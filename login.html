@@ -291,7 +291,11 @@
             });
 
             if (error) {
-              showAlert(error.message, "error");
+              if (error.message.toLowerCase().includes("invalid login credentials")) {
+                showAlert("Invalid login credentials. Agar aapne account nahi banaya hai, toh pehle niche 'Sign Up' link par click karein!", "error");
+              } else {
+                showAlert(error.message, "error");
+              }
               resetButton(originalIcon, "Log In");
             } else {
               showAlert("Logged in successfully!", "success");
@@ -336,7 +340,7 @@
         } else {
           const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
           if (!found) {
-            showAlert("Invalid email or password.", "error");
+            showAlert("Invalid email or password. Agar aapne account nahi banaya hai, toh pehle niche 'Sign Up' link par click karein!", "error");
             resetButton(originalIcon, "Log In");
             return;
           }

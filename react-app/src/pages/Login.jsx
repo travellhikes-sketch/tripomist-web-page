@@ -49,7 +49,11 @@ function Login() {
       })
 
       if (error) {
-        setErrorMsg(error.message)
+        if (error.message.toLowerCase().includes("invalid login credentials")) {
+          setErrorMsg("Invalid login credentials. Agar aapne account nahi banaya hai, toh pehle niche 'Sign Up' par click karke sign up karein!")
+        } else {
+          setErrorMsg(error.message)
+        }
       } else {
         setSuccessMsg("Logged in successfully! Redirecting...")
         setTimeout(() => {
