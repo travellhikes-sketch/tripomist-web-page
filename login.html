@@ -23,6 +23,7 @@
             "primary": "#006591",
             "primary-container": "#0ea5e9",
             "on-primary": "#ffffff",
+            "surface-container-low": "#f2f3ff",
             "surface-container-lowest": "#faf8ff",
             "on-surface": "#131b2e",
             "on-surface-variant": "#3e4850",
@@ -42,136 +43,152 @@
   </script>
 
   <style>
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-    .input-glass {
-      background: rgba(255, 255, 255, 0.5);
-      border: 1px solid rgba(110, 120, 129, 0.2);
+    .lead-input {
+      border: 1.5px solid rgba(110, 120, 129, 0.25);
+      border-radius: 14px;
+      font-size: 15px;
+      outline: none;
       transition: all 0.2s ease-in-out;
     }
-    .input-glass:focus {
-      background: rgba(255, 255, 255, 0.9);
+    .lead-input:focus {
       border-color: #006591;
-      box-shadow: 0 0 0 4px rgba(0, 101, 145, 0.1);
+      box-shadow: 0 0 0 4px rgba(0, 101, 145, 0.12);
     }
     .btn-gradient {
       background: linear-gradient(135deg, #006591 0%, #0084bd 100%);
       transition: all 0.2s ease-in-out;
     }
     .btn-gradient:hover {
-      box-shadow: 0 4px 12px rgba(0, 101, 145, 0.2);
-      opacity: 0.95;
+      box-shadow: 0 4px 12px rgba(0, 101, 145, 0.25);
+      opacity: 0.98;
     }
   </style>
 </head>
-<body class="bg-surface-container-lowest text-on-surface font-body-md antialiased flex flex-col min-h-screen">
+<body class="bg-[#f0f2f5] text-on-surface font-body-md antialiased flex items-center justify-center min-h-screen">
 
-  <!-- Top Navigation Bar -->
-  <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-16 py-4 bg-white/90 backdrop-blur-xl border-b border-outline-variant/30">
-    <div class="flex items-center justify-between w-full max-w-7xl mx-auto">
-      <!-- Brand -->
-      <a class="flex items-center gap-2" href="index.html">
-        <img alt="TripoMist Logo" class="h-12 rounded-full aspect-square object-cover w-12" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY">
-        <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">TripoMist</span>
-      </a>
+  <!-- Main Card Container (GoKwik layout replica) -->
+  <main class="w-full max-w-md bg-white shadow-2xl overflow-hidden md:rounded-[24px] flex flex-col min-h-screen md:min-h-[750px] relative">
+    
+    <!-- Top Header Panel (Dark Blue Gradient) -->
+    <section class="bg-gradient-to-b from-[#005175] to-[#006591] text-white p-8 pt-6 pb-8 relative flex flex-col items-center justify-between min-h-[290px]">
       
-      <!-- Actions -->
-      <div class="flex items-center gap-6">
-        <a class="text-on-surface hover:text-primary transition-colors flex items-center gap-2 text-sm" href="index.html">
-          <span class="material-symbols-outlined text-[18px]">home</span>
-          Back to Home
+      <!-- Brand & Close Navigation -->
+      <div class="flex justify-between items-center w-full mb-2">
+        <a class="flex items-center gap-1.5" href="index.html">
+          <img alt="TripoMist Logo" class="h-8 rounded-full aspect-square object-cover w-8 border border-white/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY">
+          <span class="font-headline-md text-md text-white tracking-tight font-bold">TripoMist</span>
         </a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Content Auth Form -->
-  <main class="flex-grow flex items-center justify-center py-24 px-4 relative overflow-hidden mt-12">
-    <!-- Background glows -->
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-container/5 rounded-full blur-3xl -z-10 animate-pulse"></div>
-
-    <!-- Auth Panel -->
-    <section class="glass-panel w-full max-w-md rounded-2xl p-8 md:p-10 border border-outline-variant/30 shadow-2xl relative">
-      <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-primary-container rounded-t-2xl"></div>
-      
-      <div class="text-center mb-8">
-        <h1 id="auth-title" class="font-display-lg text-2xl md:text-3xl font-bold text-on-surface mb-2">Welcome Back</h1>
-        <p id="auth-subtitle" class="text-sm text-on-surface-variant">Log in to check your bookings and explore new trips.</p>
-      </div>
-
-      <!-- Alert Box -->
-      <div id="alert-box" class="mb-6 p-4 rounded-lg text-sm font-medium flex items-center gap-2 hidden">
-        <span id="alert-icon" class="material-symbols-outlined shrink-0"></span>
-        <span id="alert-msg"></span>
-      </div>
-
-      <!-- Auth Form -->
-      <form id="auth-form" class="space-y-5">
-        <!-- Full name (always visible) -->
-        <div id="fullname-container" class="space-y-1.5">
-          <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Full Name</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
-            <input required id="auth-fullname" class="input-glass w-full rounded-lg pl-12 pr-4 py-3 text-sm text-on-surface focus:outline-none" placeholder="Enter your full name" type="text">
-          </div>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Email Address</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
-            <input required id="auth-email" class="input-glass w-full rounded-lg pl-12 pr-4 py-3 text-sm text-on-surface focus:outline-none" placeholder="Enter your email address" type="email">
-          </div>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Password</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
-            <input required id="auth-password" class="input-glass w-full rounded-lg pl-12 pr-4 py-3 text-sm text-on-surface focus:outline-none" placeholder="Enter password (min 6 characters)" type="password" minlength="6">
-          </div>
-        </div>
-
-        <button id="auth-submit" type="submit" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-white flex justify-center items-center gap-2 shadow-md cursor-pointer mt-4">
-          <span id="submit-icon" class="material-symbols-outlined text-[20px]">login</span>
-          <span id="submit-label">Log In</span>
+        <button onclick="redirectUser()" class="text-white/80 hover:text-white transition-colors focus:outline-none cursor-pointer border-none bg-transparent" aria-label="Close">
+          <span class="material-symbols-outlined text-[24px]">close</span>
         </button>
-      </form>
-
-      <div class="relative flex py-4 items-center">
-        <div class="flex-grow border-t border-outline-variant/30"></div>
-        <span class="flex-shrink mx-4 text-on-surface-variant/60 text-xs uppercase font-bold tracking-wider">or</span>
-        <div class="flex-grow border-t border-outline-variant/30"></div>
       </div>
 
-      <button type="button" id="google-login-btn" class="w-full bg-white hover:bg-surface-container-low border border-outline-variant/50 text-on-surface font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 transition-all cursor-pointer">
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-        </svg>
-        Continue with Google
-      </button>
+      <!-- Illustration Area -->
+      <div class="flex justify-center items-center h-28 my-2">
+        <img src="login_header_illustration.png" alt="Travel Illustration" class="h-28 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]">
+      </div>
 
+      <!-- Text Header -->
+      <div class="text-center">
+        <h1 id="auth-title" class="font-headline-md text-2xl font-bold tracking-tight text-white mb-1">Login to Autofill</h1>
+        <p id="auth-subtitle" class="text-xs text-white/85">Please fill in your details to continue</p>
+      </div>
 
-      <!-- Toggle mode -->
-      <div class="mt-8 pt-6 border-t border-outline-variant/30 text-center">
-        <p class="text-sm text-on-surface-variant">
+    </section>
+
+    <!-- Bottom Form Section -->
+    <section class="flex-grow p-6 md:p-8 flex flex-col justify-between bg-white">
+      
+      <div>
+        <!-- Alert Box -->
+        <div id="alert-box" class="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-xs font-semibold flex items-center gap-2 hidden">
+          <span id="alert-icon" class="material-symbols-outlined text-sm shrink-0">error</span>
+          <span id="alert-msg"></span>
+        </div>
+
+        <!-- Auth Form -->
+        <form id="auth-form" class="space-y-4">
+          <!-- Full Name -->
+          <div class="space-y-1">
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[18px]">person</span>
+              <input required id="auth-fullname" class="lead-input w-full pl-12 pr-4 py-3 bg-surface-container-low text-on-surface focus:bg-white placeholder:text-outline" placeholder="Full Name" type="text">
+            </div>
+          </div>
+
+          <!-- Phone (with country code prefix) -->
+          <div class="flex gap-2">
+            <div class="flex items-center bg-surface-container-low border border-outline-variant/60 rounded-[14px] px-3.5 text-sm font-semibold text-on-surface-variant select-none">
+              +91
+            </div>
+            <input required id="auth-phone" pattern="[0-9]{10}" maxlength="10" class="lead-input flex-grow px-4 py-3 bg-surface-container-low text-on-surface focus:bg-white placeholder:text-outline" placeholder="Phone Number" type="tel">
+          </div>
+
+          <!-- Email Address -->
+          <div class="space-y-1">
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[18px]">mail</span>
+              <input required id="auth-email" class="lead-input w-full pl-12 pr-4 py-3 bg-surface-container-low text-on-surface focus:bg-white placeholder:text-outline" placeholder="Email Address" type="email">
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-1">
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[18px]">lock</span>
+              <input required id="auth-password" class="lead-input w-full pl-12 pr-4 py-3 bg-surface-container-low text-on-surface focus:bg-white placeholder:text-outline" placeholder="Password (min 6 characters)" type="password" minlength="6">
+            </div>
+          </div>
+
+          <!-- Continue / Log In Submit Button -->
+          <button id="auth-submit" type="submit" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-white flex justify-center items-center gap-2 shadow-md cursor-pointer border-none mt-2">
+            <span id="submit-icon" class="material-symbols-outlined text-[20px]">arrow_forward</span>
+            <span id="submit-label">Continue</span>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="relative flex py-4 items-center">
+          <div class="flex-grow border-t border-outline-variant/30"></div>
+          <span class="flex-shrink mx-4 text-on-surface-variant/50 text-xs uppercase font-bold tracking-wider">or</span>
+          <div class="flex-grow border-t border-outline-variant/30"></div>
+        </div>
+
+        <!-- Google Auth Button -->
+        <button type="button" id="google-login-btn" class="w-full bg-white hover:bg-surface-container-low border border-outline-variant/60 text-on-surface font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-3 transition-all cursor-pointer">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <!-- Terms / Auth Checklist Checkbox -->
+        <div class="mt-5 p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+          <input type="checkbox" checked id="lead-terms" class="mt-0.5 w-4.5 h-4.5 accent-primary rounded cursor-pointer">
+          <label for="lead-terms" class="text-[11px] text-on-surface-variant leading-relaxed select-none">
+            I authorize TripoMist to use my data for autofill, marketing & personalization per their 
+            <a href="privacy-policy.html" class="text-primary hover:underline font-bold">Privacy Policy</a>.
+          </label>
+        </div>
+      </div>
+
+      <!-- Toggle mode & Footer -->
+      <div class="mt-6 pt-4 border-t border-outline-variant/30 text-center">
+        <p class="text-xs text-on-surface-variant mb-4">
           <span id="toggle-desc">New to TripoMist?</span>
-          <button id="toggle-btn" class="text-primary hover:underline font-bold ml-1.5 focus:outline-none">Sign Up</button>
+          <button id="toggle-btn" class="text-primary hover:underline font-bold ml-1 focus:outline-none">Sign Up</button>
+        </p>
+        
+        <p class="text-[10px] text-outline tracking-wider uppercase font-semibold flex items-center justify-center gap-1.5 select-none">
+          <span class="material-symbols-outlined text-[12px] text-primary">security</span> Powered by Supabase Auth
         </p>
       </div>
+
     </section>
   </main>
-
-  <footer class="bg-slate-900 text-white/60 py-6 text-center text-xs mt-auto border-t border-white/10">
-    <p>&copy; 2026 TripoMist. All Rights Reserved.</p>
-  </footer>
 
   <script>
     const isSignUpMode = { value: false };
@@ -183,7 +200,6 @@
     const toggleDesc = document.getElementById('toggle-desc');
     const authTitle = document.getElementById('auth-title');
     const authSubtitle = document.getElementById('auth-subtitle');
-    const fullnameContainer = document.getElementById('fullname-container');
     const fullnameInput = document.getElementById('auth-fullname');
     
     const submitBtn = document.getElementById('auth-submit');
@@ -234,14 +250,13 @@
         submitIcon.textContent = "person_add";
         submitLabel.textContent = "Sign Up";
       } else {
-        authTitle.textContent = "Welcome Back";
-        authSubtitle.textContent = "Log in to check your bookings and explore new trips.";
+        authTitle.textContent = "Login to Autofill";
+        authSubtitle.textContent = "Please fill in your details to continue";
         toggleDesc.textContent = "New to TripoMist?";
         toggleBtn.textContent = "Sign Up";
-        submitIcon.textContent = "login";
-        submitLabel.textContent = "Log In";
+        submitIcon.textContent = "arrow_forward";
+        submitLabel.textContent = "Continue";
       }
-
     });
 
     // Form logic
@@ -251,6 +266,7 @@
       const email = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value;
       const fullName = fullnameInput.value.trim();
+      const phone = document.getElementById('auth-phone').value.trim();
       
       // Loading State
       submitBtn.disabled = true;
@@ -268,7 +284,8 @@
               password: password,
               options: {
                 data: {
-                  full_name: fullName
+                  full_name: fullName,
+                  phone: "+91 " + phone
                 }
               }
             });
@@ -278,7 +295,6 @@
               resetButton(originalIcon, "Sign Up");
             } else {
               showAlert("Account created successfully! Logging you in...", "success");
-              // Sync mock session in case React is listening to it
               localStorage.setItem('mock_current_user', JSON.stringify(data.user));
               window.dispatchEvent(new Event('auth-state-change'));
               setTimeout(() => { redirectUser(); }, 1200);
@@ -296,10 +312,9 @@
               } else {
                 showAlert(error.message, "error");
               }
-              resetButton(originalIcon, "Log In");
+              resetButton(originalIcon, "Continue");
             } else {
               showAlert("Logged in successfully!", "success");
-              // Sync mock session in case React is listening to it
               localStorage.setItem('mock_current_user', JSON.stringify(data.user));
               window.dispatchEvent(new Event('auth-state-change'));
               setTimeout(() => { redirectUser(); }, 1000);
@@ -307,7 +322,7 @@
           }
         } catch (err) {
           showAlert("An unexpected error occurred. Please try again.", "error");
-          resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Log In");
+          resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Continue");
         }
       } else {
         // Mock Auth Flow (LocalStorage)
@@ -324,7 +339,7 @@
           const newUser = {
             id: Math.random().toString(36).substring(2, 11),
             email: email.toLowerCase(),
-            user_metadata: { full_name: fullName }
+            user_metadata: { full_name: fullName, phone: "+91 " + phone }
           };
           
           users.push({ email: email.toLowerCase(), password, user: newUser });
@@ -341,7 +356,7 @@
           const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
           if (!found) {
             showAlert("Invalid email or password. Agar aapne account nahi banaya hai, toh pehle niche 'Sign Up' link par click karein!", "error");
-            resetButton(originalIcon, "Log In");
+            resetButton(originalIcon, "Continue");
             return;
           }
           
@@ -375,11 +390,11 @@
             });
             if (error) {
               showAlert(error.message, "error");
-              resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Log In");
+              resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Continue");
             }
           } catch (err) {
             showAlert("OAuth initialization failed. Please try again.", "error");
-            resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Log In");
+            resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Continue");
           }
         } else {
           // Mock Google login
@@ -399,19 +414,18 @@
       });
     }
 
-
     function showAlert(msg, type) {
       alertBox.classList.remove('hidden');
       alertMsg.textContent = msg;
       
       if (type === 'error') {
-        alertBox.className = "mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm font-medium flex items-center gap-2";
+        alertBox.className = "mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-xs font-semibold flex items-center gap-2";
         alertIcon.textContent = "error";
-        alertIcon.className = "material-symbols-outlined shrink-0 text-red-500";
+        alertIcon.className = "material-symbols-outlined shrink-0 text-red-500 text-sm";
       } else {
-        alertBox.className = "mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-700 text-sm font-medium flex items-center gap-2";
+        alertBox.className = "mb-4 p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-700 text-xs font-semibold flex items-center gap-2";
         alertIcon.textContent = "check_circle";
-        alertIcon.className = "material-symbols-outlined shrink-0 text-emerald-500";
+        alertIcon.className = "material-symbols-outlined shrink-0 text-emerald-500 text-sm";
       }
     }
 
