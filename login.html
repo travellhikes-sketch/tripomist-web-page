@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripoMist - Login & Sign Up</title>
+  
+  <!-- CSS Tailwind Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+  
+  <!-- Tailwind Custom Config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#006591",
+            "primary-container": "#0ea5e9",
+            "on-primary": "#ffffff",
+            "surface-container-lowest": "#faf8ff",
+            "on-surface": "#131b2e",
+            "on-surface-variant": "#3e4850",
+            "outline": "#6e7881",
+            "outline-variant": "#dae2fd",
+            "error": "#ba1a1a",
+          },
+          fontFamily: {
+            "headline-md": ["Manrope"],
+            "body-md": ["Inter"],
+            "display-lg": ["Manrope"],
+            "button": ["Manrope"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .input-glass {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(110, 120, 129, 0.2);
+      transition: all 0.2s ease-in-out;
+    }
+    .input-glass:focus {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: #006591;
+      box-shadow: 0 0 0 4px rgba(0, 101, 145, 0.1);
+    }
+    .btn-gradient {
+      background: linear-gradient(135deg, #006591 0%, #0084bd 100%);
+      transition: all 0.2s ease-in-out;
+    }
+    .btn-gradient:hover {
+      box-shadow: 0 4px 12px rgba(0, 101, 145, 0.2);
+      opacity: 0.95;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md antialiased flex flex-col min-h-screen">
+
+  <!-- Top Navigation Bar -->
+  <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-16 py-4 bg-white/90 backdrop-blur-xl border-b border-outline-variant/30">
+    <div class="flex items-center justify-between w-full max-w-7xl mx-auto">
+      <!-- Brand -->
+      <a class="flex items-center gap-2" href="index.html">
+        <img alt="TripoMist Logo" class="h-12 rounded-full aspect-square object-cover w-12" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY">
+        <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">TripoMist</span>
+      </a>
+      
+      <!-- Actions -->
+      <div class="flex items-center gap-6">
+        <a class="text-on-surface hover:text-primary transition-colors flex items-center gap-2 text-sm" href="index.html">
+          <span class="material-symbols-outlined text-[18px]">home</span>
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Auth Form -->
+  <main class="flex-grow flex items-center justify-center py-24 px-4 relative overflow-hidden mt-12">
+    <!-- Background glows -->
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary-container/5 rounded-full blur-3xl -z-10 animate-pulse"></div>
+
+    <!-- Auth Panel -->
+    <section class="glass-panel w-full max-w-md rounded-2xl p-8 md:p-10 border border-outline-variant/30 shadow-2xl relative">
+      <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-primary-container rounded-t-2xl"></div>
+      
+      <div class="text-center mb-8">
+        <h1 id="auth-title" class="font-display-lg text-2xl md:text-3xl font-bold text-on-surface mb-2">Welcome Back</h1>
+        <p id="auth-subtitle" class="text-sm text-on-surface-variant">Log in to check your bookings and explore new trips.</p>
+      </div>
+
+      <!-- Alert Box -->
+      <div id="alert-box" class="mb-6 p-4 rounded-lg text-sm font-medium flex items-center gap-2 hidden">
+        <span id="alert-icon" class="material-symbols-outlined shrink-0"></span>
+        <span id="alert-msg"></span>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="auth-form" class="space-y-5">
+        <!-- Full name (only in signup mode) -->
+        <div id="fullname-container" class="space-y-1.5 hidden">
+          <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Full Name</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
+            <input id="auth-fullname" class="input-glass w-full rounded-lg pl-12 pr-4 py-3 text-sm text-on-surface focus:outline-none" placeholder="Enter your full name" type="text">
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Email Address</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
+            <input required id="auth-email" class="input-glass w-full rounded-lg pl-12 pr-4 py-3 text-sm text-on-surface focus:outline-none" placeholder="Enter your email address" type="email">
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock</span>
+            <input required id="auth-password" class="input-glass w-full rounded-lg pl-12 pr-4 py-3 text-sm text-on-surface focus:outline-none" placeholder="Enter password (min 6 characters)" type="password" minlength="6">
+          </div>
+        </div>
+
+        <button id="auth-submit" type="submit" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-white flex justify-center items-center gap-2 shadow-md cursor-pointer">
+          <span id="submit-icon" class="material-symbols-outlined text-[20px]">login</span>
+          <span id="submit-label">Log In</span>
+        </button>
+      </form>
+
+      <!-- Toggle mode -->
+      <div class="mt-8 pt-6 border-t border-outline-variant/30 text-center">
+        <p class="text-sm text-on-surface-variant">
+          <span id="toggle-desc">New to TripoMist?</span>
+          <button id="toggle-btn" class="text-primary hover:underline font-bold ml-1.5 focus:outline-none">Sign Up</button>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-slate-900 text-white/60 py-6 text-center text-xs mt-auto border-t border-white/10">
+    <p>&copy; 2026 TripoMist. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    const isSignUpMode = { value: false };
+    const alertBox = document.getElementById('alert-box');
+    const alertIcon = document.getElementById('alert-icon');
+    const alertMsg = document.getElementById('alert-msg');
+    
+    const toggleBtn = document.getElementById('toggle-btn');
+    const toggleDesc = document.getElementById('toggle-desc');
+    const authTitle = document.getElementById('auth-title');
+    const authSubtitle = document.getElementById('auth-subtitle');
+    const fullnameContainer = document.getElementById('fullname-container');
+    const fullnameInput = document.getElementById('auth-fullname');
+    
+    const submitBtn = document.getElementById('auth-submit');
+    const submitIcon = document.getElementById('submit-icon');
+    const submitLabel = document.getElementById('submit-label');
+    const authForm = document.getElementById('auth-form');
+
+    // Toggle logic
+    toggleBtn.addEventListener('click', () => {
+      isSignUpMode.value = !isSignUpMode.value;
+      alertBox.classList.add('hidden');
+      
+      if (isSignUpMode.value) {
+        authTitle.textContent = "Create Account";
+        authSubtitle.textContent = "Join TripoMist and explore beautiful destinations.";
+        toggleDesc.textContent = "Already have an account?";
+        toggleBtn.textContent = "Log In";
+        submitIcon.textContent = "person_add";
+        submitLabel.textContent = "Sign Up";
+        fullnameContainer.classList.remove('hidden');
+        fullnameInput.setAttribute('required', '');
+      } else {
+        authTitle.textContent = "Welcome Back";
+        authSubtitle.textContent = "Log in to check your bookings and explore new trips.";
+        toggleDesc.textContent = "New to TripoMist?";
+        toggleBtn.textContent = "Sign Up";
+        submitIcon.textContent = "login";
+        submitLabel.textContent = "Log In";
+        fullnameContainer.classList.add('hidden');
+        fullnameInput.removeAttribute('required');
+      }
+    });
+
+    // Form logic
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const fullName = fullnameInput.value.trim();
+      
+      // Loading State
+      submitBtn.disabled = true;
+      const originalIcon = submitIcon.textContent;
+      submitIcon.textContent = "hourglass_empty";
+      submitLabel.textContent = "Processing...";
+      
+      // Load local database
+      const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+      
+      await new Promise(resolve => setTimeout(resolve, 600)); // Latency simulation
+      
+      if (isSignUpMode.value) {
+        // Sign Up Mode
+        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+          showAlert("User with this email already exists.", "error");
+          resetButton(originalIcon, "Sign Up");
+          return;
+        }
+        
+        const newUser = {
+          id: Math.random().toString(36).substring(2, 11),
+          email: email.toLowerCase(),
+          user_metadata: { full_name: fullName }
+        };
+        
+        users.push({ email: email.toLowerCase(), password, user: newUser });
+        localStorage.setItem('mock_users', JSON.stringify(users));
+        localStorage.setItem('mock_current_user', JSON.stringify(newUser));
+        
+        showAlert("Account created successfully! Logging you in...", "success");
+        window.dispatchEvent(new Event('auth-state-change'));
+        
+        setTimeout(() => {
+          redirectUser();
+        }, 1200);
+      } else {
+        // Log In Mode
+        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+        if (!found) {
+          showAlert("Invalid email or password.", "error");
+          resetButton(originalIcon, "Log In");
+          return;
+        }
+        
+        localStorage.setItem('mock_current_user', JSON.stringify(found.user));
+        showAlert("Logged in successfully!", "success");
+        window.dispatchEvent(new Event('auth-state-change'));
+        
+        setTimeout(() => {
+          redirectUser();
+        }, 1000);
+      }
+    });
+
+    function showAlert(msg, type) {
+      alertBox.classList.remove('hidden');
+      alertMsg.textContent = msg;
+      
+      if (type === 'error') {
+        alertBox.className = "mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm font-medium flex items-center gap-2";
+        alertIcon.textContent = "error";
+        alertIcon.className = "material-symbols-outlined shrink-0 text-red-500";
+      } else {
+        alertBox.className = "mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-700 text-sm font-medium flex items-center gap-2";
+        alertIcon.textContent = "check_circle";
+        alertIcon.className = "material-symbols-outlined shrink-0 text-emerald-500";
+      }
+    }
+
+    function resetButton(icon, label) {
+      submitBtn.disabled = false;
+      submitIcon.textContent = icon;
+      submitLabel.textContent = label;
+    }
+
+    function redirectUser() {
+      // If referrer was checkout, redirect back to checkout
+      const referrer = document.referrer;
+      if (referrer && referrer.includes('checkout.html')) {
+        window.location.href = referrer;
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>

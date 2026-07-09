@@ -490,6 +490,16 @@
         alert("Failed to initialize payment gateway. Please try again.");
       }
     });
+
+    // Prefill user details if logged in
+    const currentUser = JSON.parse(localStorage.getItem('mock_current_user') || 'null');
+    if (currentUser) {
+      const nameInput = document.getElementById('traveler-name');
+      const emailInput = document.getElementById('traveler-email');
+      if (nameInput) nameInput.value = currentUser.user_metadata?.full_name || '';
+      if (emailInput) emailInput.value = currentUser.email || '';
+    }
   </script>
+  <script src="auth-navbar.js"></script>
 </body>
 </html>
