@@ -2,3 +2,7 @@
 # NOTE: The secret key must only be used in server-side environments.
 RAZORPAY_KEY_ID=rzp_test_TBICP09xzQRaAw
 RAZORPAY_KEY_SECRET=n9Pq34RtHsVA0YrWSxIbKIVl
+
+# Supabase API Credentials
+VITE_SUPABASE_URL=https://smumwkvkcfnrajamtscq.supabase.co
+VITE_SUPABASE_ANON_KEY=

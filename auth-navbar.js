@@ -23,36 +23,86 @@
   `;
   document.head.appendChild(style);
 
-  // Unified LocalStorage Auth Mock Helpers
+  // Script loader helper
+  function loadScript(url) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  let supabaseClient = null;
+  let useRealSupabase = false;
+
+  // Unified Auth Interface
   const auth = {
-    getUser: function() {
+    getUser: async function() {
+      if (useRealSupabase && supabaseClient) {
+        try {
+          const { data: { user }, error } = await supabaseClient.auth.getUser();
+          if (!error && user) return user;
+        } catch (e) {
+          console.error("Supabase getUser error:", e);
+        }
+      }
+      // Fallback to local storage mock user
       return JSON.parse(localStorage.getItem('mock_current_user') || 'null');
     },
-    signOut: function() {
+    signOut: async function() {
+      if (useRealSupabase && supabaseClient) {
+        try {
+          await supabaseClient.auth.signOut();
+        } catch (e) {
+          console.error("Supabase signOut error:", e);
+        }
+      }
       localStorage.removeItem('mock_current_user');
-      // Dispatch event to update navbar immediately in the current context
       window.dispatchEvent(new Event('auth-state-change'));
     }
   };
 
-  // Run navbar setup on DOMContentLoaded or immediately
+  // Start initialization chain
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initNavbar);
+    document.addEventListener('DOMContentLoaded', bootstrap);
   } else {
-    initNavbar();
+    bootstrap();
   }
 
-  function initNavbar() {
+  async function bootstrap() {
+    try {
+      // 1. Try to load supabase-config.js dynamically
+      await loadScript('supabase-config.js');
+      
+      // 2. Check if a real Supabase Anon Key is defined
+      if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== "") {
+        console.log("Supabase configured. Loading Supabase CDN client...");
+        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+        supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        useRealSupabase = true;
+        console.log("Supabase client initialized successfully.");
+      } else {
+        console.warn("window.SUPABASE_ANON_KEY is empty. Running in Mock Auth mode.");
+      }
+    } catch (e) {
+      console.warn("Bootstrap failed to initialize real Supabase (possibly config file missing or CDN offline). Running in Mock Auth mode.", e);
+    } finally {
+      // 3. Initialize navbar elements
+      await initNavbar();
+    }
+  }
+
+  async function initNavbar() {
     const desktopPhoneLink = document.querySelector('nav a[href^="tel:"]');
     if (!desktopPhoneLink) return;
     const desktopActions = desktopPhoneLink.parentElement;
     const mobileDropdown = document.getElementById('mobile-menu-dropdown');
 
-    // Create user status elements
-    const user = auth.getUser();
+    const user = await auth.getUser();
 
     // 1. Setup Desktop Navbar Auth
-    // Remove any previously injected auth container to prevent duplicates
     const oldDesktopAuth = document.getElementById('desktop-auth-container');
     if (oldDesktopAuth) oldDesktopAuth.remove();
 
@@ -83,7 +133,6 @@
       `;
       desktopActions.appendChild(desktopAuthContainer);
 
-      // Event listeners for dropdown
       const userBtn = document.getElementById('desktop-user-btn');
       const userDropdown = document.getElementById('desktop-user-dropdown');
       userBtn.addEventListener('click', (e) => {
@@ -95,8 +144,8 @@
       });
 
       const logoutBtn = document.getElementById('desktop-logout-btn');
-      logoutBtn.addEventListener('click', () => {
-        auth.signOut();
+      logoutBtn.addEventListener('click', async () => {
+        await auth.signOut();
         window.location.reload();
       });
     } else {
@@ -131,8 +180,8 @@
         `;
         mobileDropdown.firstElementChild.appendChild(mobileAuthContainer);
 
-        document.getElementById('mobile-logout-btn').addEventListener('click', () => {
-          auth.signOut();
+        document.getElementById('mobile-logout-btn').addEventListener('click', async () => {
+          await auth.signOut();
           window.location.reload();
         });
       } else {

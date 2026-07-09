@@ -174,6 +174,36 @@
     const submitLabel = document.getElementById('submit-label');
     const authForm = document.getElementById('auth-form');
 
+    // Script loader helper
+    function loadScript(url) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    let supabaseClient = null;
+    let useRealSupabase = false;
+
+    // Bootstrap real Supabase if key is configured
+    async function bootstrap() {
+      try {
+        await loadScript('supabase-config.js');
+        if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== "") {
+          await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+          supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+          useRealSupabase = true;
+          console.log("Login page initialized with real Supabase Auth.");
+        }
+      } catch (e) {
+        console.warn("Real Supabase init skipped. Running in Mock Auth mode.");
+      }
+    }
+    bootstrap();
+
     // Toggle logic
     toggleBtn.addEventListener('click', () => {
       isSignUpMode.value = !isSignUpMode.value;
@@ -213,52 +243,98 @@
       const originalIcon = submitIcon.textContent;
       submitIcon.textContent = "hourglass_empty";
       submitLabel.textContent = "Processing...";
-      
-      // Load local database
-      const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      
-      await new Promise(resolve => setTimeout(resolve, 600)); // Latency simulation
-      
-      if (isSignUpMode.value) {
-        // Sign Up Mode
-        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-          showAlert("User with this email already exists.", "error");
-          resetButton(originalIcon, "Sign Up");
-          return;
+
+      if (useRealSupabase && supabaseClient) {
+        // Real Supabase Flow
+        try {
+          if (isSignUpMode.value) {
+            // Sign Up
+            const { data, error } = await supabaseClient.auth.signUp({
+              email: email.toLowerCase(),
+              password: password,
+              options: {
+                data: {
+                  full_name: fullName
+                }
+              }
+            });
+
+            if (error) {
+              showAlert(error.message, "error");
+              resetButton(originalIcon, "Sign Up");
+            } else {
+              showAlert("Account created successfully! Logging you in...", "success");
+              // Sync mock session in case React is listening to it
+              localStorage.setItem('mock_current_user', JSON.stringify(data.user));
+              window.dispatchEvent(new Event('auth-state-change'));
+              setTimeout(() => { redirectUser(); }, 1200);
+            }
+          } else {
+            // Sign In
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+              email: email.toLowerCase(),
+              password: password
+            });
+
+            if (error) {
+              showAlert(error.message, "error");
+              resetButton(originalIcon, "Log In");
+            } else {
+              showAlert("Logged in successfully!", "success");
+              // Sync mock session in case React is listening to it
+              localStorage.setItem('mock_current_user', JSON.stringify(data.user));
+              window.dispatchEvent(new Event('auth-state-change'));
+              setTimeout(() => { redirectUser(); }, 1000);
+            }
+          }
+        } catch (err) {
+          showAlert("An unexpected error occurred. Please try again.", "error");
+          resetButton(originalIcon, isSignUpMode.value ? "Sign Up" : "Log In");
         }
-        
-        const newUser = {
-          id: Math.random().toString(36).substring(2, 11),
-          email: email.toLowerCase(),
-          user_metadata: { full_name: fullName }
-        };
-        
-        users.push({ email: email.toLowerCase(), password, user: newUser });
-        localStorage.setItem('mock_users', JSON.stringify(users));
-        localStorage.setItem('mock_current_user', JSON.stringify(newUser));
-        
-        showAlert("Account created successfully! Logging you in...", "success");
-        window.dispatchEvent(new Event('auth-state-change'));
-        
-        setTimeout(() => {
-          redirectUser();
-        }, 1200);
       } else {
-        // Log In Mode
-        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        if (!found) {
-          showAlert("Invalid email or password.", "error");
-          resetButton(originalIcon, "Log In");
-          return;
+        // Mock Auth Flow (LocalStorage)
+        const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+        await new Promise(resolve => setTimeout(resolve, 600)); // Latency simulation
+        
+        if (isSignUpMode.value) {
+          if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+            showAlert("User with this email already exists.", "error");
+            resetButton(originalIcon, "Sign Up");
+            return;
+          }
+          
+          const newUser = {
+            id: Math.random().toString(36).substring(2, 11),
+            email: email.toLowerCase(),
+            user_metadata: { full_name: fullName }
+          };
+          
+          users.push({ email: email.toLowerCase(), password, user: newUser });
+          localStorage.setItem('mock_users', JSON.stringify(users));
+          localStorage.setItem('mock_current_user', JSON.stringify(newUser));
+          
+          showAlert("Account created successfully! Logging you in...", "success");
+          window.dispatchEvent(new Event('auth-state-change'));
+          
+          setTimeout(() => {
+            redirectUser();
+          }, 1200);
+        } else {
+          const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+          if (!found) {
+            showAlert("Invalid email or password.", "error");
+            resetButton(originalIcon, "Log In");
+            return;
+          }
+          
+          localStorage.setItem('mock_current_user', JSON.stringify(found.user));
+          showAlert("Logged in successfully!", "success");
+          window.dispatchEvent(new Event('auth-state-change'));
+          
+          setTimeout(() => {
+            redirectUser();
+          }, 1000);
         }
-        
-        localStorage.setItem('mock_current_user', JSON.stringify(found.user));
-        showAlert("Logged in successfully!", "success");
-        window.dispatchEvent(new Event('auth-state-change'));
-        
-        setTimeout(() => {
-          redirectUser();
-        }, 1000);
       }
     });
 
@@ -284,7 +360,6 @@
     }
 
     function redirectUser() {
-      // If referrer was checkout, redirect back to checkout
       const referrer = document.referrer;
       if (referrer && referrer.includes('checkout.html')) {
         window.location.href = referrer;
