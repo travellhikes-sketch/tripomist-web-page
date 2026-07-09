@@ -2,7 +2,7 @@
 // Timed Lead Capture Modal for TripoMist static HTML pages
 
 (function() {
-  const N8N_WEBHOOK = 'https://primary-production-4c8d.up.railway.app/webhook/e78119eb-9ea2-4ee4-b152-cb4db12dbe44';
+  const N8N_WEBHOOK = 'https://storm123.app.n8n.cloud/webhook/0cf53883-0f57-4716-98d8-6b9506683b42';
   const POPUP_DELAY_MS = 5000; // 5 seconds delay before showing the modal
 
   // Don't show if closed in this session
