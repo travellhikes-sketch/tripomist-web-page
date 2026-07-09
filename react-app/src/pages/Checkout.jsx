@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { supabase } from '../utils/supabaseClient'
 
 function Checkout() {
   const [searchParams] = useSearchParams()
@@ -64,6 +65,15 @@ function Checkout() {
 
   const [showSuccess, setShowSuccess] = useState(false)
   const [bookingId, setBookingId] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setTravelerName(user.user_metadata?.full_name || '')
+        setTravelerEmail(user.email || '')
+      }
+    })
+  }, [])
 
   useEffect(() => {
     const tripParam = searchParams.get('trip')

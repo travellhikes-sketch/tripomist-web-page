@@ -11,6 +11,7 @@ import RefundPolicy from './pages/RefundPolicy'
 import ShippingPolicy from './pages/ShippingPolicy'
 import TermsConditions from './pages/TermsConditions'
 import ContactUs from './pages/ContactUs'
+import Login from './pages/Login'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/group-trips" element={<GroupTrips />} />
       <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />
       <Route path="/shipping-policy" element={<ShippingPolicy />} />

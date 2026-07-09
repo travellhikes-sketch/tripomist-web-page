@@ -1,11 +1,37 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { supabase } from '../utils/supabaseClient'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [user, setUser] = useState(null)
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
+  
   const navigate = useNavigate()
   const location = useLocation()
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    // Listen to changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => {
+      subscription?.unsubscribe()
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/')
+    setShowUserDropdown(false)
+  }
 
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter' && searchValue.trim()) {
@@ -55,6 +81,49 @@ function Navbar() {
           <Link className="text-on-surface-variant hover:text-primary transition-colors p-1" to="/group-trips?favorites=true" aria-label="Favorites">
             <span className="material-symbols-outlined">favorite</span>
           </Link>
+          
+          {/* User Auth Profile Dropdown */}
+          {user ? (
+            <div className="relative">
+              <button 
+                onClick={() => setShowUserDropdown(!showUserDropdown)} 
+                className="flex items-center gap-1.5 focus:outline-none hover:text-primary transition-colors duration-150 p-1"
+              >
+                <span className="material-symbols-outlined text-[24px]">account_circle</span>
+                <span className="hidden md:inline font-body-md text-xs font-semibold max-w-[100px] truncate">
+                  {user.user_metadata?.full_name || user.email.split('@')[0]}
+                </span>
+                <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+              </button>
+              
+              {showUserDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-surface-container-high rounded-xl border border-outline-variant/30 shadow-xl py-2 z-50 animate-fade-in">
+                  <div className="px-4 py-2 border-b border-outline-variant/20">
+                    <p className="text-xs font-bold text-on-surface truncate">
+                      {user.user_metadata?.full_name || "Traveler"}
+                    </p>
+                    <p className="text-[10px] text-on-surface-variant truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleLogout} 
+                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-surface-container-low transition-colors flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-sm">logout</span> Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link 
+              to="/login" 
+              className="bg-primary hover:bg-primary/95 text-white font-button text-xs font-semibold px-4 py-2 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm">login</span> Login
+            </Link>
+          )}
+
           <button className="md:hidden text-on-surface-variant p-1" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu">
             <span className="material-symbols-outlined">{isOpen ? 'close' : 'menu'}</span>
           </button>
@@ -68,6 +137,28 @@ function Navbar() {
             <Link className={`text-lg pb-1 border-b border-outline-variant/20 ${isActive('/group-trips') ? 'text-primary font-bold' : 'text-on-surface-variant'}`} onClick={() => setIsOpen(false)} to="/group-trips">Group Trips</Link>
             <Link className={`text-lg pb-1 border-b border-outline-variant/20 ${isActive('/weekend-trips') ? 'text-primary font-bold' : 'text-on-surface-variant'}`} onClick={() => setIsOpen(false)} to="/weekend-trips">Weekend Trips</Link>
             <Link className={`text-lg pb-1 border-b border-outline-variant/20 ${isActive('/upcoming-trips') ? 'text-primary font-bold' : 'text-on-surface-variant'}`} onClick={() => setIsOpen(false)} to="/upcoming-trips">Upcoming Trips</Link>
+            
+            {user ? (
+              <div className="pt-2 flex flex-col gap-2">
+                <div className="px-1 py-1 text-sm font-semibold text-on-surface-variant">
+                  Hi, {user.user_metadata?.full_name || user.email.split('@')[0]}
+                </div>
+                <button 
+                  onClick={() => { handleLogout(); setIsOpen(false); }} 
+                  className="w-full bg-red-50 text-red-500 border border-red-200 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined">logout</span> Logout
+                </button>
+              </div>
+            ) : (
+              <Link 
+                to="/login" 
+                onClick={() => setIsOpen(false)}
+                className="w-full bg-primary text-white text-center py-2.5 rounded-lg font-bold text-sm mt-2 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined">login</span> Login / Sign Up
+              </Link>
+            )}
           </div>
         </div>
       )}
