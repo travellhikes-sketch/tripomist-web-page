@@ -52,18 +52,15 @@ function Checkout() {
   const [activeTrip, setActiveTrip] = useState("Spiti Valley Expedition")
   const [rates, setRates] = useState({ base: 21500, gst: 3870, disc: 371, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDiD2GO7fIb1ciUdWe0odOedfkhJIm1ur64B1iKghZ8eMdF66RoOvQDTrZz1L1nfURfVdMroAzsjyFtv85EjcF8NXBkccIFhdalQolBp9Yar92MT8MtrG9wQGjuK5B7wctNIUhR54TEU7PYNv323Svs0dPfNfV6sfFdjHZinMcri0e9lDmEaHhHTP1F5YA25LoETYvVR1Dnn-8UNP4ShswwHgnmwn3Pw1YqRx1ECDm16ijYYriT-jcGpT9--pyJ_OQkKTc7lwXlnByS" })
   
-  const [numTravelers, setNumTravelers] = useState(1)
-  const [paymentMethod, setPaymentMethod] = useState('Card')
   const [travelerName, setTravelerName] = useState('')
   const [travelerEmail, setTravelerEmail] = useState('')
   const [travelerPhone, setTravelerPhone] = useState('')
   
-  // Card Inputs
-  const [cardNum, setCardNum] = useState('')
-  const [cardExp, setCardExp] = useState('')
-  const [cardCvc, setCardCvc] = useState('')
-  // UPI Input
-  const [upiId, setUpiId] = useState('')
+  const [couponCode, setCouponCode] = useState('')
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [appliedCoupon, setAppliedCoupon] = useState('')
+  const [couponMessage, setCouponMessage] = useState('')
+  const [couponStatus, setCouponStatus] = useState('')
 
   const [showSuccess, setShowSuccess] = useState(false)
   const [bookingId, setBookingId] = useState('')
@@ -103,14 +100,24 @@ function Checkout() {
     }
   }, [searchParams])
 
-  const billBase = rates.base * numTravelers
-  const billGst = rates.gst * numTravelers
-  const billDiscount = rates.disc * numTravelers
-  const billTotal = (billBase + billGst) - billDiscount
+  const billBase = rates.base
+  const billGst = rates.gst
+  const billTotal = (billBase + billGst) - discountAmount
 
-  const handleIncrement = () => setNumTravelers(prev => prev + 1)
-  const handleDecrement = () => {
-    if (numTravelers > 1) setNumTravelers(prev => prev - 1)
+  const handleApplyCoupon = () => {
+    const code = couponCode.trim().toUpperCase()
+    if (code === 'EARLYBIRD') {
+      setDiscountAmount(2000)
+      setAppliedCoupon(code)
+      setCouponMessage("Coupon applied successfully!")
+      setCouponStatus("success")
+    } else if (code === "") {
+      setCouponMessage("Please enter a coupon code.")
+      setCouponStatus("error")
+    } else {
+      setCouponMessage("Invalid coupon code.")
+      setCouponStatus("error")
+    }
   }
 
   const handleSubmit = (e) => {
@@ -170,19 +177,18 @@ function Checkout() {
       <main className="flex-grow pt-lg pb-xl px-4 md:px-8 max-w-7xl mx-auto w-full">
         {/* Title */}
         <div className="mb-8 text-center md:text-left">
-          <h1 className="font-display-lg text-display-lg text-on-surface mb-xs font-bold leading-tight">Checkout</h1>
+          <h1 className="font-display-lg text-display-lg text-on-surface mb-xs font-bold leading-tight">Payment</h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant">Complete your booking securely.</p>
         </div>
 
         <form className="grid grid-cols-1 lg:grid-cols-12 gap-margin" onSubmit={handleSubmit}>
           {/* Left panel inputs */}
-          <div className="lg:col-span-8 space-y-lg">
-            {/* Step 1: Traveler details */}
+          <div className="lg:col-span-6 space-y-lg">
+            {/* Traveler details */}
             <section className="glass-panel rounded-[1.25rem] p-6 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-primary-container"></div>
               <div className="flex items-center gap-sm mb-6 border-b border-outline-variant/30 pb-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-container/10 text-primary font-headline-md font-bold shrink-0">1</span>
-                <h2 className="font-headline-md text-headline-md text-on-surface font-bold text-lg md:text-xl">Traveler Details</h2>
+                <h2 className="font-headline-md text-headline-md text-on-surface font-bold text-lg md:text-xl">Traveller Details</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,189 +233,72 @@ function Checkout() {
                 </div>
               </div>
             </section>
-
-            {/* Step 2: Payment Method */}
-            <section className="glass-panel rounded-[1.25rem] p-6 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-outline-variant/30"></div>
-              <div className="flex items-center gap-sm mb-6 border-b border-outline-variant/30 pb-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant font-headline-md font-bold shrink-0">2</span>
-                <h2 className="font-headline-md text-headline-md text-on-surface font-bold text-lg md:text-xl">Payment Method</h2>
-              </div>
-
-              <div className="space-y-4">
-                {/* Card payment option */}
-                <label className="relative block cursor-pointer group">
-                  <input 
-                    checked={paymentMethod === 'Card'}
-                    onChange={() => setPaymentMethod('Card')}
-                    className="peer sr-only radio-custom" 
-                    name="payment_method" 
-                    type="radio" 
-                  />
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-outline-variant/50 bg-white transition-all hover:border-primary-container/50">
-                    <div className="flex items-center gap-sm">
-                      <div className="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center shrink-0">
-                        <div className={`w-3 h-3 rounded-full radio-dot transition-transform bg-primary-container ${paymentMethod === 'Card' ? 'scale-100' : 'scale-0'}`}></div>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-body-md text-body-md font-bold text-on-surface text-sm md:text-base">Credit or Debit Card</span>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant text-xs">Visa, Mastercard, Amex, RuPay</span>
-                      </div>
-                    </div>
-                    <span className="material-symbols-outlined text-outline text-[24px]">credit_card</span>
-                  </div>
-                </label>
-
-                {/* Card input forms */}
-                {paymentMethod === 'Card' && (
-                  <div className="pl-8 md:pl-12 pr-4 pb-4 space-y-4">
-                    <div>
-                      <input 
-                        required 
-                        value={cardNum}
-                        onChange={(e) => setCardNum(e.target.value)}
-                        className="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" 
-                        placeholder="Card Number" 
-                        type="text" 
-                        pattern="\d{16}" 
-                        title="16-digit card number"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <input 
-                        required 
-                        value={cardExp}
-                        onChange={(e) => setCardExp(e.target.value)}
-                        className="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" 
-                        placeholder="MM/YY" 
-                        type="text" 
-                        pattern="\d{2}/\d{2}" 
-                        title="Expiry in MM/YY format"
-                      />
-                      <input 
-                        required 
-                        value={cardCvc}
-                        onChange={(e) => setCardCvc(e.target.value)}
-                        className="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" 
-                        placeholder="CVC" 
-                        type="text" 
-                        pattern="\d{3}" 
-                        title="3-digit security code"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* UPI option */}
-                <label className="relative block cursor-pointer group">
-                  <input 
-                    checked={paymentMethod === 'UPI'}
-                    onChange={() => setPaymentMethod('UPI')}
-                    className="peer sr-only radio-custom" 
-                    name="payment_method" 
-                    type="radio" 
-                  />
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-outline-variant/50 bg-white transition-all hover:border-primary-container/50">
-                    <div className="flex items-center gap-sm">
-                      <div className="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center shrink-0">
-                        <div className={`w-3 h-3 rounded-full radio-dot transition-transform bg-primary-container ${paymentMethod === 'UPI' ? 'scale-100' : 'scale-0'}`}></div>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-body-md text-body-md font-bold text-on-surface text-sm md:text-base">UPI / Mobile Wallets</span>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant text-xs">GPay, PhonePe, Paytm, BHIM UPI</span>
-                      </div>
-                    </div>
-                    <span className="material-symbols-outlined text-outline text-[24px]">qr_code_scanner</span>
-                  </div>
-                </label>
-
-                {/* UPI inputs */}
-                {paymentMethod === 'UPI' && (
-                  <div className="pl-8 md:pl-12 pr-4 pb-4">
-                    <input 
-                      required 
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      className="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" 
-                      placeholder="Enter UPI ID (e.g. username@upi)" 
-                      type="text" 
-                    />
-                  </div>
-                )}
-
-                {/* Net Banking option */}
-                <label className="relative block cursor-pointer group">
-                  <input 
-                    checked={paymentMethod === 'Banking'}
-                    onChange={() => setPaymentMethod('Banking')}
-                    className="peer sr-only radio-custom" 
-                    name="payment_method" 
-                    type="radio" 
-                  />
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-outline-variant/50 bg-white transition-all hover:border-primary-container/50">
-                    <div className="flex items-center gap-sm">
-                      <div className="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center shrink-0">
-                        <div className={`w-3 h-3 rounded-full radio-dot transition-transform bg-primary-container ${paymentMethod === 'Banking' ? 'scale-100' : 'scale-0'}`}></div>
-                      </div>
-                      <span className="font-body-md text-body-md font-bold text-on-surface text-sm md:text-base">Net Banking</span>
-                    </div>
-                    <span className="material-symbols-outlined text-outline text-[24px]">account_balance</span>
-                  </div>
-                </label>
-              </div>
-            </section>
           </div>
 
           {/* Right side billing details */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-24">
+          <div className="lg:col-span-6">
+            <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-1 hide-scrollbar">
               <section className="glass-panel rounded-[1.25rem] p-6 flex flex-col gap-6">
                 <h2 className="font-headline-md text-headline-md text-on-surface font-bold text-lg border-b border-outline-variant/30 pb-3">Your total bill</h2>
                 
-                {/* Trip mini info */}
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 rounded-lg bg-surface-container-high overflow-hidden shrink-0">
+                {/* Trip mini info stacked */}
+                <div className="space-y-sm">
+                  <div className="w-full h-48 rounded-xl bg-surface-container-high overflow-hidden shrink-0">
                     <img alt={activeTrip} className="w-full h-full object-cover" src={rates.img} />
                   </div>
-                  <div className="flex flex-col justify-center">
-                    <h3 className="font-headline-md text-headline-md text-on-surface font-bold text-base">{activeTrip}</h3>
-                    <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1 text-xs">
+                  <div className="flex flex-col">
+                    <h3 className="font-headline-md text-headline-md text-on-surface font-bold text-xl">{activeTrip}</h3>
+                    <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1 text-sm">
                       <span className="material-symbols-outlined text-[14px]">calendar_today</span> Oct 15 - 20
                     </p>
                   </div>
                 </div>
 
-                {/* Travelers adjust counter */}
-                <div className="space-y-2 py-2 border-b border-outline-variant/30">
-                  <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block font-bold text-xs">Number of Travelers</label>
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={handleDecrement} className="w-10 h-10 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface cursor-pointer">
-                      <span className="material-symbols-outlined text-[18px]">remove</span>
-                    </button>
-                    <input className="input-glass w-full rounded-lg text-center font-body-md font-bold text-body-md text-on-surface focus:outline-none py-1.5" readOnly type="number" value={numTravelers} />
-                    <button type="button" onClick={handleIncrement} className="w-10 h-10 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface cursor-pointer">
-                      <span className="material-symbols-outlined text-[18px]">add</span>
-                    </button>
-                  </div>
-                </div>
+                <div className="h-px bg-outline-variant/30 w-full"></div>
 
                 {/* Breakdowns */}
                 <div className="space-y-3 text-xs md:text-sm">
                   <div className="flex justify-between items-center text-on-surface-variant">
-                    <span>Base Fare ({numTravelers} Adult{numTravelers > 1 ? 's' : ''})</span>
+                    <span>Base Fare</span>
                     <span>₹{billBase.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between items-center text-on-surface-variant">
                     <span>Taxes &amp; Fees (18% GST)</span>
                     <span>₹{billGst.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between items-center text-primary-container font-semibold pt-1">
-                    <span>Promo Code (EARLYBIRD)</span>
-                    <span>-₹{billDiscount.toLocaleString('en-IN')}</span>
-                  </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-center text-primary-container font-semibold pt-1">
+                      <span>Promo Code ({appliedCoupon})</span>
+                      <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="h-px bg-outline-variant/30 w-full"></div>
+                {/* Coupon Code Section */}
+                <div className="space-y-xs py-sm border-t border-b border-outline-variant/30 my-xs">
+                  <label className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block font-bold text-xs">Have a Coupon?</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="input-glass flex-grow rounded-lg px-3 py-2 text-sm focus:outline-none placeholder:text-outline" 
+                      placeholder="Enter Coupon Code (e.g. EARLYBIRD)" 
+                    />
+                    <button 
+                      type="button" 
+                      onClick={handleApplyCoupon}
+                      className="bg-primary hover:bg-primary/95 text-white px-4 py-2 rounded-lg font-bold text-sm cursor-pointer transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponMessage && (
+                    <p className={`text-xs font-semibold mt-1 ${couponStatus === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {couponMessage}
+                    </p>
+                  )}
+                </div>
 
                 <div className="flex justify-between items-end">
                   <span className="font-headline-md text-headline-md text-on-surface font-bold text-lg">Total</span>
@@ -448,7 +337,7 @@ function Checkout() {
             
             <div className="bg-surface-container-low p-4 rounded-xl w-full text-left space-y-2 text-sm border border-outline-variant/20">
               <div className="flex justify-between"><span className="text-on-surface-variant font-medium">Trip:</span><strong className="text-on-surface">{activeTrip}</strong></div>
-              <div className="flex justify-between"><span className="text-on-surface-variant font-medium">Travelers:</span><strong className="text-on-surface">{numTravelers} Adult{numTravelers > 1 ? 's' : ''}</strong></div>
+              <div className="flex justify-between"><span className="text-on-surface-variant font-medium">Travelers:</span><strong className="text-on-surface">1 Adult</strong></div>
               <div className="flex justify-between"><span className="text-on-surface-variant font-medium">Booking Reference:</span><strong className="text-primary font-mono uppercase">{bookingId}</strong></div>
               <div className="flex justify-between"><span className="text-on-surface-variant font-medium">Total Paid:</span><strong className="text-on-surface">₹{billTotal.toLocaleString('en-IN')}</strong></div>
             </div>

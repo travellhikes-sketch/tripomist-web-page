@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>TripoMist - Checkout</title>
+  <title>TripoMist - Payment</title>
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -156,20 +156,19 @@
   <main class="flex-grow pt-lg pb-xl px-sm md:px-margin max-w-7xl mx-auto w-full">
     <!-- Header -->
     <div class="mb-lg text-center md:text-left">
-      <h1 class="font-display-lg text-display-lg text-on-surface mb-xs font-bold">Checkout</h1>
+      <h1 class="font-display-lg text-display-lg text-on-surface mb-xs font-bold">Payment</h1>
       <p class="font-body-lg text-body-lg text-on-surface-variant">Complete your booking securely.</p>
     </div>
     
     <form id="checkout-form" class="grid grid-cols-1 lg:grid-cols-12 gap-margin">
       <!-- Left Side: Form -->
-      <div class="lg:col-span-8 space-y-lg">
+      <div class="lg:col-span-6 space-y-lg">
         
-        <!-- Step 1: Traveler Details -->
+        <!-- Traveler Details -->
         <section class="glass-panel rounded-[1.25rem] p-md md:p-margin relative overflow-hidden">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-primary-container"></div>
           <div class="flex items-center gap-sm mb-md border-b border-outline-variant/30 pb-sm">
-            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-container/10 text-primary font-headline-md font-bold shrink-0">1</span>
-            <h2 class="font-headline-md text-headline-md text-on-surface font-bold text-lg md:text-xl">Traveler Details</h2>
+            <h2 class="font-headline-md text-headline-md text-on-surface font-bold text-lg md:text-xl">Traveller Details</h2>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
@@ -196,151 +195,59 @@
             </div>
           </div>
         </section>
-        
-        <!-- Step 2: Payment Method -->
-        <section class="glass-panel rounded-[1.25rem] p-md md:p-margin relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-1.5 h-full bg-outline-variant/30"></div>
-          <div class="flex items-center gap-sm mb-md border-b border-outline-variant/30 pb-sm">
-            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant font-headline-md font-bold shrink-0">2</span>
-            <h2 class="font-headline-md text-headline-md text-on-surface font-bold text-lg md:text-xl">Payment Method</h2>
-          </div>
-          
-          <div class="space-y-sm">
-            <!-- Credit Card Option -->
-            <label class="relative block cursor-pointer group">
-              <input checked id="pay-card" class="peer sr-only radio-custom" name="payment_method" type="radio" value="Card">
-              <div class="flex items-center justify-between p-4 rounded-lg border border-outline-variant/50 bg-white transition-all hover:border-primary-container/50">
-                <div class="flex items-center gap-sm">
-                  <div class="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center shrink-0">
-                    <div class="w-3 h-3 rounded-full radio-dot scale-0 transition-transform bg-primary-container"></div>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="font-body-md text-body-md font-bold text-on-surface text-sm md:text-base">Credit or Debit Card</span>
-                    <span class="font-label-sm text-label-sm text-on-surface-variant text-xs">Visa, Mastercard, Amex, RuPay</span>
-                  </div>
-                </div>
-                <span class="material-symbols-outlined text-outline text-[24px]">credit_card</span>
-              </div>
-            </label>
-            
-            <!-- Card Form Inputs -->
-            <div id="card-form-container" class="pl-8 md:pl-12 pr-4 pb-4 space-y-md">
-              <div class="space-y-xs">
-                <input id="card-number" class="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="Card Number" type="text" pattern="\d{16}" title="16-digit card number">
-              </div>
-              <div class="grid grid-cols-2 gap-sm">
-                <div class="space-y-xs">
-                  <input id="card-expiry" class="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="MM/YY" type="text" pattern="\d{2}/\d{2}" title="Expiry in MM/YY format">
-                </div>
-                <div class="space-y-xs">
-                  <input id="card-cvc" class="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="CVC" type="text" pattern="\d{3}" title="3-digit security code">
-                </div>
-              </div>
-            </div>
-            
-            <!-- UPI Option -->
-            <label class="relative block cursor-pointer group">
-              <input id="pay-upi" class="peer sr-only radio-custom" name="payment_method" type="radio" value="UPI">
-              <div class="flex items-center justify-between p-4 rounded-lg border border-outline-variant/50 bg-white transition-all hover:border-primary-container/50">
-                <div class="flex items-center gap-sm">
-                  <div class="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center shrink-0">
-                    <div class="w-3 h-3 rounded-full radio-dot scale-0 transition-transform bg-primary-container"></div>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="font-body-md text-body-md font-bold text-on-surface text-sm md:text-base">UPI / Mobile Wallets</span>
-                    <span class="font-label-sm text-label-sm text-on-surface-variant text-xs">GPay, PhonePe, Paytm, BHIM UPI</span>
-                  </div>
-                </div>
-                <span class="material-symbols-outlined text-outline text-[24px]">qr_code_scanner</span>
-              </div>
-            </label>
-
-            <!-- UPI Form (Hidden initially) -->
-            <div id="upi-form-container" class="pl-8 md:pl-12 pr-4 pb-4 space-y-md hidden">
-              <div class="space-y-xs">
-                <input id="upi-id" class="input-glass w-full rounded-lg px-4 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="Enter UPI ID (e.g. username@upi)" type="text">
-              </div>
-            </div>
-            
-            <!-- Net Banking Option -->
-            <label class="relative block cursor-pointer group">
-              <input id="pay-banking" class="peer sr-only radio-custom" name="payment_method" type="radio" value="Banking">
-              <div class="flex items-center justify-between p-4 rounded-lg border border-outline-variant/50 bg-white transition-all hover:border-primary-container/50">
-                <div class="flex items-center gap-sm">
-                  <div class="w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center shrink-0">
-                    <div class="w-3 h-3 rounded-full radio-dot scale-0 transition-transform bg-primary-container"></div>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="font-body-md text-body-md font-bold text-on-surface text-sm md:text-base">Net Banking</span>
-                    <span class="font-label-sm text-label-sm text-on-surface-variant text-xs">All major Indian retail banks</span>
-                  </div>
-                </div>
-                <span class="material-symbols-outlined text-outline text-[24px]">account_balance</span>
-              </div>
-            </label>
-          </div>
-        </section>
       </div>
       
       <!-- Right Side: Order Summary -->
-      <div class="lg:col-span-4">
-        <div class="sticky top-24">
+      <div class="lg:col-span-6">
+        <div class="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-1 hide-scrollbar">
           <section class="glass-panel rounded-[1.25rem] p-md md:p-margin flex flex-col gap-md">
             <h2 class="font-headline-md text-headline-md text-on-surface font-bold text-lg border-b border-outline-variant/30 pb-sm">Your total bill</h2>
             
-            <!-- Trip Details Mini -->
-            <div class="flex gap-sm">
-              <div class="w-24 h-24 rounded-lg bg-surface-container-high overflow-hidden shrink-0">
+            <!-- Trip Details stacked -->
+            <div class="space-y-sm">
+              <div class="w-full h-48 rounded-xl bg-surface-container-high overflow-hidden">
                 <img id="summary-img" alt="Destination" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiD2GO7fIb1ciUdWe0odOedfkhJIm1ur64B1iKghZ8eMdF66RoOvQDTrZz1L1nfURfVdMroAzsjyFtv85EjcF8NXBkccIFhdalQolBp9Yar92MT8MtrG9wQGjuK5B7wctNIUhR54TEU7PYNv323Svs0dPfNfV6sfFdjHZinMcri0e9lDmEaHhHTP1F5YA25LoETYvVR1Dnn-8UNP4ShswwHgnmwn3Pw1YqRx1ECDm16ijYYriT-jcGpT9--pyJ_OQkKTc7lwXlnByS">
               </div>
-              <div class="flex flex-col justify-center">
-                <h3 id="summary-title" class="font-headline-md text-headline-md text-on-surface font-bold text-[18px]">Spiti Valley Expedition</h3>
+              <div class="flex flex-col">
+                <h3 id="summary-title" class="font-headline-md text-headline-md text-on-surface font-bold text-xl">Spiti Valley Expedition</h3>
                 <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1 text-sm">
                   <span class="material-symbols-outlined text-[16px]">calendar_today</span> Oct 15 - 20
                 </p>
               </div>
             </div>
             
-            <!-- Traveler Counter -->
-            <div class="space-y-xs py-sm border-b border-outline-variant/30">
-              <label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block font-bold text-xs">Number of Travelers</label>
-              <div class="flex items-center gap-xs">
-                <button type="button" id="btn-decrement" class="w-10 h-10 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">remove</span>
-                </button>
-                <input id="num-travelers" class="input-glass w-full rounded-lg text-center font-body-md font-bold text-body-md text-on-surface focus:outline-none py-1.5" readonly="" type="number" value="1">
-                <button type="button" id="btn-increment" class="w-10 h-10 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">add</span>
-                </button>
-              </div>
-            </div>
+            <div class="h-px bg-outline-variant/30 w-full"></div>
             
             <!-- Pricing Breakdown -->
             <div class="space-y-sm text-sm">
               <div class="flex justify-between items-center font-body-md text-on-surface-variant">
-                <span id="label-base-fare">Base Fare (1 Adult)</span>
+                <span id="label-base-fare">Base Fare</span>
                 <span id="price-base-fare">₹21,500</span>
               </div>
               <div class="flex justify-between items-center font-body-md text-on-surface-variant">
                 <span>Taxes &amp; Fees (18% GST)</span>
                 <span id="price-gst">₹3,870</span>
               </div>
-              <div class="flex justify-between items-center font-body-md text-primary-container font-semibold pt-xs">
-                <span>Promo Code (EARLYBIRD)</span>
-                <span id="price-discount">-₹371</span>
+              <div id="discount-row" class="flex justify-between items-center font-body-md text-primary-container font-semibold pt-xs hidden">
+                <span>Promo Code (<span id="discount-code"></span>)</span>
+                <span id="price-discount">-₹0</span>
               </div>
             </div>
             
-            <div class="h-px bg-outline-variant/30 w-full"></div>
+            <!-- Coupon Code Section -->
+            <div class="space-y-xs py-sm border-t border-b border-outline-variant/30 my-xs">
+              <label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block font-bold text-xs">Have a Coupon?</label>
+              <div class="flex gap-2">
+                <input type="text" id="coupon-code-input" class="input-glass flex-grow rounded-lg px-3 py-2 text-sm focus:outline-none placeholder:text-outline" placeholder="Enter Coupon Code (e.g. EARLYBIRD)">
+                <button type="button" id="apply-coupon" class="bg-primary hover:bg-primary/95 text-white px-4 py-2 rounded-lg font-bold text-sm cursor-pointer transition-colors">Apply</button>
+              </div>
+              <p id="coupon-msg" class="text-xs font-semibold mt-1 hidden"></p>
+            </div>
             
             <div class="flex justify-between items-end">
               <span class="font-headline-md text-headline-md text-on-surface font-bold text-lg">Total</span>
-              <span id="price-total" class="font-display-lg text-display-lg text-primary text-[30px] font-bold">₹24,999</span>
+              <span id="price-total" class="font-display-lg text-display-lg text-primary text-[30px] font-bold">₹25,370</span>
             </div>
-            <p class="font-label-sm text-label-sm text-on-surface-variant/70 text-center mt-xs text-[11px]">
-              Prices include all applicable taxes.
-            </p>
-            
             <!-- Action Button -->
             <button type="submit" class="btn-gradient w-full py-4 rounded-xl font-headline-md text-headline-md font-bold text-[16px] mt-sm flex justify-center items-center gap-2 cursor-pointer shadow-md">
               <span class="material-symbols-outlined text-[20px]">lock</span> Pay Securely
@@ -470,90 +377,58 @@
     document.getElementById('summary-title').textContent = activeTrip;
 
     // State Variables
-    let travelersCount = 1;
+    let discountRateApplied = 0;
+    let couponApplied = "";
 
-    const numInput = document.getElementById('num-travelers');
-    const btnIncrement = document.getElementById('btn-increment');
-    const btnDecrement = document.getElementById('btn-decrement');
-
-    const lblBaseFare = document.getElementById('label-base-fare');
     const valBaseFare = document.getElementById('price-base-fare');
     const valGst = document.getElementById('price-gst');
     const valDiscount = document.getElementById('price-discount');
     const valTotal = document.getElementById('price-total');
+    
+    const couponInput = document.getElementById('coupon-code-input');
+    const btnApplyCoupon = document.getElementById('apply-coupon');
+    const discountRow = document.getElementById('discount-row');
+    const discountCodeLabel = document.getElementById('discount-code');
+    const couponMsg = document.getElementById('coupon-msg');
 
     // Update Billing totals
     function updateBill() {
-      numInput.value = travelersCount;
-      lblBaseFare.textContent = `Base Fare (${travelersCount} Adult${travelersCount > 1 ? 's' : ''})`;
-      
-      const currentBase = baseRate * travelersCount;
-      const currentGst = gstRate * travelersCount;
-      const currentDiscount = discountRate * travelersCount;
-      const currentTotal = (currentBase + currentGst) - currentDiscount;
+      const currentBase = baseRate;
+      const currentGst = gstRate;
+      const currentTotal = (currentBase + currentGst) - discountRateApplied;
 
       valBaseFare.textContent = '₹' + currentBase.toLocaleString('en-IN');
       valGst.textContent = '₹' + currentGst.toLocaleString('en-IN');
-      valDiscount.textContent = '-₹' + currentDiscount.toLocaleString('en-IN');
+      if (discountRateApplied > 0) {
+        discountRow.classList.remove('hidden');
+        discountCodeLabel.textContent = couponApplied;
+        valDiscount.textContent = '-₹' + discountRateApplied.toLocaleString('en-IN');
+      } else {
+        discountRow.classList.add('hidden');
+      }
       valTotal.textContent = '₹' + currentTotal.toLocaleString('en-IN');
     }
 
-    btnIncrement.addEventListener('click', () => {
-      travelersCount++;
-      updateBill();
-    });
-
-    btnDecrement.addEventListener('click', () => {
-      if (travelersCount > 1) {
-        travelersCount--;
+    btnApplyCoupon.addEventListener('click', () => {
+      const code = couponInput.value.trim().toUpperCase();
+      if (code === 'EARLYBIRD') {
+        discountRateApplied = 2000;
+        couponApplied = code;
+        couponMsg.textContent = "Coupon applied successfully!";
+        couponMsg.className = "text-xs font-semibold mt-1 text-emerald-600";
+        couponMsg.classList.remove('hidden');
         updateBill();
-      }
-    });
-
-    // Payment Form toggle scripts
-    const payCard = document.getElementById('pay-card');
-    const payUpi = document.getElementById('pay-upi');
-    const payBanking = document.getElementById('pay-banking');
-
-    const cardForm = document.getElementById('card-form-container');
-    const upiForm = document.getElementById('upi-form-container');
-
-    const cardNumInp = document.getElementById('card-number');
-    const cardExpInp = document.getElementById('card-expiry');
-    const cardCvcInp = document.getElementById('card-cvc');
-    const upiIdInp = document.getElementById('upi-id');
-
-    function selectPaymentMethod() {
-      if (payCard.checked) {
-        cardForm.classList.remove('hidden');
-        upiForm.classList.add('hidden');
-        cardNumInp.setAttribute('required', '');
-        cardExpInp.setAttribute('required', '');
-        cardCvcInp.setAttribute('required', '');
-        upiIdInp.removeAttribute('required');
-      } else if (payUpi.checked) {
-        cardForm.classList.add('hidden');
-        upiForm.classList.remove('hidden');
-        cardNumInp.removeAttribute('required');
-        cardExpInp.removeAttribute('required');
-        cardCvcInp.removeAttribute('required');
-        upiIdInp.setAttribute('required', '');
+      } else if (code === "") {
+        couponMsg.textContent = "Please enter a coupon code.";
+        couponMsg.className = "text-xs font-semibold mt-1 text-red-500";
+        couponMsg.classList.remove('hidden');
       } else {
-        cardForm.classList.add('hidden');
-        upiForm.classList.add('hidden');
-        cardNumInp.removeAttribute('required');
-        cardExpInp.removeAttribute('required');
-        cardCvcInp.removeAttribute('required');
-        upiIdInp.removeAttribute('required');
+        couponMsg.textContent = "Invalid coupon code.";
+        couponMsg.className = "text-xs font-semibold mt-1 text-red-500";
+        couponMsg.classList.remove('hidden');
       }
-    }
-
-    [payCard, payUpi, payBanking].forEach(radio => {
-      radio.addEventListener('change', selectPaymentMethod);
     });
 
-    // Initial load
-    selectPaymentMethod();
     updateBill();
 
     // Form submission confirmation modal
@@ -568,10 +443,9 @@
       const travelerPhone = document.getElementById('traveler-phone').value;
       
       // Calculate current total amount in paise (Rupees * 100)
-      const currentBase = baseRate * travelersCount;
-      const currentGst = gstRate * travelersCount;
-      const currentDiscount = discountRate * travelersCount;
-      const currentTotal = (currentBase + currentGst) - currentDiscount;
+      const currentBase = baseRate;
+      const currentGst = gstRate;
+      const currentTotal = (currentBase + currentGst) - discountRateApplied;
       const amountInPaise = currentTotal * 100;
       
       const options = {
@@ -584,7 +458,7 @@
         "handler": function (response) {
           // Update success details
           document.getElementById('success-trip').textContent = activeTrip;
-          document.getElementById('success-count').textContent = `${travelersCount} Adult${travelersCount > 1 ? 's' : ''}`;
+          document.getElementById('success-count').textContent = `1 Adult`;
           document.getElementById('success-total').textContent = valTotal.textContent;
           document.getElementById('success-email').textContent = travelerEmail;
           
