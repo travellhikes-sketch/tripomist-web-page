@@ -36,7 +36,7 @@ function RefundPolicy() {
                   <thead>
                     <tr className="bg-[#faf8ff] border-b border-[#bec8d2]/30">
                       <th className="p-3 font-semibold text-on-surface">Cancellation Timeframe</th>
-                      <th class="p-3 font-semibold text-on-surface">Refundable Amount</th>
+                      <th className="p-3 font-semibold text-on-surface">Refundable Amount</th>
                       <th className="p-3 font-semibold text-on-surface">Cancellation Charges</th>
                     </tr>
                   </thead>

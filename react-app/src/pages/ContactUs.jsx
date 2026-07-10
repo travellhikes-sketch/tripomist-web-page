@@ -74,7 +74,7 @@ function ContactUs() {
               <div>
                 <h3 className="font-bold text-lg mb-1 text-on-surface">Email Address</h3>
                 <a href="mailto:contact@tripomist.com" className="text-[#006591] font-semibold hover:underline">contact@tripomist.com</a>
-                <p class="text-xs text-[#3e4850] mt-1">We typically reply within 24 hours.</p>
+                <p className="text-xs text-[#3e4850] mt-1">We typically reply within 24 hours.</p>
               </div>
             </div>
           </div>

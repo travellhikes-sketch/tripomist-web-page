@@ -8,6 +8,8 @@ node_modules/
 
 # Production
 /dist
+react-app/dist/
+console_logs_react.json
 
 # Misc
 .DS_Store

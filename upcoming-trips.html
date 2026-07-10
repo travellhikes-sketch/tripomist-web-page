@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <script src="silence-tailwind.js"></script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script id="tailwind-config">
     try {
@@ -123,10 +124,6 @@
       <!-- Brand & Search -->
       <div class="flex items-center gap-6">
         <a class="font-headline-md text-headline-md font-bold text-primary" href="index.html">TripoMist</a>
-        <div class="hidden md:flex items-center bg-surface-container-low px-4 py-1.5 rounded-full border border-outline-variant/20">
-          <span class="material-symbols-outlined text-outline text-[20px] mr-2">search</span>
-          <input onkeydown="if(event.key === 'Enter') window.location.href='group-trips.html?search=' + this.value" class="bg-transparent border-none focus:ring-0 text-sm w-48 text-on-surface placeholder:text-outline-variant outline-none" placeholder="Search trips..." type="text">
-        </div>
       </div>
       
       <!-- Navigation Links -->
@@ -172,11 +169,23 @@
         <p class="font-body-lg text-body-lg text-white/90 max-w-2xl mx-auto mb-6">Discover the perfect short escapes with like-minded travelers. Expertly curated itineraries designed for adventure and connection.</p>
         
         <!-- Filter Controls -->
-        <div class="flex items-center justify-center gap-sm mt-md">
+        <div class="flex flex-col items-center justify-center gap-4 mt-8">
           <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/20">
             <button id="filter-all" class="px-5 py-2 rounded-full bg-primary text-white font-semibold transition-all shadow-sm cursor-pointer">All Trips</button>
             <button id="filter-1n2d" class="px-5 py-2 rounded-full text-white/90 hover:bg-white/20 transition-all font-medium cursor-pointer">1N/2D</button>
             <button id="filter-2n3d" class="px-5 py-2 rounded-full text-white/90 hover:bg-white/20 transition-all font-medium cursor-pointer">2N/3D</button>
+          </div>
+          
+          <!-- Search Input -->
+          <div class="relative flex items-center bg-white border border-outline-variant/60 rounded-xl px-4 py-2.5 max-w-sm w-full shadow-md focus-within:ring-2 focus-within:ring-primary/20">
+            <span class="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
+            <input 
+              id="trips-search-input" 
+              oninput="handleSearch(this.value)"
+              class="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
+              placeholder="Search upcoming trips..." 
+              type="text" 
+            />
           </div>
         </div>
       </div>
@@ -304,48 +313,56 @@
     }
 
     // Filter controls
+    let activeDuration = 'All';
+    let searchQuery = '';
+
     const btnAll = document.getElementById('filter-all');
     const btn1n2d = document.getElementById('filter-1n2d');
     const btn2n3d = document.getElementById('filter-2n3d');
     const cards = document.querySelectorAll('#trips-grid > div');
 
-    function selectFilter(selectedBtn) {
+    function applyFilters() {
+      cards.forEach(card => {
+        const duration = card.getAttribute('data-duration');
+        const name = card.querySelector('h3').textContent.toLowerCase();
+        
+        let show = true;
+        if (activeDuration !== 'All' && duration !== activeDuration) show = false;
+        if (searchQuery && !name.includes(searchQuery)) show = false;
+        
+        card.style.display = show ? 'flex' : 'none';
+      });
+    }
+
+    function selectFilter(selectedBtn, duration) {
+      activeDuration = duration;
       [btnAll, btn1n2d, btn2n3d].forEach(btn => {
         btn.className = "px-5 py-2 rounded-full text-white/90 hover:bg-white/20 transition-all font-medium cursor-pointer";
       });
       selectedBtn.className = "px-5 py-2 rounded-full bg-primary text-white font-semibold transition-all shadow-sm cursor-pointer";
+      applyFilters();
     }
 
-    if(btnAll) {
-      btnAll.addEventListener('click', () => {
-        selectFilter(btnAll);
-        cards.forEach(card => card.style.display = 'flex');
-      });
+    if (btnAll) btnAll.addEventListener('click', () => selectFilter(btnAll, 'All'));
+    if (btn1n2d) btn1n2d.addEventListener('click', () => selectFilter(btn1n2d, '1N/2D'));
+    if (btn2n3d) btn2n3d.addEventListener('click', () => selectFilter(btn2n3d, '2N/3D'));
+
+    window.handleSearch = function(val) {
+      searchQuery = val.toLowerCase().trim();
+      applyFilters();
     }
-    if(btn1n2d) {
-      btn1n2d.addEventListener('click', () => {
-        selectFilter(btn1n2d);
-        cards.forEach(card => {
-          if (card.getAttribute('data-duration') === '1N/2D') {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    }
-    if(btn2n3d) {
-      btn2n3d.addEventListener('click', () => {
-        selectFilter(btn2n3d);
-        cards.forEach(card => {
-          if (card.getAttribute('data-duration') === '2N/3D') {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get('search') || params.get('query');
+      if (searchParam) {
+        const searchInput = document.getElementById('trips-search-input');
+        if (searchInput) {
+          searchInput.value = searchParam;
+          handleSearch(searchParam);
+        }
+      }
+    });
 
     // Hover effect fallback animation
     document.querySelectorAll('.trip-card').forEach(card => {

@@ -6,6 +6,7 @@
   <title>TripoMist - Login & Sign Up</title>
   
   <!-- CSS Tailwind Play CDN -->
+  <script src="silence-tailwind.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Fonts & Icons -->
@@ -224,22 +225,76 @@
       });
     }
 
+    // Safe storage helper supporting localStorage -> sessionStorage -> window.name fallbacks
+    let storageType = 'local';
+    try {
+      const testKey = '__storage_test__';
+      window.localStorage.setItem(testKey, testKey);
+      window.localStorage.removeItem(testKey);
+    } catch (e) {
+      try {
+        const testKey = '__storage_test__';
+        window.sessionStorage.setItem(testKey, testKey);
+        window.sessionStorage.removeItem(testKey);
+        storageType = 'session';
+      } catch (e2) {
+        storageType = 'name';
+      }
+    }
+
+    const safeStorage = {
+      getItem: (key) => {
+        if (storageType === 'local') {
+          try { const val = window.localStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+        }
+        try { const val = window.sessionStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+        try {
+          const data = JSON.parse(window.name || '{}');
+          return data[key] || null;
+        } catch(e) {
+          return null;
+        }
+      },
+      setItem: (key, value) => {
+        if (storageType === 'local') {
+          try { window.localStorage.setItem(key, value); } catch (e) {}
+        }
+        try { window.sessionStorage.setItem(key, value); } catch (e) {}
+        try {
+          const data = JSON.parse(window.name || '{}');
+          data[key] = value;
+          window.name = JSON.stringify(data);
+        } catch(e) {}
+      },
+      removeItem: (key) => {
+        if (storageType === 'local') {
+          try { window.localStorage.removeItem(key); } catch (e) {}
+        }
+        try { window.sessionStorage.removeItem(key); } catch (e) {}
+        try {
+          const data = JSON.parse(window.name || '{}');
+          delete data[key];
+          window.name = JSON.stringify(data);
+        } catch(e) {}
+      }
+    };
+
     let supabaseClient = null;
     let useRealSupabase = false;
 
     window.enableMockMode = function() {
-      localStorage.setItem('use_mock_auth', 'true');
+      safeStorage.setItem('use_mock_auth', 'true');
       window.location.reload();
     };
 
     window.disableMockMode = function() {
-      localStorage.removeItem('use_mock_auth');
+      safeStorage.removeItem('use_mock_auth');
       window.location.reload();
     };
 
     // Bootstrap real Supabase if key is configured
     async function bootstrap() {
-      if (localStorage.getItem('use_mock_auth') === 'true') {
+      if (safeStorage.getItem('use_mock_auth') === 'true') {
         const banner = document.getElementById('demo-banner');
         if (banner) banner.classList.remove('hidden');
         console.log("Offline Mock/Demo Mode active by user override.");
@@ -248,8 +303,16 @@
       try {
         await loadScript('supabase-config.js');
         if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== "") {
-          await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
-          supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+          await loadScript('supabase-cdn.js');
+          
+          const clientOptions = {
+            auth: {
+              storage: safeStorage,
+              persistSession: !useMemoryStorage,
+              detectSessionInUrl: true
+            }
+          };
+          supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, clientOptions);
           useRealSupabase = true;
           console.log("Login page initialized with real Supabase Auth.");
         }
@@ -317,7 +380,7 @@
               resetButton(originalIcon, "Sign Up");
             } else {
               showAlert("Account created successfully! Logging you in...", "success");
-              localStorage.setItem('mock_current_user', JSON.stringify(data.user));
+              safeStorage.setItem('mock_current_user', JSON.stringify(data.user));
               window.dispatchEvent(new Event('auth-state-change'));
               setTimeout(() => { redirectUser(); }, 1200);
             }
@@ -337,7 +400,7 @@
               resetButton(originalIcon, "Continue");
             } else {
               showAlert("Logged in successfully!", "success");
-              localStorage.setItem('mock_current_user', JSON.stringify(data.user));
+              safeStorage.setItem('mock_current_user', JSON.stringify(data.user));
               window.dispatchEvent(new Event('auth-state-change'));
               setTimeout(() => { redirectUser(); }, 1000);
             }
@@ -348,7 +411,7 @@
         }
       } else {
         // Mock Auth Flow (LocalStorage)
-        const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+        const users = JSON.parse(safeStorage.getItem('mock_users') || '[]');
         await new Promise(resolve => setTimeout(resolve, 600)); // Latency simulation
         
         if (isSignUpMode.value) {
@@ -365,8 +428,8 @@
           };
           
           users.push({ email: email.toLowerCase(), password, user: newUser });
-          localStorage.setItem('mock_users', JSON.stringify(users));
-          localStorage.setItem('mock_current_user', JSON.stringify(newUser));
+          safeStorage.setItem('mock_users', JSON.stringify(users));
+          safeStorage.setItem('mock_current_user', JSON.stringify(newUser));
           
           showAlert("Account created successfully! Logging you in...", "success");
           window.dispatchEvent(new Event('auth-state-change'));
@@ -382,7 +445,7 @@
             return;
           }
           
-          localStorage.setItem('mock_current_user', JSON.stringify(found.user));
+          safeStorage.setItem('mock_current_user', JSON.stringify(found.user));
           showAlert("Logged in successfully!", "success");
           window.dispatchEvent(new Event('auth-state-change'));
           
@@ -426,7 +489,7 @@
             email: 'google-traveler@example.com',
             user_metadata: { full_name: 'Google Traveler' }
           };
-          localStorage.setItem('mock_current_user', JSON.stringify(mockUser));
+          safeStorage.setItem('mock_current_user', JSON.stringify(mockUser));
           showAlert("Logged in with Google (Mock) successfully!", "success");
           window.dispatchEvent(new Event('auth-state-change'));
           setTimeout(() => {

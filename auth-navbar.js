@@ -34,6 +34,60 @@
     });
   }
 
+  // Safe storage helper supporting localStorage -> sessionStorage -> window.name fallbacks
+  let storageType = 'local';
+  try {
+    const testKey = '__storage_test__';
+    window.localStorage.setItem(testKey, testKey);
+    window.localStorage.removeItem(testKey);
+  } catch (e) {
+    try {
+      const testKey = '__storage_test__';
+      window.sessionStorage.setItem(testKey, testKey);
+      window.sessionStorage.removeItem(testKey);
+      storageType = 'session';
+    } catch (e2) {
+      storageType = 'name';
+    }
+  }
+
+  const safeStorage = {
+    getItem: (key) => {
+      if (storageType === 'local') {
+        try { const val = window.localStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+      }
+      try { const val = window.sessionStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+      try {
+        const data = JSON.parse(window.name || '{}');
+        return data[key] || null;
+      } catch(e) {
+        return null;
+      }
+    },
+    setItem: (key, value) => {
+      if (storageType === 'local') {
+        try { window.localStorage.setItem(key, value); } catch (e) {}
+      }
+      try { window.sessionStorage.setItem(key, value); } catch (e) {}
+      try {
+        const data = JSON.parse(window.name || '{}');
+        data[key] = value;
+        window.name = JSON.stringify(data);
+      } catch(e) {}
+    },
+    removeItem: (key) => {
+      if (storageType === 'local') {
+        try { window.localStorage.removeItem(key); } catch (e) {}
+      }
+      try { window.sessionStorage.removeItem(key); } catch (e) {}
+      try {
+        const data = JSON.parse(window.name || '{}');
+        delete data[key];
+        window.name = JSON.stringify(data);
+      } catch(e) {}
+    }
+  };
+
   let supabaseClient = null;
   let useRealSupabase = false;
 
@@ -49,7 +103,7 @@
         }
       }
       // Fallback to local storage mock user
-      return JSON.parse(localStorage.getItem('mock_current_user') || 'null');
+      return JSON.parse(safeStorage.getItem('mock_current_user') || 'null');
     },
     signOut: async function() {
       if (useRealSupabase && supabaseClient) {
@@ -59,7 +113,7 @@
           console.error("Supabase signOut error:", e);
         }
       }
-      localStorage.removeItem('mock_current_user');
+      safeStorage.removeItem('mock_current_user');
       window.dispatchEvent(new Event('auth-state-change'));
     }
   };
@@ -78,9 +132,19 @@
       
       // 2. Check if a real Supabase Anon Key is defined
       if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.SUPABASE_ANON_KEY !== "") {
-        console.log("Supabase configured. Loading Supabase CDN client...");
-        await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
-        supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        console.log("Supabase configured. Loading local Supabase client...");
+        await loadScript('supabase-cdn.js');
+        
+        // Pass custom storage options to avoid tracking prevention warnings in iframe/sandboxed contexts
+        const clientOptions = {
+          auth: {
+            storage: safeStorage,
+            persistSession: !useMemoryStorage,
+            detectSessionInUrl: true
+          }
+        };
+        supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, clientOptions);
+        window.supabaseClientInstance = supabaseClient;
         useRealSupabase = true;
         console.log("Supabase client initialized successfully.");
       } else {
@@ -125,6 +189,9 @@
               <p class="text-xs font-bold text-on-surface truncate">${user.user_metadata?.full_name || "Traveler"}</p>
               <p class="text-[10px] text-on-surface-variant truncate">${user.email}</p>
             </div>
+            <a href="profile.html" class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2 cursor-pointer no-underline block border-none bg-transparent">
+              <span class="material-symbols-outlined text-sm">person</span> Profile Dashboard
+            </a>
             <button id="desktop-logout-btn" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-surface-container-low transition-colors flex items-center gap-2 cursor-pointer border-none bg-transparent">
               <span class="material-symbols-outlined text-sm">logout</span> Logout
             </button>
@@ -173,6 +240,9 @@
             <div class="px-1 py-1 text-sm font-semibold text-on-surface-variant">
               Hi, ${user.user_metadata?.full_name || user.email.split('@')[0]}
             </div>
+            <a href="profile.html" class="w-full bg-slate-50 text-slate-700 border border-slate-200 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 cursor-pointer no-underline text-center">
+              <span class="material-symbols-outlined text-sm">person</span> Profile Dashboard
+            </a>
             <button id="mobile-logout-btn" class="w-full bg-red-50 text-red-500 border border-red-200 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 cursor-pointer">
               <span class="material-symbols-outlined">logout</span> Logout
             </button>

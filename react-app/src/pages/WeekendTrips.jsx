@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
 function WeekendTrips() {
+  const location = useLocation()
   const [filter, setFilter] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const trips = [
     {
@@ -33,15 +35,26 @@ function WeekendTrips() {
     }
   ]
 
-  const filteredTrips = filter === 'All' 
-    ? trips 
-    : trips.filter(t => t.duration === filter)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const q = params.get('search') || params.get('query') || ''
+    if (q) setSearchQuery(q)
+  }, [location])
+
+  const filteredTrips = trips.filter(t => {
+    if (filter !== 'All' && t.duration !== filter) return false
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      return t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q)
+    }
+    return true
+  })
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-grow flex flex-col items-center w-full">
+      <main className="flex-grow flex flex-col items-center w-full bg-background">
         {/* Hero Section */}
         <section className="w-full relative py-xl px-4 md:px-8 flex justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
@@ -52,27 +65,41 @@ function WeekendTrips() {
             <h1 className="font-display-lg text-display-lg md:font-display-lg text-primary font-bold">Weekend Trips</h1>
             <p className="font-body-lg text-body-lg max-w-2xl text-on-surface-variant">Discover quick, refreshing getaways. Perfect for recharging your spirit without the need for long planning.</p>
             
-            {/* Filters */}
-            <div className="glass-card mt-8 p-4 rounded-xl flex flex-wrap gap-4 justify-center items-center">
-              <span className="font-label-sm text-label-sm text-on-surface-variant mr-2">Duration:</span>
-              <button 
-                onClick={() => setFilter('All')} 
-                className={`px-5 py-2 rounded-lg font-body-md transition-all duration-200 cursor-pointer ${filter === 'All' ? 'bg-primary text-white shadow-sm' : 'bg-white border border-outline-variant/40 text-on-surface-variant hover:border-primary/50 hover:text-primary'}`}
-              >
-                All
-              </button>
-              <button 
-                onClick={() => setFilter('1N/2D')} 
-                className={`px-5 py-2 rounded-lg font-body-md transition-all duration-200 cursor-pointer ${filter === '1N/2D' ? 'bg-primary text-white shadow-sm' : 'bg-white border border-outline-variant/40 text-on-surface-variant hover:border-primary/50 hover:text-primary'}`}
-              >
-                1N/2D
-              </button>
-              <button 
-                onClick={() => setFilter('2N/3D')} 
-                className={`px-5 py-2 rounded-lg font-body-md transition-all duration-200 cursor-pointer ${filter === '2N/3D' ? 'bg-primary text-white shadow-sm' : 'bg-white border border-outline-variant/40 text-on-surface-variant hover:border-primary/50 hover:text-primary'}`}
-              >
-                2N/3D
-              </button>
+            {/* Filter and Search Layout */}
+            <div className="flex flex-col items-center justify-center gap-4 mt-8 w-full max-w-md">
+              <div className="glass-card p-4 rounded-xl flex flex-wrap gap-4 justify-center items-center">
+                <span className="font-label-sm text-label-sm text-on-surface-variant mr-2">Duration:</span>
+                <button 
+                  onClick={() => setFilter('All')} 
+                  className={`px-5 py-2 rounded-lg font-body-md transition-all duration-200 cursor-pointer ${filter === 'All' ? 'bg-primary text-white shadow-sm border-none' : 'bg-white border border-outline-variant/40 text-on-surface-variant hover:border-primary/50 hover:text-primary'}`}
+                >
+                  All
+                </button>
+                <button 
+                  onClick={() => setFilter('1N/2D')} 
+                  className={`px-5 py-2 rounded-lg font-body-md transition-all duration-200 cursor-pointer ${filter === '1N/2D' ? 'bg-primary text-white shadow-sm border-none' : 'bg-white border border-outline-variant/40 text-on-surface-variant hover:border-primary/50 hover:text-primary'}`}
+                >
+                  1N/2D
+                </button>
+                <button 
+                  onClick={() => setFilter('2N/3D')} 
+                  className={`px-5 py-2 rounded-lg font-body-md transition-all duration-200 cursor-pointer ${filter === '2N/3D' ? 'bg-primary text-white shadow-sm border-none' : 'bg-white border border-outline-variant/40 text-on-surface-variant hover:border-primary/50 hover:text-primary'}`}
+                >
+                  2N/3D
+                </button>
+              </div>
+
+              {/* Search input field */}
+              <div className="relative flex items-center bg-white border border-outline-variant/60 rounded-xl px-4 py-2.5 w-full shadow-md focus-within:ring-2 focus-within:ring-primary/20">
+                <span className="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
+                <input 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
+                  placeholder="Search weekend trips by destination..." 
+                  type="text" 
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -91,8 +118,8 @@ function WeekendTrips() {
                 <div className="flex justify-between items-center mt-auto pt-4 border-t border-outline-variant/20">
                   <span className="font-headline-md text-headline-md text-primary font-bold">₹{trip.price.toLocaleString('en-IN')}</span>
                   <div className="flex gap-2">
-                    <Link to={`/itinerary/${encodeURIComponent(trip.name)}?price=${trip.price}`} className="border border-outline-variant hover:border-primary hover:text-primary px-3 py-1.5 rounded-lg text-sm transition-colors">Itinerary</Link>
-                    <Link to={`/checkout?trip=${encodeURIComponent(trip.name)}&price=${trip.price}`} className="bg-gradient-to-r from-[#0EA5E9] to-[#7DD3FC] text-white px-4 py-1.5 rounded-lg font-label-sm text-label-sm hover:opacity-95 transition-opacity font-bold">Book Now</Link>
+                    <Link to={`/itinerary/${trip.id.toLowerCase().replace(/\s+/g, '-')}`} className="border border-outline-variant hover:border-primary hover:text-primary px-3 py-1.5 rounded-lg text-sm transition-colors no-underline text-on-surface flex items-center">Itinerary</Link>
+                    <Link to={`/checkout?trip=${encodeURIComponent(trip.name)}&price=${trip.price}`} className="bg-primary text-white px-4 py-1.5 rounded-lg font-label-sm text-label-sm hover:opacity-95 transition-opacity font-bold no-underline flex items-center">Book Now</Link>
                   </div>
                 </div>
               </div>

@@ -47,23 +47,12 @@ function Navbar() {
   return (
     <nav className="bg-white/80 dark:bg-surface-dim/80 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/30 shadow-sm transition-all duration-300">
       <div className="flex justify-between items-center w-full px-4 md:px-8 py-3 max-w-7xl mx-auto">
-        {/* Brand & Search */}
+        {/* Brand */}
         <div className="flex items-center gap-6">
           <Link className="font-headline-md text-headline-md font-bold tracking-tight text-primary flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
             <img alt="TripoMist Logo" className="h-10 w-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY" />
             TripoMist
           </Link>
-          <div className="relative flex items-center">
-            <span className="material-symbols-outlined absolute left-4 text-on-surface-variant opacity-30">search</span>
-            <input
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={handleSearchSubmit}
-              className="bg-surface-container-low border-none rounded-full py-1.5 pl-12 pr-4 w-40 md:w-64 font-body-md text-sm focus:ring-2 focus:ring-primary/20 outline-none" 
-              placeholder="Search trips..." 
-              type="text" 
-            />
-          </div>
         </div>
         
         {/* Desktop Nav Links */}
@@ -99,16 +88,23 @@ function Navbar() {
               {showUserDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-surface-container-high rounded-xl border border-outline-variant/30 shadow-xl py-2 z-50 animate-fade-in">
                   <div className="px-4 py-2 border-b border-outline-variant/20">
-                    <p className="text-xs font-bold text-on-surface truncate">
+                    <p class="text-xs font-bold text-on-surface truncate">
                       {user.user_metadata?.full_name || "Traveler"}
                     </p>
-                    <p className="text-[10px] text-on-surface-variant truncate">
+                    <p class="text-[10px] text-on-surface-variant truncate">
                       {user.email}
                     </p>
                   </div>
+                  <Link 
+                    to="/profile" 
+                    onClick={() => setShowUserDropdown(false)} 
+                    className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2 no-underline block"
+                  >
+                    <span className="material-symbols-outlined text-sm">person</span> Profile Dashboard
+                  </Link>
                   <button 
                     onClick={handleLogout} 
-                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-surface-container-low transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-surface-container-low transition-colors flex items-center gap-2 border-none bg-transparent"
                   >
                     <span className="material-symbols-outlined text-sm">logout</span> Logout
                   </button>
@@ -143,6 +139,13 @@ function Navbar() {
                 <div className="px-1 py-1 text-sm font-semibold text-on-surface-variant">
                   Hi, {user.user_metadata?.full_name || user.email.split('@')[0]}
                 </div>
+                <Link 
+                  to="/profile" 
+                  onClick={() => setIsOpen(false)} 
+                  className="w-full bg-slate-50 text-slate-700 border border-slate-200 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 no-underline text-center block"
+                >
+                  <span className="material-symbols-outlined text-sm">person</span> Profile Dashboard
+                </Link>
                 <button 
                   onClick={() => { handleLogout(); setIsOpen(false); }} 
                   className="w-full bg-red-50 text-red-500 border border-red-200 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2"

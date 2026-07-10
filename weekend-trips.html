@@ -8,6 +8,7 @@
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+  <script src="silence-tailwind.js"></script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script id="tailwind-config">
     try {
@@ -141,10 +142,6 @@
           <img alt="TripoMist Logo" class="h-10 w-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY">
           TripoMist
         </a>
-        <div class="relative flex items-center">
-          <span class="material-symbols-outlined absolute left-4 text-on-surface-variant opacity-30">search</span>
-          <input onkeydown="if(event.key === 'Enter') window.location.href='group-trips.html?search=' + this.value" class="bg-surface-container-low border-none rounded-full py-1.5 pl-12 pr-4 w-64 font-body-md text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Search trips..." type="text">
-        </div>
       </div>
       
       <!-- Desktop Links -->
@@ -191,11 +188,25 @@
         <p class="font-body-lg text-body-lg max-w-2xl text-on-surface-variant">Discover quick, refreshing getaways. Perfect for recharging your spirit without the need for long planning.</p>
         
         <!-- Filters -->
-        <div class="glass-card mt-8 p-4 rounded-xl flex flex-wrap gap-4 justify-center items-center">
-          <span class="font-label-sm text-label-sm text-on-surface-variant mr-2">Duration:</span>
-          <button id="filter-all" class="px-5 py-2 rounded-lg bg-primary text-white font-body-md shadow-sm transition-all duration-200 cursor-pointer">All</button>
-          <button id="filter-1n2d" class="px-5 py-2 rounded-lg bg-white border border-outline-variant/40 text-on-surface-variant font-body-md hover:border-primary/50 hover:text-primary transition-all duration-200 cursor-pointer">1N/2D</button>
-          <button id="filter-2n3d" class="px-5 py-2 rounded-lg bg-white border border-outline-variant/40 text-on-surface-variant font-body-md hover:border-primary/50 hover:text-primary transition-all duration-200 cursor-pointer">2N/3D</button>
+        <div class="flex flex-col items-center justify-center gap-4 mt-8">
+          <div class="glass-card p-4 rounded-xl flex flex-wrap gap-4 justify-center items-center">
+            <span class="font-label-sm text-label-sm text-on-surface-variant mr-2">Duration:</span>
+            <button id="filter-all" class="px-5 py-2 rounded-lg bg-primary text-white font-body-md shadow-sm transition-all duration-200 cursor-pointer">All</button>
+            <button id="filter-1n2d" class="px-5 py-2 rounded-lg bg-white border border-outline-variant/40 text-on-surface-variant font-body-md hover:border-primary/50 hover:text-primary transition-all duration-200 cursor-pointer">1N/2D</button>
+            <button id="filter-2n3d" class="px-5 py-2 rounded-lg bg-white border border-outline-variant/40 text-on-surface-variant font-body-md hover:border-primary/50 hover:text-primary transition-all duration-200 cursor-pointer">2N/3D</button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative flex items-center bg-white border border-outline-variant/60 rounded-xl px-4 py-2.5 max-w-sm w-full shadow-md focus-within:ring-2 focus-within:ring-primary/20">
+            <span class="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
+            <input 
+              id="trips-search-input" 
+              oninput="handleSearch(this.value)"
+              class="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
+              placeholder="Search weekend trips..." 
+              type="text" 
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -293,50 +304,56 @@
     }
 
     // Filter functionality
+    let activeDuration = 'All';
+    let searchQuery = '';
+
     const btnAll = document.getElementById('filter-all');
     const btn1n2d = document.getElementById('filter-1n2d');
     const btn2n3d = document.getElementById('filter-2n3d');
     const cards = document.querySelectorAll('#trips-grid > div');
 
-    function selectFilterButton(selectedBtn) {
+    function applyFilters() {
+      cards.forEach(card => {
+        const duration = card.getAttribute('data-duration');
+        const name = card.querySelector('h3').textContent.toLowerCase();
+        
+        let show = true;
+        if (activeDuration !== 'All' && duration !== activeDuration) show = false;
+        if (searchQuery && !name.includes(searchQuery)) show = false;
+        
+        card.style.display = show ? 'flex' : 'none';
+      });
+    }
+
+    function selectFilterButton(selectedBtn, duration) {
+      activeDuration = duration;
       [btnAll, btn1n2d, btn2n3d].forEach(btn => {
         btn.className = "px-5 py-2 rounded-lg bg-white border border-outline-variant/40 text-on-surface-variant font-body-md hover:border-primary/50 hover:text-primary transition-all duration-200 cursor-pointer";
       });
       selectedBtn.className = "px-5 py-2 rounded-lg bg-primary text-white font-body-md shadow-sm transition-all duration-200 cursor-pointer";
+      applyFilters();
     }
 
-    if (btnAll) {
-      btnAll.addEventListener('click', () => {
-        selectFilterButton(btnAll);
-        cards.forEach(card => card.style.display = 'flex');
-      });
+    if (btnAll) btnAll.addEventListener('click', () => selectFilterButton(btnAll, 'All'));
+    if (btn1n2d) btn1n2d.addEventListener('click', () => selectFilterButton(btn1n2d, '1N/2D'));
+    if (btn2n3d) btn2n3d.addEventListener('click', () => selectFilterButton(btn2n3d, '2N/3D'));
+
+    window.handleSearch = function(val) {
+      searchQuery = val.toLowerCase().trim();
+      applyFilters();
     }
 
-    if (btn1n2d) {
-      btn1n2d.addEventListener('click', () => {
-        selectFilterButton(btn1n2d);
-        cards.forEach(card => {
-          if (card.getAttribute('data-duration') === '1N/2D') {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    }
-
-    if (btn2n3d) {
-      btn2n3d.addEventListener('click', () => {
-        selectFilterButton(btn2n3d);
-        cards.forEach(card => {
-          if (card.getAttribute('data-duration') === '2N/3D') {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get('search') || params.get('query');
+      if (searchParam) {
+        const searchInput = document.getElementById('trips-search-input');
+        if (searchInput) {
+          searchInput.value = searchParam;
+          handleSearch(searchParam);
+        }
+      }
+    });
   </script>
   <script src="auth-navbar.js"></script>
   <script src="lead-modal.js"></script>

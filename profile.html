@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Customer Dashboard - TripoMist</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <script src="silence-tailwind.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    try {
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+              "on-secondary": "#ffffff",
+              "primary-fixed-dim": "#89ceff",
+              "primary-fixed": "#c9e6ff",
+              "surface": "#faf8ff",
+              "tertiary-fixed": "#dbe4ea",
+              "primary-container": "#0ea5e9",
+              "outline-variant": "#bec8d2",
+              "on-tertiary": "#ffffff",
+              "on-secondary-container": "#005b78",
+              "inverse-surface": "#283044",
+              "on-tertiary-fixed": "#141d21",
+              "on-secondary-fixed": "#001e2b",
+              "on-error-container": "#93000a",
+              "inverse-on-surface": "#eef0ff",
+              "surface-tint": "#006591",
+              "tertiary": "#576065",
+              "surface-bright": "#faf8ff",
+              "on-tertiary-container": "#2c3539",
+              "secondary-fixed": "#c0e8ff",
+              "surface-dim": "#d2d9f4",
+              "on-surface-variant": "#3e4850",
+              "surface-container": "#eaedff",
+              "on-tertiary-fixed-variant": "#3f484d",
+              "surface-container-lowest": "#ffffff",
+              "secondary-container": "#7ed4fd",
+              "surface-container-high": "#e2e7ff",
+              "on-primary-fixed": "#001e2f",
+              "tertiary-fixed-dim": "#bfc8ce",
+              "primary": "#006591",
+              "secondary-fixed-dim": "#7bd1fa",
+              "inverse-primary": "#89ceff",
+              "on-surface": "#131b2e",
+              "on-primary-fixed-variant": "#004c6e",
+              "on-background": "#131b2e",
+              "secondary": "#006686",
+              "on-error": "#ffffff",
+              "surface-container-low": "#f2f3ff",
+              "surface-variant": "#dae2fd",
+              "on-secondary-fixed-variant": "#004d66",
+              "error-container": "#ffdad6",
+              "background": "#faf8ff",
+              "outline": "#6e7881",
+              "tertiary-container": "#949da3",
+              "on-primary-container": "#003751",
+              "on-primary": "#ffffff",
+              "surface-container-highest": "#dae2fd",
+              "error": "#ba1a1a"
+            },
+            "borderRadius": {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+            "spacing": {
+              "gutter": "24px",
+              "lg": "48px",
+              "sm": "16px",
+              "md": "24px",
+              "xs": "8px",
+              "xl": "80px",
+              "margin": "32px",
+              "base": "4px"
+            },
+            "fontFamily": {
+              "label-sm": ["JetBrains Mono"],
+              "body-lg": ["Inter"],
+              "headline-lg-mobile": ["Manrope"],
+              "display-lg": ["Manrope"],
+              "headline-md": ["Manrope"],
+              "body-md": ["Inter"],
+              "headline-lg": ["Manrope"]
+            },
+            "fontSize": {
+              "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+              "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+              "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+              "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+              "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+              "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+              "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }]
+            }
+          }
+        }
+      }
+    } catch (_e) {}
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Manrope', sans-serif;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .ticket-card {
+      position: relative;
+      background: #ffffff;
+      border: 1px dashed rgba(203, 213, 225, 0.8);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+    .ticket-card::before, .ticket-card::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #faf8ff;
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .ticket-card::before {
+      left: -9px;
+      border-right: 1px dashed rgba(203, 213, 225, 0.8);
+    }
+    .ticket-card::after {
+      right: -9px;
+      border-left: 1px dashed rgba(203, 213, 225, 0.8);
+    }
+  </style>
+  <script>
+    // Authentication guard before page rendering to prevent layout flashing
+    (function() {
+      let storageType = 'local';
+      try {
+        const testKey = '__storage_test__';
+        window.localStorage.setItem(testKey, testKey);
+        window.localStorage.removeItem(testKey);
+      } catch (e) {
+        try {
+          const testKey = '__storage_test__';
+          window.sessionStorage.setItem(testKey, testKey);
+          window.sessionStorage.removeItem(testKey);
+          storageType = 'session';
+        } catch (e2) {
+          storageType = 'name';
+        }
+      }
+
+      const safeStorage = {
+        getItem: (key) => {
+          if (storageType === 'local') {
+            try { const val = window.localStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+          }
+          try { const val = window.sessionStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+          try {
+            const data = JSON.parse(window.name || '{}');
+            return data[key] || null;
+          } catch(e) {
+            return null;
+          }
+        }
+      };
+
+      let userObj = null;
+      const mockUser = safeStorage.getItem('mock_current_user');
+      if (mockUser) {
+        try { userObj = JSON.parse(mockUser); } catch(e) {}
+      } else {
+        const sbKey = 'sb-smumwkvkcfnrajamtscq-auth-token';
+        const sbSessionStr = safeStorage.getItem(sbKey);
+        if (sbSessionStr) {
+          try {
+            const sbSession = JSON.parse(sbSessionStr);
+            userObj = sbSession.user;
+          } catch(e) {}
+        }
+      }
+
+      if (!userObj) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col antialiased">
+
+  <!-- Top Navigation Bar -->
+  <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/30 shadow-sm transition-all duration-300">
+    <div class="flex justify-between items-center w-full px-8 py-3 max-w-7xl mx-auto">
+      <div class="flex items-center gap-6">
+        <a class="font-headline-md text-headline-md font-bold tracking-tight text-primary flex items-center gap-2" href="index.html">
+          <img alt="TripoMist Logo" class="h-10 w-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY">
+          TripoMist
+        </a>
+      </div>
+      
+      <!-- Desktop Links -->
+      <div class="hidden md:flex gap-6 items-center">
+        <a class="text-on-surface-variant hover:text-primary transition-colors px-3 py-1 font-body-md text-body-md" href="group-trips.html">Group Trips</a>
+        <a class="text-on-surface-variant hover:text-primary transition-colors px-3 py-1 font-body-md text-body-md" href="weekend-trips.html">Weekend Trips</a>
+        <a class="text-on-surface-variant hover:text-primary transition-colors px-3 py-1 font-body-md text-body-md" href="upcoming-trips.html">Upcoming Trips</a>
+      </div>
+      
+      <!-- Actions -->
+      <div class="flex items-center gap-4" id="desktop-actions">
+        <button onclick="alert('No new notifications')" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform" aria-label="Notifications">
+          <span class="material-symbols-outlined">notifications</span>
+        </button>
+        <button onclick="window.location.href='group-trips.html?favorites=true'" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform" aria-label="Favorites">
+          <span class="material-symbols-outlined">favorite</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Profile Layout -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 md:px-8 py-10">
+    <!-- Header banner -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[32px] text-primary">dashboard</span>
+        Customer Dashboard
+      </h1>
+      <p class="text-slate-500 mt-1">Manage your traveler details, active packages, and secret expeditions here.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Left Column: Personal details card & Edit profile form -->
+      <aside class="space-y-6">
+        
+        <!-- Live profile details -->
+        <div class="glass-card rounded-2xl p-6 shadow-sm border border-outline-variant/30 flex flex-col items-center text-center">
+          <div class="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+            <span class="material-symbols-outlined text-4xl">person</span>
+          </div>
+          <h2 id="client-name" class="text-xl font-bold text-slate-800">Mohd Wasim</h2>
+          <p id="client-badge" class="text-xs bg-primary/15 text-primary font-bold px-2.5 py-0.5 rounded-full mt-1.5 tracking-wider uppercase">Premium Traveler</p>
+          
+          <div class="w-full mt-6 space-y-4 border-t border-slate-100 pt-6 text-left">
+            <div>
+              <span class="text-xs text-slate-400 block uppercase font-bold tracking-wider">Email Address</span>
+              <span id="client-email" class="text-sm font-semibold text-slate-700 block truncate">loading...</span>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block uppercase font-bold tracking-wider">Phone Number</span>
+              <span id="client-phone" class="text-sm font-semibold text-slate-700 block truncate">loading...</span>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block uppercase font-bold tracking-wider">Member Since</span>
+              <span class="text-sm font-semibold text-slate-700 block">July 2024</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Profile Form Card -->
+        <div class="glass-card rounded-2xl p-6 shadow-sm border border-outline-variant/30">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-1.5 border-b border-slate-100 pb-2">
+            <span class="material-symbols-outlined text-primary text-[18px]">manage_accounts</span>
+            Edit Travel Profile
+          </h3>
+          <form id="edit-profile-form" class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Full Name</label>
+              <input required id="edit-fullname" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20" type="text" placeholder="Update full name">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+              <input required id="edit-email" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20" type="email" placeholder="Update email">
+            </div>
+            <button type="submit" class="w-full bg-primary hover:bg-[#004e72] text-white text-xs font-bold py-3 rounded-xl transition-colors cursor-pointer border-none flex items-center justify-center gap-1.5 mt-2">
+              <span class="material-symbols-outlined text-[16px]">save</span> Update Profile
+            </button>
+          </form>
+          <div id="edit-alert" class="hidden mt-3 p-2.5 text-xs rounded-xl text-center font-semibold border"></div>
+        </div>
+
+        <!-- Travel Perks Banner -->
+        <div class="bg-gradient-to-br from-primary to-[#004e72] text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-10">
+            <span class="material-symbols-outlined text-9xl">flight_takeoff</span>
+          </div>
+          <h3 class="text-lg font-bold mb-2">TripoMist Club</h3>
+          <p class="text-xs text-white/80 leading-relaxed mb-4">Get access to secret departures, special weekend trip cashbacks, and dedicated 24/7 travel coordinators.</p>
+          <div class="flex items-center gap-1.5 text-xs font-bold text-white/95 uppercase tracking-wider">
+            <span class="material-symbols-outlined text-sm">verified_user</span> Verified Explorer
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Columns: Saved Trips / Cart & Booking history -->
+      <section class="lg:col-span-2 space-y-8">
+        
+        <!-- Booking History Section (Ticket-like professional design) -->
+        <div class="glass-card rounded-2xl p-6 shadow-sm border border-outline-variant/30">
+          <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-3">
+            <span class="material-symbols-outlined text-primary text-xl">history</span>
+            My Bookings & Expeditions
+          </h3>
+
+          <div class="space-y-4">
+            <!-- Ticket 1: Andaman -->
+            <div class="ticket-card hover:shadow-md transition-shadow">
+              <div class="flex flex-col md:flex-row justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">luggage</span>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-base">Andaman Escape</h4>
+                    <span class="text-xs text-slate-400 font-mono block mt-0.5">Booking ID: TM-BK-40912</span>
+                    <span class="text-xs text-slate-500 font-medium block mt-1">4N/5D Departure • Confirmed departure</span>
+                  </div>
+                </div>
+                
+                <div class="flex flex-row md:flex-col justify-between items-center md:items-end border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
+                  <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Confirmed
+                  </span>
+                  <div class="text-right mt-2">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Paid Amount</span>
+                    <span class="font-bold text-slate-800 text-lg">₹18,500</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ticket 2: Rishikesh -->
+            <div class="ticket-card hover:shadow-md transition-shadow">
+              <div class="flex flex-col md:flex-row justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">done_all</span>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-base">Rishikesh Retreat</h4>
+                    <span class="text-xs text-slate-400 font-mono block mt-0.5">Booking ID: TM-BK-38761</span>
+                    <span class="text-xs text-slate-500 font-medium block mt-1">1N/2D Weekend Getaway • Travel Completed</span>
+                  </div>
+                </div>
+                
+                <div class="flex flex-row md:flex-col justify-between items-center md:items-end border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
+                  <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Completed
+                  </span>
+                  <div class="text-right mt-2">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Paid Amount</span>
+                    <span class="font-bold text-slate-800 text-lg">₹5,499</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart & Saved Trips Section (Beautiful listing layout) -->
+        <div class="glass-card rounded-2xl p-6 shadow-sm border border-outline-variant/30">
+          <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-3">
+            <span class="material-symbols-outlined text-primary text-xl">favorite</span>
+            Saved Packages & Cart
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Saved Item 1: Ladakh -->
+            <div class="flex flex-col bg-slate-50/50 hover:bg-slate-50 border border-slate-200/60 rounded-xl overflow-hidden transition-all hover:shadow-sm">
+              <img class="h-32 w-full object-cover" alt="Ladakh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCE6p_UF0GujYyL7QDuZtoqzEShR-1wG1cgQi_O9hq38FgS581MFo2tgdKmqcWlbrQv9BdUpqpfR3vThFmanWNkaQRl4F0B3TKW2esN658tI0CjH-96Uh4B0SFJGOihOlNRXGuNeTj7DuNQKJh7n4WL1N1nlIj9od50ycbUf85JmEIJnOVNdc--S1p5-ZvcYwdCh35eyB9Y9_0MF0m9e0LoIC9-kWldVdViKnfzZc-H1YQF1JrBHOfUx0TWmgKVKuqtnJQv7mNresai">
+              <div class="p-4 flex flex-col flex-grow">
+                <h4 class="font-bold text-slate-800 text-base">Ladakh Expedition</h4>
+                <span class="text-xs text-slate-500 font-semibold mt-0.5">6N/7D • Mountains</span>
+                <div class="flex items-center justify-between mt-4 border-t border-slate-100 pt-3">
+                  <span class="font-bold text-primary text-base">₹21,999</span>
+                  <a href="checkout.html?trip=Ladakh%20Expedition&price=21999" class="bg-primary text-white text-[11px] font-bold px-3.5 py-1.5 rounded-lg hover:bg-[#004e72] transition-colors no-underline">Checkout</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Saved Item 2: Spiti Valley -->
+            <div class="flex flex-col bg-slate-50/50 hover:bg-slate-50 border border-slate-200/60 rounded-xl overflow-hidden transition-all hover:shadow-sm">
+              <img class="h-32 w-full object-cover" alt="Spiti Valley" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoJR3BpNyP1i1mPJq3X3jHeXOGmBJ_nQl0snOauAWZkJyJOg4Qba33jURx3B9X94_hsmX9bQh19tDtOJfrT3q37LwYx1Wk_xHMqdEMpCT-wV0fYyopsVjDHjfEIAByBgaDpOOK4g7rOmJx9hzCkMHvbE5VLyDYJYys6hvDlZDthNmF-hNbppnYt9xZRw2g5SDGcNW0_VtWjgiCuQXPg2kY1pF1L1cJHMQ_NyzQ3t5UBG48pm5tsjfp5ydUvO2rOmPvEZgATszcYDG-">
+              <div class="p-4 flex flex-col flex-grow">
+                <h4 class="font-bold text-slate-800 text-base">Spiti Valley Adventure</h4>
+                <span class="text-xs text-slate-500 font-semibold mt-0.5">5N/6D • Mountains</span>
+                <div class="flex items-center justify-between mt-4 border-t border-slate-100 pt-3">
+                  <span class="font-bold text-primary text-base">₹14,500</span>
+                  <a href="checkout.html?trip=Spiti%20Valley%20Adventure&price=14500" class="bg-primary text-white text-[11px] font-bold px-3.5 py-1.5 rounded-lg hover:bg-[#004e72] transition-colors no-underline">Checkout</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full px-8 bg-surface-container-lowest border-t border-outline-variant/30 max-w-container-max mx-auto mt-24 pt-12 pb-16">
+    <div class="flex flex-col md:flex-row justify-between items-start gap-8 w-full border-b border-outline-variant/20 pb-12 mb-8">
+      <div class="text-center md:text-left">
+        <a class="flex items-center justify-center md:justify-start gap-2 mb-4" href="index.html">
+          <img alt="TripoMist Logo" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY">
+          <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">TripoMist</span>
+        </a>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-md">Your Safe Travel Our Responsibility. Discover life-changing group expeditions and weekend short escapes with Delhi's premium travel tribe.</p>
+      </div>
+      <div class="flex flex-col items-center md:items-start gap-4">
+        <h3 class="font-headline-md text-body-lg text-on-surface font-bold">Follow us on</h3>
+        <div class="flex items-center gap-4">
+          <a href="https://wa.me/919990802608" class="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center hover:opacity-85 transition-opacity" target="_blank">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg>
+          </a>
+          <a href="https://www.instagram.com/travellhikes?igsh=dDIxcmJvbmRkemlj" class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-500 via-pink-500 to-purple-600 text-white flex items-center justify-center hover:opacity-85 transition-opacity" target="_blank">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.805.249 2.227.412.56.216.96.475 1.382.897.422.422.681.822.897 1.382.164.422.359 1.057.412 2.227.059 1.266.071 1.646.071 4.85s-.012 3.584-.07 4.85c-.054 1.17-.249 1.805-.412 2.227-.216.56-.475.96-.897 1.382-.422.422-.822.681-1.382.897-.422.164-1.057.359-2.227.412-1.266.059-1.646.071-4.85.071s-3.584-.012-4.85-.07c-1.17-.054-1.805-.249-2.227-.412-.56-.216-.96-.475-1.382-.897-.422-.422-.681-.822-.897-1.382-.164-.422-.359-1.057-.412-2.227-.059-1.266-.071-1.646-.071-4.85s.012-3.584.07-4.85c.054-1.17.249-1.805.412-2.227.216-.56.475-.96.897-1.382.422-.422.822-.681 1.382-.897.422-.164 1.057-.359 2.227-.412 1.266-.059 1.646-.071 4.85-.071zM12 0C8.741 0 8.333.014 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.741 0 12s.014 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.306.788.717 1.459 1.384 2.126s1.337 1.079 2.126 1.384c.766.296 1.636.499 2.913.558C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384s1.079-1.337 1.384-2.126c.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126s-1.337-1.079-2.126-1.384c-.765-.296-1.636-.499-2.913-.558C15.667.012 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"></path></svg>
+          </a>
+          <a href="https://www.facebook.com/share/1BWhe7V5V3/" class="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center hover:opacity-85 transition-opacity" target="_blank">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"></path></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6 w-full text-center md:text-left">
+      <p class="font-body-md text-body-md text-on-surface-variant">© 2024 TripoMist Travel Agency. All rights reserved.</p>
+      <div class="flex flex-wrap justify-center md:justify-end gap-6">
+        <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase text-[12px] tracking-wider" href="contact.html">Contact Us</a>
+        <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase text-[12px] tracking-wider" href="terms-conditions.html">Terms & Conditions</a>
+        <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase text-[12px] tracking-wider" href="privacy-policy.html">Privacy Policy</a>
+        <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase text-[12px] tracking-wider" href="refund-policy.html">Refund Policy</a>
+        <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors uppercase text-[12px] tracking-wider" href="shipping-policy.html">Shipping Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="auth-navbar.js"></script>
+  <script>
+    // Load current user information from safe storage and display it
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Safe storage helper supporting localStorage -> sessionStorage -> window.name fallbacks
+      let storageType = 'local';
+      try {
+        const testKey = '__storage_test__';
+        window.localStorage.setItem(testKey, testKey);
+        window.localStorage.removeItem(testKey);
+      } catch (e) {
+        try {
+          const testKey = '__storage_test__';
+          window.sessionStorage.setItem(testKey, testKey);
+          window.sessionStorage.removeItem(testKey);
+          storageType = 'session';
+        } catch (e2) {
+          storageType = 'name';
+        }
+      }
+
+      const safeStorage = {
+        getItem: (key) => {
+          if (storageType === 'local') {
+            try { const val = window.localStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+          }
+          try { const val = window.sessionStorage.getItem(key); if (val !== null) return val; } catch (e) {}
+          try {
+            const data = JSON.parse(window.name || '{}');
+            return data[key] || null;
+          } catch(e) {
+            return null;
+          }
+        },
+        setItem: (key, value) => {
+          if (storageType === 'local') {
+            try { window.localStorage.setItem(key, value); } catch (e) {}
+          }
+          try { window.sessionStorage.setItem(key, value); } catch (e) {}
+          try {
+            const data = JSON.parse(window.name || '{}');
+            data[key] = value;
+            window.name = JSON.stringify(data);
+          } catch(e) {}
+        },
+        removeItem: (key) => {
+          if (storageType === 'local') {
+            try { window.localStorage.removeItem(key); } catch (e) {}
+          }
+          try { window.sessionStorage.removeItem(key); } catch (e) {}
+          try {
+            const data = JSON.parse(window.name || '{}');
+            delete data[key];
+            window.name = JSON.stringify(data);
+          } catch(e) {}
+        }
+      };
+
+      let user = null;
+      const userString = safeStorage.getItem('mock_current_user');
+      if (userString) {
+        try { user = JSON.parse(userString); } catch(e) {}
+      } else {
+        const sbKey = 'sb-smumwkvkcfnrajamtscq-auth-token';
+        const sbSessionStr = safeStorage.getItem(sbKey);
+        if (sbSessionStr) {
+          try {
+            const sbSession = JSON.parse(sbSessionStr);
+            user = sbSession.user;
+          } catch(e) {}
+        }
+      }
+
+      if (user) {
+        try {
+          const nameEl = document.getElementById('client-name');
+          const emailEl = document.getElementById('client-email');
+          const phoneEl = document.getElementById('client-phone');
+          
+          if (nameEl) nameEl.textContent = user.user_metadata?.full_name || user.email.split('@')[0];
+          if (emailEl) emailEl.textContent = user.email;
+          if (phoneEl) phoneEl.textContent = user.user_metadata?.phone || 'Not provided';
+
+          // Populate edit form
+          document.getElementById('edit-fullname').value = user.user_metadata?.full_name || '';
+          document.getElementById('edit-email').value = user.email || '';
+        } catch (e) {
+          console.error("Error parsing user state:", e);
+        }
+      }
+
+      // Handle profile update form submission
+      const editForm = document.getElementById('edit-profile-form');
+      const editAlert = document.getElementById('edit-alert');
+      
+      if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const newName = document.getElementById('edit-fullname').value.trim();
+          const newEmail = document.getElementById('edit-email').value.trim();
+          
+          editAlert.className = "mt-3 p-2.5 text-xs rounded-xl text-center font-semibold bg-slate-100 text-slate-700 border border-slate-200/50 block";
+          editAlert.textContent = "Updating profile...";
+          editAlert.classList.remove('hidden');
+
+          // Check if we are using real Supabase client loaded in window
+          if (window.supabase && typeof window.supabase.createClient === 'function') {
+            try {
+              // Real Supabase Auth Update
+              // Try to find the supabase instance
+              const supabaseClient = window.supabaseClientInstance; 
+              if (supabaseClient) {
+                const { data, error } = await supabaseClient.auth.updateUser({
+                  email: newEmail,
+                  data: { full_name: newName }
+                });
+                
+                if (error) {
+                  editAlert.className = "mt-3 p-2.5 text-xs rounded-xl text-center font-semibold bg-red-50 text-red-600 border border-red-100 block";
+                  editAlert.textContent = error.message;
+                } else {
+                  editAlert.className = "mt-3 p-2.5 text-xs rounded-xl text-center font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100 block";
+                  editAlert.textContent = "Profile details updated! Check your email for confirmation.";
+                  safeStorage.setItem('mock_current_user', JSON.stringify(data.user));
+                  setTimeout(() => { window.location.reload(); }, 1800);
+                }
+                return;
+              }
+            } catch (err) {
+              console.error("Supabase update error:", err);
+            }
+          }
+
+          // Mock Update fallback
+          if (user) {
+            user.email = newEmail;
+            if (!user.user_metadata) user.user_metadata = {};
+            user.user_metadata.full_name = newName;
+            safeStorage.setItem('mock_current_user', JSON.stringify(user));
+            
+            editAlert.className = "mt-3 p-2.5 text-xs rounded-xl text-center font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100 block";
+            editAlert.textContent = "Profile details updated successfully!";
+            window.dispatchEvent(new Event('auth-state-change'));
+            setTimeout(() => { window.location.reload(); }, 1200);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

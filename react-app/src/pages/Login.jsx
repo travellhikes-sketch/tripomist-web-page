@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../utils/supabaseClient'
+import { supabase, safeStorage } from '../utils/supabaseClient'
 
 function Login() {
   const [isSignUpMode, setIsSignUpMode] = useState(false)
@@ -37,7 +37,7 @@ function Login() {
         setErrorMsg(error.message)
       } else {
         setSuccessMsg("Account created successfully! Logging you in...")
-        localStorage.setItem('mock_current_user', JSON.stringify(data.user || data))
+        safeStorage.setItem('mock_current_user', JSON.stringify(data.user || data))
         window.dispatchEvent(new Event('auth-state-change'))
         setTimeout(() => {
           navigate('/')
@@ -58,7 +58,7 @@ function Login() {
         }
       } else {
         setSuccessMsg("Logged in successfully! Redirecting...")
-        localStorage.setItem('mock_current_user', JSON.stringify(data.user || data))
+        safeStorage.setItem('mock_current_user', JSON.stringify(data.user || data))
         window.dispatchEvent(new Event('auth-state-change'))
         setTimeout(() => {
           navigate(-1) // Redirect back to previous page or home
@@ -80,7 +80,7 @@ function Login() {
         email: 'google-traveler@example.com',
         user_metadata: { full_name: 'Google Traveler' }
       }
-      localStorage.setItem('mock_current_user', JSON.stringify(mockUser))
+      safeStorage.setItem('mock_current_user', JSON.stringify(mockUser))
       window.dispatchEvent(new Event('auth-state-change'))
       setSuccessMsg("Logged in with Google successfully!")
       setTimeout(() => {
@@ -145,13 +145,13 @@ function Login() {
           
           <div>
             {/* Demo Banner */}
-            {supabase.isMock && localStorage.getItem('use_mock_auth') === 'true' && (
+            {supabase.isMock && safeStorage.getItem('use_mock_auth') === 'true' && (
               <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg text-blue-800 text-[11px] font-semibold flex justify-between items-center">
                 <span>Running in Offline Demo Mode.</span>
                 <button 
                   type="button" 
                   onClick={() => {
-                    localStorage.removeItem('use_mock_auth')
+                    safeStorage.removeItem('use_mock_auth')
                     window.location.reload()
                   }}
                   className="text-primary hover:underline font-bold focus:outline-none uppercase text-[10px] cursor-pointer"
@@ -172,7 +172,7 @@ function Login() {
                   <button 
                     type="button"
                     onClick={() => {
-                      localStorage.setItem('use_mock_auth', 'true')
+                      safeStorage.setItem('use_mock_auth', 'true')
                       window.location.reload()
                     }}
                     className="mt-1 bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded text-[10px] uppercase tracking-wider self-start cursor-pointer border-none"

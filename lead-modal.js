@@ -3,7 +3,7 @@
 
 (function() {
   const N8N_WEBHOOK = 'https://primary-production-4c8d.up.railway.app/webhook/e78119eb-9ea2-4ee4-b152-cb4db12dbe44';
-  const POPUP_DELAY_MS = 5000; // 5 seconds delay before showing the modal
+  const POPUP_DELAY_MS = 90000; // 90 seconds (1.5 minutes) delay before showing the modal
 
   // Don't show if closed in this session
   if (sessionStorage.getItem('lead_modal_closed') === 'true') {
@@ -49,7 +49,12 @@
     modal.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none opacity-0 transition-opacity duration-300 ease-out';
     
     // Check if user is logged in to prefill details
-    const currentUser = JSON.parse(localStorage.getItem('mock_current_user') || 'null');
+    let currentUser = null;
+    try {
+      currentUser = JSON.parse(localStorage.getItem('mock_current_user') || 'null');
+    } catch (e) {
+      console.warn("localStorage is blocked or restricted:", e);
+    }
     const defaultName = currentUser?.user_metadata?.full_name || '';
     const defaultEmail = currentUser?.email || '';
 

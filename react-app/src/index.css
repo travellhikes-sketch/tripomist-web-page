@@ -76,3 +76,16 @@
   background-color: #0EA5E9;
   transform: scale(1);
 }
+
+/* Auto bouncing floating animations */
+@keyframes float-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animate-float-bounce {
+  animation: float-bounce 2.2s ease-in-out infinite;
+}

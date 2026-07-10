@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Group Trips - TripoMist</title>
+  <title>Search Trips - TripoMist</title>
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -122,7 +122,7 @@
       </a>
       
       <div class="hidden md:flex items-center gap-md">
-        <a class="text-primary font-bold border-b-2 border-primary pb-1 transition-colors font-body-md text-body-md" href="group-trips.html">Group Trips</a>
+        <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="group-trips.html">Group Trips</a>
         <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="weekend-trips.html">Weekend Trips</a>
         <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="upcoming-trips.html">Upcoming Trips</a>
       </div>
@@ -131,7 +131,7 @@
         <button onclick="alert('No new notifications')" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform" aria-label="Notifications">
           <span class="material-symbols-outlined">notifications</span>
         </button>
-        <button id="favorites-toggle-btn" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform" aria-label="Favorites">
+        <button onclick="window.location.href='group-trips.html?favorites=true'" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform" aria-label="Favorites">
           <span class="material-symbols-outlined">favorite</span>
         </button>
         <button class="md:hidden text-on-surface-variant p-2" id="mobile-menu-btn" aria-label="Toggle Menu">
@@ -144,7 +144,7 @@
   <!-- Mobile Dropdown Navigation -->
   <div class="fixed top-[64px] left-0 w-full bg-white border-b border-outline-variant/30 shadow-lg z-40 hidden" id="mobile-menu-dropdown">
     <div class="flex flex-col p-6 gap-4">
-      <a class="text-primary font-bold text-lg pb-1 border-b border-outline-variant/20" href="group-trips.html">Group Trips</a>
+      <a class="text-on-surface-variant hover:text-primary text-lg pb-1 border-b border-outline-variant/20" href="group-trips.html">Group Trips</a>
       <a class="text-on-surface-variant hover:text-primary text-lg pb-1 border-b border-outline-variant/20" href="weekend-trips.html">Weekend Trips</a>
       <a class="text-on-surface-variant hover:text-primary text-lg pb-1 border-b border-outline-variant/20" href="upcoming-trips.html">Upcoming Trips</a>
     </div>
@@ -152,53 +152,29 @@
 
   <!-- Main Content -->
   <main class="flex-grow max-w-7xl mx-auto w-full px-gutter py-12">
-    <!-- Page Header -->
-    <div class="text-center mb-12">
-      <h1 class="font-display-lg text-3xl md:text-4xl font-extrabold mb-3 text-on-surface tracking-tight">Group Trips & Expeditions</h1>
-      <p class="text-on-surface-variant text-sm md:text-base max-w-xl mx-auto">Explore premium group adventures across stunning landscapes, beaches, and scenic mountain trails.</p>
-    </div>
-
-    <!-- Style Filter Tabs -->
-    <div class="flex justify-center gap-3 mb-10 overflow-x-auto hide-scrollbar py-1">
-      <button onclick="filterStyle('All')" id="btn-all" class="filter-tab whitespace-nowrap px-4 py-2 rounded-full border-2 border-primary text-primary font-bold text-sm bg-primary/5 cursor-pointer">
-        All Trips
-      </button>
-      <button onclick="filterStyle('Mountains')" id="btn-mountains" class="filter-tab whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant/50 text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors text-sm bg-white cursor-pointer">
-        Mountains
-      </button>
-      <button onclick="filterStyle('Beaches')" id="btn-beaches" class="filter-tab whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant/50 text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors text-sm bg-white cursor-pointer">
-        Beaches
-      </button>
-      <button onclick="filterStyle('Weekend')" id="btn-weekend" class="filter-tab whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant/50 text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors text-sm bg-white cursor-pointer">
-        Weekend Getaways
-      </button>
-    </div>
-
-    <!-- Search Input -->
-    <div class="max-w-md mx-auto mb-10">
-      <div class="relative flex items-center bg-white border border-outline-variant/60 rounded-xl px-4 py-2.5 shadow-sm focus-within:ring-2 focus-within:ring-primary/20">
-        <span class="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
-        <input 
-          id="trips-search-input" 
-          oninput="handleSearch(this.value)"
-          class="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
-          placeholder="Search group trips by destination..." 
-          type="text" 
-        />
+    <!-- Google-like Search Bar Card -->
+    <div class="max-w-xl mx-auto mb-12 text-center">
+      <h1 class="font-display-lg text-2xl md:text-3xl font-extrabold mb-2 text-on-surface tracking-tight">Search Results</h1>
+      <p class="text-on-surface-variant text-sm mb-6">Type destination, state, or style to find matching itineraries.</p>
+      <div class="relative flex items-center bg-white border border-outline-variant/60 rounded-xl px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20">
+        <span class="material-symbols-outlined text-outline mr-2 text-[22px]">search</span>
+        <input id="search-page-input" class="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" placeholder="Search destination, e.g. Ladakh, beach..." type="text">
+        <button id="search-page-btn" class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-surface-tint transition-all cursor-pointer border-none ml-2">Search</button>
       </div>
     </div>
 
-    <!-- Trips Grid -->
-    <div id="trips-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      
+    <!-- Results Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 id="results-count" class="font-bold text-slate-800 text-lg">Showing all trips</h2>
+    </div>
+
+    <!-- Results Grid -->
+    <div id="results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Ladakh -->
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-style="Mountains" data-favorite="false">
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-name="Ladakh Expedition" data-style="Mountains">
         <div class="relative h-48 w-full overflow-hidden">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Ladakh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCE6p_UF0GujYyL7QDuZtoqzEShR-1wG1cgQi_O9hq38FgS581MFo2tgdKmqcWlbrQv9BdUpqpfR3vThFmanWNkaQRl4F0B3TKW2esN658tI0CjH-96Uh4B0SFJGOihOlNRXGuNeTj7DuNQKJh7n4WL1N1nlIj9od50ycbUf85JmEIJnOVNdc--S1p5-ZvcYwdCh35eyB9Y9_0MF0m9e0LoIC9-kWldVdViKnfzZc-H1YQF1JrBHOfUx0TWmgKVKuqtnJQv7mNresai">
           <div class="absolute top-3 left-3 bg-primary text-on-primary px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">Mountains</div>
-          <button onclick="toggleFav(this)" class="fav-btn absolute top-3 right-3 p-1.5 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full text-on-surface hover:text-red-500 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">favorite</span>
-          </button>
         </div>
         <div class="p-md flex-grow flex flex-col">
           <h3 class="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">Ladakh Expedition</h3>
@@ -217,13 +193,10 @@
       </div>
 
       <!-- Andaman -->
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-style="Beaches" data-favorite="false">
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-name="Andaman Escape" data-style="Beaches">
         <div class="relative h-48 w-full overflow-hidden">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Andaman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0y5u9i_7N2laNOZIxv71RdSK5FT0jAp-uHjMwYERiu8PA0f5ZIXZzTW4mDV5pXzsldIlhzXyCWnP5ZeVmWrNzZA04wZjrXsqBFScmOmKAtCHvpCFb6K2d2clvgPz9CbpDVnYeY-R0F5Gqy6VwxCes6qYo50J7xDRpzrnraZxMnW3TIp8XWLoxy3IC28IqbylRrXiPfjUP5lIgNX_7uh3ALSCif0KIatU2BLPP981PAZcWg9SUt4geKFkNwyapsLwVn2kD17gLKID1">
           <div class="absolute top-3 left-3 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">Beaches</div>
-          <button onclick="toggleFav(this)" class="fav-btn absolute top-3 right-3 p-1.5 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full text-on-surface hover:text-red-500 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">favorite</span>
-          </button>
         </div>
         <div class="p-md flex-grow flex flex-col">
           <h3 class="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">Andaman Escape</h3>
@@ -242,13 +215,10 @@
       </div>
 
       <!-- Munnar -->
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-style="Weekend" data-favorite="false">
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-name="Munnar Retreat" data-style="Weekend">
         <div class="relative h-48 w-full overflow-hidden">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Munnar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCCXUB1XgJi4Y3t-H0p0t5UTLh_BxmzWOe6kQ6O9c_bPnXHeOmV57Psr-R7D3VlYAEeSb8-WFp0w8bVahRCvNnzR2fMlppIEo7n0DZjWXwlGY4PaWsr7zS4rmU4g64wR4hqvvoWbTudriJszYf-C0CCmsgcHn_H5FaXFQ99Nj5-WPugNDzqKW8Tyc3KXyhxW4yhLBrEIf1V8Xo3VDkqA1VgXMiL06W0aDWctLY1-4qYXNgXr9KN6giLlLXGStqXDvP6KxWiRvJVC4J">
           <div class="absolute top-3 left-3 bg-primary text-on-primary px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">Weekend</div>
-          <button onclick="toggleFav(this)" class="fav-btn absolute top-3 right-3 p-1.5 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full text-on-surface hover:text-red-500 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">favorite</span>
-          </button>
         </div>
         <div class="p-md flex-grow flex flex-col">
           <h3 class="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">Munnar Retreat</h3>
@@ -267,13 +237,10 @@
       </div>
 
       <!-- Spiti Valley -->
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-style="Mountains" data-favorite="false">
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-name="Spiti Valley Expedition" data-style="Mountains">
         <div class="relative h-48 w-full overflow-hidden">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Spiti" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiD2GO7fIb1ciUdWe0odOedfkhJIm1ur64B1iKghZ8eMdF66RoOvQDTrZz1L1nfURfVdMroAzsjyFtv85EjcF8NXBkccIFhdalQolBp9Yar92MT8MtrG9wQGjuK5B7wctNIUhR54TEU7PYNv323Svs0dPfNfV6sfFdjHZinMcri0e9lDmEaHhHTP1F5YA25LoETYvVR1Dnn-8UNP4ShswwHgnmwn3Pw1YqRx1ECDm16ijYYriT-jcGpT9--pyJ_OQkKTc7lwXlnByS">
           <div class="absolute top-3 left-3 bg-primary text-on-primary px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">Mountains</div>
-          <button onclick="toggleFav(this)" class="fav-btn absolute top-3 right-3 p-1.5 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full text-on-surface hover:text-red-500 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">favorite</span>
-          </button>
         </div>
         <div class="p-md flex-grow flex flex-col">
           <h3 class="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">Spiti Valley Expedition</h3>
@@ -292,13 +259,10 @@
       </div>
 
       <!-- Rishikesh -->
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-style="Weekend" data-favorite="false">
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-name="Rishikesh Retreat" data-style="Weekend">
         <div class="relative h-48 w-full overflow-hidden">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Rishikesh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdeK5rNXK2i1b9n6OjyVoqm3Bxp8LEe74ptA6ncV2vP0x3Mi3B8HxlbdKEmQm91XCHfRR1kMKAQPDSbdqUrKDW4JM3xypx1fRMk3V2CB8LGMsnDVcKS_UZfnZcEYkmv5SROPXh2Y_cNDIOvWufVrH-JjvgMbmJ5A7_AgOyZUaA-BJA08GG7r2s0bw9GaqDO4QlU2W62kMiK6U1woPfrvgioGY_Glgx-Ig1A4Io0qyEemYXHUM9K9ujeQRoKgUEMoYyknVTGzgYBeRs">
           <div class="absolute top-3 left-3 bg-primary text-on-primary px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">Weekend</div>
-          <button onclick="toggleFav(this)" class="fav-btn absolute top-3 right-3 p-1.5 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full text-on-surface hover:text-red-500 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">favorite</span>
-          </button>
         </div>
         <div class="p-md flex-grow flex flex-col">
           <h3 class="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">Rishikesh Retreat</h3>
@@ -317,13 +281,10 @@
       </div>
 
       <!-- Jaipur -->
-      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-style="Weekend" data-favorite="false">
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card" data-name="Jaipur Heritage" data-style="Weekend">
         <div class="relative h-48 w-full overflow-hidden">
           <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Jaipur" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRwnZMqN75wiCGdYCe57bjOJqnQL8ixU9e0QsmbQNBMgQzcZ2tX7BX4tDAqoU8FUgUqp1QPoAzbFcQOY9cjylZmNqpl5HPNriyb50-N7uufQaF7nEz0ciYQP-JVZh7E3rmaaaAtn1HmSbpnGnuSdDky0eOIAvJ7SS5YCQ1I-SURRXNSHrCdOdyeLAeYoMGSKuIszmp7kQygPsJ19kxjBKCrAAjCB-nASur3eTy47RWuE18brwHmoxgNO2fM_WsfO8iaSUnvytThry-">
           <div class="absolute top-3 left-3 bg-primary text-on-primary px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">Weekend</div>
-          <button onclick="toggleFav(this)" class="fav-btn absolute top-3 right-3 p-1.5 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full text-on-surface hover:text-red-500 transition-colors cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">favorite</span>
-          </button>
         </div>
         <div class="p-md flex-grow flex flex-col">
           <h3 class="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">Jaipur Heritage</h3>
@@ -340,7 +301,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </main>
 
@@ -355,100 +315,54 @@
     </div>
   </footer>
 
-  <!-- Script for Listing Filters -->
+  <!-- Search JavaScript -->
   <script>
-    let activeStyle = 'All';
-    let onlyFavorites = false;
-    const cards = document.querySelectorAll('#trips-grid > div');
-    const favToggleBtn = document.getElementById('favorites-toggle-btn');
+    const searchInput = document.getElementById('search-page-input');
+    const searchBtn = document.getElementById('search-page-btn');
+    const cards = document.querySelectorAll('#results-grid > div');
+    const countDisplay = document.getElementById('results-count');
 
-    function filterStyle(style) {
-      activeStyle = style;
-      
-      // Update Tab Button Styles
-      document.querySelectorAll('.filter-tab').forEach(btn => {
-        btn.className = "filter-tab whitespace-nowrap px-4 py-2 rounded-full border border-outline-variant/50 text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors text-sm bg-white cursor-pointer";
-      });
-
-      const activeBtnId = style === 'All' ? 'btn-all' : 
-                          style === 'Mountains' ? 'btn-mountains' :
-                          style === 'Beaches' ? 'btn-beaches' : 'btn-weekend';
-      const activeBtn = document.getElementById(activeBtnId);
-      if (activeBtn) {
-        activeBtn.className = "filter-tab whitespace-nowrap px-4 py-2 rounded-full border-2 border-primary text-primary font-bold text-sm bg-primary/5 cursor-pointer";
-      }
-
-      applyFilters();
-    }
-
-    function toggleFav(btn) {
-      const card = btn.closest('.trip-card');
-      const icon = btn.querySelector('.material-symbols-outlined');
-      const isFav = card.getAttribute('data-favorite') === 'true';
-
-      if (isFav) {
-        card.setAttribute('data-favorite', 'false');
-        btn.classList.remove('text-red-500');
-        icon.style.fontVariationSettings = "'FILL' 0";
-      } else {
-        card.setAttribute('data-favorite', 'true');
-        btn.classList.add('text-red-500');
-        icon.style.fontVariationSettings = "'FILL' 1";
-      }
-      
-      if (onlyFavorites) applyFilters();
-    }
-
-    if (favToggleBtn) {
-      favToggleBtn.addEventListener('click', () => {
-        onlyFavorites = !onlyFavorites;
-        favToggleBtn.classList.toggle('text-red-500');
-        favToggleBtn.classList.toggle('bg-red-50');
-        applyFilters();
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuDropdown = document.getElementById('mobile-menu-dropdown');
+    if(mobileMenuBtn && mobileMenuDropdown) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenuDropdown.classList.toggle('hidden');
       });
     }
 
-    let searchQuery = '';
+    function doSearch() {
+      const query = searchInput.value.toLowerCase().trim();
+      let count = 0;
 
-    function applyFilters() {
       cards.forEach(card => {
-        const style = card.getAttribute('data-style');
         const name = card.getAttribute('data-name').toLowerCase();
-        const isFav = card.getAttribute('data-favorite') === 'true';
+        const style = card.getAttribute('data-style').toLowerCase();
 
-        let show = true;
-        if (activeStyle !== 'All' && style !== activeStyle) show = false;
-        if (onlyFavorites && !isFav) show = false;
-        if (searchQuery && !name.includes(searchQuery)) show = false;
-
-        card.style.display = show ? 'flex' : 'none';
+        if (!query || name.includes(query) || style.includes(query)) {
+          card.style.display = 'flex';
+          count++;
+        } else {
+          card.style.display = 'none';
+        }
       });
+
+      countDisplay.textContent = query 
+        ? `Found ${count} departures matching "${searchInput.value}"` 
+        : `Showing all ${count} departures`;
     }
 
-    window.handleSearch = function(val) {
-      searchQuery = val.toLowerCase().trim();
-      applyFilters();
-    }
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doSearch();
+    });
+    searchBtn.addEventListener('click', doSearch);
 
-    // Handle initial load from URL param (e.g. ?style=Mountains or ?favorites=true or ?search=...)
+    // Initial search on load
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
-      const styleParam = params.get('style');
-      if (styleParam) filterStyle(styleParam);
-
-      const favParam = params.get('favorites');
-      if (favParam === 'true' && favToggleBtn) {
-        favToggleBtn.click();
-      }
-
-      const searchParam = params.get('search') || params.get('query');
-      if (searchParam) {
-        const searchInput = document.getElementById('trips-search-input');
-        if (searchInput) {
-          searchInput.value = searchParam;
-          handleSearch(searchParam);
-        }
-      }
+      const query = params.get('search') || params.get('query') || '';
+      searchInput.value = query;
+      doSearch();
     });
   </script>
 </body>
