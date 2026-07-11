@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import Chatbot from '../components/Chatbot'
 
 function Home() {
   const navigate = useNavigate()
@@ -350,12 +351,8 @@ function Home() {
         </section>
       </main>
 
-      {/* Floating Chatbot Button */}
-      <div className="fixed bottom-8 left-8 z-50 animate-float-bounce">
-        <button id="chatbot-trigger-btn" className="w-14 h-14 rounded-full bg-primary hover:bg-[#004e72] flex items-center justify-center text-white transition-colors shadow-lg active:scale-95 cursor-pointer border-none" onClick={() => alert('Chatbot setup incoming! Our Kaptain AI will be active soon.')} title="Chatbot">
-          <span className="material-symbols-outlined text-[28px] leading-none">smart_toy</span>
-        </button>
-      </div>
+      {/* Floating Chatbot */}
+      <Chatbot />
 
       {/* Floating Action Buttons */}
       <div className="fixed bottom-8 right-8 z-50 animate-float-bounce">
