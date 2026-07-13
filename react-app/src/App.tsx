@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import WeekendTrips from './pages/WeekendTrips'
@@ -15,8 +15,11 @@ import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Search from './pages/Search'
 import BottomDock from './components/BottomDock'
+import Chatbot from './components/Chatbot'
 
 function App() {
+  const [chatOpen, setChatOpen] = useState(false)
+
   return (
     <>
       <Routes>
@@ -38,8 +41,11 @@ function App() {
         <Route path="*" element={<Home />} />
       </Routes>
 
-      {/* GooeyDock — fixed bottom navigation on every page */}
-      <BottomDock />
+      {/* Global Chatbot — controlled from App level so pill can open it */}
+      <Chatbot isOpenExternal={chatOpen} onExternalClose={() => setChatOpen(false)} />
+
+      {/* GooeyDock + AI pill — fixed bottom on every page */}
+      <BottomDock onOpenChat={() => setChatOpen(true)} />
     </>
   )
 }

@@ -1,13 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-function Chatbot() {
+function Chatbot({ isOpenExternal, onExternalClose } = {}) {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState([
+  
+  // Sync with external open trigger (from BottomDock pill)
+  useEffect(() => {
+    if (isOpenExternal) setIsOpen(true)
+  }, [isOpenExternal])
+
+  const handleClose = () => {
+    setIsOpen(false)
+    if (onExternalClose) onExternalClose()
+  }
+
+  const messages_init = [
     {
       role: 'assistant',
       content: "Hi! I'm Kaptain AI 🏔️, your personal TripoMist travel companion. Where would you like to explore next? Spiti Valley, Ladakh, or maybe a weekend getaway? Let's plan your dream trip!"
     }
-  ])
+  ]
+
+  const [messages, setMessages] = useState(messages_init)
+
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -91,7 +105,7 @@ function Chatbot() {
         <button 
           id="chatbot-trigger-btn" 
           className="w-14 h-14 rounded-full bg-primary hover:bg-[#004e72] flex items-center justify-center text-white transition-all shadow-lg active:scale-95 cursor-pointer border-none relative" 
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => isOpen ? handleClose() : setIsOpen(true)}
           title="Chat with Kaptain AI"
         >
           {isOpen ? (
@@ -126,7 +140,7 @@ function Chatbot() {
               </div>
             </div>
             <button 
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               className="text-white/80 hover:text-white hover:scale-115 transition-all bg-transparent border-none cursor-pointer p-1"
             >
               <span className="material-symbols-outlined text-[22px]">close</span>

@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import Chatbot from '../components/Chatbot'
 
 function Home() {
   const navigate = useNavigate()
@@ -350,9 +349,6 @@ function Home() {
           </div>
         </section>
       </main>
-
-      {/* Floating Chatbot */}
-      <Chatbot />
 
       {/* Floating Action Buttons */}
       <div className="fixed bottom-8 right-8 z-50 animate-float-bounce">
