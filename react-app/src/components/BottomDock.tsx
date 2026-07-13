@@ -40,7 +40,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
         onClick={() => isChatOpen ? onCloseChat?.() : onOpenChat?.()}
         className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer select-none transition-all duration-300"
         style={{
-          background: isChatOpen ? 'rgba(239, 68, 68, 0.9)' : 'rgba(255,255,255,0.18)',
+          background: 'rgba(255,255,255,0.18)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: '1px solid rgba(255,255,255,0.40)',

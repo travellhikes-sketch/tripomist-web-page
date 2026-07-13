@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, safeStorage } from '../utils/supabaseClient'
 
 function Login() {
-  const [isSignUpMode, setIsSignUpMode] = useState(false)
+  const [isSignUpMode, setIsSignUpMode] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')

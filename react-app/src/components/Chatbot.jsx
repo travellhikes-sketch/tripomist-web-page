@@ -3,9 +3,9 @@ import React, { useState, useRef, useEffect } from 'react'
 function Chatbot({ isOpenExternal, onExternalClose } = {}) {
   const [isOpen, setIsOpen] = useState(false)
   
-  // Sync with external open trigger (from BottomDock pill)
+  // Sync with external open trigger
   useEffect(() => {
-    if (isOpenExternal) setIsOpen(true)
+    setIsOpen(isOpenExternal)
   }, [isOpenExternal])
 
   const handleClose = () => {
@@ -16,7 +16,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
   const messages_init = [
     {
       role: 'assistant',
-      content: "Hi! I'm Kaptain AI 🏔️, your personal TripoMist travel companion. Where would you like to explore next? Spiti Valley, Ladakh, or maybe a weekend getaway? Let's plan your dream trip!"
+      content: "Hello! I'm TripoMist Ai. How can I assist you today with your travel plans?"
     }
   ]
 
@@ -52,7 +52,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
     // Build standard messages structure with system prompt
     const systemPrompt = {
       role: 'system',
-      content: "You are Kaptain AI, a friendly and highly knowledgeable travel assistant for TripoMist, a premium group trip and adventure travel company in India. Help users plan itineraries, answer questions about destinations (like Spiti Valley, Meghalaya, Kerala, Ladakh, etc.), suggest packing lists, and give details about TripoMist group trips. Keep your responses highly engaging, professional, formatting sections using clear bullet points or bold text where appropriate. Keep responses relatively concise so they look clean in a small chat window. Avoid mentioning OpenRouter or API details."
+      content: "You are TripoMist Ai, a friendly and highly knowledgeable travel assistant for TripoMist, a premium group trip and adventure travel company in India. Help users plan itineraries, answer questions about destinations, suggest packing lists, and give details about TripoMist group trips. Keep your responses highly engaging, professional, formatting sections using clear bullet points or bold text where appropriate. Keep responses relatively concise so they look clean in a small chat window. Avoid mentioning OpenRouter or API details."
     }
 
     const apiMessages = [
@@ -102,31 +102,20 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
     <>
       {/* Chat Window Panel — opened via BottomDock pill */}
       {isOpen && (
-        <div className="fixed bottom-24 left-4 right-4 md:left-8 md:right-auto z-50 w-auto md:max-w-[400px] h-[500px] md:h-[550px] rounded-[1.5rem] overflow-hidden flex flex-col bg-white/95 backdrop-blur-md shadow-2xl border border-outline-variant/30 transition-all duration-300 animate-slide-up">
+        <div className="fixed bottom-24 left-4 right-4 md:left-8 md:right-auto z-50 w-auto md:max-w-[400px] h-[500px] md:h-[550px] rounded-[1rem] overflow-hidden flex flex-col bg-white shadow-2xl border border-gray-200 transition-all duration-300 animate-slide-up font-sans">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-[#004e72] p-4 text-white flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
-                <span className="material-symbols-outlined text-white text-[24px]">smart_toy</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-base leading-tight font-headline">Kaptain AI</h3>
-                <span className="text-xs text-emerald-300 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Online - TripoMist Guide
-                </span>
-              </div>
-            </div>
+          <div className="bg-[#f3f4f6] p-4 text-gray-800 flex items-center justify-between border-b border-gray-200">
+            <h3 className="font-bold text-lg leading-tight">TripoMist Ai</h3>
             <button 
               onClick={handleClose}
-              className="text-white/80 hover:text-white hover:scale-115 transition-all bg-transparent border-none cursor-pointer p-1"
+              className="text-gray-500 hover:text-gray-800 transition-colors bg-transparent border-none cursor-pointer p-1"
             >
               <span className="material-symbols-outlined text-[22px]">close</span>
             </button>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 bg-slate-50/50 hide-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-white hide-scrollbar">
             {messages.map((msg, index) => (
               <div 
                 key={index}
@@ -135,45 +124,41 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
                 }`}
               >
                 <div 
-                  className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                  className={`px-4 py-3 rounded-[1.2rem] text-sm leading-relaxed shadow-sm ${
                     msg.role === 'user' 
-                      ? 'bg-primary text-white rounded-tr-none shadow-md' 
-                      : 'bg-white text-on-surface border border-outline-variant/20 rounded-tl-none shadow-sm'
+                      ? 'bg-[#f3f4f6] text-gray-800 rounded-tr-sm' 
+                      : 'bg-[#e5e7eb] text-gray-800 rounded-tl-sm'
                   }`}
                 >
-                  <p className="whitespace-pre-line">{msg.content}</p>
+                  <p className="whitespace-pre-line m-0">{msg.content}</p>
                 </div>
-                <span className="text-[10px] text-on-surface-variant/60 mt-1 px-1">
-                  {msg.role === 'user' ? 'You' : 'Kaptain AI'}
-                </span>
               </div>
             ))}
 
             {/* Loading Indicator */}
             {isLoading && (
               <div className="self-start flex flex-col items-start max-w-[85%]">
-                <div className="bg-white text-on-surface border border-outline-variant/20 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                  <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                  <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                <div className="bg-[#e5e7eb] text-gray-800 rounded-[1.2rem] rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                 </div>
-                <span className="text-[10px] text-on-surface-variant/60 mt-1 px-1">Kaptain AI is thinking...</span>
               </div>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Suggestions (Only if chat has just started or no pending load) */}
+          {/* Quick Suggestions */}
           {!isLoading && messages.length <= 2 && (
-            <div className="px-4 py-2 flex flex-wrap gap-1.5 bg-slate-50/50 border-t border-slate-100">
-              {['Plan Spiti Trip 🏔️', 'Ladakh Group Trips 🏍️', 'Weekend getaway suggestions'].map((txt, idx) => (
+            <div className="px-4 py-2 flex flex-wrap gap-2 bg-white">
+              {['Plan a Trip', 'Group Trips', 'Weekend getaways'].map((txt, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
                     setInput(txt)
                   }}
-                  className="text-xs bg-white text-primary border border-primary/20 hover:bg-primary/5 transition-all px-2.5 py-1.5 rounded-full cursor-pointer"
+                  className="text-[13px] bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 transition-all px-3 py-1.5 rounded-md cursor-pointer shadow-sm"
                 >
                   {txt}
                 </button>
@@ -184,22 +169,22 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
           {/* Input Form */}
           <form 
             onSubmit={handleSend}
-            className="p-3.5 bg-white border-t border-outline-variant/30 flex items-center gap-2 shadow-inner"
+            className="p-3 bg-[#f3f4f6] flex items-center gap-2 border-t border-gray-200"
           >
             <input 
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Kaptain AI a question..."
+              placeholder="Type your message"
               disabled={isLoading}
-              className="flex-1 bg-slate-50 border border-outline-variant/40 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all disabled:opacity-50"
+              className="flex-1 bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all disabled:opacity-50"
             />
             <button 
               type="submit" 
               disabled={isLoading || !input.trim()}
-              className="w-10 h-10 rounded-xl bg-primary hover:bg-[#004e72] text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none shadow-md"
+              className="rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-4 py-2 flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-sm"
             >
-              <span className="material-symbols-outlined text-[20px] leading-none">send</span>
+              Send
             </button>
           </form>
         </div>

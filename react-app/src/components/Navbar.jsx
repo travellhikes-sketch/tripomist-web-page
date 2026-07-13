@@ -82,33 +82,33 @@ function Navbar() {
               </button>
               
               {showUserDropdown && (
-                <div className="absolute right-0 mt-2 w-[280px] bg-[#1a1a1a] rounded-2xl border border-gray-800 shadow-2xl py-2 z-50 animate-fade-in text-white font-sans">
-                  <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-3">
+                <div className="absolute right-0 mt-2 w-[280px] bg-white rounded-2xl border border-gray-200 shadow-2xl py-2 z-50 animate-fade-in text-gray-800 font-sans">
+                  <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-indigo-500 flex items-center justify-center text-white text-lg font-bold shadow-inner">
                       {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div className="flex flex-col">
-                      <p className="text-base font-bold text-white m-0 leading-tight">
+                      <p className="text-base font-bold text-gray-900 m-0 leading-tight">
                         {user.user_metadata?.full_name || "Traveler"}
                       </p>
-                      <p className="text-[13px] text-gray-400 m-0 mt-0.5 truncate max-w-[180px]">
+                      <p className="text-[13px] text-gray-500 m-0 mt-0.5 truncate max-w-[180px]">
                         {user.email}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="py-2">
+                  <div className="py-2 border-b border-gray-100">
                     <Link 
                       to="/profile" 
                       onClick={() => setShowUserDropdown(false)} 
-                      className="w-full text-left px-5 py-2.5 text-[15px] text-gray-200 hover:bg-white/5 transition-colors flex items-center gap-3 no-underline block"
+                      className="w-full text-left px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 no-underline block"
                     >
                       <span className="material-symbols-outlined text-[20px] font-light">person</span> View Profile
                     </Link>
                     <Link 
                       to="/settings" 
                       onClick={() => setShowUserDropdown(false)} 
-                      className="w-full text-left px-5 py-2.5 text-[15px] text-gray-200 hover:bg-white/5 transition-colors flex items-center gap-3 no-underline block"
+                      className="w-full text-left px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 no-underline block"
                     >
                       <span className="material-symbols-outlined text-[20px] font-light">settings</span> Settings
                     </Link>
@@ -117,9 +117,9 @@ function Navbar() {
                   <div className="px-4 py-2 mt-1">
                     <button 
                       onClick={handleLogout} 
-                      className="w-full text-center px-4 py-2.5 text-[14px] text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all font-medium border border-white/5 cursor-pointer"
+                      className="w-full text-left px-4 py-2.5 text-[15px] text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex items-center gap-3 border-none cursor-pointer bg-transparent"
                     >
-                      Sign Out
+                      <span className="material-symbols-outlined text-[20px] font-light">logout</span> Sign Out
                     </button>
                   </div>
                 </div>
