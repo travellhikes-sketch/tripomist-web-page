@@ -14,27 +14,33 @@ import ContactUs from './pages/ContactUs'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Search from './pages/Search'
+import BottomDock from './components/BottomDock'
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/weekend-trips" element={<WeekendTrips />} />
-      <Route path="/upcoming-trips" element={<UpcomingTrips />} />
-      <Route path="/group-trips" element={<GroupTrips />} />
-      <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
-      <Route path="/checkout" element={<Checkout />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/search" element={<Search />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/refund-policy" element={<RefundPolicy />} />
-      <Route path="/shipping-policy" element={<ShippingPolicy />} />
-      <Route path="/terms-conditions" element={<TermsConditions />} />
-      <Route path="/contact" element={<ContactUs />} />
-      {/* Fallback route */}
-      <Route path="*" element={<Home />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/weekend-trips" element={<WeekendTrips />} />
+        <Route path="/upcoming-trips" element={<UpcomingTrips />} />
+        <Route path="/group-trips" element={<GroupTrips />} />
+        <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/terms-conditions" element={<TermsConditions />} />
+        <Route path="/contact" element={<ContactUs />} />
+        {/* Fallback route */}
+        <Route path="*" element={<Home />} />
+      </Routes>
+
+      {/* GooeyDock — fixed bottom navigation on every page */}
+      <BottomDock />
+    </>
   )
 }
 

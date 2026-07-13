@@ -11,13 +11,16 @@ import {
 } from "@/components/ui/tooltip"
 import { motion } from "framer-motion"
 
+interface DockItem {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  onClick?: () => void
+  active?: boolean
+}
+
 interface GooeyDockProps {
   className?: string
-  items: {
-    icon: React.ComponentType<{ className?: string }>
-    label: string
-    onClick?: () => void
-  }[]
+  items: DockItem[]
 }
 
 export default function GooeyDock({ items, className }: GooeyDockProps) {
@@ -25,10 +28,10 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
 
   return (
     <div
-      className={cn("flex items-center justify-center w-full py-20", className)}
+      className={cn("flex items-center justify-center w-full py-2", className)}
     >
       {/* SVG goo filter */}
-      <svg className="absolute h-0 w-0">
+      <svg className="absolute h-0 w-0" aria-hidden="true">
         <defs>
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
@@ -48,9 +51,10 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
       </svg>
 
       <TooltipProvider delayDuration={100}>
-        <div className="relative flex gap-6 px-6 py-4">
+        <div className="relative flex gap-2 px-3 py-2">
           {items.map((item, i) => {
             const isHovered = hovered === i
+            const isActive  = item.active ?? false
 
             return (
               <Tooltip key={item.label}>
@@ -59,22 +63,28 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
                     onMouseEnter={() => setHovered(i)}
                     onMouseLeave={() => setHovered(null)}
                     animate={{
-                      scale: isHovered ? 1.2 : 1,
+                      scale: isHovered ? 1.25 : 1,
+                      y: isHovered ? -4 : 0,
                     }}
                     transition={{
                       type: "spring",
                       stiffness: 300,
                       damping: 20,
                     }}
-                    className="relative"
+                    className="relative flex flex-col items-center"
                   >
                     {/* Liquid blob background with goo filter */}
                     <motion.div
-                      className="absolute inset-0 rounded-full bg-primary/40"
-                      style={{ filter: "url(#goo)" }}
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        filter: "url(#goo)",
+                        background: isActive
+                          ? "rgba(99,102,241,0.35)"
+                          : "rgba(99,102,241,0.18)",
+                      }}
                       animate={{
-                        scale: isHovered ? 1.8 : 1,
-                        opacity: isHovered ? 1 : 0.6,
+                        scale: isHovered ? 1.7 : 1,
+                        opacity: isHovered ? 1 : isActive ? 0.8 : 0.5,
                       }}
                       transition={{
                         type: "spring",
@@ -83,18 +93,37 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
                       }}
                     />
 
-                    {/* Icon button (not filtered) */}
+                    {/* Icon button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="relative rounded-full bg-background/80 backdrop-blur-xl"
+                      className={cn(
+                        "relative rounded-full backdrop-blur-xl h-11 w-11",
+                        isActive
+                          ? "bg-primary/20 text-primary"
+                          : "bg-white/10 text-white hover:bg-white/20",
+                      )}
                       onClick={item.onClick}
+                      aria-label={item.label}
+                      aria-current={isActive ? "page" : undefined}
                     >
-                      <item.icon className="h-6 w-6" />
+                      <item.icon className="h-5 w-5" />
                     </Button>
+
+                    {/* Active indicator dot */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="mt-1 h-1 w-1 rounded-full bg-primary"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      />
+                    )}
+                    {!isActive && <div className="mt-1 h-1 w-1" />}
                   </motion.div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
+                <TooltipContent side="top" className="text-xs font-medium">
                   {item.label}
                 </TooltipContent>
               </Tooltip>
