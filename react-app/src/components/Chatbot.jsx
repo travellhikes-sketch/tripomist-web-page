@@ -100,31 +100,9 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
 
   return (
     <>
-      {/* Floating Chatbot Toggle Button */}
-      <div className="fixed bottom-8 left-8 z-50">
-        <button 
-          id="chatbot-trigger-btn" 
-          className="w-14 h-14 rounded-full bg-primary hover:bg-[#004e72] flex items-center justify-center text-white transition-all shadow-lg active:scale-95 cursor-pointer border-none relative" 
-          onClick={() => isOpen ? handleClose() : setIsOpen(true)}
-          title="Chat with Kaptain AI"
-        >
-          {isOpen ? (
-            <span className="material-symbols-outlined text-[28px] leading-none">close</span>
-          ) : (
-            <>
-              <span className="material-symbols-outlined text-[28px] leading-none animate-pulse">smart_toy</span>
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-              </span>
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Chat Window Panel */}
+      {/* Chat Window Panel — opened via BottomDock pill */}
       {isOpen && (
-        <div className="fixed bottom-24 left-8 z-50 w-full max-w-[360px] md:max-w-[400px] h-[500px] md:h-[550px] rounded-[1.5rem] overflow-hidden flex flex-col bg-white/95 backdrop-blur-md shadow-2xl border border-outline-variant/30 transition-all duration-300 animate-slide-up">
+        <div className="fixed bottom-24 left-4 right-4 md:left-8 md:right-auto z-50 w-auto md:max-w-[400px] h-[500px] md:h-[550px] rounded-[1.5rem] overflow-hidden flex flex-col bg-white/95 backdrop-blur-md shadow-2xl border border-outline-variant/30 transition-all duration-300 animate-slide-up">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-[#004e72] p-4 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">

@@ -14,6 +14,9 @@ import ContactUs from './pages/ContactUs'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Search from './pages/Search'
+import Uttarakhand from './pages/Uttarakhand'
+import Himachal from './pages/Himachal'
+import AboutUs from './pages/AboutUs'
 import BottomDock from './components/BottomDock'
 import Chatbot from './components/Chatbot'
 
@@ -27,6 +30,9 @@ function App() {
         <Route path="/weekend-trips" element={<WeekendTrips />} />
         <Route path="/upcoming-trips" element={<UpcomingTrips />} />
         <Route path="/group-trips" element={<GroupTrips />} />
+        <Route path="/uttarakhand" element={<Uttarakhand />} />
+        <Route path="/himachal" element={<Himachal />} />
+        <Route path="/about" element={<AboutUs />} />
         <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/login" element={<Login />} />
@@ -37,14 +43,13 @@ function App() {
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/contact" element={<ContactUs />} />
-        {/* Fallback route */}
         <Route path="*" element={<Home />} />
       </Routes>
 
-      {/* Global Chatbot — controlled from App level so pill can open it */}
+      {/* Global Chatbot */}
       <Chatbot isOpenExternal={chatOpen} onExternalClose={() => setChatOpen(false)} />
 
-      {/* GooeyDock + AI pill — fixed bottom on every page */}
+      {/* GooeyDock + AI pill */}
       <BottomDock onOpenChat={() => setChatOpen(true)} />
     </>
   )

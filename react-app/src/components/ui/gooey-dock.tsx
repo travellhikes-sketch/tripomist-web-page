@@ -51,7 +51,7 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
       </svg>
 
       <TooltipProvider delayDuration={100}>
-        <div className="relative flex gap-2 px-3 py-2">
+        <div className="relative flex gap-1 px-2 py-1">
           {items.map((item, i) => {
             const isHovered = hovered === i
             const isActive  = item.active ?? false
@@ -98,7 +98,7 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        "relative rounded-full backdrop-blur-xl h-11 w-11",
+                        "relative rounded-full backdrop-blur-xl h-9 w-9",
                         isActive
                           ? "bg-primary/20 text-primary"
                           : "bg-white/10 text-white hover:bg-white/20",
@@ -107,7 +107,7 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
                       aria-label={item.label}
                       aria-current={isActive ? "page" : undefined}
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-4 w-4" />
                     </Button>
 
                     {/* Active indicator dot */}
