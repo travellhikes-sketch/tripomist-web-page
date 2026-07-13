@@ -317,23 +317,6 @@ function Home() {
           </div>
         </section>
 
-        {/* Experience banner stats */}
-        <section className="px-4 md:px-8 max-w-container-max mx-auto mb-24">
-          <div className="flex flex-col md:flex-row justify-between items-center bg-surface-container-low border border-outline-variant/30 rounded-xl p-8 shadow-sm gap-8 md:gap-16">
-            <div className="text-center w-full">
-              <div className="font-headline-lg text-headline-lg text-primary mb-1 flex items-center justify-center gap-1 font-bold">4.9<span className="material-symbols-outlined fill-current text-[24px]">star</span></div>
-              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px]">Google Rating</div>
-            </div>
-            <div className="text-center w-full">
-              <div className="font-headline-lg text-headline-lg text-primary mb-1 font-bold">10K+</div>
-              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px]">Happy Travellers</div>
-            </div>
-            <div className="text-center w-full">
-              <div className="font-headline-lg text-headline-lg text-primary mb-1 font-bold">100+</div>
-              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px]">Domestic Trips</div>
-            </div>
-          </div>
-        </section>
 
         {/* International Trips Coming Soon */}
         <section className="py-24 px-4 md:px-8 max-w-container-max mx-auto border-t border-outline-variant/30 bg-surface-container-lowest">
@@ -414,6 +397,24 @@ function Home() {
                   <button className="px-4 py-2 border border-outline-variant/50 rounded-md text-on-surface font-button text-sm font-semibold hover:border-primary hover:text-primary transition-colors bg-surface">View Details</button>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Experience banner stats */}
+        <section className="px-4 md:px-8 max-w-container-max mx-auto mb-24 mt-24">
+          <div className="flex flex-col md:flex-row justify-between items-center bg-surface-container-low border border-outline-variant/30 rounded-xl p-8 shadow-sm gap-8 md:gap-16">
+            <div className="text-center w-full">
+              <div className="font-headline-lg text-headline-lg text-primary mb-1 flex items-center justify-center gap-1 font-bold">4.9<span className="material-symbols-outlined fill-current text-[24px]">star</span></div>
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px]">Google Rating</div>
+            </div>
+            <div className="text-center w-full">
+              <div className="font-headline-lg text-headline-lg text-primary mb-1 font-bold">10K+</div>
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px]">Happy Travellers</div>
+            </div>
+            <div className="text-center w-full">
+              <div className="font-headline-lg text-headline-lg text-primary mb-1 font-bold">100+</div>
+              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px]">Domestic Trips</div>
             </div>
           </div>
         </section>
