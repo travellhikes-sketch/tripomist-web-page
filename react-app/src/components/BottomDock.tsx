@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import GooeyDock from '@/components/ui/gooey-dock'
-import { Home, Users, Sunrise, CalendarDays, Search } from 'lucide-react'
+import { Home, Users, Sunrise, CalendarDays, ShoppingCart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
@@ -9,7 +9,7 @@ const navItems = [
   { icon: Users,        label: 'Group Trips',   path: '/group-trips' },
   { icon: Sunrise,      label: 'Weekend Trips', path: '/weekend-trips' },
   { icon: CalendarDays, label: 'Upcoming',      path: '/upcoming-trips' },
-  { icon: Search,       label: 'Search',        path: '/search' },
+  { icon: ShoppingCart, label: 'Cart',          path: '/cart' },
 ]
 
 interface BottomDockProps {

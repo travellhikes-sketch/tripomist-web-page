@@ -15,7 +15,6 @@ import ContactUs from './pages/ContactUs'
 import Login from './pages/Login'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
-import Search from './pages/Search'
 import Uttarakhand from './pages/Uttarakhand'
 import Himachal from './pages/Himachal'
 import Kashmir from './pages/Kashmir'
@@ -64,7 +63,6 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/search" element={<Search />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />

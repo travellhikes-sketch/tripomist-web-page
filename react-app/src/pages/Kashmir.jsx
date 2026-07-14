@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import DestinationSearch from '../components/DestinationSearch'
 
 const destinations = [
   {
@@ -46,7 +47,10 @@ export default function Kashmir() {
 
       {/* Destinations Grid */}
       <main className="max-w-6xl mx-auto px-4 py-10 w-full pb-36">
-        <h2 className="text-2xl font-bold text-on-surface mb-6">Top Destinations</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <h2 className="text-2xl font-bold text-on-surface">Top Destinations</h2>
+          <DestinationSearch />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {destinations.map((dest) => (
             <Link
