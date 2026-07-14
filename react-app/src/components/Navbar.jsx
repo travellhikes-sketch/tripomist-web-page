@@ -44,6 +44,7 @@ function Navbar() {
   }
 
   return (
+    <>
     <nav className="bg-white dark:bg-slate-900 sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300">
       <div className="flex justify-between items-center w-full px-4 md:px-8 py-3 max-w-7xl mx-auto">
         {/* Brand */}
