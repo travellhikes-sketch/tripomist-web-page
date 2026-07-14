@@ -66,27 +66,46 @@ export default function Himachal() {
     <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative w-full h-72 md:h-96 flex items-end pb-10 px-6 overflow-hidden">
+            {/* Hero */}
+      <section className="relative w-full h-72 md:h-96 flex items-end pb-10 px-6 md:px-12 overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80"
           alt="Himachal Pradesh mountains"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-        <div className="relative z-10">
-          <p className="text-blue-300 text-sm font-semibold tracking-widest uppercase mb-1">Explore India</p>
-          <h1 className="text-white text-4xl md:text-5xl font-bold leading-tight">Himachal Pradesh</h1>
-          <p className="text-white/80 mt-2 text-base max-w-md">Snow peaks, apple orchards, ancient monasteries — the Himalayan paradise.</p>
+        
+        <div className="relative z-10 w-full max-w-7xl mx-auto">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex relative w-full items-end justify-between">
+            <div className="w-1/3">
+              <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore India</p>
+              <h1 className="text-white text-4xl md:text-5xl font-bold leading-tight">Himachal Pradesh</h1>
+              <p className="text-white/80 mt-2 text-base">Snow peaks, apple orchards, ancient monasteries — the Himalayan paradise.</p>
+            </div>
+            
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-2 w-[400px]">
+              <DestinationSearch />
+            </div>
+          </div>
+
+          {/* Mobile Layout */}
+          <div className="md:hidden flex flex-col gap-6">
+            <div>
+              <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore India</p>
+              <h1 className="text-white text-4xl font-bold leading-tight">Himachal Pradesh</h1>
+              <p className="text-white/80 mt-2 text-base">Snow peaks, apple orchards, ancient monasteries — the Himalayan paradise.</p>
+            </div>
+            <div className="w-full">
+              <DestinationSearch />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Destinations Grid */}
       <main className="max-w-6xl mx-auto px-4 py-10 w-full pb-36">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <h2 className="text-2xl font-bold text-on-surface">Top Destinations</h2>
-          <DestinationSearch />
-        </div>
+        <h2 className="text-2xl font-bold text-on-surface mb-6">Top Destinations</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {destinations.map((dest) => (
             <Link

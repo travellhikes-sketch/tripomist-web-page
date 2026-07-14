@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import DestinationSearch from '../components/DestinationSearch'
 import Footer from '../components/Footer'
 
 function GroupTrips() {
@@ -123,27 +124,53 @@ function GroupTrips() {
     <div className="text-on-background bg-background font-body-md text-body-md antialiased min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Main Content Layout */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-12">
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="font-display-lg text-3xl md:text-4xl font-extrabold mb-3 text-on-surface tracking-tight">Group Trips & Expeditions</h1>
-          <p className="text-on-surface-variant text-sm md:text-base max-w-xl mx-auto">Explore premium group adventures across stunning landscapes, beaches, and scenic mountain trails.</p>
-        </div>
+            {/* Hero */}
+      <section className="relative w-full h-72 md:h-96 flex items-end pb-10 px-6 md:px-12 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1523592121529-f6dde35f079e?w=1200&q=80"
+          alt="Trips"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        
+        <div className="relative z-10 w-full max-w-7xl mx-auto">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex relative w-full items-end justify-between">
+            <div className="w-1/3">
+              <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore</p>
+              <h1 className="text-white text-4xl md:text-5xl font-bold leading-tight">Group Trips & Expeditions</h1>
+              <p className="text-white/80 mt-2 text-base">Explore premium group adventures across stunning landscapes, beaches, and scenic mountain trails.</p>
+            </div>
+            
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-2 w-[400px]">
+              <DestinationSearch 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search trips by destination..."
+              />
+            </div>
+          </div>
 
-        {/* Search Input */}
-        <div className="max-w-md mx-auto mb-10">
-          <div className="relative flex items-center bg-white dark:bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2.5 shadow-sm focus-within:ring-2 focus-within:ring-primary/20">
-            <span className="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
-            <input 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
-              placeholder="Search group trips by destination..." 
-              type="text" 
-            />
+          {/* Mobile Layout */}
+          <div className="md:hidden flex flex-col gap-6">
+            <div>
+              <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore</p>
+              <h1 className="text-white text-4xl font-bold leading-tight">Group Trips & Expeditions</h1>
+              <p className="text-white/80 mt-2 text-base">Explore premium group adventures across stunning landscapes, beaches, and scenic mountain trails.</p>
+            </div>
+            <div className="w-full">
+              <DestinationSearch 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search trips by destination..."
+              />
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* Main Content Layout */}
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-12">
 
         {/* Trips Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
