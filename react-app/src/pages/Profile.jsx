@@ -145,15 +145,16 @@ function Profile() {
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#4a90e2] text-white flex items-center justify-center overflow-hidden shadow-md">
                 <span className="material-symbols-outlined text-[60px] md:text-[80px] mt-4 opacity-90">person</span>
               </div>
-              <button 
-                onClick={() => setIsEditing(!isEditing)}
+              <label 
                 className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                title="Change Photo"
               >
+                <input type="file" className="hidden" accept="image/*" onChange={() => alert('Photo upload functionality is ready to be connected!')} />
                 <span className="material-symbols-outlined text-[16px] md:text-[18px] text-gray-600">edit</span>
-              </button>
+              </label>
             </div>
             <h3 className="text-lg md:text-xl font-bold text-gray-900 mt-4 flex items-center gap-2">
-              Hi {displayName.split(' ')[0]} 🙋🏻‍♂️
+              Hi {displayName.split(' ')[0]}
             </h3>
           </div>
 
@@ -161,14 +162,7 @@ function Profile() {
           <div className="w-full max-w-lg">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">Personal Info</h2>
-              {!isEditing ? (
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer shadow-sm"
-                >
-                  Update
-                </button>
-              ) : (
+              {isEditing && (
                 <button 
                   onClick={() => setIsEditing(false)}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-full text-sm font-semibold transition-colors cursor-pointer"
@@ -190,11 +184,11 @@ function Profile() {
                     <input required value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a]" type="tel" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Birthday</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Date of Birth</label>
                     <input value={editDob} onChange={(e) => setEditDob(e.target.value)} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a]" type="date" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
                     <input required value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a]" type="email" />
                   </div>
                   <div>
@@ -207,75 +201,120 @@ function Profile() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Location</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Address</label>
                     <input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a]" type="text" placeholder="City, State" />
                   </div>
                 </div>
-                <button type="submit" disabled={updating} className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3 rounded-xl transition-colors mt-4 disabled:opacity-50">
+                <button type="submit" disabled={updating} className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3 rounded-xl transition-colors mt-4 disabled:opacity-50 cursor-pointer">
                   {updating ? 'Saving...' : 'Save Changes'}
                 </button>
               </form>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4 animate-fade-in">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🖊️</span>
-                  <span className="text-gray-700 font-medium">{user.user_metadata?.full_name || 'Not provided'}</span>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4 animate-fade-in bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase mb-1">Full Name:</span>
+                    <span className="text-gray-800 font-medium">{user.user_metadata?.full_name || 'Not provided'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase mb-1">Phone No:</span>
+                    <span className="text-gray-800 font-medium">{user.user_metadata?.phone || 'Not provided'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase mb-1">Date of Birth:</span>
+                    <span className="text-gray-800 font-medium">{user.user_metadata?.dob || 'Not provided'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase mb-1">Email:</span>
+                    <span className="text-gray-800 font-medium">{user.email || 'Not provided'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase mb-1">Gender:</span>
+                    <span className="text-gray-800 font-medium capitalize">{user.user_metadata?.gender || 'Not provided'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-500 uppercase mb-1">Address:</span>
+                    <span className="text-gray-800 font-medium">{user.user_metadata?.address || 'Not provided'}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📱</span>
-                  <span className="text-gray-700 font-medium">{user.user_metadata?.phone || 'Not provided'}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🎂</span>
-                  <span className="text-gray-700 font-medium">{user.user_metadata?.dob || 'Not provided'}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📬</span>
-                  <span className="text-gray-700 font-medium">{user.email || 'Not provided'}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">👨</span>
-                  <span className="text-gray-700 font-medium capitalize">{user.user_metadata?.gender || 'Not provided'}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🏠</span>
-                  <span className="text-gray-700 font-medium">{user.user_metadata?.address || 'Not provided'}</span>
-                </div>
-              </div>
-            )}
 
-            <div className="mt-8 pt-6 border-t border-gray-100 flex justify-start">
-              <button 
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-red-500 underline font-medium transition-colors cursor-pointer"
-              >
-                Logout
-              </button>
-            </div>
+                <div className="mt-8 flex items-center justify-start gap-4">
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors cursor-pointer shadow-sm"
+                  >
+                    Update
+                  </button>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-gray-500 hover:text-red-500 underline font-medium transition-colors cursor-pointer text-sm"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Ad Banner */}
-        <div className="w-full rounded-2xl overflow-hidden relative shadow-lg cursor-pointer group mb-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10"></div>
-          <img 
-            src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=1200&q=80" 
-            alt="Paris" 
-            className="w-full h-[200px] md:h-[250px] object-cover group-hover:scale-105 transition-transform duration-700" 
-          />
-          <div className="absolute top-0 left-0 w-full h-full z-20 flex flex-col justify-center p-8 md:p-12">
-            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined text-white text-sm">flight</span>
-            </div>
-            <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-2 leading-tight">
-              International New Year Trips
-            </h2>
-            <h3 className="text-xl md:text-2xl font-bold text-orange-500 mb-6">
-              at Jaw-Dropping Prices!
-            </h3>
-            <p className="text-white/90 font-medium text-sm md:text-base">
-              You'll Book Before Midnight!
-            </p>
+        {/* Recommended Trips */}
+        <div className="mb-10 w-full overflow-hidden">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 px-1">Recommended For You</h2>
+          <div className="flex gap-4 md:gap-6 overflow-x-auto pb-6 hide-scrollbar snap-x snap-mandatory px-1">
+            {[
+              {
+                id: 'spiti',
+                title: 'Spiti Valley Expedition',
+                image: 'https://images.unsplash.com/photo-1548344686-2180ec5d09e7?w=800&q=80',
+                price: '₹14,999',
+                days: '7 Days',
+                link: '/spiti'
+              },
+              {
+                id: 'ladakh',
+                title: 'Leh Ladakh Adventure',
+                image: 'https://images.unsplash.com/photo-1626084666504-20b5711df774?w=800&q=80',
+                price: '₹22,500',
+                days: '8 Days',
+                link: '/ladakh'
+              },
+              {
+                id: 'kashmir',
+                title: 'Kashmir Paradise',
+                image: 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?w=800&q=80',
+                price: '₹12,000',
+                days: '6 Days',
+                link: '/kashmir'
+              }
+            ].map((trip) => (
+              <div key={trip.id} className="min-w-[280px] md:min-w-[320px] bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden relative snap-center group transition-shadow">
+                <div className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-full z-10 shadow-md">
+                  🔥 Top Seller
+                </div>
+                <div className="relative h-48 overflow-hidden cursor-pointer" onClick={() => navigate(trip.link)}>
+                  <img src={trip.image} alt={trip.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-3 left-3 text-white">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md border border-white/20">
+                      <span className="material-symbols-outlined text-[14px]">schedule</span> {trip.days}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-[17px] font-bold text-gray-900 mb-1 leading-tight">{trip.title}</h3>
+                  <p className="text-gray-500 text-xs mb-4">Starts Ex Delhi</p>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-medium">Starting from</span>
+                      <span className="text-[#136b8a] font-extrabold text-lg">{trip.price}</span>
+                    </div>
+                    <Link to={trip.link} className="bg-gray-900 hover:bg-[#136b8a] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm no-underline">
+                      View Detail
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </main>

@@ -111,13 +111,6 @@ function Navbar() {
                     >
                       <span className="material-symbols-outlined text-[20px] text-gray-500 dark:text-gray-400">person</span> View Profile
                     </Link>
-                    <Link 
-                      to="/settings" 
-                      onClick={() => setShowUserDropdown(false)} 
-                      className="w-full text-left px-4 py-2.5 text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 no-underline block"
-                    >
-                      <span className="material-symbols-outlined text-[20px] text-gray-500 dark:text-gray-400">settings</span> Settings
-                    </Link>
                   </div>
                   
                   <div className="h-px bg-gray-100 dark:bg-gray-700 w-full my-1"></div>
