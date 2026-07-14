@@ -43,34 +43,36 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/weekend-trips" element={<WeekendTrips />} />
-        <Route path="/upcoming-trips" element={<UpcomingTrips />} />
-        <Route path="/group-trips" element={<GroupTrips />} />
-        <Route path="/uttarakhand" element={<Uttarakhand />} />
-        <Route path="/himachal" element={<Himachal />} />
-        <Route path="/kashmir" element={<Kashmir />} />
-        <Route path="/rajasthan" element={<Rajasthan />} />
-        <Route path="/meghalaya" element={<Meghalaya />} />
-        <Route path="/ladakh" element={<Ladakh />} />
-        <Route path="/spiti" element={<Spiti />} />
-        <Route path="/andaman" element={<Andaman />} />
-        <Route path="/about" element={<AboutUs />} />
-        <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/refund-policy" element={<RefundPolicy />} />
-        <Route path="/shipping-policy" element={<ShippingPolicy />} />
-        <Route path="/terms-conditions" element={<TermsConditions />} />
-        <Route path="/contact" element={<ContactUs />} />
-        <Route path="*" element={<Home />} />
-      </Routes>
+      <div className="pb-36 md:pb-0">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/weekend-trips" element={<WeekendTrips />} />
+          <Route path="/upcoming-trips" element={<UpcomingTrips />} />
+          <Route path="/group-trips" element={<GroupTrips />} />
+          <Route path="/uttarakhand" element={<Uttarakhand />} />
+          <Route path="/himachal" element={<Himachal />} />
+          <Route path="/kashmir" element={<Kashmir />} />
+          <Route path="/rajasthan" element={<Rajasthan />} />
+          <Route path="/meghalaya" element={<Meghalaya />} />
+          <Route path="/ladakh" element={<Ladakh />} />
+          <Route path="/spiti" element={<Spiti />} />
+          <Route path="/andaman" element={<Andaman />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/terms-conditions" element={<TermsConditions />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </div>
 
       {/* Global Chatbot */}
       <Chatbot isOpenExternal={chatOpen} onExternalClose={() => setChatOpen(false)} />
