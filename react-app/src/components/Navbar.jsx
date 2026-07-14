@@ -44,7 +44,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="bg-white/80 dark:bg-surface-dim/80 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/30 shadow-sm transition-all duration-300">
+    <nav className="bg-white dark:bg-slate-900 sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300">
       <div className="flex justify-between items-center w-full px-4 md:px-8 py-3 max-w-7xl mx-auto">
         {/* Brand */}
         <div className="flex items-center gap-6">
@@ -56,9 +56,9 @@ function Navbar() {
         
         {/* Desktop Nav Links */}
         <div className="hidden md:flex gap-6 items-center">
-          <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/uttarakhand') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-on-surface-variant hover:text-primary'}`} to="/uttarakhand">Uttarakhand</Link>
-          <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/himachal') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-on-surface-variant hover:text-primary'}`} to="/himachal">Himachal Pradesh</Link>
-          <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/about') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-on-surface-variant hover:text-primary'}`} to="/about">About Us</Link>
+          <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/uttarakhand') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/uttarakhand">Uttarakhand</Link>
+          <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/himachal') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/himachal">Himachal Pradesh</Link>
+          <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/about') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/about">About Us</Link>
         </div>
         
         {/* Actions/Icons */}
@@ -75,14 +75,14 @@ function Navbar() {
                   {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 
-                <span className="hidden md:inline font-body-md text-sm font-semibold max-w-[100px] truncate text-gray-700">
+                <span className="hidden md:inline font-body-md text-sm font-semibold max-w-[100px] truncate text-gray-700 dark:text-gray-200">
                   {user.user_metadata?.full_name || user.email?.split('@')[0]}
                 </span>
-                <span className="material-symbols-outlined text-sm text-gray-500">expand_more</span>
+                <span className="material-symbols-outlined text-sm text-gray-500 dark:text-gray-400">expand_more</span>
               </button>
               
               {showUserDropdown && (
-                <div className="absolute right-0 mt-3 w-[260px] bg-white rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 z-50 animate-fade-in font-sans">
+                <div className="absolute right-0 mt-3 w-[260px] bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 z-50 animate-fade-in font-sans">
                   
                   {/* Header / User Info */}
                   <div className="px-4 py-3 flex items-center gap-3">
@@ -90,42 +90,42 @@ function Navbar() {
                       {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div className="flex flex-col overflow-hidden">
-                      <p className="text-[15px] font-bold text-gray-900 m-0 leading-tight truncate">
+                      <p className="text-[15px] font-bold text-gray-900 dark:text-white m-0 leading-tight truncate">
                         {user.user_metadata?.full_name || "Traveler"}
                       </p>
-                      <p className="text-[12px] text-gray-500 m-0 mt-0.5 truncate">
+                      <p className="text-[12px] text-gray-500 dark:text-gray-400 m-0 mt-0.5 truncate">
                         {user.email}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="h-px bg-gray-100 w-full my-1"></div>
+                  <div className="h-px bg-gray-100 dark:bg-gray-700 w-full my-1"></div>
                   
                   {/* Menu Items */}
                   <div className="py-1">
                     <Link 
                       to="/profile" 
                       onClick={() => setShowUserDropdown(false)} 
-                      className="w-full text-left px-4 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 no-underline block"
+                      className="w-full text-left px-4 py-2.5 text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 no-underline block"
                     >
-                      <span className="material-symbols-outlined text-[20px] text-gray-500">person</span> View Profile
+                      <span className="material-symbols-outlined text-[20px] text-gray-500 dark:text-gray-400">person</span> View Profile
                     </Link>
                     <Link 
                       to="/settings" 
                       onClick={() => setShowUserDropdown(false)} 
-                      className="w-full text-left px-4 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 no-underline block"
+                      className="w-full text-left px-4 py-2.5 text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-3 no-underline block"
                     >
-                      <span className="material-symbols-outlined text-[20px] text-gray-500">settings</span> Settings
+                      <span className="material-symbols-outlined text-[20px] text-gray-500 dark:text-gray-400">settings</span> Settings
                     </Link>
                   </div>
                   
-                  <div className="h-px bg-gray-100 w-full my-1"></div>
+                  <div className="h-px bg-gray-100 dark:bg-gray-700 w-full my-1"></div>
                   
                   {/* Sign Out Button */}
                   <div className="px-4 py-3">
                     <button 
                       onClick={handleLogout} 
-                      className="w-full text-center py-2.5 text-[14px] font-semibold text-gray-700 bg-white border border-gray-300 hover:border-gray-400 hover:bg-gray-50 rounded-xl transition-all cursor-pointer"
+                      className="w-full text-center py-2.5 text-[14px] font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-xl transition-all cursor-pointer"
                     >
                       Sign Out
                     </button>
@@ -142,24 +142,25 @@ function Navbar() {
             </Link>
           )}
 
-          <Link className="hidden md:flex items-center text-on-surface-variant hover:text-primary transition-colors p-1" to="/cart" aria-label="Cart">
+          <Link className="hidden md:flex items-center text-gray-600 dark:text-gray-300 hover:text-primary transition-colors p-1" to="/cart" aria-label="Cart">
             <span className="material-symbols-outlined">shopping_cart</span>
           </Link>
 
-          <button className="md:hidden text-on-surface-variant p-1 ml-1" onClick={() => setIsOpen(true)} aria-label="Open Menu">
-            <span className="material-symbols-outlined">menu</span>
+          <button className="md:hidden text-gray-800 dark:text-gray-200 p-1 ml-1" onClick={() => setIsOpen(true)} aria-label="Open Menu">
+            <span className="material-symbols-outlined text-2xl">menu</span>
           </button>
         </div>
-      </nav>
+      </div>
+    </nav>
 
       {/* Mobile Overlay (Outside Nav for perfect z-index) */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden transition-opacity duration-300" onClick={() => setIsOpen(false)}></div>
       )}
 
-      {/* Mobile Drawer Navigation (Slides from right, Outside Nav for perfect z-index) */}
-      <div className={`fixed top-0 right-0 h-[100dvh] w-[280px] bg-white dark:bg-slate-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out md:hidden flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800">
+      {/* Mobile Drawer Navigation (Drops from top, Outside Nav for perfect z-index) */}
+      <div className={`fixed top-0 left-0 w-full bg-white dark:bg-slate-900 shadow-2xl z-[70] transform transition-all duration-300 ease-in-out md:hidden flex flex-col rounded-b-3xl max-h-[90dvh] overflow-hidden ${isOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
           <span className="font-bold text-gray-900 dark:text-white text-lg">Menu</span>
           <button className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => setIsOpen(false)} aria-label="Close Menu">
             <span className="material-symbols-outlined">close</span>
@@ -196,7 +197,7 @@ function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="pt-6">
+            <div className="pt-6 mb-4">
               <Link 
                 to="/login"
                 onClick={() => setIsOpen(false)}
