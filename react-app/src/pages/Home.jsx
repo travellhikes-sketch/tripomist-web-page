@@ -51,7 +51,7 @@ function Home() {
 
       <main className="w-full flex-grow">
         {/* Hero Section */}
-        <section className="relative w-full min-h-[921px] flex flex-col justify-end pt-32 pb-48 md:pb-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+        <section className="relative w-full min-h-[921px] flex flex-col justify-end pt-32 pb-48 md:pb-margin-desktop">
           <div className="absolute inset-0 w-full h-full -z-10 bg-black">
             <video 
               autoPlay 
@@ -69,8 +69,11 @@ function Home() {
             {/* Cinematic dark gradient overlay (40-50%) for perfect text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30"></div>
           </div>
-          <div className="relative z-10 max-w-3xl mb-stack-lg">
-            <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight">
+          
+          {/* Content Wrapper */}
+          <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="relative z-10 max-w-3xl mb-stack-lg">
+              <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight">
               Find Yourself&nbsp; <br /><span className="text-primary-container">With TripoMist</span>
             </h1>
             <p className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8">
@@ -101,6 +104,7 @@ function Home() {
               </div>
             </div>
           </div>
+        </div>
         </section>
 
         {/* Explore Destinations - Circles */}
