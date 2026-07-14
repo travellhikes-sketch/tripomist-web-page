@@ -58,16 +58,17 @@ function Home() {
               loop 
               muted 
               playsInline 
-              preload="none"
+              preload="auto"
+              onLoadedData={(e) => e.target.classList.replace('opacity-0', 'opacity-100')}
               poster="https://lh3.googleusercontent.com/aida-public/AB6AXuDr1bFj-VK1OCK8cofjz3XpkMGaadAnPYNmy27ywy54zuRYxrUQWhc_bunY6J-RqHK7AH63X6zrdMCNsPptKpAjoAH0gN_AyLziUOhSONpQWYo2iL4J0lexaBryu5Jkgz98qymqdjEkPK6YVc27KlmYURB5u-wFuH0ea815zPNGCAyoL54FxRvBec2KvReMlQ3I5k-JNY1lb-l6qzxNx0EqJq6TgwOr025Fb-LqlnNhup3j9tRlfLE2Ijr-lxsxOAeNIw3yoHQS_XrEWNA"
-              className="w-full h-full object-cover opacity-90"
+              className="w-full h-full object-cover opacity-0 transition-opacity duration-1000 ease-in-out"
+              style={{ objectPosition: 'center center' }}
             >
-              {/* Using a premium cinematic snow-covered mountains video */}
-              <source src="https://assets.mixkit.co/videos/preview/mixkit-winter-forest-covered-with-snow-from-above-4188-large.mp4" type="video/mp4" />
+              <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260629_032424_3c9c2a9d-807b-4482-80e6-dd6d9dfd4545.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-            {/* Cinematic dark gradient overlay (40-50%) for perfect text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30"></div>
+            {/* Subtle dark overlay (20-30%) for text readability */}
+            <div className="absolute inset-0 bg-black/30"></div>
           </div>
           
           {/* Content Wrapper */}
