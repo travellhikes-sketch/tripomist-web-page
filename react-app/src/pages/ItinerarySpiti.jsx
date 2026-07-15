@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import DownloadItineraryModal from '../components/DownloadItineraryModal'
+import { GooeySearchBar } from '../components/ui/animated-search-bar'
 
 export default function ItinerarySpiti() {
   const { id } = useParams()
@@ -171,10 +172,20 @@ export default function ItinerarySpiti() {
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[60vh] bg-gray-900 overflow-hidden">
           <div className="absolute inset-0 bg-cover bg-center w-full h-full" style={{ backgroundImage: `url('${trip.bg}')` }}></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-center pb-8">
-            <h1 className="text-white text-2xl md:text-4xl font-bold tracking-wide drop-shadow-lg text-center">
-              {trip.title} {trip.duration.split(',')[0]}
-            </h1>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex flex-col items-start justify-center px-4 md:px-12 lg:px-20">
+            
+            <div className="w-full max-w-lg mb-8 mx-auto md:mx-0">
+              <GooeySearchBar />
+            </div>
+
+            <div className="mt-auto pb-12 w-full max-w-4xl">
+              <h1 className="text-white text-3xl md:text-5xl font-extrabold tracking-tight drop-shadow-xl mb-4 text-left">
+                {trip.title} {trip.duration.split(',')[0]}
+              </h1>
+              <p className="text-gray-200 text-sm md:text-lg font-medium max-w-2xl text-left drop-shadow-md line-clamp-2 md:line-clamp-none">
+                {trip.description}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -288,7 +299,7 @@ export default function ItinerarySpiti() {
           </div>
 
           {/* Right Column: Sticky Booking Card (Desktop Only) */}
-          <div className="hidden lg:block lg:col-span-4 relative">
+          <div className="w-full lg:col-span-4 relative mt-8 lg:mt-0">
             <div className="sticky top-[100px] bg-white rounded-3xl border border-gray-200 p-6 shadow-lg shadow-gray-100">
               
               {/* Price Details */}

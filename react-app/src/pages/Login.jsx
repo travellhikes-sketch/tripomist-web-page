@@ -2,35 +2,60 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, safeStorage } from '../utils/supabaseClient'
 
+// Mock Country Codes
+const countryCodes = [
+  { code: '+91', country: 'IN' },
+  { code: '+1', country: 'US/CA' },
+  { code: '+44', country: 'UK' },
+  { code: '+61', country: 'AU' },
+  { code: '+971', country: 'AE' }
+]
+
 function Login() {
-  const [step, setStep] = useState(1) // 1: Phone, 2: OTP, 3: Profile
-  const [phone, setPhone] = useState('')
-  const [otp, setOtp] = useState('')
+  const [authMode, setAuthMode] = useState('register') // 'register' | 'login'
+  const [step, setStep] = useState(1) // 1: Registration Form, 2: OTP
+  
+  // Registration State
   const [fullName, setFullName] = useState('')
+  const [countryCode, setCountryCode] = useState('+91')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+  
+  // Login State
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   
   const navigate = useNavigate()
 
-  const handlePhoneSubmit = (e) => {
+  // 1. Submit Registration Form
+  const handleRegisterSubmit = (e) => {
     e.preventDefault()
+    if (!fullName || !phone || !email || !password) {
+      setErrorMsg("Please fill in all fields.")
+      return
+    }
     if (phone.length < 10) {
-      setErrorMsg("Please enter a valid 10-digit phone number.")
+      setErrorMsg("Please enter a valid phone number.")
       return
     }
     setLoading(true)
     setErrorMsg('')
+    
     // Simulate sending OTP
     setTimeout(() => {
       setLoading(false)
-      setSuccessMsg("OTP sent successfully to " + phone)
+      setSuccessMsg("OTP sent successfully to " + countryCode + " " + phone)
       setStep(2)
     }, 800)
   }
 
+  // 2. Submit OTP
   const handleOtpSubmit = (e) => {
     e.preventDefault()
     if (otp.length < 4) {
@@ -40,239 +65,298 @@ function Login() {
     setLoading(true)
     setErrorMsg('')
     setSuccessMsg('')
-    // Simulate verifying OTP
+    
+    // Simulate verifying OTP and completing registration
     setTimeout(() => {
       setLoading(false)
-      setStep(3)
-    }, 800)
+      // Save credentials to local storage so they can login later (mocking DB)
+      safeStorage.setItem('mock_registered_user', JSON.stringify({
+        email,
+        password,
+        full_name: fullName,
+        phone: countryCode + " " + phone
+      }))
+      
+      alert("Registration Successful! Please Sign In.")
+      // Redirect to home as requested ("home page par back ho jayega")
+      navigate('/')
+    }, 1000)
   }
 
-  const handleProfileSubmit = async (e) => {
+  // 3. Submit Login
+  const handleLoginSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setErrorMsg('')
     setSuccessMsg('')
 
-    // Mock Sign Up Flow
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          phone: "+91 " + phone
-        }
-      }
+    // Use supabase auth if configured, otherwise fallback to mock
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword
     })
 
     if (error) {
-      // If user exists, just log them in for this demo flow
-      if (error.message.includes("already exists")) {
-         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-           email,
-           password
-         })
-         if (signInError) {
-           setErrorMsg(signInError.message)
-         } else {
-           setSuccessMsg("Welcome back! Redirecting...")
-           safeStorage.setItem('mock_current_user', JSON.stringify(signInData.user || signInData))
-           window.dispatchEvent(new Event('auth-state-change'))
-           setTimeout(() => { navigate('/') }, 1200)
-         }
-      } else if (error.message.toLowerCase().includes("rate limit")) {
-        setSuccessMsg("Rate limit reached. Mock logging you in...")
-        const mockUser = {
-          id: 'mock-user-' + Math.random().toString(36).substring(2, 11),
-          email: email,
-          user_metadata: { full_name: fullName, phone: "+91 " + phone }
+      // Mock logic fallback for unregistered users in Supabase but registered in our mock flow
+      const mockStr = safeStorage.getItem('mock_registered_user')
+      if (mockStr) {
+        const mockUser = JSON.parse(mockStr)
+        if (mockUser.email === loginEmail && mockUser.password === loginPassword) {
+          // Success
+          const sessionUser = {
+            id: 'mock-user-' + Math.random().toString(36).substring(2, 11),
+            email: loginEmail,
+            user_metadata: { full_name: mockUser.full_name, phone: mockUser.phone }
+          }
+          safeStorage.setItem('mock_current_user', JSON.stringify(sessionUser))
+          window.dispatchEvent(new Event('auth-state-change'))
+          setSuccessMsg("Sign In Successful! Redirecting...")
+          setTimeout(() => { navigate('/') }, 1000)
+          return
         }
-        safeStorage.setItem('mock_current_user', JSON.stringify(mockUser))
-        window.dispatchEvent(new Event('auth-state-change'))
-        setTimeout(() => { navigate('/') }, 1200)
-      } else {
-        setErrorMsg(error.message)
       }
+      // If we reach here, neither supabase nor mock matched
+      setLoading(false)
+      setErrorMsg("Invalid Email or Password.")
     } else {
-      setSuccessMsg("Profile completed! Logging you in...")
+      // Supabase success
       safeStorage.setItem('mock_current_user', JSON.stringify(data.user || data))
       window.dispatchEvent(new Event('auth-state-change'))
-      setTimeout(() => {
-        navigate('/')
-      }, 1500)
+      setSuccessMsg("Sign In Successful! Redirecting...")
+      setTimeout(() => { navigate('/') }, 1000)
     }
-    setLoading(false)
-  }
-
-  const handleClose = () => {
-    navigate(-1)
   }
 
   return (
-    <div className="flex justify-center min-h-screen bg-[#f3f4f6] text-gray-900 font-sans p-4 relative">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
       
-      {/* Simple Back Button at Top Left */}
-      <button 
-        onClick={handleClose}
-        className="absolute top-6 left-6 flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors bg-transparent border-none cursor-pointer"
-      >
-        <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-        <span className="font-semibold text-sm">Back</span>
-      </button>
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+      <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl z-0 pointer-events-none"></div>
+      <div className="absolute top-40 left-20 w-48 h-48 bg-teal-400/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
 
-      <main className="w-full max-w-[400px] mt-16 md:mt-24 flex flex-col gap-6">
-        
-        <div className="text-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            {step === 1 && "Login"}
-            {step === 2 && "Verification"}
-            {step === 3 && "Complete Profile"}
-          </h1>
-          <p className="text-sm text-gray-500 mt-2">
-            {step === 1 && "Enter your phone number to continue"}
-            {step === 2 && "Enter the OTP sent to your phone"}
-            {step === 3 && "Please fill in your details to finish"}
-          </p>
-        </div>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight drop-shadow-sm">
+          {authMode === 'register' 
+            ? (step === 1 ? 'Create an Account' : 'Verify OTP')
+            : 'Sign in to TripoMist'}
+        </h2>
+        <p className="mt-2 text-center text-sm text-teal-100 font-medium">
+          {authMode === 'register' ? 'Join us and start your adventure' : 'Welcome back, traveler!'}
+        </p>
+      </div>
 
-        {/* Messages */}
-        {errorMsg && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined">error</span>
-            {errorMsg}
-          </div>
-        )}
-        {successMsg && (
-          <div className="p-3 bg-green-50 text-green-600 rounded-xl text-sm font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined">check_circle</span>
-            {successMsg}
-          </div>
-        )}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
+        <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100">
+          
+          {errorMsg && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
+              <span className="material-symbols-outlined text-[18px]">error</span>
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
+              <span className="material-symbols-outlined text-[18px]">check_circle</span>
+              {successMsg}
+            </div>
+          )}
 
-        {/* Auth Forms depending on Step */}
-        
-        {/* STEP 1: Phone */}
-        {step === 1 && (
-          <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4 animate-fade-in">
-            <div className="flex gap-2">
-              <div className="flex items-center justify-center bg-white border border-gray-200 rounded-2xl px-4 text-sm font-semibold text-gray-500 shadow-sm">
-                +91
+          {/* ----- REGISTER FLOW ----- */}
+          {authMode === 'register' && step === 1 && (
+            <form className="space-y-5" onSubmit={handleRegisterSubmit}>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-400 material-symbols-outlined text-[20px]">person</span>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    placeholder="John Doe"
+                  />
+                </div>
               </div>
-              <input
-                required
-                autoFocus
-                type="tel"
-                minLength={10}
-                maxLength={10}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="flex-grow pl-4 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
-                placeholder="Phone Number"
-              />
-            </div>
-            <button
-              disabled={loading || phone.length < 10}
-              type="submit"
-              className="w-full py-3.5 mt-2 rounded-2xl bg-gray-900 hover:bg-black text-white font-semibold text-base shadow-md transition-all cursor-pointer border-none flex justify-center items-center h-[52px] disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                "Send OTP"
-              )}
-            </button>
-          </form>
-        )}
 
-        {/* STEP 2: OTP */}
-        {step === 2 && (
-          <form onSubmit={handleOtpSubmit} className="flex flex-col gap-4 animate-fade-in">
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">dialpad</span>
-              <input
-                required
-                autoFocus
-                type="text"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all text-center tracking-widest text-lg font-bold"
-                placeholder="0 0 0 0"
-              />
-            </div>
-            <button
-              disabled={loading || otp.length < 4}
-              type="submit"
-              className="w-full py-3.5 mt-2 rounded-2xl bg-gray-900 hover:bg-black text-white font-semibold text-base shadow-md transition-all cursor-pointer border-none flex justify-center items-center h-[52px] disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                "Verify OTP"
-              )}
-            </button>
-            <button type="button" onClick={() => setStep(1)} className="text-sm text-blue-600 font-semibold bg-transparent border-none cursor-pointer mt-2">
-              Wrong phone number? Go back
-            </button>
-          </form>
-        )}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
+                <div className="flex gap-2">
+                  <select 
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-24 px-2 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] font-medium text-gray-900 bg-white"
+                  >
+                    {countryCodes.map(c => (
+                      <option key={c.code} value={c.code}>{c.country} ({c.code})</option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    placeholder="9990802608"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
 
-        {/* STEP 3: Complete Profile */}
-        {step === 3 && (
-          <form onSubmit={handleProfileSubmit} className="flex flex-col gap-4 animate-fade-in">
-            {/* Full Name */}
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">person</span>
-              <input
-                required
-                autoFocus
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
-                placeholder="Full Name"
-              />
-            </div>
-            {/* Email */}
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">alternate_email</span>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
-                placeholder="Email Address"
-              />
-            </div>
-            {/* Password */}
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
-              <input
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
-                placeholder="Password (min 6 characters)"
-                minLength={6}
-              />
-            </div>
-            <button
-              disabled={loading}
-              type="submit"
-              className="w-full py-3.5 mt-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-md transition-all cursor-pointer border-none flex justify-center items-center h-[52px]"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                "Complete Profile & Login"
-              )}
-            </button>
-          </form>
-        )}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-400 material-symbols-outlined text-[20px]">mail</span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
 
-      </main>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Create Password</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-400 material-symbols-outlined text-[20px]">lock</span>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  {loading ? 'Processing...' : 'Register'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ----- OTP FLOW ----- */}
+          {authMode === 'register' && step === 2 && (
+            <form className="space-y-6" onSubmit={handleOtpSubmit}>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#eff6f9] text-[#136b8a] mb-4">
+                  <span className="material-symbols-outlined text-3xl">mark_email_read</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Enter OTP</h3>
+                <p className="text-sm text-gray-500 mt-1">We've sent a 4-digit code to <br/><span className="font-semibold text-gray-800">{countryCode} {phone}</span></p>
+                <p className="text-xs text-gray-400 mt-1">(Hint: Use 1234 for testing)</p>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  className="appearance-none block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm text-center text-2xl tracking-[0.5em] focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-bold text-gray-900"
+                  placeholder="••••"
+                  maxLength={4}
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  {loading ? 'Verifying...' : 'Verify & Complete'}
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <button type="button" onClick={() => setStep(1)} className="text-sm font-bold text-gray-500 hover:text-gray-700 cursor-pointer">
+                  Go Back
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ----- LOGIN FLOW ----- */}
+          {authMode === 'login' && (
+            <form className="space-y-6" onSubmit={handleLoginSubmit}>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-400 material-symbols-outlined text-[20px]">mail</span>
+                  <input
+                    type="email"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-gray-400 material-symbols-outlined text-[20px]">lock</span>
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Toggle Modes */}
+          {step !== 2 && (
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 font-medium border-t border-gray-100 pt-6">
+                {authMode === 'register' ? "Already have an account? " : "Don't have an account? "}
+                <button
+                  onClick={() => setAuthMode(authMode === 'register' ? 'login' : 'register')}
+                  className="font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer transition-colors"
+                >
+                  {authMode === 'register' ? 'Sign In' : 'Register'}
+                </button>
+              </p>
+            </div>
+          )}
+
+        </div>
+      </div>
+      
+      {/* CSS for slanted background */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .clip-path-slant {
+          clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%);
+        }
+      `}} />
     </div>
   )
 }

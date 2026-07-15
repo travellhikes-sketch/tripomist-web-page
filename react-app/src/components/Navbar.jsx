@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
-import { GooeySearchBar } from './ui/animated-search-bar'
+
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   
   const navigate = useNavigate()
   const location = useLocation()
@@ -22,7 +23,18 @@ function Navbar() {
       setUser(session?.user || null)
     })
 
+    // Cart count listener
+    const updateCartCount = () => {
+      const items = JSON.parse(localStorage.getItem('cartItems') || '[]')
+      setCartCount(items.length)
+    }
+    updateCartCount()
+    window.addEventListener('cartUpdated', updateCartCount)
+    window.addEventListener('storage', updateCartCount)
+
     return () => {
+      window.removeEventListener('cartUpdated', updateCartCount)
+      window.removeEventListener('storage', updateCartCount)
       subscription?.unsubscribe()
     }
   }, [])
@@ -61,11 +73,7 @@ function Navbar() {
           <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/uttarakhand') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/uttarakhand">Uttarakhand</Link>
           <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/himachal') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/himachal">Himachal Pradesh</Link>
           <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/about') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/about">About Us</Link>
-          {location.pathname !== '/' && (
-            <div className="ml-4">
-              <GooeySearchBar />
-            </div>
-          )}
+          
         </div>
         
         {/* Actions/Icons */}
