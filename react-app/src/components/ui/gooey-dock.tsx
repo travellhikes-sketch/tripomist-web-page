@@ -16,6 +16,7 @@ interface DockItem {
   label: string
   onClick?: () => void
   active?: boolean
+  badge?: number
 }
 
 interface GooeyDockProps {
@@ -82,7 +83,12 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
                       aria-label={item.label}
                       aria-current={isActive ? "page" : undefined}
                     >
-                      <item.icon className="h-4 w-4" />
+                                            <item.icon className="h-4 w-4" />
+                      {item.badge ? (
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
+                          {item.badge}
+                        </div>
+                      ) : null}
                     </Button>
 
                     {/* Label below icon */}

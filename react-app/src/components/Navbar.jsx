@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
+import { GooeySearchBar } from './ui/animated-search-bar'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -60,6 +61,11 @@ function Navbar() {
           <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/uttarakhand') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/uttarakhand">Uttarakhand</Link>
           <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/himachal') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/himachal">Himachal Pradesh</Link>
           <Link className={`px-3 py-1 font-body-md text-body-md transition-colors ${isActive('/about') ? 'text-primary font-semibold border-b-2 border-primary' : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary'}`} to="/about">About Us</Link>
+          {location.pathname !== '/' && (
+            <div className="ml-4">
+              <GooeySearchBar />
+            </div>
+          )}
         </div>
         
         {/* Actions/Icons */}

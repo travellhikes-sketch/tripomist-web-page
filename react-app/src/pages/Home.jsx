@@ -70,7 +70,7 @@ function Home() {
           </div>
           
           {/* Content Wrapper */}
-          <div className="w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+          <div className="w-full px-4 md:px-12 lg:px-20">
             <div className="relative z-10 max-w-3xl mb-stack-lg">
               <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight">
               Find Yourself&nbsp; <br /><span className="text-primary-container">With TripoMist</span>
@@ -79,11 +79,11 @@ function Home() {
               Your Safe Travel Our Responsibility<span className="text-primary-container">.</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-              <Link className="inline-flex items-center justify-center bg-primary text-on-primary font-button text-button px-8 py-4 rounded-lg hover:bg-primary/95 transition-all shadow-md active:scale-98 whitespace-nowrap" to="/group-trips">
-                Explore Group Trips
+              <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to="/all-departures">
+                Explore All Departures
                 <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
               </Link>
-              <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to="/upcoming-trips">
+              <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to="/upcoming-departures">
                 See Upcoming Departures
               </Link>
               <div className="relative flex items-center bg-black/40 backdrop-blur-md border border-white/30 rounded-lg px-4 py-3.5 w-full sm:w-64">
@@ -109,64 +109,70 @@ function Home() {
         {/* Explore Destinations - Circles */}
         <section className="w-full py-12 px-4 md:px-12 lg:px-20 bg-surface-container-lowest">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <h2 className="font-headline-md text-headline-md text-on-surface font-bold">Explore Destinations</h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface font-bold">Destinations</h2>
           </div>
           
           <div className="flex gap-8 overflow-x-auto hide-scrollbar py-4 px-2 -mx-2">
-            <div onClick={() => navigate('/uttarakhand')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Uttarakhand" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" />
-              </div>
-              <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Uttarakhand</span>
-            </div>
-            <div onClick={() => navigate('/himachal')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Himachal Pradesh" src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80" />
-              </div>
-              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Himachal Pradesh</span>
-            </div>
-            <div onClick={() => navigate('/kashmir')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Kashmir" src="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=600&q=80" />
-              </div>
-              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Kashmir</span>
-            </div>
-            <div onClick={() => navigate('/rajasthan')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Rajasthan" src="https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80" />
-              </div>
-              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Rajasthan</span>
-            </div>
-            <div onClick={() => navigate('/meghalaya')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Meghalaya" src="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=600&auto=format&fit=crop" />
-              </div>
-              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Meghalaya</span>
-            </div>
-            <div onClick={() => navigate('/ladakh')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
+            <Link to="/ladakh" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
               <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Ladakh" src="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?q=80&w=600&auto=format&fit=crop" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Ladakh</span>
-            </div>
-            <div onClick={() => navigate('/spiti')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
+            </Link>
+            <Link to="/kashmir" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Kashmir" src="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=600&q=80" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Kashmir</span>
+            </Link>
+            <Link to="/spiti" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
               <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Spiti Valley" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTVDi07scWfsFblrLlOF-M9lu-HBlLoRDiFhOY99I-xJ8vciAIMc4UWni-VaPjhz66-GETj7gd_fHksswzPboUyDwG1PK0xK8Sob6IH0ONIcytECw-YZjVpt2MCEB5U9uVNq13npqE1DEbJ9UNLPeQIp50xXz0iFVTy_XEx8qhmd7iKpyJ8VllOV8TFiFIezpeoxg2BIlQii2v60DuTHXrdh_Pcm3FPdSSXD_s_4jG-YFTYpnCQTHKIXIj8SpiRgCiPUPkJnNyJZ5t" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Spiti Valley</span>
-            </div>
-            <div onClick={() => navigate('/andaman')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
+            </Link>
+            <Link to="/uttarakhand" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
               <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Andaman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEgmyWOIgZZbElsZln0-quTF0Zl1sILwwQ0jCPpa9x4O6dexC9kI3F5q6J36Sdjx675kTkFj1OhTAmdo1dRRTjI7BL82J61hzB98Ir7m8lklUTKBDQOL7GBNY4O1TYJtbQlPRlQ6HpPXHJTv-pq9GZAZ_83waE9IRgwZoZbaxPRHFZiXmNjpSU-DTYBJJNY7ayhcdClyF0WZmvH0gC6Pu3goYX3H7GJx6u24jX-q7nJ3LtZ38SEz_SXg_vXpKwA2472XqCzQIRXYA_" />
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Uttarakhand" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" />
               </div>
-              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Andaman</span>
-            </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Uttarakhand</span>
+            </Link>
+            <Link to="/himachal" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Himachal Pradesh" src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Himachal Pradesh</span>
+            </Link>
+            <Link to="/rajasthan" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Rajasthan" src="https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Rajasthan</span>
+            </Link>
+            <Link to="/kerala" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Kerala" src="https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Kerala</span>
+            </Link>
+            <Link to="/meghalaya" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Meghalaya" src="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=600&auto=format&fit=crop" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Meghalaya</span>
+            </Link>
+            <Link to="/goa" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Goa" src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Goa</span>
+            </Link>
           </div>
         </section>
 
         {/* Camera Roll Destinations */}
         <section className="w-full py-24 px-4 md:px-12 lg:px-20 bg-surface-container-lowest overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
                 <span className="material-symbols-outlined text-[16px]">explore</span>
@@ -226,7 +232,7 @@ function Home() {
         </section>
 
         {/* Featured Group Trips */}
-        <section className="w-full py-24 px-4 md:px-12 lg:px-20 border-t border-gray-100 bg-surface-container-lowest overflow-hidden">
+        <section className="w-full py-12 px-4 md:px-12 lg:px-20 border-t border-gray-100 bg-surface-container-lowest overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
@@ -280,7 +286,7 @@ function Home() {
         </section>
 
         {/* International Trips Coming Soon */}
-        <section className="w-full py-24 px-4 md:px-12 lg:px-20 border-t border-gray-100 bg-surface-container-lowest overflow-hidden">
+        <section className="w-full py-12 px-4 md:px-12 lg:px-20 border-t border-gray-100 bg-surface-container-lowest overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">

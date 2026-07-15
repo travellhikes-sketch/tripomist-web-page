@@ -1,4 +1,5 @@
 import React from 'react'
+import ReadMoreText from '../components/ReadMoreText'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -66,54 +67,44 @@ export default function Himachal() {
     <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
 
-            {/* Hero */}
-      <section className="relative w-full h-72 md:h-96 flex items-end pb-10 px-6 md:px-12 overflow-hidden">
+      {/* Hero Video/Image Banner */}
+      <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80"
-          alt="Himachal Pradesh mountains"
+          src={destinations[0]?.img || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80"}
+          alt="Himachal mountains"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         
-        <div className="relative z-10 w-full max-w-7xl mx-auto">
-          {/* Desktop Layout */}
-          <div className="hidden md:flex relative w-full items-end justify-between">
-            <div className="w-1/3">
-              <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore India</p>
-              <h1 className="text-white text-4xl md:text-5xl font-bold leading-tight">Himachal Pradesh</h1>
-              <p className="text-white/80 mt-2 text-base">Snow peaks, apple orchards, ancient monasteries — the Himalayan paradise.</p>
-            </div>
-            
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-2 w-[400px]">
-              <DestinationSearch />
-            </div>
-          </div>
-
-          {/* Mobile Layout */}
-          <div className="md:hidden flex flex-col gap-6">
-            <div>
-              <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore India</p>
-              <h1 className="text-white text-4xl font-bold leading-tight">Himachal Pradesh</h1>
-              <p className="text-white/80 mt-2 text-base">Snow peaks, apple orchards, ancient monasteries — the Himalayan paradise.</p>
-            </div>
-            <div className="w-full">
-              <DestinationSearch />
-            </div>
-          </div>
+        <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
+          <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
+            Himachal Tour Packages
+          </h1>
         </div>
+
+        
+      </section>
+
+      {/* About Section */}
+      <section className="w-full max-w-6xl mx-auto px-4 pt-12 pb-6">
+        <h2 className="font-headline-md text-headline-md text-on-surface font-bold mb-4">
+          About Himachal Tour Packages
+        </h2>
+        <ReadMoreText text="What if we say to you that there's a place wherein the clouds came down to greet the mountains, where rivers whisper the old secrets, and where time slows down just to make you able to take it all in? Himachal is that magical place, waiting for you to explore its untouched beauty." />
+        
+        
       </section>
 
       {/* Destinations Grid */}
-      <main className="max-w-6xl mx-auto px-4 py-10 w-full pb-36">
-        <h2 className="text-2xl font-bold text-on-surface mb-6">Top Destinations</h2>
+      <main className="max-w-6xl mx-auto px-4 pb-36 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {destinations.map((dest) => (
             <Link
               key={dest.id}
-              to={`/checkout?destination=${dest.id}&name=${encodeURIComponent(dest.name)}&price=${dest.price}`}
-              className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 no-underline"
+              to={`/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`}
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 no-underline flex flex-col"
             >
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-48 overflow-hidden shrink-0">
                 <img
                   src={dest.img}
                   alt={dest.name}
@@ -123,9 +114,9 @@ export default function Himachal() {
                   {dest.duration}
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-4 flex flex-col flex-grow">
                 <h3 className="font-bold text-lg text-on-surface">{dest.name}</h3>
-                <p className="text-on-surface-variant text-sm mt-0.5">{dest.tagline}</p>
+                <p className="text-on-surface-variant text-sm mt-0.5 flex-grow">{dest.tagline}</p>
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {dest.tags.map((t) => (
                     <span key={t} className="text-[11px] bg-primary/10 text-primary font-medium px-2 py-0.5 rounded-full">{t}</span>

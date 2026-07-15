@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import GooeyDock from '@/components/ui/gooey-dock'
 import { Home, Map, Plane, Star, ShoppingCart } from 'lucide-react'
@@ -22,12 +22,28 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
   const navigate = useNavigate()
   const location = useLocation()
   const [isFabOpen, setIsFabOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      setCartCount(cart.length);
+    };
+    updateCartCount();
+    window.addEventListener('cartUpdated', updateCartCount);
+    window.addEventListener('storage', updateCartCount);
+    return () => {
+      window.removeEventListener('cartUpdated', updateCartCount);
+      window.removeEventListener('storage', updateCartCount);
+    };
+  }, []);
 
   const items = navItems.map((nav) => ({
     icon: nav.icon,
     label: nav.label,
     onClick: () => navigate(nav.path),
     active: location.pathname === nav.path,
+    badge: nav.label === 'Cart' ? cartCount : undefined,
   }))
 
   if (location.pathname === '/login') return null
@@ -80,7 +96,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
       </div>
 
       {/* Right Corner Group: Contact FAB */}
-      <div className="absolute right-4 sm:right-6 bottom-2 flex flex-col items-center justify-end pointer-events-auto">
+      <div className="absolute right-4 sm:right-6 bottom-6 flex flex-col items-center justify-end pointer-events-auto">
         <AnimatePresence>
           {isFabOpen && (
             <motion.div 

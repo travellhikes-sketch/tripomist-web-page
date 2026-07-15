@@ -141,7 +141,7 @@ function Search() {
                     <span className="font-headline-md text-headline-md text-primary font-bold">₹{trip.price.toLocaleString('en-IN')}</span>
                   </div>
                   <Link 
-                    to={`/checkout?trip=${encodeURIComponent(trip.name)}&price=${trip.price}`} 
+                    to={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} 
                     className="bg-primary text-on-primary px-4 py-2 rounded-lg font-body-md text-body-md font-semibold hover:bg-surface-tint transition-colors no-underline"
                   >
                     View Detail

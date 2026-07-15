@@ -15,6 +15,7 @@ export default function ItinerarySpiti() {
   
   // New States for Redesign
   const [activeTab, setActiveTab] = useState('Itinerary')
+  const [isAddedToCart, setIsAddedToCart] = useState(false)
   const [travellers, setTravellers] = useState(1)
 
   const tripsData = {
@@ -101,14 +102,48 @@ export default function ItinerarySpiti() {
     }
   }
 
-  // Determine active itinerary
-  let currentKey = "Spiti Valley"
+  // Determine active itinerary dynamically
+  let trip = tripsData["Spiti Valley"];
   if (id) {
-    if (id.toLowerCase().includes("ladakh")) currentKey = "Ladakh"
-    else if (id.toLowerCase().includes("kashmir")) currentKey = "Kashmir"
+    const formattedId = id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    
+    // Check specific overrides first
+    if (id.toLowerCase().includes("ladakh")) trip = tripsData["Ladakh"];
+    else if (id.toLowerCase().includes("kashmir")) trip = tripsData["Kashmir"];
+    else if (tripsData[formattedId]) trip = tripsData[formattedId];
+    else {
+      // Create dynamic fallback using Spiti as a template
+      trip = {
+        ...trip,
+        title: `${formattedId} Tour Package`,
+        location: formattedId,
+        description: `Explore the beautiful landscapes of ${formattedId}. Journey through amazing places and make memories for a lifetime.`
+      };
+    }
   }
 
-  const trip = tripsData[currentKey] || tripsData["Spiti Valley"]
+  React.useEffect(() => {
+    const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+    const isAdded = cartItems.some(item => item.title === trip.title);
+    setIsAddedToCart(isAdded);
+  }, [trip.title]);
+
+  
+  const handleAddToCart = () => {
+    if (isAddedToCart) return;
+    const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+    cartItems.push({
+      id: Date.now(),
+      title: trip.title,
+      duration: trip.durationText || "Package",
+      travellers: travellers,
+      price: trip.numericPrice,
+      total: trip.numericPrice * travellers
+    });
+    localStorage.setItem('cart', JSON.stringify(cartItems));
+    setIsAddedToCart(true);
+    window.dispatchEvent(new Event('cartUpdated'));
+  }
 
   const handleBookNow = () => {
     navigate(`/checkout?trip=${encodeURIComponent(trip.title)}&price=${trip.numericPrice * travellers}`)
@@ -131,12 +166,8 @@ export default function ItinerarySpiti() {
     <div className="flex flex-col min-h-screen bg-white">
       <Navbar />
 
-      {/* Top Mobile Sticky Bar */}
-      <div className="md:hidden sticky top-0 z-40 bg-[#136b8a] text-white text-center py-2 text-sm font-semibold shadow-sm w-full">
-        {trip.title} Early Bird - Save up to ₹3,000 🎉
-      </div>
-
-      <main className="w-full flex-grow pb-24 md:pb-0">
+      
+      <main className="w-full flex-grow">
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[60vh] bg-gray-900 overflow-hidden">
           <div className="absolute inset-0 bg-cover bg-center w-full h-full" style={{ backgroundImage: `url('${trip.bg}')` }}></div>
@@ -188,15 +219,28 @@ export default function ItinerarySpiti() {
               <section className="mb-10">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Itinerary Breakdown</h2>
-                  <button 
-                    onClick={() => setIsModalOpen(true)}
-                    className="btn-shiny bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">download</span>
-                      Download Itinerary
-                    </span>
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {/* Add to Cart Circular Button */}
+                    <button
+                      onClick={handleAddToCart}
+                      title="Add to Cart"
+                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-sm border cursor-pointer ${isAddedToCart ? 'bg-white text-[#136b8a] border-[#136b8a]' : 'bg-[#136b8a] text-white border-transparent hover:bg-[#0f556e]'}`}
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {isAddedToCart ? 'check' : 'shopping_cart'}
+                      </span>
+                    </button>
+
+                    <button 
+                      onClick={() => setIsModalOpen(true)}
+                      className="btn-shiny bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
+                    >
+                      <span className="relative z-10 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">download</span>
+                        Download Itinerary
+                      </span>
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="flex flex-col gap-4">
@@ -284,17 +328,16 @@ export default function ItinerarySpiti() {
                 onClick={handleBookNow}
                 className="btn-shiny w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mb-4 text-lg cursor-pointer"
               >
-                <span className="relative z-10">View Detail</span>
+                <span className="relative z-10">Book Now</span>
               </button>
-
               <button 
                 onClick={handleSendEnquiry}
-                className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg cursor-pointer"
+                className="w-full mt-4 bg-[#25D366] hover:bg-[#20b858] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg cursor-pointer"
               >
                 <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg" alt="WhatsApp" className="w-5 h-5 filter invert" />
                 Send Enquiry to trip experts
               </button>
-              <p className="text-center text-gray-500 text-[11px] font-medium mt-2">
+              <p className="text-center text-gray-500 text-[11px] font-medium mt-2 mb-2">
                 fill the blanks to send enquiry to expert
               </p>
               
@@ -303,44 +346,16 @@ export default function ItinerarySpiti() {
         </div>
       </main>
 
-      {/* Mobile Bottom Sticky Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 pb-6 flex items-center justify-between z-40 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-extrabold text-gray-900">₹{totalAmount.toLocaleString()}</span>
-            <span className="text-[10px] text-gray-500 font-medium">for {travellers}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] font-semibold mt-0.5">
-            <span className="line-through text-gray-500 font-normal">₹{strikePrice.toLocaleString()}</span>
-            <span className="text-red-500 font-bold">₹3,000 Off</span>
-          </div>
-        </div>
-        <button 
-          onClick={handleBookNow}
-          className="btn-shiny bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3 rounded-xl shadow-md active:scale-95 transition-transform cursor-pointer"
-        >
-          <span className="relative z-10">View Detail</span>
-        </button>
-      </div>
 
-      {/* Mobile Floating WhatsApp Icon */}
-      <button 
-        onClick={handleSendEnquiry}
-        className="md:hidden fixed bottom-28 right-4 w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#20b858] active:scale-95 transition-all z-40 border-2 border-white cursor-pointer"
-        aria-label="Send Enquiry to trip experts"
-      >
-        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg" alt="WhatsApp" className="w-8 h-8 filter invert" />
-      </button>
 
+      
       <DownloadItineraryModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         tripTitle={trip.title}
       />
 
-      <div className="pb-16 md:pb-0">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   )
 }

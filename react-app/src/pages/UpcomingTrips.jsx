@@ -121,7 +121,7 @@ function UpcomingTrips() {
                       <span className="text-label-sm font-label-sm text-outline block uppercase tracking-wider">Starting from</span>
                       <span className="text-headline-md font-bold text-primary">₹{trip.price.toLocaleString('en-IN')}</span>
                     </div>
-                    <Link to={`/checkout?trip=${encodeURIComponent(trip.name)}&price=${trip.price}`} className="bg-primary text-white hover:bg-surface-tint px-5 py-2.5 rounded-xl transition-all font-semibold active:scale-95 no-underline flex items-center">View Detail</Link>
+                    <Link to={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} className="bg-primary text-white hover:bg-surface-tint px-5 py-2.5 rounded-xl transition-all font-semibold active:scale-95 no-underline flex items-center">View Detail</Link>
                   </div>
                 </div>
               </div>

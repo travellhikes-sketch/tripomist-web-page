@@ -1,68 +1,100 @@
-import React from 'react'
-import ReadMoreText from '../components/ReadMoreText'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import DestinationSearch from '../components/DestinationSearch'
+import ReadMoreText from '../components/ReadMoreText'
 
-const destinations = [
+const allDestinations = [
+  // Domestic
   {
-    id: 'leh',
-    name: 'Leh',
-    tagline: 'Land of High Passes',
-    duration: '5N/6D',
-    price: 18999,
-    img: 'https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=600&q=80',
-    tags: ['Mountains', 'Biking', 'Monasteries'],
+    id: 'srinagar', name: 'Srinagar', tagline: 'Paradise on Earth', duration: '4N/5D', price: 15999,
+    img: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=600&q=80',
+    tags: ['Dal Lake', 'Houseboat', 'Scenic'], type: 'domestic'
   },
   {
-    id: 'pangong',
-    name: 'Pangong Lake',
-    tagline: 'Azure Blue Waters',
-    duration: '2N/3D',
-    price: 9999,
-    img: 'https://images.unsplash.com/photo-1629858711802-e0c52f1b4028?w=600&q=80',
-    tags: ['Lake', 'Camping', 'Scenic'],
+    id: 'kerala-backwaters', name: 'Kerala Backwaters', tagline: 'God\'s Own Country', duration: '5N/6D', price: 18999,
+    img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80',
+    tags: ['Houseboat', 'Nature', 'Relax'], type: 'domestic'
+  },
+  {
+    id: 'ladakh', name: 'Ladakh', tagline: 'Land of High Passes', duration: '6N/7D', price: 24999,
+    img: 'https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=600&q=80',
+    tags: ['Mountains', 'Adventure', 'Monasteries'], type: 'domestic'
+  },
+  // International
+  {
+    id: 'bali', name: 'Bali', tagline: 'Island of the Gods', duration: '5N/6D', price: 35000,
+    img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80',
+    tags: ['Beaches', 'Culture', 'Relax'], type: 'international'
+  },
+  {
+    id: 'dubai', name: 'Dubai', tagline: 'City of Gold', duration: '4N/5D', price: 42000,
+    img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80',
+    tags: ['Desert', 'Shopping', 'Luxury'], type: 'international'
+  },
+  {
+    id: 'singapore', name: 'Singapore', tagline: 'Lion City', duration: '4N/5D', price: 38000,
+    img: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=600&q=80',
+    tags: ['City', 'Modern', 'Food'], type: 'international'
   }
-]
+];
 
-export default function Ladakh() {
+export default function UpcomingDepartures() {
+  const [activeFilter, setActiveFilter] = useState('All');
+
+  const filteredDestinations = allDestinations.filter(dest => {
+    if (activeFilter === 'All') return true;
+    if (activeFilter === 'Domestic trips') return dest.type === 'domestic';
+    if (activeFilter === 'International trips') return dest.type === 'international';
+    return true;
+  });
+
   return (
     <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
 
-      {/* Hero Video/Image Banner */}
       <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
         <img
-          src={destinations[0]?.img || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80"}
-          alt="Ladakh mountains"
+          src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&q=80"
+          alt="Upcoming Departures"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         
         <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
           <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
-            Ladakh Tour Packages
+            See Upcoming Departures
           </h1>
         </div>
-
-        
       </section>
 
-      {/* About Section */}
       <section className="w-full max-w-6xl mx-auto px-4 pt-12 pb-6">
         <h2 className="font-headline-md text-headline-md text-on-surface font-bold mb-4">
-          About Ladakh Tour Packages
+          About Upcoming Departures
         </h2>
-        <ReadMoreText text="What if we say to you that there's a place wherein the clouds came down to greet the mountains, where rivers whisper the old secrets, and where time slows down just to make you able to take it all in? Ladakh is that magical place, waiting for you to explore its untouched beauty." />
+        <ReadMoreText text="Ready for your next adventure? Browse our upcoming departures to find the perfect trip. Whether you're looking for a quick domestic getaway or a grand international tour, we have carefully curated experiences waiting just for you." />
         
-        
+        {/* Filter Pills */}
+        <div className="flex flex-wrap gap-3 mt-8">
+          {['All', 'Domestic trips', 'International trips'].map(filter => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-5 py-2.5 rounded-full border text-sm font-semibold transition-all cursor-pointer ${
+                activeFilter === filter 
+                  ? 'bg-primary text-white border-primary shadow-md scale-105' 
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
       </section>
 
-      {/* Destinations Grid */}
       <main className="max-w-6xl mx-auto px-4 pb-36 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {destinations.map((dest) => (
+          {filteredDestinations.map((dest) => (
             <Link
               key={dest.id}
               to={`/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`}

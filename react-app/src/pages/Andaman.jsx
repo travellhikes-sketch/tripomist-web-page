@@ -74,7 +74,7 @@ export default function Andaman() {
           {destinations.map((dest) => (
             <Link
               key={dest.id}
-              to={`/checkout?destination=${dest.id}&name=${encodeURIComponent(dest.name)}&price=${dest.price}`}
+              to={`/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`}
               className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 no-underline"
             >
               <div className="relative h-48 overflow-hidden">

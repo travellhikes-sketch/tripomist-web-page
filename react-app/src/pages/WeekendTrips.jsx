@@ -100,7 +100,7 @@ function WeekendTrips() {
                   <span className="font-headline-md text-headline-md text-primary font-bold">₹{trip.price.toLocaleString('en-IN')}</span>
                   <div className="flex gap-2">
                     <Link to={`/itinerary/${trip.id.toLowerCase().replace(/\s+/g, '-')}`} className="border border-outline-variant hover:border-primary hover:text-primary px-3 py-1.5 rounded-lg text-sm transition-colors no-underline text-on-surface flex items-center">Itinerary</Link>
-                    <Link to={`/checkout?trip=${encodeURIComponent(trip.name)}&price=${trip.price}`} className="bg-primary text-white px-4 py-1.5 rounded-lg font-label-sm text-label-sm hover:opacity-95 transition-opacity font-bold no-underline flex items-center">View Detail</Link>
+                    <Link to={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} className="bg-primary text-white px-4 py-1.5 rounded-lg font-label-sm text-label-sm hover:opacity-95 transition-opacity font-bold no-underline flex items-center">View Detail</Link>
                   </div>
                 </div>
               </div>

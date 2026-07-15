@@ -22,8 +22,11 @@ import Rajasthan from './pages/Rajasthan'
 import Meghalaya from './pages/Meghalaya'
 import Ladakh from './pages/Ladakh'
 import Spiti from './pages/Spiti'
-import Andaman from './pages/Andaman'
+import Kerala from './pages/Kerala'
+import Goa from './pages/Goa'
 import AboutUs from './pages/AboutUs'
+import AllDepartures from './pages/AllDepartures'
+import UpcomingDepartures from './pages/UpcomingDepartures'
 import BottomDock from './components/BottomDock'
 import Chatbot from './components/Chatbot'
 
@@ -45,6 +48,8 @@ function App() {
       <div className="pb-36 md:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/all-departures" element={<AllDepartures />} />
+          <Route path="/upcoming-departures" element={<UpcomingDepartures />} />
           <Route path="/international" element={<International />} />
           <Route path="/review" element={<Review />} />
           <Route path="/domestic" element={<Domestic />} />
@@ -55,7 +60,8 @@ function App() {
           <Route path="/meghalaya" element={<Meghalaya />} />
           <Route path="/ladakh" element={<Ladakh />} />
           <Route path="/spiti" element={<Spiti />} />
-          <Route path="/andaman" element={<Andaman />} />
+          <Route path="/kerala" element={<Kerala />} />
+          <Route path="/goa" element={<Goa />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
           <Route path="/checkout" element={<Checkout />} />
