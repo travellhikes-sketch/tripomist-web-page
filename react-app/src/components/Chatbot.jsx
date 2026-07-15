@@ -113,7 +113,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
           <div className="bg-[#f8f9fa] p-4 text-gray-800 flex items-center justify-between border-b border-gray-200 shadow-sm relative z-10 shrink-0">
             <div className="flex items-center gap-3">
               {/* TripoMist Logo from Navbar */}
-              <img src="/logo.png" alt="TripoMist Logo" className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200" />
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY" alt="TripoMist Logo" className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200" />
               <h3 className="font-extrabold text-[22px] text-[#136b8a] tracking-tight m-0">Chat With Us</h3>
             </div>
             <div className="flex items-center gap-3">

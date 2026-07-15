@@ -18,7 +18,7 @@ function Footer() {
         <div className="flex flex-col items-start gap-4">
           <Link className="flex items-center gap-3 no-underline text-primary" to="/">
             <img 
-              src="/logo.png" 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY" 
               alt="TripoMist Logo" 
               className="h-10 w-10 object-contain rounded-full shadow-sm" 
             />
