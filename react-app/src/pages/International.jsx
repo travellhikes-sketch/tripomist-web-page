@@ -17,7 +17,7 @@ function International() {
       duration: "1N/2D",
       desc: "Experience the serenity of the Ganges with yoga, light trekking, and riverside camping.",
       price: 4500,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDoS-vg_XCH-xHOowgbNVmjJoAj5bJzHN-NPmV15QY-39UHQ4IJCCau_MiOWaK22x0EQGXjpHPcG2QGgkKDzSYzBJx8NUxIR9YhsWYoHhlYXkLlrJCpNeIP2t-yraYqChgdzbvZ0nGOLpUJ0VddALLKLT6LTp-ubk4ne5mb3HfmzUjVL-QQSjGtWIWjpx5VSNdg8NsWROo7n0GwTuaQ34eUIF46J9WrGRE7AQv48QIDQEQ00msw8gCETVFWwU1ocB7f_cNGaUtJoHbC"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "Jaipur Heritage",
@@ -25,7 +25,7 @@ function International() {
       duration: "2N/3D",
       desc: "Explore majestic forts, vibrant markets, and royal palaces in the Pink City.",
       price: 6200,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCIbezhhDn6kVeW-bPt5ihoXXxovwztmJdRitP6cpomnc6_qKxsrtuE2LhA1aSGmpzTbQudel1DreoXcgnvtkKQmeiBfKJxvofcpCiS7qc3FXI_lccCF_1b6rvlVhBJtMrR9emJS43N7lV6K_Z7QZdUbbi1FPjn0tzA8AdHDWSxhkSh2XuAh2cU1EryOd0XjSy5tm_OJig6fy7VhWecFwm4iaMhwI5EKYwed_ZTIbb8bKGhuZNTjk3Gy2rmZQ44qUr6PyNBUCW1JWs1"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "Kasol Escape",
@@ -33,7 +33,7 @@ function International() {
       duration: "2N/3D",
       desc: "Unwind in the scenic Parvati Valley with gentle hikes and peaceful cafe culture.",
       price: 5800,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDgL7yO6p43o1i054rIF_OdRwkt9E0P7hMyeB6NFyOy2o5oP-iEfAu5VOXXj0dJwSfmmHayKsaBdsqjzBCCh6ubtd1OKaawRppWYX17Gzeu0-Sv7lPMFcNqaocrNbrvF17LuiLKZe5DXB9_Kd79Tkt1qu6U2vzOv0I1Q67Lg00tvJ1l0X70b1XkJXKviwSlXqAvAotXrB5taNSnfDXZsS-xo17TS1ugN4jzzPPbD8CO-gdnG6u9TTfVkAoAe41xxdMvAitdhXP0CfY8"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     }
   ]
 
@@ -59,7 +59,7 @@ function International() {
       {/* Hero Video/Image Banner */}
       <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
         <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2SFGiuFvySMpzkeJ4qNwJezyFqN7ciVYRXuCKlhd7u9-DT1sfv1FvXiLjqnwIkMJDBletWJ8BCG-Vawhmo8JDI8b18zIQPCZiMUDWVyCxUCIsp5fd5s555fiSiQh13eezdGEOTWDdUJvRz3ZYS9lcf6pTan0rPHCIL2wxmioKnE2E_Cg_i50WFubokMPo3KK93vpGsDfBPdgXb8bNdpkBvLI5swdQv6JDfulqq2NuORk-UfFcaNAysvkzqFWLehEQ2UY5A_acGyIv"
+          src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
           alt="International trips"
           className="absolute inset-0 w-full h-full object-cover"
         />

@@ -68,7 +68,7 @@ function TermsConditions() {
                 <strong>TripoMist Travel Agency</strong><br />
                 Email: info@tripomist.com<br />
                 Phone: +91 9990802608<br />
-                Address: c-1/28 New Kondli, Mayur Vihar Phase-3, Delhi 110096, India
+                Address: New Kondli, Mayur Vihar Phase-3, Delhi 110096, India
               </div>
             </section>
           </div>

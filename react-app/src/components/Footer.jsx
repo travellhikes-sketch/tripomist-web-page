@@ -18,7 +18,7 @@ function Footer() {
         <div className="flex flex-col items-start gap-4">
           <Link className="flex items-center gap-3 no-underline text-primary" to="/">
             <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY" 
+              src="/logo.png" 
               alt="TripoMist Logo" 
               className="h-10 w-10 object-contain rounded-full shadow-sm" 
             />
@@ -52,7 +52,7 @@ function Footer() {
           <ul className="space-y-3 p-0 m-0 list-none text-sm text-on-surface-variant font-medium">
             <li className="flex items-start gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary shrink-0">location_on</span>
-              <span>c-1/28 New Kondli, Mayur Vihar Phase-3, Delhi 110096</span>
+              <span>New Kondli, Mayur Vihar Phase-3, Delhi 110096</span>
             </li>
             <li className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary shrink-0">mail</span>

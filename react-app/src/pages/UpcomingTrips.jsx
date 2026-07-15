@@ -18,7 +18,7 @@ function UpcomingTrips() {
       desc: "Yoga, white water rafting, and spiritual Ganga Aarti under the stars.",
       price: 5499,
       bestSeller: true,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAdeK5rNXK2i1b9n6OjyVoqm3Bxp8LEe74ptA6ncV2vP0x3Mi3B8HxlbdKEmQm91XCHfRR1kMKAQPDSbdqUrKDW4JM3xypx1fRMk3V2CB8LGMsnDVcKS_UZfnZcEYkmv5SROPXh2Y_cNDIOvWufVrH-JjvgMbmJ5A7_AgOyZUaA-BJA08GG7r2s0bw9GaqDO4QlU2W62kMiK6U1woPfrvgioGY_Glgx-Ig1A4Io0qyEemYXHUM9K9ujeQRoKgUEMoYyknVTGzgYBeRs"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "Jaipur Heritage",
@@ -28,7 +28,7 @@ function UpcomingTrips() {
       desc: "Explore royal palaces, vibrant bazaars, and legendary Rajasthani cuisine.",
       price: 6200,
       bestSeller: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBRwnZMqN75wiCGdYCe57bjOJqnQL8ixU9e0QsmbQNBMgQzcZ2tX7BX4tDAqoU8FUgUqp1QPoAzbFcQOY9cjylZmNqpl5HPNriyb50-N7uufQaF7nEz0ciYQP-JVZh7E3rmaaaAtn1HmSbpnGnuSdDky0eOIAvJ7SS5YCQ1I-SURRXNSHrCdOdyeLAeYoMGSKuIszmp7kQygPsJ19kxjBKCrAAjCB-nASur3eTy47RWuE18brwHmoxgNO2fM_WsfO8iaSUnvytThry-"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "Kasol Escape",
@@ -38,7 +38,7 @@ function UpcomingTrips() {
       desc: "Trek to Kheerganga and experience the scenic Parvati Valley landscape.",
       price: 4999,
       bestSeller: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoJR3BpNyP1i1mPJq3X3jHeXOGmBJ_nQl0snOauAWZkJyJOg4Qba33jURx3B9X94_hsmX9bQh19tDtOJfrT3q37LwYx1Wk_xHMqdEMpCT-wV0fYyopsVjDHjfEIAByBgaDpOOK4g7rOmJx9hzCkMHvbE5VLyDYJYys6hvDlZDthNmF-hNbppnYt9xZRw2g5SDGcNW0_VtWjgiCuQXPg2kY1pF1L1cJHMQ_NyzQ3t5UBG48pm5tsjfp5ydUvO2rOmPvEZgATszcYDG-"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     }
   ]
 
@@ -65,7 +65,7 @@ function UpcomingTrips() {
         {/* Hero Section */}
         <section className="relative h-[614px] min-h-[450px] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAoig9UuwC8usJJWO11p5-rBPc2lAoDBEgo5rYncjC-BmJviaXxlD3KbNQEOyBoBey8QJU6e_wCMavGLuvdQfGVEz_gIAOQreu5i7lytC3nE0uOdiSA-EpVqogPc5qFRMwoDc7ErdXnQt1kjyt6u239J1S7PD7aeG-xRHyu6Y0O1hFlntUxh4xDwydAwThMayHfR2veQh_quYAJus3GLjd8gMKwFZpKuWmgr8UvExYvu_5EvTO07wkuFHKwJSAGvzOaLy_6IZnbOEcE')" }}></div>
+            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80')" }}></div>
             <div className="absolute inset-0 bg-inverse-surface/40 backdrop-brightness-75"></div>
           </div>
           <div className="relative z-10 text-center px-4 max-w-4xl flex flex-col items-center">

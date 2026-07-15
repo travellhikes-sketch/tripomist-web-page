@@ -127,7 +127,7 @@ function Home() {
             </Link>
             <Link to="/spiti" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
               <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Spiti Valley" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTVDi07scWfsFblrLlOF-M9lu-HBlLoRDiFhOY99I-xJ8vciAIMc4UWni-VaPjhz66-GETj7gd_fHksswzPboUyDwG1PK0xK8Sob6IH0ONIcytECw-YZjVpt2MCEB5U9uVNq13npqE1DEbJ9UNLPeQIp50xXz0iFVTy_XEx8qhmd7iKpyJ8VllOV8TFiFIezpeoxg2BIlQii2v60DuTHXrdh_Pcm3FPdSSXD_s_4jG-YFTYpnCQTHKIXIj8SpiRgCiPUPkJnNyJZ5t" />
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Spiti Valley" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Spiti Valley</span>
             </Link>
@@ -157,7 +157,7 @@ function Home() {
             </Link>
             <Link to="/meghalaya" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
               <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
-                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Meghalaya" src="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=600&auto=format&fit=crop" />
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Meghalaya" src="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1600&q=80" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Meghalaya</span>
             </Link>
@@ -179,9 +179,7 @@ function Home() {
                 <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">Explore</span>
               </div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
-                Explore More.<br />
-                Capture Better.<br />
-                <span className="text-[#136b8a]">With TripoMist.</span>
+                Explore More Capture Better
               </h2>
             </div>
           </div>
@@ -193,7 +191,7 @@ function Home() {
               price="₹21,999" 
               duration="6N/7D" 
               description="Experience the raw beauty of Leh, Nubra Valley, and Pangong Tso with a close-knit group of adventurers."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuAj_2vbbw_s3xz1DiSwdLIPB91UjIk6PDZxdsBnYm814_77Jzqvfd2kWMUeOvj3AEjF3S4r4H15YwByYU97r8Fu7ILdgtSJ7U5xniKZmkdCoaFd_qnmf7-3V7Arh2PPk6Q87ghzBZjDLQe2VR7QRLwWpmocIiBZeT0Jfr7z12eP6njmtr_SiXnTl4Xo5Kodp5oHyjSeZ-7Z8cS6quHT4VhEBpHASzD0tOUoSMVb_xNsQhzdUiwWoLW4I37lVfc5kAK_dtkYWb5NmnPq"
+              bg="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1600&q=80"
               link="/itinerary/Ladakh" 
             />
             <PackageCard 
@@ -201,7 +199,7 @@ function Home() {
               price="₹16,999" 
               duration="5N/6D" 
               description="Brave the frozen landscapes of the middle land. A curated winter adventure for the bold."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuDiD2GO7fIb1ciUdWe0odOedfkhJIm1ur64B1iKghZ8eMdF66RoOvQDTrZz1L1nfURfVdMroAzsjyFtv85EjcF8NXBkccIFhdalQolBp9Yar92MT8MtrG9wQGjuK5B7wctNIUhR54TEU7PYNv323Svs0dPfNfV6sfFdjHZinMcri0e9lDmEaHhHTP1F5YA25LoETYvVR1Dnn-8UNP4ShswwHgnmwn3Pw1YqRx1ECDm16ijYYriT-jcGpT9--pyJ_OQkKTc7lwXlnByS"
+              bg="https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1600&q=80"
               link="/itinerary/Spiti Valley" 
             />
             <PackageCard 
@@ -209,7 +207,7 @@ function Home() {
               price="₹17,999" 
               duration="4N/5D" 
               description="Explore Srinagar, Gulmarg, and Pahalgam. A perfect mix of leisure and breathtaking vistas."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuCoZ_1M6Zk0HMDhTpKzxMQgQnTBWH9nJlDxVZ3z680TUyTZDm2k0r8nZLugA9SsMmSxZwBQNlP0RqL0o_pN3y8oodeLuZrAMK_BT5g3TtjjmMuq2qryknNF_eDajNtaJ0lhkNCoTDd0wvhRvqO6r6FQKYgQY2G1jrrxLxKfk3vfLTyv4stEcsTeJNnx4i_IeZlGcu5QAISZR2l1bfUnCU3NRglStiKpz8VEJh6Ac0yEugDurHd9RpWrIHVqOg_8q7TXhns1RLgQNPd3"
+              bg="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=1600&q=80"
               link="/itinerary/Kashmir" 
             />
             <PackageCard 
@@ -217,7 +215,7 @@ function Home() {
               price="₹25,999" 
               duration="5N/6D" 
               description="Relax on the pristine beaches of Havelock and Neil Islands with amazing scuba diving opportunities."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuAEgmyWOIgZZbElsZln0-quTF0Zl1sILwwQ0jCPpa9x4O6dexC9kI3F5q6J36Sdjx675kTkFj1OhTAmdo1dRRTjI7BL82J61hzB98Ir7m8lklUTKBDQOL7GBNY4O1TYJtbQlPRlQ6HpPXHJTv-pq9GZAZ_83waE9IRgwZoZbaxPRHFZiXmNjpSU-DTYBJJNY7ayhcdClyF0WZmvH0gC6Pu3goYX3H7GJx6u24jX-q7nJ3LtZ38SEz_SXg_vXpKwA2472XqCzQIRXYA_"
+              bg="https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1600&q=80"
               link="/group-trips" 
             />
             <PackageCard 
@@ -225,7 +223,7 @@ function Home() {
               price="₹18,999" 
               duration="6N/7D" 
               description="Journey through the abode of clouds, explore living root bridges and crystal clear rivers."
-              bg="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=600&auto=format&fit=crop"
+              bg="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1600&q=80"
               link="/group-trips" 
             />
           </div>
@@ -254,7 +252,7 @@ function Home() {
               price="₹24,999" 
               duration="6N/7D" 
               description="Experience the raw beauty of Leh, Nubra Valley, and Pangong Tso with a close-knit group of adventurers."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuAj_2vbbw_s3xz1DiSwdLIPB91UjIk6PDZxdsBnYm814_77Jzqvfd2kWMUeOvj3AEjF3S4r4H15YwByYU97r8Fu7ILdgtSJ7U5xniKZmkdCoaFd_qnmf7-3V7Arh2PPk6Q87ghzBZjDLQe2VR7QRLwWpmocIiBZeT0Jfr7z12eP6njmtr_SiXnTl4Xo5Kodp5oHyjSeZ-7Z8cS6quHT4VhEBpHASzD0tOUoSMVb_xNsQhzdUiwWoLW4I37lVfc5kAK_dtkYWb5NmnPq"
+              bg="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1600&q=80"
               link="/itinerary/Ladakh" 
               label="Best Seller"
             />
@@ -263,7 +261,7 @@ function Home() {
               price="₹16,999" 
               duration="5N/6D" 
               description="Brave the frozen landscapes of the middle land. A curated winter adventure for the bold."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuDiD2GO7fIb1ciUdWe0odOedfkhJIm1ur64B1iKghZ8eMdF66RoOvQDTrZz1L1nfURfVdMroAzsjyFtv85EjcF8NXBkccIFhdalQolBp9Yar92MT8MtrG9wQGjuK5B7wctNIUhR54TEU7PYNv323Svs0dPfNfV6sfFdjHZinMcri0e9lDmEaHhHTP1F5YA25LoETYvVR1Dnn-8UNP4ShswwHgnmwn3Pw1YqRx1ECDm16ijYYriT-jcGpT9--pyJ_OQkKTc7lwXlnByS"
+              bg="https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1600&q=80"
               link="/itinerary/Spiti Valley" 
             />
             <PackageCard 
@@ -271,7 +269,7 @@ function Home() {
               price="₹19,999" 
               duration="4N/5D" 
               description="Explore Srinagar, Gulmarg, and Pahalgam. A perfect mix of leisure and breathtaking vistas."
-              bg="https://lh3.googleusercontent.com/aida-public/AB6AXuCoZ_1M6Zk0HMDhTpKzxMQgQnTBWH9nJlDxVZ3z680TUyTZDm2k0r8nZLugA9SsMmSxZwBQNlP0RqL0o_pN3y8oodeLuZrAMK_BT5g3TtjjmMuq2qryknNF_eDajNtaJ0lhkNCoTDd0wvhRvqO6r6FQKYgQY2G1jrrxLxKfk3vfLTyv4stEcsTeJNnx4i_IeZlGcu5QAISZR2l1bfUnCU3NRglStiKpz8VEJh6Ac0yEugDurHd9RpWrIHVqOg_8q7TXhns1RLgQNPd3"
+              bg="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=1600&q=80"
               link="/itinerary/Kashmir" 
             />
             <PackageCard 

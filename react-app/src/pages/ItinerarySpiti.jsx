@@ -5,6 +5,147 @@ import Footer from '../components/Footer'
 import DownloadItineraryModal from '../components/DownloadItineraryModal'
 import { GooeySearchBar } from '../components/ui/animated-search-bar'
 
+
+// --- Booking Modal Component ---
+const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, navigate }) => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    date: null,
+    source: ''
+  })
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+
+  if (!isOpen) return null;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  
+  const days = [];
+  for (let i = 0; i < firstDayOfMonth; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
+
+  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  const prevMonth = () => {
+    const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+    if (prev > new Date(today.getFullYear(), today.getMonth(), 1) || (prev.getMonth() === today.getMonth() && prev.getFullYear() === today.getFullYear())) {
+      setCurrentMonth(prev);
+    }
+  };
+
+  const handleDateSelect = (d) => {
+    if (d >= today && d.getDay() === 5) { // Only Fridays
+      setFormData({...formData, date: d});
+      setIsCalendarOpen(false); // Close calendar on select
+    }
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.date) return alert("Please select a date (Fridays only)");
+    // Pass data to checkout
+    navigate(`/checkout?trip=${encodeURIComponent(tripTitle)}&price=${price}&date=${formData.date.toISOString()}&name=${encodeURIComponent(formData.fullName)}&email=${encodeURIComponent(formData.email)}&phone=${encodeURIComponent('+91 ' + formData.phone)}&source=${encodeURIComponent(formData.source)}`);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl animate-fade-in relative max-h-[90vh] overflow-y-auto">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
+          <span className="material-symbols-outlined">close</span>
+        </button>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Book Your Trip</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+            <input required type="text" value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700" placeholder="John Doe" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+            <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700" placeholder="john@example.com" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone No (WhatsApp)</label>
+            <div className="flex">
+              <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 text-gray-500 font-semibold">+91</span>
+              <input required type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full border border-gray-200 rounded-r-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700" placeholder="9999999999" />
+            </div>
+          </div>
+
+          <div className="relative">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Select Date</label>
+            <div 
+              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 cursor-pointer bg-white flex justify-between items-center text-gray-700 hover:border-[#136b8a] transition-colors"
+            >
+              <span>{formData.date ? formData.date.toLocaleDateString() : "Select a Friday"}</span>
+              <span className="material-symbols-outlined text-gray-400">calendar_month</span>
+            </div>
+
+            {isCalendarOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 z-50 border border-gray-200 rounded-xl p-3 bg-white shadow-xl">
+                <div className="flex justify-between items-center mb-2">
+                  <button type="button" onClick={prevMonth} className="p-1 hover:bg-gray-200 rounded-full"><span className="material-symbols-outlined text-sm">chevron_left</span></button>
+                  <span className="font-bold text-sm text-gray-700">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
+                  <button type="button" onClick={nextMonth} className="p-1 hover:bg-gray-200 rounded-full"><span className="material-symbols-outlined text-sm">chevron_right</span></button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-500 mb-1">
+                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <div key={d}>{d}</div>)}
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-sm">
+                  {days.map((d, idx) => {
+                    if (!d) return <div key={idx} className="p-1"></div>;
+                    const isPast = d < today;
+                    const isFriday = d.getDay() === 5;
+                    const isSelected = formData.date && d.getTime() === formData.date.getTime();
+                    return (
+                      <button 
+                        key={idx}
+                        type="button"
+                        disabled={isPast || !isFriday}
+                        onClick={() => handleDateSelect(d)}
+                        className={`p-1.5 rounded-full flex items-center justify-center transition-colors ${isPast ? 'text-gray-300 cursor-not-allowed' : !isFriday ? 'text-gray-400 cursor-not-allowed' : isSelected ? 'bg-[#136b8a] text-white font-bold' : 'bg-blue-100 text-[#136b8a] hover:bg-blue-200 font-semibold cursor-pointer'}`}
+                      >
+                        {d.getDate()}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Where did you hear about us?</label>
+            <select required value={formData.source} onChange={(e) => setFormData({...formData, source: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none bg-white text-gray-700">
+              <option value="" className="text-gray-400">Select source</option>
+              <option value="Facebook" className="text-gray-700">Facebook</option>
+              <option value="Instagram" className="text-gray-700">Instagram</option>
+              <option value="WhatsApp" className="text-gray-700">WhatsApp</option>
+              <option value="Google" className="text-gray-700">Google</option>
+              <option value="Friend and Family" className="text-gray-700">Friend and Family</option>
+              <option value="I'm already travel with you" className="text-gray-700">I'm already travel with you</option>
+              <option value="Other" className="text-gray-700">Other</option>
+            </select>
+          </div>
+
+          <button type="submit" className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mt-4">
+            Proceed to Checkout
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+// ------------------------------
+
 export default function ItinerarySpiti() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -17,6 +158,7 @@ export default function ItinerarySpiti() {
   // New States for Redesign
   const [activeTab, setActiveTab] = useState('Itinerary')
   const [isAddedToCart, setIsAddedToCart] = useState(false)
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [travellers, setTravellers] = useState(1)
 
   const tripsData = {
@@ -28,7 +170,7 @@ export default function ItinerarySpiti() {
       numericPrice: 24999,
       duration: "6 Days, 5 Nights",
       difficulty: "Moderate",
-      bg: "https://lh3.googleusercontent.com/aida-public/AB6AXuD90IAq7vZq8BDXHDHO2wbzL_ex8lV1Rx8E662i7VSWQb4zypGKBmsG7uhaIPRdLLWkp6uc-e4vCjXwIvBAEvZj-EuJBS-kdRgGDEeqze2MhpFjLDuKPRqCSrMDKv_WE8A_T6J3Y99iGnSw7QojlYBiMiuo3_8tqx5OFJEUJv3FkuMYfE_d9wucTwrbX9SmRvMD_aZJUGsMx0E2plr1qroJgQiDOmYBdeIFXS5M3EWKPvl8AiWAKMyhFuhg5yCKkjcFEAEmd_OHiyD-31k",
+      bg: "https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1600&q=80",
       days: [
         {
           num: 1,
@@ -55,7 +197,7 @@ export default function ItinerarySpiti() {
       numericPrice: 21999,
       duration: "7 Days, 6 Nights",
       difficulty: "Hard",
-      bg: "https://lh3.googleusercontent.com/aida-public/AB6AXuAj_2vbbw_s3xz1DiSwdLIPB91UjIk6PDZxdsBnYm814_77Jzqvfd2kWMUeOvj3AEjF3S4r4H15YwByYU97r8Fu7ILdgtSJ7U5xniKZmkdCoaFd_qnmf7-3V7Arh2PPk6Q87ghzBZjDLQe2VR7QRLwWpmocIiBZeT0Jfr7z12eP6njmtr_SiXnTl4Xo5Kodp5oHyjSeZ-7Z8cS6quHT4VhEBpHASzD0tOUoSMVb_xNsQhzdUiwWoLW4I37lVfc5kAK_dtkYWb5NmnPq",
+      bg: "https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1600&q=80",
       days: [
         {
           num: 1,
@@ -82,7 +224,7 @@ export default function ItinerarySpiti() {
       numericPrice: 17999,
       duration: "5 Days, 4 Nights",
       difficulty: "Easy",
-      bg: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoZ_1M6Zk0HMDhTpKzxMQgQnTBWH9nJlDxVZ3z680TUyTZDm2k0r8nZLugA9SsMmSxZwBQNlP0RqL0o_pN3y8oodeLuZrAMK_BT5g3TtjjmMuq2qryknNF_eDajNtaJ0lhkNCoTDd0wvhRvqO6r6FQKYgQY2G1jrrxLxKfk3vfLTyv4stEcsTeJNnx4i_IeZlGcu5QAISZR2l1bfUnCU3NRglStiKpz8VEJh6Ac0yEugDurHd9RpWrIHVqOg_8q7TXhns1RLgQNPd3",
+      bg: "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=1600&q=80",
       days: [
         {
           num: 1,
@@ -147,7 +289,7 @@ export default function ItinerarySpiti() {
   }
 
   const handleBookNow = () => {
-    navigate(`/checkout?trip=${encodeURIComponent(trip.title)}&price=${trip.numericPrice * travellers}`)
+    setIsBookingModalOpen(true)
   }
 
   const toggleAccordion = (index) => {
@@ -172,20 +314,10 @@ export default function ItinerarySpiti() {
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[60vh] bg-gray-900 overflow-hidden">
           <div className="absolute inset-0 bg-cover bg-center w-full h-full" style={{ backgroundImage: `url('${trip.bg}')` }}></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex flex-col items-start justify-center px-4 md:px-12 lg:px-20">
-            
-            <div className="w-full max-w-lg mb-8 mx-auto md:mx-0">
-              <GooeySearchBar />
-            </div>
-
-            <div className="mt-auto pb-12 w-full max-w-4xl">
-              <h1 className="text-white text-3xl md:text-5xl font-extrabold tracking-tight drop-shadow-xl mb-4 text-left">
-                {trip.title} {trip.duration.split(',')[0]}
-              </h1>
-              <p className="text-gray-200 text-sm md:text-lg font-medium max-w-2xl text-left drop-shadow-md line-clamp-2 md:line-clamp-none">
-                {trip.description}
-              </p>
-            </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex flex-col items-start justify-end px-4 md:px-12 lg:px-20 pb-16">
+            <h1 className="text-white text-3xl md:text-5xl font-extrabold tracking-tight drop-shadow-xl text-left max-w-4xl">
+              {trip.title} {trip.duration.split(',')[0]}
+            </h1>
           </div>
         </div>
 
@@ -290,7 +422,52 @@ export default function ItinerarySpiti() {
             )}
 
             {/* Other Tabs Placeholders */}
-            {activeTab !== 'Itinerary' && (
+            {activeTab === 'Inclusions' && (
+              <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">What included in package and what not ??</h2>
+                
+                <h3 className="text-lg font-bold text-[#136b8a] mb-4">Included</h3>
+                <ul className="space-y-4 text-gray-700 font-medium">
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Accommodation in hotels, campsites, and lakeside cottages.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Meals {parseInt(trip.duration.split(' ')[0]) - 1 || 4} Dinner & {parseInt(trip.duration.split(' ')[0]) - 1 || 4} Breakfast
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Professional team captains, guides, and support staff.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    First aid kits, oxygen cylinders, and an oximeter are available.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    All sightseeing, permits, and entry fees as per the itinerary.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Adventure medical insurance
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Emergency medical support and oxygen cylinders for high altitudes.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Inner Line Permits for restricted areas included.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                    Delhi to {trip.title.split(' ')[0]} and back via volvo bus & Tempo traveller for the whole journey for local sightseeings.
+                  </li>
+                </ul>
+              </section>
+            )}
+            {activeTab !== 'Itinerary' && activeTab !== 'Inclusions' && (
               <section className="mb-10 min-h-[200px] flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100">
                 <p className="text-gray-500 font-medium">Content for {activeTab} will be available here.</p>
               </section>
@@ -364,6 +541,14 @@ export default function ItinerarySpiti() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         tripTitle={trip.title}
+      />
+      <BookingModal 
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        tripTitle={trip.title}
+        price={totalAmount}
+        travellers={travellers}
+        navigate={navigate}
       />
 
       <Footer />

@@ -15,7 +15,7 @@ function GroupTrips() {
       id: "uttarakhand-explorer",
       name: "Valley of Flowers Trek",
       location: "Uttarakhand",
-      style: "Mountains",
+      style: "Domestic Trips",
       durationText: "5N/6D",
       price: 15999,
       isFav: false,
@@ -25,7 +25,7 @@ function GroupTrips() {
       id: "himachal-adventure",
       name: "Manali to Rohtang Pass",
       location: "Himachal",
-      style: "Mountains",
+      style: "Domestic Trips",
       durationText: "4N/5D",
       price: 12499,
       isFav: false,
@@ -35,7 +35,7 @@ function GroupTrips() {
       id: "kashmir-paradise",
       name: "Kashmir Valley Paradise",
       location: "Kashmir",
-      style: "Mountains",
+      style: "Domestic Trips",
       durationText: "5N/6D",
       price: 18999,
       isFav: false,
@@ -45,7 +45,7 @@ function GroupTrips() {
       id: "rajasthan-royal",
       name: "Jaipur & Udaipur Heritage",
       location: "Rajasthan",
-      style: "Weekend",
+      style: "Domestic Trips",
       durationText: "3N/4D",
       price: 14999,
       isFav: false,
@@ -55,41 +55,61 @@ function GroupTrips() {
       id: "meghalaya-monsoon",
       name: "Cherrapunji & Shillong",
       location: "Meghalaya",
-      style: "Mountains",
+      style: "Domestic Trips",
       durationText: "4N/5D",
       price: 17500,
       isFav: false,
-      img: "https://images.unsplash.com/photo-1629211252194-2795f72da0bc?w=600&q=80"
+      img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=80"
     },
     {
       id: "ladakh-expedition",
       name: "Ladakh Himalayan Expedition",
       location: "Ladakh",
-      style: "Mountains",
+      style: "Domestic Trips",
       durationText: "6N/7D",
       price: 21999,
       isFav: false,
-      img: "https://images.unsplash.com/photo-1596500412806-0361280031dc?w=600&q=80"
+      img: "https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=600&q=80"
     },
     {
       id: "spiti-valley-expedition",
       name: "Spiti Valley Roadtrip",
       location: "Spiti Valley",
-      style: "Mountains",
+      style: "Domestic Trips",
       durationText: "7N/8D",
       price: 24999,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDTVDi07scWfsFblrLlOF-M9lu-HBlLoRDiFhOY99I-xJ8vciAIMc4UWni-VaPjhz66-GETj7gd_fHksswzPboUyDwG1PK0xK8Sob6IH0ONIcytECw-YZjVpt2MCEB5U9uVNq13npqE1DEbJ9UNLPeQIp50xXz0iFVTy_XEx8qhmd7iKpyJ8VllOV8TFiFIezpeoxg2BIlQii2v60DuTHXrdh_Pcm3FPdSSXD_s_4jG-YFTYpnCQTHKIXIj8SpiRgCiPUPkJnNyJZ5t"
+      img: "https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=600&q=80"
     },
     {
       id: "andaman-escape",
       name: "Andaman Islands Escape",
       location: "Andaman",
-      style: "Beaches",
+      style: "Domestic Trips",
       durationText: "5N/6D",
       price: 28500,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0y5u9i_7N2laNOZIxv71RdSK5FT0jAp-uHjMwYERiu8PA0f5ZIXZzTW4mDV5pXzsldIlhzXyCWnP5ZeVmWrNzZA04wZjrXsqBFScmOmKAtCHvpCFb6K2d2clvgPz9CbpDVnYeY-R0F5Gqy6VwxCes6qYo50J7xDRpzrnraZxMnW3TIp8XWLoxy3IC28IqbylRrXiPfjUP5lIgNX_7uh3ALSCif0KIatU2BLPP981PAZcWg9SUt4geKFkNwyapsLwVn2kD17gLKID1"
+      img: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=600&q=80"
+    },
+    {
+      id: "bali-escape",
+      name: "Bali Island Escape",
+      location: "Bali",
+      style: "International Trips",
+      durationText: "5N/6D",
+      price: 35000,
+      isFav: false,
+      img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80"
+    },
+    {
+      id: "dubai-adventure",
+      name: "Dubai Desert Adventure",
+      location: "Dubai",
+      style: "International Trips",
+      durationText: "4N/5D",
+      price: 42000,
+      isFav: false,
+      img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80"
     }
   ])
 
@@ -118,7 +138,13 @@ function GroupTrips() {
       return trip.name.toLowerCase().includes(q) || trip.style.toLowerCase().includes(q) || (trip.location && trip.location.toLowerCase().includes(q))
     }
     return true
-  })
+  }).sort((a, b) => {
+    if (activeStyle === 'All') {
+      if (a.style === 'Domestic Trips' && b.style === 'International Trips') return -1;
+      if (a.style === 'International Trips' && b.style === 'Domestic Trips') return 1;
+    }
+    return 0;
+  });
 
   return (
     <div className="text-on-background bg-background font-body-md text-body-md antialiased min-h-screen flex flex-col">
@@ -172,7 +198,26 @@ function GroupTrips() {
       {/* Main Content Layout */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-12">
 
+        
+        {/* Filter Pills */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {['All', 'Domestic Trips', 'International Trips'].map(filter => (
+            <button
+              key={filter}
+              onClick={() => setActiveStyle(filter)}
+              className={`px-5 py-2.5 rounded-full border text-sm font-semibold transition-all cursor-pointer ${
+                activeStyle === filter 
+                  ? 'bg-primary text-white border-primary shadow-md scale-105' 
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+        
         {/* Trips Grid */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTrips.map(trip => (
             <div key={trip.id} className="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card">

@@ -24,7 +24,7 @@ function ContactUs() {
         <div className="space-y-3 mb-8 text-[#3e4850] text-[15px] leading-relaxed">
           <p>
             <strong>Address</strong><br />
-            c-1/28 New Kondli, Mayur Vihar Phase-3, Delhi 110096, India.
+            New Kondli, Mayur Vihar Phase-3, Delhi 110096, India.
           </p>
           <p>
             <strong>Email:</strong> <a href="mailto:info@tripomist.com" className="text-[#006591] hover:underline">info@tripomist.com</a>

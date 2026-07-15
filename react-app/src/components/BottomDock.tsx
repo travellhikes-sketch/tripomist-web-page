@@ -96,7 +96,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
       </div>
 
       {/* Right Corner Group: Contact FAB */}
-      <div className="absolute right-4 sm:right-6 bottom-6 flex flex-col items-center justify-end pointer-events-auto">
+      <div className="absolute right-4 sm:right-6 bottom-4 sm:bottom-5 flex flex-col items-center justify-end pointer-events-auto">
         <AnimatePresence>
           {isFabOpen && (
             <motion.div 

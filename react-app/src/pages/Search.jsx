@@ -15,7 +15,7 @@ function Search() {
       durationText: "6N/7D",
       price: 21999,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCE6p_UF0GujYyL7QDuZtoqzEShR-1wG1cgQi_O9hq38FgS581MFo2tgdKmqcWlbrQv9BdUpqpfR3vThFmanWNkaQRl4F0B3TKW2esN658tI0CjH-96Uh4B0SFJGOihOlNRXGuNeTj7DuNQKJh7n4WL1N1nlIj9od50ycbUf85JmEIJnOVNdc--S1p5-ZvcYwdCh35eyB9Y9_0MF0m9e0LoIC9-kWldVdViKnfzZc-H1YQF1JrBHOfUx0TWmgKVKuqtnJQv7mNresai"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "andaman-escape",
@@ -24,7 +24,7 @@ function Search() {
       durationText: "4N/5D",
       price: 18500,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0y5u9i_7N2laNOZIxv71RdSK5FT0jAp-uHjMwYERiu8PA0f5ZIXZzTW4mDV5pXzsldIlhzXyCWnP5ZeVmWrNzZA04wZjrXsqBFScmOmKAtCHvpCFb6K2d2clvgPz9CbpDVnYeY-R0F5Gqy6VwxCes6qYo50J7xDRpzrnraZxMnW3TIp8XWLoxy3IC28IqbylRrXiPfjUP5lIgNX_7uh3ALSCif0KIatU2BLPP981PAZcWg9SUt4geKFkNwyapsLwVn2kD17gLKID1"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "munnar-retreat",
@@ -33,7 +33,7 @@ function Search() {
       durationText: "2N/3D",
       price: 8999,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBCCXUB1XgJi4Y3t-H0p0t5UTLh_BxmzWOe6kQ6O9c_bPnXHeOmV57Psr-R7D3VlYAEeSb8-WFp0w8bVahRCvNnzR2fMlppIEo7n0DZjWXwlGY4PaWsr7zS4rmU4g64wR4hqvvoWbTudriJszYf-C0CCmsgcHn_H5FaXFQ99Nj5-WPugNDzqKW8Tyc3KXyhxW4yhLBrEIf1V8Xo3VDkqA1VgXMiL06W0aDWctLY1-4qYXNgXr9KN6giLlLXGStqXDvP6KxWiRvJVC4J"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "spiti-valley-expedition",
@@ -42,7 +42,7 @@ function Search() {
       durationText: "5N/6D",
       price: 24999,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDiD2GO7fIb1ciUdWe0odOedfkhJIm1ur64B1iKghZ8eMdF66RoOvQDTrZz1L1nfURfVdMroAzsjyFtv85EjcF8NXBkccIFhdalQolBp9Yar92MT8MtrG9wQGjuK5B7wctNIUhR54TEU7PYNv323Svs0dPfNfV6sfFdjHZinMcri0e9lDmEaHhHTP1F5YA25LoETYvVR1Dnn-8UNP4ShswwHgnmwn3Pw1YqRx1ECDm16ijYYriT-jcGpT9--pyJ_OQkKTc7lwXlnByS"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "rishikesh-retreat",
@@ -51,7 +51,7 @@ function Search() {
       durationText: "1N/2D",
       price: 5499,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAdeK5rNXK2i1b9n6OjyVoqm3Bxp8LEe74ptA6ncV2vP0x3Mi3B8HxlbdKEmQm91XCHfRR1kMKAQPDSbdqUrKDW4JM3xypx1fRMk3V2CB8LGMsnDVcKS_UZfnZcEYkmv5SROPXh2Y_cNDIOvWufVrH-JjvgMbmJ5A7_AgOyZUaA-BJA08GG7r2s0bw9GaqDO4QlU2W62kMiK6U1woPfrvgioGY_Glgx-Ig1A4Io0qyEemYXHUM9K9ujeQRoKgUEMoYyknVTGzgYBeRs"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     },
     {
       id: "jaipur-heritage",
@@ -60,7 +60,7 @@ function Search() {
       durationText: "2N/3D",
       price: 6200,
       isFav: false,
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBRwnZMqN75wiCGdYCe57bjOJqnQL8ixU9e0QsmbQNBMgQzcZ2tX7BX4tDAqoU8FUgUqp1QPoAzbFcQOY9cjylZmNqpl5HPNriyb50-N7uufQaF7nEz0ciYQP-JVZh7E3rmaaaAtn1HmSbpnGnuSdDky0eOIAvJ7SS5YCQ1I-SURRXNSHrCdOdyeLAeYoMGSKuIszmp7kQygPsJ19kxjBKCrAAjCB-nASur3eTy47RWuE18brwHmoxgNO2fM_WsfO8iaSUnvytThry-"
+      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
     }
   ])
 
