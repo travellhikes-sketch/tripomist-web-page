@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import DestinationSearch from '../components/DestinationSearch'
 import Footer from '../components/Footer'
 
-function WeekendTrips() {
+function International() {
   const location = useLocation()
   const [filter, setFilter] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
@@ -63,7 +63,7 @@ function WeekendTrips() {
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 to-background"></div>
           </div>
           <div className="relative z-10 max-w-7xl w-full flex flex-col items-center text-center gap-6">
-            <h1 className="font-display-lg text-display-lg md:font-display-lg text-primary font-bold">Weekend Trips</h1>
+            <h1 className="font-display-lg text-display-lg md:font-display-lg text-primary font-bold">International Trips</h1>
             <p className="font-body-lg text-body-lg max-w-2xl text-on-surface-variant">Discover quick, refreshing getaways. Perfect for recharging your spirit without the need for long planning.</p>
             
             {/* Filter and Search Layout */}
@@ -77,7 +77,7 @@ function WeekendTrips() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
-                  placeholder="Search weekend trips by destination..." 
+                  placeholder="Search International Trips by destination..." 
                   type="text" 
                 />
               </div>
@@ -114,4 +114,4 @@ function WeekendTrips() {
   )
 }
 
-export default WeekendTrips
+export default International

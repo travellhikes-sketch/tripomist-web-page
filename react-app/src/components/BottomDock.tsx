@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import GooeyDock from '@/components/ui/gooey-dock'
-import { Home, Users, Sunrise, CalendarDays, ShoppingCart } from 'lucide-react'
+import { Home, Map, Plane, Star, ShoppingCart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { icon: Home,         label: 'Home',          path: '/' },
-  { icon: Users,        label: 'Group Trips',   path: '/group-trips' },
-  { icon: Sunrise,      label: 'Weekend Trips', path: '/weekend-trips' },
-  { icon: CalendarDays, label: 'Upcoming',      path: '/upcoming-trips' },
+  { icon: Map,          label: 'Domestic',      path: '/domestic' },
+  { icon: Plane,        label: 'International', path: '/international' },
+  { icon: Star,         label: 'Review',        path: '/review' },
   { icon: ShoppingCart, label: 'Cart',          path: '/cart' },
 ]
 
@@ -36,7 +36,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
     <div className="fixed bottom-6 left-0 right-0 z-[80] w-full px-4 sm:px-6 pointer-events-none flex justify-center items-end">
       
       {/* Center Group: Pill and Dock */}
-      <div className="flex flex-col items-center gap-4 pointer-events-auto">
+      <div className="flex flex-col items-center gap-1.5 pointer-events-auto">
         
         {/* "How can I help you today?" or "Close Chat" pill */}
         <motion.button

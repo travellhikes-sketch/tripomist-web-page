@@ -144,7 +144,7 @@ function Search() {
                     to={`/checkout?trip=${encodeURIComponent(trip.name)}&price=${trip.price}`} 
                     className="bg-primary text-on-primary px-4 py-2 rounded-lg font-body-md text-body-md font-semibold hover:bg-surface-tint transition-colors no-underline"
                   >
-                    Book Now
+                    View Detail
                   </Link>
                 </div>
               </div>

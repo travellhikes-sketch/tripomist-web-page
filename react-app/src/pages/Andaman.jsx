@@ -101,7 +101,7 @@ export default function Andaman() {
                     <p className="text-primary font-bold text-lg">₹{dest.price.toLocaleString()}</p>
                   </div>
                   <span className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-xl group-hover:bg-primary/90 transition-colors">
-                    Book Now
+                    View Detail
                   </span>
                 </div>
               </div>

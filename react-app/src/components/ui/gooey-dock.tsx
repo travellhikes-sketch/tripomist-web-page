@@ -30,16 +30,15 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
     <div
       className={cn("flex items-center justify-center w-full py-2", className)}
     >
-      <TooltipProvider delayDuration={100}>
         <div className="relative flex gap-1 px-2 py-1">
           {items.map((item, i) => {
             const isHovered = hovered === i
             const isActive  = item.active ?? false
 
             return (
-              <Tooltip key={item.label}>
-                <TooltipTrigger asChild>
+
                   <motion.div
+                    key={item.label}
                     onMouseEnter={() => setHovered(i)}
                     onMouseLeave={() => setHovered(null)}
                     animate={{
@@ -86,27 +85,26 @@ export default function GooeyDock({ items, className }: GooeyDockProps) {
                       <item.icon className="h-4 w-4" />
                     </Button>
 
+                    {/* Label below icon */}
+                    <span className={cn("text-[7.5px] tracking-tight font-medium leading-none mt-1 text-center truncate w-full max-w-[44px]", isActive ? "text-primary" : "text-gray-600 font-normal")}>
+                      {item.label}
+                    </span>
+
                     {/* Active indicator dot */}
                     {isActive && (
                       <motion.div
                         layoutId="activeIndicator"
-                        className="mt-1 h-1 w-1 rounded-full bg-primary"
+                        className="mt-0.5 h-1 w-1 rounded-full bg-primary"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 20 }}
                       />
                     )}
-                    {!isActive && <div className="mt-1 h-1 w-1" />}
+                    {!isActive && <div className="mt-0.5 h-1 w-1" />}
                   </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs font-medium">
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
             )
           })}
         </div>
-      </TooltipProvider>
     </div>
   )
 }

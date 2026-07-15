@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import DestinationSearch from '../components/DestinationSearch'
 import Footer from '../components/Footer'
 
-function UpcomingTrips() {
+function Review() {
   const location = useLocation()
   const [filter, setFilter] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
@@ -69,7 +69,7 @@ function UpcomingTrips() {
             <div className="absolute inset-0 bg-inverse-surface/40 backdrop-brightness-75"></div>
           </div>
           <div className="relative z-10 text-center px-4 max-w-4xl flex flex-col items-center">
-            <h1 className="font-display-lg text-display-lg text-white mb-md font-bold">Upcoming Trips</h1>
+            <h1 className="font-display-lg text-display-lg text-white mb-md font-bold">Reviews</h1>
             <p className="font-body-lg text-body-lg text-white/90 max-w-2xl mx-auto mb-6">Discover the perfect short escapes with like-minded travelers. Expertly curated itineraries designed for adventure and connection.</p>
             
             {/* Filter and Search Controls */}
@@ -83,7 +83,7 @@ function UpcomingTrips() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
-                  placeholder="Search upcoming trips..." 
+                  placeholder="Search Reviews..." 
                   type="text" 
                 />
               </div>
@@ -135,4 +135,4 @@ function UpcomingTrips() {
   )
 }
 
-export default UpcomingTrips
+export default Review

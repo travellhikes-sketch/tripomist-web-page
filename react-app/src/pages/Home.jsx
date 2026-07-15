@@ -114,49 +114,49 @@ function Home() {
           
           <div className="flex gap-8 overflow-x-auto hide-scrollbar py-4 px-2 -mx-2">
             <div onClick={() => navigate('/uttarakhand')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Uttarakhand" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Uttarakhand</span>
             </div>
             <div onClick={() => navigate('/himachal')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Himachal Pradesh" src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Himachal Pradesh</span>
             </div>
             <div onClick={() => navigate('/kashmir')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Kashmir" src="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=600&q=80" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Kashmir</span>
             </div>
             <div onClick={() => navigate('/rajasthan')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Rajasthan" src="https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Rajasthan</span>
             </div>
             <div onClick={() => navigate('/meghalaya')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Meghalaya" src="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=600&auto=format&fit=crop" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Meghalaya</span>
             </div>
             <div onClick={() => navigate('/ladakh')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Ladakh" src="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?q=80&w=600&auto=format&fit=crop" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Ladakh</span>
             </div>
             <div onClick={() => navigate('/spiti')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Spiti Valley" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTVDi07scWfsFblrLlOF-M9lu-HBlLoRDiFhOY99I-xJ8vciAIMc4UWni-VaPjhz66-GETj7gd_fHksswzPboUyDwG1PK0xK8Sob6IH0ONIcytECw-YZjVpt2MCEB5U9uVNq13npqE1DEbJ9UNLPeQIp50xXz0iFVTy_XEx8qhmd7iKpyJ8VllOV8TFiFIezpeoxg2BIlQii2v60DuTHXrdh_Pcm3FPdSSXD_s_4jG-YFTYpnCQTHKIXIj8SpiRgCiPUPkJnNyJZ5t" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Spiti Valley</span>
             </div>
             <div onClick={() => navigate('/andaman')} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle">
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Andaman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEgmyWOIgZZbElsZln0-quTF0Zl1sILwwQ0jCPpa9x4O6dexC9kI3F5q6J36Sdjx675kTkFj1OhTAmdo1dRRTjI7BL82J61hzB98Ir7m8lklUTKBDQOL7GBNY4O1TYJtbQlPRlQ6HpPXHJTv-pq9GZAZ_83waE9IRgwZoZbaxPRHFZiXmNjpSU-DTYBJJNY7ayhcdClyF0WZmvH0gC6Pu3goYX3H7GJx6u24jX-q7nJ3LtZ38SEz_SXg_vXpKwA2472XqCzQIRXYA_" />
               </div>
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Andaman</span>

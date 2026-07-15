@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
-import WeekendTrips from './pages/WeekendTrips'
-import UpcomingTrips from './pages/UpcomingTrips'
-import GroupTrips from './pages/GroupTrips'
+import Domestic from './pages/Domestic'
+import International from './pages/International'
+import Review from './pages/Review'
 import ItinerarySpiti from './pages/ItinerarySpiti'
 import Checkout from './pages/Checkout'
 import Cart from './pages/Cart'
@@ -45,9 +45,9 @@ function App() {
       <div className="pb-36 md:pb-0">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/weekend-trips" element={<WeekendTrips />} />
-          <Route path="/upcoming-trips" element={<UpcomingTrips />} />
-          <Route path="/group-trips" element={<GroupTrips />} />
+          <Route path="/international" element={<International />} />
+          <Route path="/review" element={<Review />} />
+          <Route path="/domestic" element={<Domestic />} />
           <Route path="/uttarakhand" element={<Uttarakhand />} />
           <Route path="/himachal" element={<Himachal />} />
           <Route path="/kashmir" element={<Kashmir />} />

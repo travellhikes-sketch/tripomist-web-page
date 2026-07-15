@@ -284,7 +284,7 @@ export default function ItinerarySpiti() {
                 onClick={handleBookNow}
                 className="btn-shiny w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mb-4 text-lg cursor-pointer"
               >
-                <span className="relative z-10">Book Now</span>
+                <span className="relative z-10">View Detail</span>
               </button>
 
               <button 
@@ -319,7 +319,7 @@ export default function ItinerarySpiti() {
           onClick={handleBookNow}
           className="btn-shiny bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3 rounded-xl shadow-md active:scale-95 transition-transform cursor-pointer"
         >
-          <span className="relative z-10">Book Now</span>
+          <span className="relative z-10">View Detail</span>
         </button>
       </div>
 

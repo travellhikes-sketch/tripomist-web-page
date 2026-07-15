@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import DestinationSearch from '../components/DestinationSearch'
 import Footer from '../components/Footer'
 
-function GroupTrips() {
+function Domestic() {
   const location = useLocation()
   const [activeStyle, setActiveStyle] = useState('All')
   const [favoritesFilter, setFavoritesFilter] = useState(false)
@@ -138,7 +138,7 @@ function GroupTrips() {
           <div className="hidden md:flex relative w-full items-end justify-between">
             <div className="w-1/3">
               <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore</p>
-              <h1 className="text-white text-4xl md:text-5xl font-bold leading-tight">Group Trips & Expeditions</h1>
+              <h1 className="text-white text-4xl md:text-5xl font-bold leading-tight">Domestic Trips & Expeditions</h1>
               <p className="text-white/80 mt-2 text-base">Explore premium group adventures across stunning landscapes, beaches, and scenic mountain trails.</p>
             </div>
             
@@ -155,7 +155,7 @@ function GroupTrips() {
           <div className="md:hidden flex flex-col gap-6">
             <div>
               <p className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1">Explore</p>
-              <h1 className="text-white text-4xl font-bold leading-tight">Group Trips & Expeditions</h1>
+              <h1 className="text-white text-4xl font-bold leading-tight">Domestic Trips & Expeditions</h1>
               <p className="text-white/80 mt-2 text-base">Explore premium group adventures across stunning landscapes, beaches, and scenic mountain trails.</p>
             </div>
             <div className="w-full">
@@ -215,4 +215,4 @@ function GroupTrips() {
   )
 }
 
-export default GroupTrips
+export default Domestic
