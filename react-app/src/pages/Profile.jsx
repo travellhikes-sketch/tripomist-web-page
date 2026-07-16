@@ -257,61 +257,34 @@ function Profile() {
           </div>
         </div>
 
-        {/* Recommended Trips */}
+        {/* Your Past Purchases */}
         <div className="mb-10 w-full overflow-hidden">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 px-1">Recommended For You</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 px-1">Your Past Purchases</h2>
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-6 hide-scrollbar snap-x snap-mandatory px-1">
             {[
               {
                 id: 'spiti',
                 title: 'Spiti Valley Expedition',
                 image: 'https://images.unsplash.com/photo-1548344686-2180ec5d09e7?w=800&q=80',
-                price: '₹14,999',
-                days: '7 Days',
-                link: '/spiti'
+                link: '/itinerary/spiti-valley'
               },
               {
                 id: 'ladakh',
                 title: 'Leh Ladakh Adventure',
                 image: 'https://images.unsplash.com/photo-1626084666504-20b5711df774?w=800&q=80',
-                price: '₹22,500',
-                days: '8 Days',
-                link: '/ladakh'
+                link: '/itinerary/ladakh'
               },
               {
                 id: 'kashmir',
                 title: 'Kashmir Paradise',
                 image: 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?w=800&q=80',
-                price: '₹12,000',
-                days: '6 Days',
-                link: '/kashmir'
+                link: '/itinerary/kashmir'
               }
             ].map((trip) => (
               <div key={trip.id} className="min-w-[280px] md:min-w-[320px] bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden relative snap-center group transition-shadow">
-                <div className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-full z-10 shadow-md">
-                  🔥 Top Seller
-                </div>
                 <div className="relative h-48 overflow-hidden cursor-pointer" onClick={() => navigate(trip.link)}>
                   <img src={trip.image} alt={trip.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                  <div className="absolute bottom-3 left-3 text-white">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md border border-white/20">
-                      <span className="material-symbols-outlined text-[14px]">schedule</span> {trip.days}
-                    </div>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="text-[17px] font-bold text-gray-900 mb-1 leading-tight">{trip.title}</h3>
-                  <p className="text-gray-500 text-xs mb-4">Starts Ex Delhi</p>
-                  <div className="flex items-center justify-between mt-auto">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-medium">Starting from</span>
-                      <span className="text-[#136b8a] font-extrabold text-lg">{trip.price}</span>
-                    </div>
-                    <Link to={trip.link} className="bg-gray-900 hover:bg-[#136b8a] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm no-underline">
-                      View Detail
-                    </Link>
-                  </div>
                 </div>
               </div>
             ))}

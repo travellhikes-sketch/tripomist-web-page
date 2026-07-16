@@ -1,5 +1,6 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import PackageCard from '../components/PackageCard'
+import { Link, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import DestinationSearch from '../components/DestinationSearch'
@@ -26,6 +27,18 @@ const destinations = [
 ]
 
 export default function Andaman() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get('search') || '';
+
+  const filteredDestinations = destinations.filter(dest => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase().trim()
+    return dest.name.toLowerCase().includes(q) || 
+           dest.tagline.toLowerCase().includes(q) || 
+           dest.tags.some(tag => tag.toLowerCase().includes(q))
+  })
+
   return (
     <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
@@ -49,7 +62,11 @@ export default function Andaman() {
             </div>
             
             <div className="absolute left-1/2 -translate-x-1/2 bottom-2 w-[400px]">
-              <DestinationSearch />
+              <DestinationSearch 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Andaman packages..."
+              />
             </div>
           </div>
 
@@ -60,9 +77,6 @@ export default function Andaman() {
               <h1 className="text-white text-4xl font-bold leading-tight">Andaman & Nicobar</h1>
               <p className="text-white/80 mt-2 text-base">Tropical paradise — dive into azure waters and historical legacy.</p>
             </div>
-            <div className="w-full">
-              <DestinationSearch />
-            </div>
           </div>
         </div>
       </section>
@@ -71,41 +85,16 @@ export default function Andaman() {
       <main className="max-w-6xl mx-auto px-4 py-10 w-full pb-36">
         <h2 className="text-2xl font-bold text-on-surface mb-6">Top Destinations</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {destinations.map((dest) => (
-            <Link
+          {filteredDestinations.map((dest) => (
+            <PackageCard 
               key={dest.id}
-              to={`/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`}
-              className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 no-underline"
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={dest.img}
-                  alt={dest.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-primary text-xs font-bold px-2.5 py-1 rounded-full shadow">
-                  {dest.duration}
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-lg text-on-surface">{dest.name}</h3>
-                <p className="text-on-surface-variant text-sm mt-0.5">{dest.tagline}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {dest.tags.map((t) => (
-                    <span key={t} className="text-[11px] bg-primary/10 text-primary font-medium px-2 py-0.5 rounded-full">{t}</span>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <div>
-                    <span className="text-xs text-on-surface-variant">Starting from</span>
-                    <p className="text-primary font-bold text-lg">₹{dest.price.toLocaleString()}</p>
-                  </div>
-                  <span className="bg-primary text-white text-sm font-semibold px-4 py-2 rounded-xl group-hover:bg-primary/90 transition-colors">
-                    View Detail
-                  </span>
-                </div>
-              </div>
-            </Link>
+              tripTitle={dest.name} 
+              price={"₹" + dest.price.toLocaleString()}
+              duration={dest.duration} 
+              description={dest.tagline}
+              bg={dest.img}
+              link={`/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`} 
+            />
           ))}
         </div>
       </main>
@@ -114,3 +103,4 @@ export default function Andaman() {
     </div>
   )
 }
+

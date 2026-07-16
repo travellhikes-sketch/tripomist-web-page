@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
 import Home from './pages/Home'
 import Domestic from './pages/Domestic'
 import International from './pages/International'
@@ -7,6 +7,14 @@ import Review from './pages/Review'
 import ItinerarySpiti from './pages/ItinerarySpiti'
 import Checkout from './pages/Checkout'
 import Cart from './pages/Cart'
+import FeaturedGroupTrip from './pages/FeaturedGroupTrip'
+import MostPopularPackages from './pages/MostPopularPackages'
+import ItineraryManaliKasol from './pages/ItineraryManaliKasol'
+import ItineraryJibhi from './pages/ItineraryJibhi'
+import ItineraryChopta from './pages/ItineraryChopta'
+import ItineraryKedarnath from './pages/ItineraryKedarnath'
+import ItineraryMadhyameshwar from './pages/ItineraryMadhyameshwar'
+import Search from './pages/Search'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import RefundPolicy from './pages/RefundPolicy'
 import ShippingPolicy from './pages/ShippingPolicy'
@@ -30,12 +38,15 @@ import UpcomingDepartures from './pages/UpcomingDepartures'
 import BottomDock from './components/BottomDock'
 import Chatbot from './components/Chatbot'
 
-// Create a component that forces layout re-render on route change
+// Create a component that forces layout re-render on route change, but respects back button
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const navType = useNavigationType();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (navType !== "POP") {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, navType]);
   return null;
 }
 
@@ -63,6 +74,14 @@ function App() {
           <Route path="/kerala" element={<Kerala />} />
           <Route path="/goa" element={<Goa />} />
           <Route path="/about" element={<AboutUs />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/featured-group-trips" element={<FeaturedGroupTrip />} />
+          <Route path="/most-popular-packages" element={<MostPopularPackages />} />
+          <Route path="/itinerary/manali-kasol" element={<ItineraryManaliKasol />} />
+          <Route path="/itinerary/jibhi" element={<ItineraryJibhi />} />
+          <Route path="/itinerary/chopta" element={<ItineraryChopta />} />
+          <Route path="/itinerary/kedarnath" element={<ItineraryKedarnath />} />
+          <Route path="/itinerary/madhyameshwar" element={<ItineraryMadhyameshwar />} />
           <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/cart" element={<Cart />} />

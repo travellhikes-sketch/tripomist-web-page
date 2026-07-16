@@ -73,9 +73,9 @@ function Footer() {
         <div className="md:justify-self-start lg:justify-self-center">
           <h3 className="mb-4 text-base font-bold text-on-surface">Follow Us</h3>
           <div className="flex items-center gap-4">
-            {/* WhatsApp */}
-            <a href="https://wa.me/919990802608" className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20b858] flex items-center justify-center hover:scale-105 transition-transform shadow-sm" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-              <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg" alt="WhatsApp" className="w-6 h-6 filter invert" />
+            {/* Twitter */}
+            <a href="https://twitter.com" className="w-12 h-12 rounded-full bg-[#1DA1F2] hover:bg-[#1a8cd8] flex items-center justify-center hover:scale-105 transition-transform shadow-sm" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+              <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/twitter.svg" alt="Twitter" className="w-6 h-6 filter invert" />
             </a>
             {/* Instagram */}
             <a href="https://www.instagram.com/travellhikes?igsh=dDIxcmJvbmRkemlj" className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] flex items-center justify-center hover:scale-105 transition-transform shadow-sm" target="_blank" rel="noopener noreferrer" aria-label="Instagram">

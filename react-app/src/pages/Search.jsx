@@ -88,29 +88,27 @@ function Search() {
     <div className="text-on-background bg-background font-body-md text-body-md antialiased min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-12">
-        {/* Google-like Search Bar Card */}
-        <div className="max-w-xl mx-auto mb-12 text-center">
-          <h1 className="font-display-lg text-2xl md:text-3xl font-extrabold mb-2 text-on-surface tracking-tight">Search Results</h1>
-          <p className="text-on-surface-variant text-sm mb-6">Type destination, state, or style to find matching itineraries.</p>
-          <div className="relative flex items-center bg-white dark:bg-surface-container-high border border-outline-variant/60 rounded-xl px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20">
-            <span className="material-symbols-outlined text-outline mr-2 text-[22px]">search</span>
-            <input 
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && doSearch()}
-              className="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
-              placeholder="Search destination, e.g. Ladakh, beach..." 
-              type="text" 
-            />
-            <button 
-              onClick={doSearch}
-              className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-surface-tint transition-all cursor-pointer border-none ml-2"
-            >
-              Search
-            </button>
+      <main className="flex-grow w-full pb-12">
+        {/* Hero Video/Image Banner */}
+        <section className="relative w-full h-[40vh] min-h-[300px] overflow-hidden mb-12">
+          <img
+            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80"
+            alt="Search results"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          
+          <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
+            <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight mb-2">
+              Your Search
+            </h1>
+            {searchVal && (
+              <p className="text-primary font-bold text-xl md:text-2xl">{searchVal}</p>
+            )}
           </div>
-        </div>
+        </section>
+
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
 
         {/* Results Header */}
         <div className="flex justify-between items-center mb-6">
@@ -150,6 +148,7 @@ function Search() {
               </div>
             </div>
           ))}
+        </div>
         </div>
       </main>
 

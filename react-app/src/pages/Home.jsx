@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -15,6 +15,11 @@ function Home() {
   const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
   const [isFabOpen, setIsFabOpen] = useState(false)
+  
+  const scrollRef = useRef(null)
+
+  // Auto-scroll removed as requested
+  useEffect(() => {}, [])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -49,30 +54,17 @@ function Home() {
             <p className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8">
               Your Safe Travel Our Responsibility<span className="text-primary-container">.</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center mb-8">
               <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to="/all-departures">
                 Explore All Departures
                 <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
               </Link>
               <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to="/upcoming-departures">
-                See Upcoming Departures
+                See Upcoming Trips
               </Link>
-              <div className="relative flex items-center bg-black/40 backdrop-blur-md border border-white/30 rounded-lg px-4 py-3.5 w-full sm:w-64">
-                <span className="material-symbols-outlined text-white/60 mr-2 text-[20px] leading-none">search</span>
-                <input
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && searchValue.trim()) {
-                      navigate(`/group-trips?search=${encodeURIComponent(searchValue.trim())}`)
-                    }
-                  }}
-                  className="bg-transparent border-none text-white text-sm focus:ring-0 outline-none w-full placeholder-white/60 p-0"
-                  placeholder="Search destinations..."
-                  type="text"
-                />
-              </div>
             </div>
+            
+
           </div>
         </div>
         </section>
@@ -146,16 +138,19 @@ function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
-                <span className="material-symbols-outlined text-[16px]">explore</span>
-                <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">Explore</span>
+                <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
+                <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">Hot Selling</span>
               </div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
               Most Popular Packages
             </h2>
             </div>
+            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/most-popular-packages">
+              View All Packages <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+            </Link>
           </div>
 
-          <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+          <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
             <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
               tripTitle="Ladakh" 
               price="₹21,999" 
@@ -251,7 +246,7 @@ function Home() {
                 Featured Group <span className="text-[#136b8a]">Trips</span>
               </h2>
             </div>
-            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/group-trips">
+            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/featured-group-trips">
               View All Trips <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
             </Link>
           </div>
@@ -347,63 +342,48 @@ function Home() {
                 Soon you can plan <span className="text-[#136b8a]">abroad trips with us</span>
               </h2>
             </div>
+            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/international">
+              View All Destinations <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+            </Link>
           </div>
 
-          <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0">
-            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px]" 
-              tripTitle="Bali Escape" 
-              price="₹51,999" 
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 pb-8">
+            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+              tripTitle="Almaty" 
+              price="54999" 
+              duration="5N/6D" 
+              description="Experience the magic of Central Asia."
+              bg="https://images.unsplash.com/photo-1558588825-450f38b1d9df?w=800&q=80"
+              link="#" 
+              badge="Coming Soon"
+            />
+            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+              tripTitle="Kazakhstan" 
+              price="56999" 
+              duration="5N/6D" 
+              description="Discover beautiful landscapes and culture."
+              bg="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=800&q=80"
+              link="#" 
+              badge="Coming Soon"
+            />
+            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+              tripTitle="Thailand" 
+              price="41999" 
               duration="6N/7D" 
-              description="Experience the magic of Bali, from pristine beaches to lush rice terraces and ancient temples."
-              bg="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80"
+              description="Explore vibrant beaches and culture."
+              bg="https://images.unsplash.com/photo-1528181304800-259b08848526?w=800&q=80"
               link="#" 
               badge="Coming Soon"
             />
-            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px]" 
-              tripTitle="Vietnam Adventure" 
-              price="₹56,999" 
-              duration="5N/6D" 
-              description="Discover the breathtaking landscapes, rich history, and vibrant culture of Vietnam."
-              bg="https://images.unsplash.com/photo-1528127269322-539801943592?w=600&q=80"
+            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+              tripTitle="Bali" 
+              price="51999" 
+              duration="6N/7D" 
+              description="Relax on pristine tropical beaches."
+              bg="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80"
               link="#" 
               badge="Coming Soon"
             />
-            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px]" 
-              tripTitle="Singapore Highlights" 
-              price="₹55,999" 
-              duration="4N/5D" 
-              description="Explore the futuristic city-state of Singapore, offering a perfect blend of nature and modern marvels."
-              bg="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=600&q=80"
-              link="#" 
-              badge="Coming Soon"
-            />
-            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px]" 
-              tripTitle="Dubai Luxury Getaway" 
-              price="₹62,999" 
-              duration="5N/6D" 
-              description="Experience the opulence of Dubai, from the towering Burj Khalifa to the endless desert dunes."
-              bg="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80"
-              link="#" 
-              badge="Coming Soon"
-            />
-          </div>
-        </section>
-
-        {/* Experience banner stats */}
-        <section className="w-full px-4 md:px-12 lg:px-20 mb-24 mt-24">
-          <div className="flex flex-col md:flex-row justify-between items-center bg-surface-container-low border border-outline-variant/30 rounded-2xl p-8 shadow-sm gap-8 md:gap-16">
-            <div className="text-center w-full">
-              <div className="font-headline-lg text-headline-lg text-[#136b8a] mb-1 flex items-center justify-center gap-1 font-bold">4.9<span className="material-symbols-outlined fill-current text-[24px]">star</span></div>
-              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px] font-bold">Google Rating</div>
-            </div>
-            <div className="text-center w-full">
-              <div className="font-headline-lg text-headline-lg text-[#136b8a] mb-1 font-bold">10K+</div>
-              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px] font-bold">Happy Travellers</div>
-            </div>
-            <div className="text-center w-full">
-              <div className="font-headline-lg text-headline-lg text-[#136b8a] mb-1 font-bold">100+</div>
-              <div className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-[12px] font-bold">Domestic Trips</div>
-            </div>
           </div>
         </section>
       </main>

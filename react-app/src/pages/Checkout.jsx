@@ -19,6 +19,8 @@ export default function Checkout() {
   
   const [showSuccess, setShowSuccess] = useState(false)
   const [bookingId, setBookingId] = useState('')
+  const [showOtp, setShowOtp] = useState(false)
+  const [otpValue, setOtpValue] = useState('')
 
   useEffect(() => {
     const tripParam = searchParams.get('trip')
@@ -51,8 +53,22 @@ export default function Checkout() {
     setSharingType(type);
   }
 
-  const handleSubmit = (e) => {
+  const handleBookNow = (e) => {
     e.preventDefault()
+    if (!travelerName || !travelerEmail || !travelerPhone) {
+      alert("Please fill in traveler details")
+      return
+    }
+    setShowOtp(true)
+  }
+
+  const handleVerifyOtp = (e) => {
+    e.preventDefault()
+    if (otpValue.length !== 4) {
+      alert("Please enter a valid 4-digit OTP")
+      return
+    }
+    setShowOtp(false)
     const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TBICP09xzQRaAw"
     const amountInPaise = billTotal * 100
     
@@ -110,9 +126,9 @@ export default function Checkout() {
               <p className="text-sm text-gray-500 mb-1">Booking ID</p>
               <p className="font-mono font-bold text-gray-900 text-lg">{bookingId || 'TRP-892374'}</p>
             </div>
-            <Link to="/profile" className="inline-block bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3.5 rounded-xl transition-colors w-full">
-              Go to Profile
-            </Link>
+            <button onClick={() => window.history.back()} className="inline-block bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3.5 rounded-xl transition-colors w-full">
+              Back to Package
+            </button>
           </div>
         </main>
         <Footer />
@@ -123,6 +139,29 @@ export default function Checkout() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50">
       <Navbar />
+
+      {/* Simulated OTP Modal */}
+      {showOtp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-6 text-center animate-scale-in">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Code</h2>
+            <p className="text-gray-500 text-sm mb-6">Enter any 4-digit code to simulate OTP verification</p>
+            <input 
+              type="text" 
+              maxLength="4" 
+              value={otpValue}
+              onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+              className="w-full text-center text-3xl tracking-[1em] font-bold border-2 border-gray-200 rounded-xl py-3 focus:outline-none focus:border-[#136b8a] transition-colors mb-6"
+              placeholder="0000"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setShowOtp(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors">Cancel</button>
+              <button onClick={handleVerifyOtp} className="flex-1 py-3 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold rounded-xl transition-colors">Verify</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-grow pt-32 pb-20 px-4 md:px-8 lg:px-20 max-w-7xl mx-auto w-full">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Checkout</h1>
@@ -134,7 +173,7 @@ export default function Checkout() {
           {/* Left Column: Sharing Options & Traveller Info */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Occupancy according to your requirement,</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Occupancy According To Your Requirement,</h2>
               <p className="text-gray-500 text-sm font-medium mb-6"></p>
               
               <div className="flex flex-col gap-4">
@@ -270,7 +309,7 @@ export default function Checkout() {
               </div>
 
               <button 
-                onClick={handleSubmit}
+                onClick={handleBookNow}
                 className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] text-lg"
               >
                 Book Now

@@ -8,10 +8,21 @@ function ContactUs() {
     <div className="bg-surface text-on-surface antialiased font-body-md min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Grey Banner */}
-      <div className="bg-gray-300 py-16 text-center w-full">
-        <h1 className="font-display-lg text-4xl md:text-5xl font-bold text-white uppercase tracking-wider">Contact Us</h1>
-      </div>
+      {/* Hero Video/Image Banner */}
+      <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80"
+          alt="Contact Us"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        
+        <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
+          <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
+            Contact Us
+          </h1>
+        </div>
+      </section>
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-6 py-12">

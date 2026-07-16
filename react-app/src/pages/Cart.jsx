@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 function Cart() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [viewHistory, setViewHistory] = useState(false);
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart');
@@ -57,9 +58,32 @@ function Cart() {
 
       {/* Cart Content */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 pb-36 pt-4">
+        
+        <div className="flex justify-end mb-4">
+          <button 
+            onClick={() => setViewHistory(!viewHistory)}
+            className="text-primary font-bold hover:underline flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined">{viewHistory ? 'shopping_cart' : 'history'}</span>
+            {viewHistory ? 'View Cart' : 'Your Past Purchases'}
+          </button>
+        </div>
+
         <div className="bg-white rounded-xl shadow-sm border border-outline-variant/30 p-6 flex flex-col gap-6">
           
-          {cartItems.length === 0 ? (
+          {viewHistory ? (
+            <div className="text-center py-10">
+              <span className="material-symbols-outlined text-[64px] text-gray-300 mb-4">history</span>
+              <h3 className="font-bold text-xl text-gray-800 mb-2">No history found</h3>
+              <p className="text-gray-500 mb-6">You haven't made any bookings yet.</p>
+              <button 
+                onClick={() => navigate('/')}
+                className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:opacity-90 transition-opacity"
+              >
+                Start Exploring
+              </button>
+            </div>
+          ) : cartItems.length === 0 ? (
             <div className="text-center py-10">
               <span className="material-symbols-outlined text-[64px] text-gray-300 mb-4">shopping_cart</span>
               <h3 className="font-bold text-xl text-gray-800 mb-2">Your cart is empty</h3>

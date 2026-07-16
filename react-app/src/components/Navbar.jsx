@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -6,9 +6,20 @@ import { motion, AnimatePresence } from 'framer-motion'
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const searchRef = useRef(null)
   
+  const suggestionsList = ['Manali-Kasol', 'Jibhi-Thirthan', 'Kedarnath', 'Chopta-Tungnath']
+
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Initialize search query from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    setSearchQuery(params.get('search') || '')
+  }, [location.search])
 
   useEffect(() => {
     // Check current session
@@ -25,6 +36,37 @@ function Navbar() {
       subscription?.unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleSearch = (query) => {
+    const destinationPaths = ['/uttarakhand', '/ladakh', '/spiti', '/kashmir', '/goa', '/rajasthan', '/kerala', '/meghalaya', '/himachal', '/andaman', '/international', '/group-trips', '/all-departures']
+    
+    setSearchQuery(query) // Update state just in case it was called from a suggestion
+    
+    if (!query.trim()) {
+      if (destinationPaths.includes(location.pathname)) {
+        navigate(location.pathname) // Clear search param
+      }
+      setShowSuggestions(false)
+      return
+    }
+
+    if (destinationPaths.includes(location.pathname)) {
+      navigate(`${location.pathname}?search=${encodeURIComponent(query.trim())}`)
+    } else {
+      navigate(`/search?search=${encodeURIComponent(query.trim())}`)
+    }
+    setShowSuggestions(false)
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -49,15 +91,62 @@ function Navbar() {
           </div>
           
           {/* Search Bar (Center) */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-8 relative">
+          <div ref={searchRef} className="hidden md:flex flex-1 max-w-xl mx-8 relative">
             <input 
               type="text" 
-              placeholder="Search here..." 
+              placeholder="Search destinations..." 
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setShowSuggestions(true)
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch(searchQuery)
+                }
+              }}
               className="w-full bg-white text-black border-2 border-primary rounded-full py-2.5 pl-6 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[14px] font-medium placeholder-black/50 transition-all shadow-sm"
             />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm">
+            <button 
+              onClick={() => handleSearch(searchQuery)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
+            >
               <span className="material-symbols-outlined text-[18px]">search</span>
             </button>
+            
+            <AnimatePresence>
+              {showSuggestions && (searchQuery.trim().length > 0 || suggestionsList.length > 0) && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
+                >
+                  <div className="py-2">
+                    {suggestionsList.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())).map((suggestion, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => handleSearch(suggestion)}
+                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
+                        {suggestion}
+                      </div>
+                    ))}
+                    {searchQuery.trim().length > 0 && suggestionsList.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                      <div 
+                        onClick={() => handleSearch(searchQuery)}
+                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
+                        Search for "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           {/* Actions/Icons */}

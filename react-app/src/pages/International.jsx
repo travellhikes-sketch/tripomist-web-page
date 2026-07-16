@@ -13,28 +13,60 @@ function International() {
 
   const trips = [
     {
-      id: "Rishikesh Retreat",
-      name: "Rishikesh Retreat",
-      duration: "1N/2D",
-      desc: "Experience the serenity of the Ganges with yoga, light trekking, and riverside camping.",
-      price: 4500,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
+      id: "almaty",
+      name: "Almaty",
+      duration: "5N/6D",
+      desc: "Experience the magic of Central Asia.",
+      price: "₹54,999",
+      img: "https://images.unsplash.com/photo-1558588825-450f38b1d9df?w=800&q=80"
     },
     {
-      id: "Jaipur Heritage",
-      name: "Jaipur Heritage",
-      duration: "2N/3D",
-      desc: "Explore majestic forts, vibrant markets, and royal palaces in the Pink City.",
-      price: 6200,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
+      id: "kazakhstan",
+      name: "Kazakhstan",
+      duration: "5N/6D",
+      desc: "Discover beautiful landscapes and culture.",
+      price: "₹56,999",
+      img: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=800&q=80"
     },
     {
-      id: "Kasol Escape",
-      name: "Kasol Escape",
-      duration: "2N/3D",
-      desc: "Unwind in the scenic Parvati Valley with gentle hikes and peaceful cafe culture.",
-      price: 5800,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
+      id: "thailand",
+      name: "Thailand",
+      duration: "6N/7D",
+      desc: "Explore vibrant beaches and culture.",
+      price: "₹41,999",
+      img: "https://images.unsplash.com/photo-1528181304800-259b08848526?w=800&q=80"
+    },
+    {
+      id: "bali",
+      name: "Bali",
+      duration: "6N/7D",
+      desc: "Relax on pristine tropical beaches.",
+      price: "₹51,999",
+      img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80"
+    },
+    {
+      id: "vietnam",
+      name: "Vietnam",
+      duration: "5N/6D",
+      desc: "Explore breathtaking bays and historic cities.",
+      price: "₹56,999",
+      img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=800&q=80"
+    },
+    {
+      id: "dubai",
+      name: "Dubai",
+      duration: "5N/6D",
+      desc: "Experience luxury and modern marvels.",
+      price: "₹62,999",
+      img: "https://images.unsplash.com/photo-1512453979436-5a5336f33d7b?w=800&q=80"
+    },
+    {
+      id: "philippines",
+      name: "Philippines",
+      duration: "8N/9D",
+      desc: "Discover beautiful islands and lagoons.",
+      price: "₹75,999",
+      img: "https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=800&q=80"
     }
   ]
 
@@ -86,10 +118,21 @@ function International() {
       </section>
 
       {/* Grid Section */}
-      <main className="max-w-6xl mx-auto px-4 pb-36 w-full">
+      <main className="max-w-6xl mx-auto px-4 pb-36 w-full mt-10">
+        <h2 className="text-3xl font-bold mb-8 text-center text-on-surface">Soon you can plan abroad trips with us</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTrips.map(trip => (
-            <PackageCard key={trip.id} tripTitle={trip.name} price={`₹${trip.price.toLocaleString('en-IN')}`} duration={trip.duration} bg={trip.img} link={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} label='International' blueText={true} />
+            <PackageCard 
+              key={trip.id} 
+              tripTitle={trip.name} 
+              price={trip.price} 
+              duration={trip.duration} 
+              bg={trip.img} 
+              link="#"
+              badge="Coming Soon"
+              label='International' 
+              blueText={true} 
+            />
           ))}
         </div>
       </main>

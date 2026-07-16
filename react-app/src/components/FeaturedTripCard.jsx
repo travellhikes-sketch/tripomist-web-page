@@ -14,7 +14,7 @@ const FeaturedTripCard = ({ tripTitle, packagesCount, bg, link, className }) => 
       <div className="relative z-10 p-5 md:p-6 w-full flex justify-between items-end mt-auto">
         <div className="flex flex-col">
           <h3 className="text-white text-[24px] md:text-[28px] font-bold leading-tight drop-shadow-md mb-0.5">{tripTitle}</h3>
-          <span className="text-white/90 text-[12px] md:text-[14px] font-medium">{packagesCount} Pckages</span>
+          <span className="text-white text-[12px] md:text-[14px] font-bold">{packagesCount} Packages</span>
         </div>
         
         <div className="border border-white/60 text-white text-[12px] px-5 py-2 rounded-full hover:bg-white/20 hover:border-white transition-all backdrop-blur-sm cursor-pointer flex items-center gap-1 font-medium whitespace-nowrap mb-1">

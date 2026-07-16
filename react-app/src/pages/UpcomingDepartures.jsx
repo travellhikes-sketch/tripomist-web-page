@@ -57,23 +57,23 @@ export default function UpcomingDepartures() {
       <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&q=80"
-          alt="Upcoming Departures"
+          alt="Upcoming Trips"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         
         <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
           <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
-            See Upcoming Departures
+            See Upcoming Trips
           </h1>
         </div>
       </section>
 
       <section className="w-full max-w-6xl mx-auto px-4 pt-12 pb-6">
         <h2 className="font-headline-md text-headline-md text-on-surface font-bold mb-4">
-          About Upcoming Departures
+          About Upcoming Trips
         </h2>
-        <ReadMoreText text="Ready for your next adventure? Browse our upcoming departures to find the perfect trip. Whether you're looking for a quick domestic getaway or a grand international tour, we have carefully curated experiences waiting just for you." />
+        <ReadMoreText text="Ready for your next adventure? Browse our upcoming trips to find the perfect trip. Whether you're looking for a quick domestic getaway or a grand international tour, we have carefully curated experiences waiting just for you." />
         
         {/* Filter Pills */}
         <div className="flex flex-wrap gap-3 mt-8">
