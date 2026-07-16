@@ -1,6 +1,10 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { EffectCoverflow, Autoplay } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/effect-coverflow'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
@@ -9,31 +13,32 @@ const PackageCard = ({ tripTitle, price, duration, description, bg, link, label 
   return (
     <Link 
       to={link} 
-      className="w-[85vw] sm:w-[280px] md:w-[320px] flex-shrink-0 snap-center bg-[#f8fbff] rounded-xl overflow-hidden border border-blue-100 group flex flex-col h-full shadow-sm hover:shadow-lg transition-all duration-300"
+      draggable={false}
+      className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] flex-shrink-0 snap-center rounded-[28px] overflow-hidden group relative flex flex-col justify-end shadow-sm hover:shadow-xl transition-all duration-300 select-none block"
     >
-      <div className="relative h-48 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
-        {label && (
-          <div className="absolute top-3 right-3 bg-[#136b8a] text-white font-bold text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm z-10">
-            {label}
-          </div>
-        )}
-      </div>
-      <div className="p-5 flex flex-col flex-grow bg-white">
-        <div className="flex items-center gap-4 text-gray-500 font-bold text-[10px] mb-3 uppercase tracking-wider">
-          <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">schedule</span> {duration}</span>
-          <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">group</span> Group</span>
+      <div className="absolute inset-0 bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-700 pointer-events-none" style={{ backgroundImage: `url('${bg}')` }}></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent h-[75%] mt-auto"></div>
+      
+      {label && (
+        <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md text-white font-bold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider z-10">
+          {label}
         </div>
-        <h3 className="text-[18px] md:text-[20px] text-gray-900 mb-2 font-bold leading-tight">{tripTitle}</h3>
-        <p className="text-[13px] text-gray-600 mb-6 flex-grow leading-relaxed">{description}</p>
-        <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
-          <div>
-            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest block mb-0.5">Starts At</span>
-            <span className="text-[20px] text-[#136b8a] font-extrabold">{price}</span>
-          </div>
-          <button className="border border-gray-200 text-gray-800 font-bold text-[12px] px-4 py-2 rounded-lg hover:border-[#136b8a] hover:text-[#136b8a] hover:bg-[#eff6f9] transition-colors cursor-pointer shadow-sm">
-            View Details
-          </button>
+      )}
+
+      <div className="relative z-10 p-6 md:p-7 w-full flex flex-col gap-1">
+        <h3 className="text-white text-[22px] md:text-[26px] font-bold leading-tight">{tripTitle}</h3>
+        <p className="text-white/80 text-[13px] md:text-[14px] font-medium mb-4 truncate">{description}</p>
+        
+        <div className="flex flex-wrap gap-2.5">
+          <span className="bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md text-white text-[11px] md:text-[12px] font-semibold px-4 py-1.5 rounded-full">
+            {duration}
+          </span>
+          <span className="bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md text-white text-[11px] md:text-[12px] font-semibold px-4 py-1.5 rounded-full">
+            Group
+          </span>
+          <span className="bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md text-white text-[11px] md:text-[12px] font-semibold px-4 py-1.5 rounded-full">
+            {price}
+          </span>
         </div>
       </div>
     </Link>
@@ -184,48 +189,121 @@ function Home() {
             </div>
           </div>
 
-          {/* Cards Container with Snap Scrolling */}
-          <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0">
-            <PackageCard 
-              tripTitle="Ladakh" 
-              price="₹21,999" 
-              duration="6N/7D" 
-              description="Experience the raw beauty of Leh, Nubra Valley, and Pangong Tso with a close-knit group of adventurers."
-              bg="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1600&q=80"
-              link="/itinerary/Ladakh" 
-            />
-            <PackageCard 
-              tripTitle="Spiti Valley" 
-              price="₹16,999" 
-              duration="5N/6D" 
-              description="Brave the frozen landscapes of the middle land. A curated winter adventure for the bold."
-              bg="https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1600&q=80"
-              link="/itinerary/Spiti Valley" 
-            />
-            <PackageCard 
-              tripTitle="Kashmir" 
-              price="₹17,999" 
-              duration="4N/5D" 
-              description="Explore Srinagar, Gulmarg, and Pahalgam. A perfect mix of leisure and breathtaking vistas."
-              bg="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=1600&q=80"
-              link="/itinerary/Kashmir" 
-            />
-            <PackageCard 
-              tripTitle="Andaman Retreat" 
-              price="₹25,999" 
-              duration="5N/6D" 
-              description="Relax on the pristine beaches of Havelock and Neil Islands with amazing scuba diving opportunities."
-              bg="https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1600&q=80"
-              link="/group-trips" 
-            />
-            <PackageCard 
-              tripTitle="Meghalaya Expedition" 
-              price="₹18,999" 
-              duration="6N/7D" 
-              description="Journey through the abode of clouds, explore living root bridges and crystal clear rivers."
-              bg="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1600&q=80"
-              link="/group-trips" 
-            />
+          {/* Cards Container with Swiper Flat */}
+          <div className="-mx-4 md:mx-0">
+            <Swiper
+              grabCursor={true}
+              centeredSlides={true}
+              loop={true}
+              slidesPerView={'auto'}
+              spaceBetween={24}
+              observer={true}
+              observeParents={true}
+              touchEventsTarget="container"
+              modules={[Autoplay]}
+              className="w-full !pb-12 !pt-6"
+            >
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Ladakh" 
+                  price="₹21,999" 
+                  duration="6N/7D" 
+                  description="Experience the raw beauty of Leh, Nubra Valley, and Pangong Tso with a close-knit group of adventurers."
+                  bg="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1600&q=80"
+                  link="/itinerary/Ladakh" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Spiti Valley" 
+                  price="₹16,999" 
+                  duration="5N/6D" 
+                  description="Brave the frozen landscapes of the middle land. A curated winter adventure for the bold."
+                  bg="https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1600&q=80"
+                  link="/itinerary/Spiti Valley" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Kashmir" 
+                  price="₹17,999" 
+                  duration="4N/5D" 
+                  description="Explore Srinagar, Gulmarg, and Pahalgam. A perfect mix of leisure and breathtaking vistas."
+                  bg="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=1600&q=80"
+                  link="/itinerary/Kashmir" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Andaman Retreat" 
+                  price="₹25,999" 
+                  duration="5N/6D" 
+                  description="Relax on the pristine beaches of Havelock and Neil Islands with amazing scuba diving opportunities."
+                  bg="https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Meghalaya Expedition" 
+                  price="₹18,999" 
+                  duration="6N/7D" 
+                  description="Journey through the abode of clouds, explore living root bridges and crystal clear rivers."
+                  bg="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Manali Kasol" 
+                  price="₹10,999" 
+                  duration="4N/5D" 
+                  description="Experience the vibrant cafes of Kasol and the snow-capped peaks of Manali in one epic trip."
+                  bg="https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Jibhi Tirthan" 
+                  price="₹9,999" 
+                  duration="3N/4D" 
+                  description="Unwind in the pristine hidden valleys of Jibhi and Tirthan, surrounded by lush green forests."
+                  bg="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Chopta Tungnath" 
+                  price="₹11,999" 
+                  duration="4N/5D" 
+                  description="Trek through the mini Switzerland of India and visit the highest Shiva temple in the world."
+                  bg="https://images.unsplash.com/photo-1610212594957-c5332fc39634?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Kedarnath" 
+                  price="₹14,999" 
+                  duration="5N/6D" 
+                  description="Embark on a spiritual journey to the majestic Kedarnath temple amidst the Garhwal Himalayas."
+                  bg="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+              <SwiperSlide className="!w-auto">
+                <PackageCard 
+                  tripTitle="Madhyameshwar" 
+                  price="₹12,999" 
+                  duration="4N/5D" 
+                  description="Discover the serene beauty and spiritual aura of the mystical Madhyameshwar temple trek."
+                  bg="https://images.unsplash.com/photo-1614531341773-3bff8b7cb3fc?w=1600&q=80"
+                  link="/group-trips" 
+                />
+              </SwiperSlide>
+            </Swiper>
           </div>
         </section>
 
