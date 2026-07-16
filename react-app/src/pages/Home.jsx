@@ -19,24 +19,24 @@ const PackageCard = ({ tripTitle, price, duration, description, bg, link, label 
       <div className="absolute inset-0 bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-700 pointer-events-none" style={{ backgroundImage: `url('${bg}')` }}></div>
       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent h-[75%] mt-auto"></div>
       
+      <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md text-white font-bold text-[11px] px-3 py-1.5 rounded-full tracking-wider z-10">
+        Group Trip
+      </div>
+      
       {label && (
-        <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md text-white font-bold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider z-10">
+        <div className="absolute top-4 left-4 bg-primary text-white font-bold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider z-10">
           {label}
         </div>
       )}
 
-      <div className="relative z-10 p-6 md:p-7 w-full flex flex-col gap-1">
-        <h3 className="text-white text-[22px] md:text-[26px] font-bold leading-tight">{tripTitle}</h3>
-        <p className="text-white/80 text-[13px] md:text-[14px] font-medium mb-4 truncate">{description}</p>
+      <div className="relative z-10 p-5 md:p-6 w-full flex flex-col gap-3">
+        <h3 className="text-white text-[22px] md:text-[24px] font-bold leading-tight">{tripTitle}</h3>
         
         <div className="flex flex-wrap gap-2.5">
-          <span className="bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md text-white text-[11px] md:text-[12px] font-semibold px-4 py-1.5 rounded-full">
+          <span className="bg-white/20 backdrop-blur-md text-white text-[12px] font-semibold px-4 py-1.5 rounded-full">
             {duration}
           </span>
-          <span className="bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md text-white text-[11px] md:text-[12px] font-semibold px-4 py-1.5 rounded-full">
-            Group
-          </span>
-          <span className="bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md text-white text-[11px] md:text-[12px] font-semibold px-4 py-1.5 rounded-full">
+          <span className="bg-white/20 backdrop-blur-md text-white text-[12px] font-semibold px-4 py-1.5 rounded-full">
             {price}
           </span>
         </div>
