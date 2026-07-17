@@ -131,6 +131,46 @@ function Home() {
               <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Goa</span>
             </Link>
           </div>
+          </section>
+
+        {/* Destination According To Interest */}
+        <section className="w-full py-12 px-4 md:px-12 lg:px-20 bg-surface-container-lowest">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <h2 className="font-headline-md text-headline-md text-on-surface font-bold">Destination According To Interest</h2>
+          </div>
+          
+          <div className="flex gap-8 overflow-x-auto hide-scrollbar py-4 px-2 -mx-2">
+            <Link to="/all-departures" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Group Trips" src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?q=80&w=600&auto=format&fit=crop" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Group Trips</span>
+            </Link>
+            <Link to="/weekend-trips" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Weekend Trips" src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=600&auto=format&fit=crop" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors max-w-[100px] leading-tight">Weekend Trips</span>
+            </Link>
+            <Link to="/all-departures" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Treks" src="https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=600&auto=format&fit=crop" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">Treks</span>
+            </Link>
+            <Link to="/domestic" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Family Tours" src="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=600&auto=format&fit=crop" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Family Tours</span>
+            </Link>
+            <Link to="/international" className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
+              <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
+                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Honeymoon Trips" src="https://images.unsplash.com/photo-1520106208642-127e9976378e?q=80&w=600&auto=format&fit=crop" />
+              </div>
+              <span className="font-button text-button text-on-surface group-hover:text-primary text-center max-w-[100px] leading-tight transition-colors">Honeymoon Trips</span>
+            </Link>
+          </div>
         </section>
 
         {/* Camera Roll Destinations */}
