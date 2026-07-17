@@ -22,8 +22,36 @@ function PackageDetail() {
         .eq('slug', slug)
         .single()
       
-      if (error) {
-        console.error('Error fetching package:', error)
+      if (error || !data) {
+        console.error('Error fetching package or not found, using dummy data:', error)
+        // Dummy fallback data so the page opens even if DB is empty
+        setTrip({
+          title: slug ? slug.replace(/-/g, ' ').toUpperCase() : 'Amazing Trip',
+          badge: "Most Popular",
+          state: "Adventure",
+          durationText: "5N 6D",
+          numericPrice: 19999,
+          price: `₹19,999`,
+          originalPrice: `₹24,999`,
+          discountText: "20% OFF",
+          pickup: "Delhi / Chandigarh",
+          heroImg: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1200&auto=format&fit=crop",
+          overview: "Enjoy a breathtaking journey through stunning landscapes. This package offers a perfect mix of adventure, relaxation, and cultural exploration.",
+          description: "Experience the trip of a lifetime with our carefully curated itinerary. From scenic viewpoints to local cuisines, every moment is planned for your ultimate comfort and enjoyment.",
+          inclusions: ["Accommodation in premium hotels", "Daily Breakfast & Dinner", "Sightseeing transfers", "Experienced Guide"],
+          exclusions: ["Flight / Train Tickets", "Personal Expenses", "Entry fees to monuments", "Travel Insurance"],
+          highlights: ["Day 1: Arrival & Local Sightseeing", "Day 2: Adventure Activities", "Day 3: Scenic Drive & Departure"],
+          itinerary: [
+            { title: "Day 1: Arrival & Local Sightseeing", description: "Arrive at the destination and check into your hotel. Later, visit local attractions." },
+            { title: "Day 2: Adventure Activities", description: "Spend the day enjoying various adventure sports and exploring hidden gems." },
+            { title: "Day 3: Scenic Drive & Departure", description: "After breakfast, enjoy a scenic drive before heading back home." }
+          ],
+          costings: [
+            { type: "Double Sharing", price: "₹19,999 per person" },
+            { type: "Triple Sharing", price: "₹18,500 per person" },
+            { type: "Quad Sharing", price: "₹17,000 per person" }
+          ]
+        })
       } else {
         // Map data to match the UI fields
         setTrip({

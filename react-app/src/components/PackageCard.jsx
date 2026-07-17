@@ -81,11 +81,14 @@ const PackageCard = ({
             </div>
           </div>
           
-          {/* Small View Detail Arrow or Discount % */}
-          <div className="flex items-center text-gray-900 font-bold text-[12px] group-hover:text-[#136b8a] transition-colors bg-gray-50 group-hover:bg-[#eaf4f7] px-3 py-1.5 rounded-full border border-gray-100 group-hover:border-[#136b8a]/20">
-            {discountText && showBadge && <span className="mr-1">{discountText}</span>}
-            {!discountText && <span className="mr-1">View</span>}
-            <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
+          {/* Animated View Detail Arrow or Discount % */}
+          <div className={`relative overflow-hidden group/btn bg-gray-50 rounded-full px-3 py-1.5 border border-gray-100 flex items-center transition-all ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}>
+            {isClickable && <div className="absolute inset-0 w-0 bg-[#136b8a] transition-all duration-300 ease-out group-hover/btn:w-full z-0"></div>}
+            <div className={`relative z-10 flex items-center font-bold text-[12px] whitespace-nowrap transition-colors duration-300 ${isClickable ? 'text-gray-900 group-hover/btn:text-white' : 'text-gray-400'}`}>
+              {discountText && showBadge && <span className="mr-1">{discountText}</span>}
+              {!discountText && <span className="mr-1">View</span>}
+              <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
+            </div>
           </div>
         </div>
       </div>
