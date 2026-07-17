@@ -1,117 +1,100 @@
 import React, { useState, useEffect } from 'react'
+import PackageCard from '../components/PackageCard'
+import ReadMoreText from '../components/ReadMoreText'
 import { Link, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import DestinationSearch from '../components/DestinationSearch'
 import Footer from '../components/Footer'
+import { supabase } from '../supabaseClient'
 
-function HoneymoonTrips() {
-  const location = useLocation()
-  const [filter, setFilter] = useState('All')
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const trips = [
-    {
-      id: "Rishikesh Retreat",
-      name: "Rishikesh Retreat",
-      duration: "1N/2D",
-      desc: "Experience the serenity of the Ganges with yoga, light trekking, and riverside camping.",
-      price: 4500,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "Jaipur Heritage",
-      name: "Jaipur Heritage",
-      duration: "2N/3D",
-      desc: "Explore majestic forts, vibrant markets, and royal palaces in the Pink City.",
-      price: 6200,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "Kasol Escape",
-      name: "Kasol Escape",
-      duration: "2N/3D",
-      desc: "Unwind in the scenic Parvati Valley with gentle hikes and peaceful cafe culture.",
-      price: 5800,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    }
-  ]
+export default function HoneymoonTrips() {
+  const [tripsList, setTripsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const q = params.get('search') || params.get('query') || ''
-    if (q) setSearchQuery(q)
-  }, [location])
-
-  const filteredTrips = trips.filter(t => {
-    if (filter !== 'All' && t.duration !== filter) return false
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      return t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q)
+    async function fetchPackages() {
+      const { data, error } = await supabase
+        .from('Pakage')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching packages:', error);
+      } else {
+        const activePackages = data.filter(pkg => pkg.status && pkg.status.includes('active'));
+        // Try to filter by specific logic if matches, else fallback to all active
+        let categoryPackages = activePackages.filter(pkg => pkg.category === 'Honeymoon' || pkg.title.toLowerCase().includes('honeymoon'));
+        if (categoryPackages.length === 0) categoryPackages = activePackages; // Fallback if no specific packages found
+        
+        const mappedTrips = categoryPackages.map(pkg => ({
+          id: pkg.id,
+          name: pkg.title,
+          location: pkg.destination || pkg.state,
+          style: pkg.category === 'International' ? 'International Trips' : 'Domestic Trips',
+          durationText: pkg.duration,
+          price: pkg.price,
+          isFav: false,
+          tagline: pkg.short_description ? pkg.short_description.substring(0, 80) + '...' : pkg.title,
+          img: pkg.image_url || pkg.banner_image
+        }));
+        setTripsList(mappedTrips);
+      }
+      setLoading(false);
     }
-    return true
-  })
+    fetchPackages();
+  }, []);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
 
-      <main className="flex-grow flex flex-col items-center w-full bg-background">
-        {/* Hero Section */}
-        <section className="w-full relative py-xl px-4 md:px-8 flex justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <div className="bg-cover bg-center w-full h-full opacity-20" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80')" }}></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-background/40 to-background"></div>
+      {/* Hero Video/Image Banner */}
+      <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1200&q=80"
+          alt="Honeymoon Trips"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        
+        <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
+          <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
+            Honeymoon Trips
+          </h1>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="w-full max-w-6xl mx-auto px-4 pt-12 pb-6">
+        <div className="flex-1">
+          <h2 className="font-headline-md text-headline-md text-on-surface font-bold mb-4">
+            About Honeymoon Trips
+          </h2>
+          <ReadMoreText text="Celebrate your love in the world's most romantic destinations. Our Honeymoon Trips offer luxurious stays, breathtaking views, and intimate experiences to start your new journey together." />
+        </div>
+      </section>
+
+      {/* Destinations Grid */}
+      <main className="max-w-6xl mx-auto px-4 pb-36 w-full flex-grow">
+        {loading ? (
+           <p className="text-center font-bold text-primary mt-10">Loading packages...</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tripsList.map((dest) => (
+              <PackageCard 
+                key={dest.id}
+                tripTitle={dest.name} 
+                price={"₹" + dest.price.toLocaleString('en-IN')}
+                duration={dest.durationText} 
+                description={dest.tagline}
+                bg={dest.img}
+                link={`/itinerary/${dest.id}`} 
+                blueText={true}
+              />
+            ))}
           </div>
-          <div className="relative z-10 max-w-7xl w-full flex flex-col items-center text-center gap-6">
-            <h1 className="font-display-lg text-display-lg md:font-display-lg text-primary font-bold">Honeymoon Trips</h1>
-            <p className="font-body-lg text-body-lg max-w-2xl text-on-surface-variant">Discover quick, refreshing getaways. Perfect for recharging your spirit without the need for long planning.</p>
-            
-            {/* Filter and Search Layout */}
-            <div className="flex flex-col items-center justify-center gap-4 mt-8 w-full max-w-md">
-
-
-              {/* Search input field */}
-              <div className="relative flex items-center bg-white border border-outline-variant/60 rounded-xl px-4 py-2.5 w-full shadow-md focus-within:ring-2 focus-within:ring-primary/20">
-                <span className="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
-                <input 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none text-on-surface text-sm focus:ring-0 outline-none w-full p-0" 
-                  placeholder="Search Honeymoon Trips by destination..." 
-                  type="text" 
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Grid Section */}
-        <section className="w-full max-w-7xl px-4 md:px-8 py-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-          {filteredTrips.map(trip => (
-            <div key={trip.id} className="glass-card rounded-[1.5rem] overflow-hidden group relative hover:shadow-[0_10px_25px_-5px_rgba(14,165,233,0.15)] transition-all duration-300 transform hover:-translate-y-2 flex flex-col">
-              <div className="h-48 relative overflow-hidden">
-                <img alt={trip.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src={trip.img} />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md font-label-sm text-label-sm text-primary font-bold uppercase">{trip.duration}</div>
-              </div>
-              <div className="p-6 flex flex-col flex-grow glass-reveal">
-                <h3 className="font-headline-md text-headline-md mb-2 font-bold group-hover:text-primary transition-colors">{trip.name}</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant mb-6 flex-grow">{trip.desc}</p>
-                <div className="flex justify-between items-center mt-auto pt-4 border-t border-outline-variant/20">
-                  <span className="font-headline-md text-headline-md text-primary font-bold">₹{trip.price.toLocaleString('en-IN')}</span>
-                  <div className="flex gap-2">
-                    <Link to={`/itinerary/${trip.id.toLowerCase().replace(/\s+/g, '-')}`} className="border border-outline-variant hover:border-primary hover:text-primary px-3 py-1.5 rounded-lg text-sm transition-colors no-underline text-on-surface flex items-center">Itinerary</Link>
-                    <Link to={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} className="bg-primary text-white px-4 py-1.5 rounded-lg font-label-sm text-label-sm hover:opacity-95 transition-opacity font-bold no-underline flex items-center">View Detail</Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
+        )}
       </main>
 
       <Footer />
     </div>
   )
 }
-
-export default HoneymoonTrips
