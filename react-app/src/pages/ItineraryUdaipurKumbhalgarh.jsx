@@ -170,7 +170,7 @@ export default function ItineraryUdaipurKumbhalgarh() {
       numericPrice: 6999,
       duration: "2N/3D",
       difficulty: "Easy",
-      bg: "https://images.unsplash.com/photo-1615836245337-f5b9b230bc18?w=1600&q=80",
+      bg: "/udaipur.jpg",
       days: [
         {
           num: 0,

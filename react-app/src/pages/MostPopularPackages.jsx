@@ -60,7 +60,7 @@ function MostPopularPackages() {
       durationText: "2N/3D",
       price: 6999,
       isFav: false,
-      img: "https://images.unsplash.com/photo-1615836245337-f5b9b230bc18?w=600&q=80"
+      img: "/udaipur.jpg"
     },
     {
       id: "meghalaya-monsoon",

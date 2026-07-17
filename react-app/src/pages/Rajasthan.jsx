@@ -23,7 +23,7 @@ const destinations = [
     tagline: 'City of Lakes',
     duration: '2N/3D',
     price: 6999,
-    img: 'https://images.unsplash.com/photo-1615836245337-f5b9b230bc18?w=800&q=80',
+    img: '/udaipur.jpg',
     tags: ['Lakes', 'Palaces', 'Romantic', 'Forts'],
   }
 ]

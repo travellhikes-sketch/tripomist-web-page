@@ -45,7 +45,7 @@ const destinations = [
     tripTitle: "Udaipur",
     price: "₹6,999",
     duration: "2N/3D",
-    bg: "https://images.unsplash.com/photo-1615836245337-f5b9b230bc18?w=1600&q=80",
+    bg: "/udaipur.jpg",
     link: "/itinerary/udaipur-and-kumbhalgarh"
   },
   {
