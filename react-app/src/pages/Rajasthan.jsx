@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import PackageCard from '../components/PackageCard'
+import { supabase } from '../supabaseClient'
 import ReadMoreText from '../components/ReadMoreText'
 import { Link, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'

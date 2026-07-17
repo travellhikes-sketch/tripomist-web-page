@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import DestinationSearch from '../components/DestinationSearch'
 import Footer from '../components/Footer'
 import PackageCard from '../components/PackageCard'
+import { supabase } from '../supabaseClient'
 
 function GroupTrips() {
   const location = useLocation()
@@ -11,108 +12,35 @@ function GroupTrips() {
   const [favoritesFilter, setFavoritesFilter] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const [tripsList, setTripsList] = useState([
-    {
-      id: "uttarakhand-explorer",
-      name: "Valley of Flowers Trek",
-      location: "Uttarakhand",
-      style: "Domestic Trips",
-      durationText: "5N/6D",
-      price: 15999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80"
-    },
-    {
-      id: "himachal-adventure",
-      name: "Manali to Rohtang Pass",
-      location: "Himachal",
-      style: "Domestic Trips",
-      durationText: "4N/5D",
-      price: 12499,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80"
-    },
-    {
-      id: "kashmir-paradise",
-      name: "Kashmir Valley Paradise",
-      location: "Kashmir",
-      style: "Domestic Trips",
-      durationText: "5N/6D",
-      price: 18999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=600&q=80"
-    },
-    {
-      id: "rajasthan-royal",
-      name: "Jaipur & Udaipur Heritage",
-      location: "Rajasthan",
-      style: "Domestic Trips",
-      durationText: "3N/4D",
-      price: 14999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80"
-    },
-    {
-      id: "meghalaya-monsoon",
-      name: "Cherrapunji & Shillong",
-      location: "Meghalaya",
-      style: "Domestic Trips",
-      durationText: "4N/5D",
-      price: 17500,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=600&q=80"
-    },
-    {
-      id: "ladakh-expedition",
-      name: "Ladakh Himalayan Expedition",
-      location: "Ladakh",
-      style: "Domestic Trips",
-      durationText: "6N/7D",
-      price: 21999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=600&q=80"
-    },
-    {
-      id: "spiti-valley-expedition",
-      name: "Spiti Valley Roadtrip",
-      location: "Spiti Valley",
-      style: "Domestic Trips",
-      durationText: "7N/8D",
-      price: 24999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=600&q=80"
-    },
-    {
-      id: "andaman-escape",
-      name: "Andaman Islands Escape",
-      location: "Andaman",
-      style: "Domestic Trips",
-      durationText: "5N/6D",
-      price: 28500,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=600&q=80"
-    },
-    {
-      id: "bali-escape",
-      name: "Bali Island Escape",
-      location: "Bali",
-      style: "International Trips",
-      durationText: "5N/6D",
-      price: 35000,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80"
-    },
-    {
-      id: "dubai-adventure",
-      name: "Dubai Desert Adventure",
-      location: "Dubai",
-      style: "International Trips",
-      durationText: "4N/5D",
-      price: 42000,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80"
+  const [tripsList, setTripsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPackages() {
+      const { data, error } = await supabase
+        .from('Pakage')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching packages:', error);
+      } else {
+        const activePackages = data.filter(pkg => pkg.status && pkg.status.includes('active'));
+        const mappedTrips = activePackages.map(pkg => ({
+          id: pkg.id,
+          name: pkg.title,
+          location: pkg.destination || pkg.state,
+          style: pkg.category === 'International' ? 'International Trips' : 'Domestic Trips',
+          durationText: pkg.duration,
+          price: pkg.price,
+          isFav: false,
+          img: pkg.image_url || pkg.banner_image
+        }));
+        setTripsList(mappedTrips);
+      }
+      setLoading(false);
     }
-  ])
+    fetchPackages();
+  }, []);
 
   // Parse query parameters
   useEffect(() => {
@@ -232,7 +160,7 @@ function GroupTrips() {
               price={`₹${trip.price.toLocaleString('en-IN')}`} 
               duration={trip.durationText} 
               bg={trip.img}
-              link={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} 
+              link={`/itinerary/${trip.id}`} 
               badge={trip.style === 'Domestic Trips' ? 'Domestic' : 'International'}
               blueText={true}
             />

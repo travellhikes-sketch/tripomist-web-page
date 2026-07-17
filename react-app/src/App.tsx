@@ -9,7 +9,7 @@ import Home from './pages/Home'
 import Domestic from './pages/Domestic'
 import International from './pages/International'
 import Review from './pages/Review'
-import ItinerarySpiti from './pages/ItinerarySpiti'
+import PackageDetail from './pages/PackageDetail'
 import Checkout from './pages/Checkout'
 import Cart from './pages/Cart'
 import FeaturedGroupTrip from './pages/FeaturedGroupTrip'
@@ -94,7 +94,7 @@ function App() {
           <Route path="/itinerary/kedarnath" element={<ItineraryKedarnath />} />
           <Route path="/itinerary/madhyameshwar" element={<ItineraryMadhyameshwar />} />
           <Route path="/itinerary/udaipur-and-kumbhalgarh" element={<ItineraryUdaipurKumbhalgarh />} />
-          <Route path="/itinerary/:id" element={<ItinerarySpiti />} />
+          <Route path="/itinerary/:id" element={<PackageDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
