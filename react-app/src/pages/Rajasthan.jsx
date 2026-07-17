@@ -18,7 +18,8 @@ const destinations = [
   },
   {
     id: 'udaipur',
-    name: 'Udaipur and Kumbhalgarh',
+    name: 'Udaipur',
+    link: '/itinerary/udaipur-and-kumbhalgarh',
     tagline: 'City of Lakes',
     duration: '2N/3D',
     price: 6999,
@@ -83,7 +84,7 @@ export default function Rajasthan() {
               duration={dest.duration} 
               description={dest.tagline}
               bg={dest.img}
-              link={`/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`} 
+              link={dest.link || `/itinerary/${dest.name.toLowerCase().replace(/\s+/g, '-')}`} 
             />
           ))}
         </div>

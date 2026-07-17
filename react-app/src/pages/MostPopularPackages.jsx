@@ -53,7 +53,8 @@ function MostPopularPackages() {
     },
     {
       id: "udaipur-kumbhalgarh",
-      name: "Udaipur and Kumbhalgarh",
+      name: "Udaipur",
+      link: "/itinerary/udaipur-and-kumbhalgarh",
       location: "Rajasthan",
       style: "Domestic Trips",
       durationText: "2N/3D",
@@ -188,7 +189,7 @@ function MostPopularPackages() {
               price={`₹${trip.price.toLocaleString('en-IN')}`} 
               duration={trip.durationText} 
               bg={trip.img}
-              link={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} 
+              link={trip.link || `/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} 
               blueText={true}
               badge=""
             />

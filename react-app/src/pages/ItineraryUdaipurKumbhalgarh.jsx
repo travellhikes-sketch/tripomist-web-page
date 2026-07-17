@@ -197,6 +197,21 @@ export default function ItineraryUdaipurKumbhalgarh() {
           title: "GURUGRAM ARRIVAL",
           desc: "Reach Gurugram early morning with lots of amazing memories and unforgettable experiences."
         }
+      ],
+      inclusions: [
+        "Transportation from Gurugram to Gurugram: Tempo Traveler",
+        "Accommodation on Sharing Basis: 2 Nights in Hotel.",
+        "4 Meals: Dinner (2) & Breakfast (2), starting from Dinner on Day 1 to Breakfast on Day 3.",
+        "All local explorations as per itinerary: City Palace, Jagdish Temple, Karni Mata Temple, Fatesagar Lake, Saheliyon Ki Bari, Lake Pichola, Gangaur Ghat, Bagore Ki Haveli and Kumbhalgarh Fort.",
+        "Experienced and cool Trip Captain.",
+        "Driver allowances, toll taxes, parking, state road taxes."
+      ],
+      exclusions: [
+        "Any personal Expenses / Adventure activities",
+        "Anything not mentioned in the itinerary",
+        "Any kind of entry tickets/fees",
+        "Any Meals / Drinks other than Inclusion",
+        "5% GST."
       ]
     },
     "Ladakh": {
@@ -351,10 +366,10 @@ export default function ItineraryUdaipurKumbhalgarh() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-3 overflow-x-auto pb-2 mb-10 hide-scrollbar border-b border-gray-100">
-              {['Itinerary', 'Inclusions', 'Costing'].map((tab) => (
-                <button 
-                  key={tab}
+            <div className="flex overflow-x-auto no-scrollbar gap-3 pb-2 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+                {['Itinerary', 'Inclusions', 'Exclusions', 'Costing'].map((tab) => (
+                  <button 
+                    key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-2 rounded-full whitespace-nowrap font-bold text-sm transition-all border cursor-pointer
                     ${activeTab === tab 
@@ -431,52 +446,34 @@ export default function ItineraryUdaipurKumbhalgarh() {
               </section>
             )}
 
-            {/* Other Tabs Placeholders */}
             {activeTab === 'Inclusions' && (
               <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">What included in package and what not ??</h2>
-                
-                <h3 className="text-lg font-bold text-[#136b8a] mb-4">Included</h3>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">What's included in the package?</h2>
                 <ul className="space-y-4 text-gray-700 font-medium">
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Accommodation in hotels, campsites, and lakeside cottages.
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Meals {parseInt(trip.duration.split(' ')[0]) - 1 || 4} Dinner & {parseInt(trip.duration.split(' ')[0]) - 1 || 4} Breakfast
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Professional team captains, guides, and support staff.
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    First aid kits, oxygen cylinders, and an oximeter are available.
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    All sightseeing, permits, and entry fees as per the itinerary.
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Adventure medical insurance
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Emergency medical support and oxygen cylinders for high altitudes.
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Inner Line Permits for restricted areas included.
-                  </li>
-                  <li className="flex gap-3 items-start">
-                    <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                    Delhi to {trip.title.split(' ')[0]} and back via volvo bus & Tempo traveller for the whole journey for local sightseeings.
-                  </li>
+                  {trip.inclusions?.map((item, index) => (
+                    <li key={index} className="flex gap-3 items-start">
+                      <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
+                      {item}
+                    </li>
+                  ))}
                 </ul>
               </section>
             )}
+
+            {activeTab === 'Exclusions' && (
+              <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">What's NOT included?</h2>
+                <ul className="space-y-4 text-gray-700 font-medium">
+                  {trip.exclusions?.map((item, index) => (
+                    <li key={index} className="flex gap-3 items-start">
+                      <span className="material-symbols-outlined text-red-500 mt-0.5 text-[20px]">cancel</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {activeTab === 'Costing' && (
               <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Costing Details</h2>
@@ -496,7 +493,8 @@ export default function ItineraryUdaipurKumbhalgarh() {
                 </div>
               </section>
             )}
-            {activeTab !== 'Itinerary' && activeTab !== 'Inclusions' && activeTab !== 'Costing' && (
+            
+            {activeTab !== 'Itinerary' && activeTab !== 'Inclusions' && activeTab !== 'Exclusions' && activeTab !== 'Costing' && (
               <section className="mb-10 min-h-[200px] flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100">
                 <p className="text-gray-500 font-medium">Content for {activeTab} will be available here.</p>
               </section>
