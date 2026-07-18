@@ -44,10 +44,14 @@ function Login() {
       setErrorMsg("Please enter a valid phone number.")
       return
     }
+    if (password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters.")
+      return
+    }
     setLoading(true)
     setErrorMsg('')
     
-    // Simulate sending OTP
+    // Simulate sending OTP (UI step transition)
     setTimeout(() => {
       setLoading(false)
       setSuccessMsg("OTP sent successfully to " + countryCode + " " + phone)
@@ -55,8 +59,8 @@ function Login() {
     }, 800)
   }
 
-  // 2. Submit OTP
-  const handleOtpSubmit = (e) => {
+  // 2. Submit OTP — Actually register the user in Supabase
+  const handleOtpSubmit = async (e) => {
     e.preventDefault()
     if (otp.length < 4) {
       setErrorMsg("Please enter the OTP.")
@@ -66,66 +70,75 @@ function Login() {
     setErrorMsg('')
     setSuccessMsg('')
     
-    // Simulate verifying OTP and completing registration
-    setTimeout(() => {
-      setLoading(false)
-      // Save credentials to local storage so they can login later (mocking DB)
-      safeStorage.setItem('mock_registered_user', JSON.stringify({
+    try {
+      // Create the user in Supabase with email + password
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        full_name: fullName,
-        phone: countryCode + " " + phone
-      }))
-      
-      alert("Registration Successful! Please Sign In.")
-      // Redirect to home as requested ("home page par back ho jayega")
-      navigate('/')
-    }, 1000)
+        options: {
+          data: {
+            full_name: fullName,
+            phone: countryCode + " " + phone
+          }
+        }
+      })
+
+      if (signUpError) {
+        setLoading(false)
+        setErrorMsg(signUpError.message)
+        return
+      }
+
+      // Sign out after registration so user can log in fresh
+      await supabase.auth.signOut()
+
+      setLoading(false)
+      setSuccessMsg("Registration Successful! Please Sign In.")
+      // Switch to login mode after a brief delay
+      setTimeout(() => {
+        setAuthMode('login')
+        setStep(1)
+        setSuccessMsg('')
+      }, 2000)
+    } catch (err) {
+      setLoading(false)
+      setErrorMsg(err.message || "Registration failed. Please try again.")
+    }
   }
 
-  // 3. Submit Login
+  // 3. Submit Login — Real Supabase authentication
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setErrorMsg('')
     setSuccessMsg('')
 
-    // Use supabase auth if configured, otherwise fallback to mock
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: loginPassword
-    })
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword
+      })
 
-    if (error) {
-      // Mock logic fallback for unregistered users in Supabase but registered in our mock flow
-      const mockStr = safeStorage.getItem('mock_registered_user')
-      if (mockStr) {
-        const mockUser = JSON.parse(mockStr)
-        if (mockUser.email === loginEmail && mockUser.password === loginPassword) {
-          // Success
-          const sessionUser = {
-            id: 'mock-user-' + Math.random().toString(36).substring(2, 11),
-            email: loginEmail,
-            user_metadata: { full_name: mockUser.full_name, phone: mockUser.phone }
-          }
-          safeStorage.setItem('mock_current_user', JSON.stringify(sessionUser))
-          window.dispatchEvent(new Event('auth-state-change'))
-          setSuccessMsg("Sign In Successful! Redirecting...")
-          setTimeout(() => { navigate('/') }, 1000)
-          return
-        }
+      if (error) {
+        setLoading(false)
+        setErrorMsg("Invalid Email or Password.")
+        return
       }
-      // If we reach here, neither supabase nor mock matched
-      setLoading(false)
-      setErrorMsg("Invalid Email or Password.")
-    } else {
-      // Supabase success
-      safeStorage.setItem('mock_current_user', JSON.stringify(data.user || data))
-      window.dispatchEvent(new Event('auth-state-change'))
+
+      // Store user info for components that read from safeStorage
+      if (data?.user) {
+        safeStorage.setItem('mock_current_user', JSON.stringify(data.user))
+        window.dispatchEvent(new Event('auth-state-change'))
+      }
+
       setSuccessMsg("Sign In Successful! Redirecting...")
       setTimeout(() => { navigate('/') }, 1000)
+    } catch (err) {
+      setLoading(false)
+      setErrorMsg(err.message || "An error occurred during login.")
     }
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
