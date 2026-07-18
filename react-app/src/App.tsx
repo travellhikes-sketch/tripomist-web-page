@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom'
 import GroupTrips from './pages/GroupTrips'
 import WeekendTrips from './pages/WeekendTrips'
 import Treks from './pages/Treks'
@@ -44,6 +44,13 @@ import AllDepartures from './pages/AllDepartures'
 import UpcomingDepartures from './pages/UpcomingDepartures'
 import BottomDock from './components/BottomDock'
 import Chatbot from './components/Chatbot'
+import AdminLayout from './components/admin/AdminLayout'
+import AdminRoute from './components/admin/AdminRoute'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminPackages from './pages/admin/AdminPackages'
+import AdminBookings from './pages/admin/AdminBookings'
+import AdminUsers from './pages/admin/AdminUsers'
 
 // Create a component that forces layout re-render on route change, but respects back button
 function ScrollToTop() {
@@ -59,12 +66,27 @@ function ScrollToTop() {
 
 function App() {
   const [chatOpen, setChatOpen] = useState(false)
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
 
   return (
     <>
       <ScrollToTop />
-      <div className="pb-36 md:pb-0">
+      <div className={isAdminRoute ? "" : "pb-36 md:pb-0"}>
         <Routes>
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="packages" element={<AdminPackages />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="users" element={<AdminUsers />} />
+            </Route>
+          </Route>
+
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/group-trips" element={<GroupTrips />} />
           <Route path="/weekend-trips" element={<WeekendTrips />} />
@@ -112,14 +134,18 @@ function App() {
       </div>
 
       {/* Global Chatbot */}
-      <Chatbot isOpenExternal={chatOpen} onExternalClose={() => setChatOpen(false)} />
+      {!isAdminRoute && (
+        <Chatbot isOpenExternal={chatOpen} onExternalClose={() => setChatOpen(false)} />
+      )}
 
       {/* GooeyDock + AI pill */}
-      <BottomDock 
-        isChatOpen={chatOpen}
-        onOpenChat={() => setChatOpen(true)} 
-        onCloseChat={() => setChatOpen(false)} 
-      />
+      {!isAdminRoute && (
+        <BottomDock 
+          isChatOpen={chatOpen}
+          onOpenChat={() => setChatOpen(true)} 
+          onCloseChat={() => setChatOpen(false)} 
+        />
+      )}
     </>
   )
 }
