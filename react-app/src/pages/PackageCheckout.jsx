@@ -358,25 +358,47 @@ export default function PackageCheckout() {
                 View My Trips
               </Link>
             ) : (
-              <div className="flex-1 flex flex-col gap-3">
-                <div className="bg-amber-50 text-amber-800 border border-amber-200 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 mb-2">
-                  <span className="material-symbols-outlined text-[18px]">account_circle</span>
-                  Login to securely save and manage this booking in your account.
+              <div className="w-full bg-[#FFF8E6] border border-amber-200/80 rounded-2xl p-6 shadow-sm flex flex-col gap-4 text-left">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 text-amber-700 shadow-sm">
+                    <span className="material-symbols-outlined text-[20px] font-semibold">lock</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                      Want to manage this booking later?
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 font-medium">Login anytime to:</p>
+                    <ul className="text-sm text-gray-600 mt-2 space-y-1.5 list-none pl-0">
+                      {[
+                        'View all your upcoming trips',
+                        'Access booking confirmations & invoices',
+                        'Track booking status',
+                        'Receive trip updates and notifications',
+                        'Manage your profile and travel history',
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-amber-500 font-bold">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                
+                <div className="flex flex-col sm:flex-row gap-3 mt-2">
                   <button
                     onClick={() => {
                       sessionStorage.setItem('pending_claim', JSON.stringify({ id: bookingId, razorpay_payment_id: paymentId }));
                       navigate('/login');
                     }}
-                    className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-lg">login</span>
-                    Login to Save
+                    <span className="material-symbols-outlined text-lg">lock_open</span>
+                    Login & Save Booking
                   </button>
                   <Link
                     to="/"
-                    className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                    className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-3.5 rounded-xl transition-all active:scale-[0.99] flex items-center justify-center"
                   >
                     Skip for Now
                   </Link>
