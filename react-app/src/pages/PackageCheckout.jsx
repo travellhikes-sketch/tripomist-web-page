@@ -111,83 +111,92 @@ export default function PackageCheckout() {
   const finalPayable = subTotal + gst;
 
   const saveBookingToSupabase = async (razorpayPaymentId) => {
+    setLoading(true);
+    setError(null);
+
+    // Safe date extraction — handles both ISO string and Date object
+    let travelDate = '';
     try {
-      setLoading(true);
-      setError(null);
-      
-      const parsedPackageId = parseInt(tripDetails.packageId);
-      const bookingPayload = {
-        customer_name: formData.fullName,
-        phone: formData.phone,
-        email: formData.email || null,
-        source: formData.source || null,
-        package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
-        package_title: tripDetails.tripTitle,
-        destination: tripDetails.destination || null,
-        travel_date: formData.date.split('T')[0],
-        travellers: tripDetails.travellers,
-        total_amount: parsePriceString(tripDetails.price),
-        selected_sharing: selectedSharing,
-        final_amount: finalPayable,
-        razorpay_payment_id: razorpayPaymentId,
-        payment_status: 'paid',
-        booking_status: 'confirmed',
-        special_request: formData.specialRequest || null,
-      };
-
-      console.log("Retry payment ID:", razorpayPaymentId);
-      console.log("bookingPayload", bookingPayload);
-      // Field-by-field diagnostic log
-      console.log("  customer_name:", bookingPayload.customer_name, '|', typeof bookingPayload.customer_name);
-      console.log("  phone:", bookingPayload.phone, '|', typeof bookingPayload.phone);
-      console.log("  email:", bookingPayload.email, '|', typeof bookingPayload.email);
-      console.log("  travel_date:", bookingPayload.travel_date, '|', typeof bookingPayload.travel_date);
-      console.log("  travellers:", bookingPayload.travellers, '|', typeof bookingPayload.travellers);
-      console.log("  package_id:", bookingPayload.package_id, '|', typeof bookingPayload.package_id);
-      console.log("  package_title:", bookingPayload.package_title, '|', typeof bookingPayload.package_title);
-      console.log("  destination:", bookingPayload.destination, '|', typeof bookingPayload.destination);
-      console.log("  source:", bookingPayload.source, '|', typeof bookingPayload.source);
-      console.log("  special_request:", bookingPayload.special_request, '|', typeof bookingPayload.special_request);
-      console.log("  selected_sharing:", bookingPayload.selected_sharing, '|', typeof bookingPayload.selected_sharing);
-      console.log("  total_amount:", bookingPayload.total_amount, '|', typeof bookingPayload.total_amount);
-      console.log("  final_amount:", bookingPayload.final_amount, '|', typeof bookingPayload.final_amount);
-      console.log("  payment_status:", bookingPayload.payment_status, '|', typeof bookingPayload.payment_status);
-      console.log("  booking_status:", bookingPayload.booking_status, '|', typeof bookingPayload.booking_status);
-      console.log("  razorpay_payment_id:", bookingPayload.razorpay_payment_id, '|', typeof bookingPayload.razorpay_payment_id);
-      // Flag any undefined or NaN fields
-      Object.entries(bookingPayload).forEach(([k, v]) => {
-        if (v === undefined) console.error('  *** UNDEFINED field:', k);
-        if (typeof v === 'number' && isNaN(v)) console.error('  *** NaN field:', k);
-        if (typeof v === 'object' && v !== null) console.warn('  *** OBJECT (non-null) field:', k, v);
-      });
-
-      const { error: insertError } = await supabase
-        .from('bookings')
-        .insert([bookingPayload]);
-        
-      if (insertError) {
-        console.error("Booking insert failed:", insertError);
-        throw insertError;
+      const raw = formData.date;
+      if (typeof raw === 'string') {
+        travelDate = raw.split('T')[0];
+      } else if (raw instanceof Date) {
+        travelDate = raw.toISOString().split('T')[0];
+      } else {
+        travelDate = String(raw).split('T')[0];
       }
-      
-      setPaymentId(razorpayPaymentId);
-      setStep('success');
-      
-      sessionStorage.removeItem('checkoutData');
-      localStorage.removeItem('cart');
-      window.dispatchEvent(new Event('cartUpdated'));
-    } catch (err) {
-      console.error('Booking save error:', err);
-      let errMsg = err.message || err.details || 'Unknown error';
-      if (err.code === '23505') {
+    } catch (e) {
+      console.error('Date parse error:', e);
+      travelDate = '';
+    }
+
+    const parsedPackageId = parseInt(tripDetails.packageId);
+    const bookingPayload = {
+      customer_name: formData.fullName,
+      phone: formData.phone,
+      email: formData.email || null,
+      source: formData.source || null,
+      package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
+      package_title: tripDetails.tripTitle,
+      destination: tripDetails.destination || null,
+      travel_date: travelDate,
+      travellers: tripDetails.travellers,
+      total_amount: parsePriceString(tripDetails.price),
+      selected_sharing: selectedSharing,
+      final_amount: finalPayable,
+      razorpay_payment_id: razorpayPaymentId,
+      payment_status: 'paid',
+      booking_status: 'confirmed',
+      special_request: formData.specialRequest || null,
+    };
+
+    console.log("Retry payment ID:", razorpayPaymentId);
+    console.log("bookingPayload", bookingPayload);
+    console.log("  customer_name:", bookingPayload.customer_name, '|', typeof bookingPayload.customer_name);
+    console.log("  phone:", bookingPayload.phone, '|', typeof bookingPayload.phone);
+    console.log("  email:", bookingPayload.email, '|', typeof bookingPayload.email);
+    console.log("  travel_date:", bookingPayload.travel_date, '|', typeof bookingPayload.travel_date);
+    console.log("  travellers:", bookingPayload.travellers, '|', typeof bookingPayload.travellers);
+    console.log("  package_id:", bookingPayload.package_id, '|', typeof bookingPayload.package_id);
+    console.log("  package_title:", bookingPayload.package_title, '|', typeof bookingPayload.package_title);
+    console.log("  destination:", bookingPayload.destination, '|', typeof bookingPayload.destination);
+    console.log("  source:", bookingPayload.source, '|', typeof bookingPayload.source);
+    console.log("  special_request:", bookingPayload.special_request, '|', typeof bookingPayload.special_request);
+    console.log("  selected_sharing:", bookingPayload.selected_sharing, '|', typeof bookingPayload.selected_sharing);
+    console.log("  total_amount:", bookingPayload.total_amount, '|', typeof bookingPayload.total_amount);
+    console.log("  final_amount:", bookingPayload.final_amount, '|', typeof bookingPayload.final_amount);
+    console.log("  payment_status:", bookingPayload.payment_status, '|', typeof bookingPayload.payment_status);
+    console.log("  booking_status:", bookingPayload.booking_status, '|', typeof bookingPayload.booking_status);
+    console.log("  razorpay_payment_id:", bookingPayload.razorpay_payment_id, '|', typeof bookingPayload.razorpay_payment_id);
+
+    const { error: insertError } = await supabase
+      .from('bookings')
+      .insert([bookingPayload]);
+
+    console.log("Insert error:", insertError);
+
+    if (insertError) {
+      // Only enter failure path if Supabase explicitly returned an error
+      console.error("Booking insert failed:", insertError);
+      let errMsg = insertError.message || insertError.details || 'Unknown error';
+      if (insertError.code === '23505') {
         errMsg = 'This payment has already been recorded.';
       }
       setError('Payment was successful but booking save failed. Error: ' + errMsg);
       setPaymentId(razorpayPaymentId);
-      setStep('failed');
-    } finally {
       setLoading(false);
+      setStep('failed');
+      return; // ← stop here, never touch success state
     }
+
+    // INSERT succeeded — null error
+    console.log("Insert successful");
+    setPaymentId(razorpayPaymentId);
+    sessionStorage.removeItem('checkoutData');
+    localStorage.removeItem('cart');
+    window.dispatchEvent(new Event('cartUpdated'));
+    setLoading(false);
+    setStep('success'); // ← last line, nothing can overwrite this
   };
 
   const handleProceedToPayment = () => {
