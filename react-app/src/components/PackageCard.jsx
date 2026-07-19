@@ -68,7 +68,7 @@ const PackageCard = ({
       {/* Bottom Content Section */}
       <div className="flex flex-col p-5 h-[45%] justify-between">
         <div>
-          <h3 className="text-gray-900 text-[20px] md:text-[22px] font-extrabold leading-[1.2] mb-2 line-clamp-2">{tripTitle}</h3>
+          <h3 className="text-gray-900 text-[20px] md:text-[22px] font-extrabold leading-[1.2] mb-2 line-clamp-2 min-h-[48px] md:min-h-[53px]">{tripTitle}</h3>
           
           <div className="flex items-center gap-1.5 text-gray-500">
             <span className="material-symbols-outlined text-[16px]">schedule</span>
