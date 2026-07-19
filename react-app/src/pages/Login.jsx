@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '../supabaseClient';
-import { safeStorage } from '../utils/supabaseClient';
+import { supabase, safeStorage } from '../utils/supabaseClient';
 
 // Mock Country Codes
 const countryCodes = [
@@ -87,23 +86,33 @@ function Login() {
       })
 
       if (signUpError) {
+        console.error("Registration failed:", signUpError)
         setLoading(false)
-        setErrorMsg(signUpError.message)
+        setErrorMsg(signUpError.message || "Registration failed.")
         return
       }
+
+      // Check if email confirmation is required (data.session will be null if verification is required)
+      const confirmationRequired = data && data.user && !data.session;
 
       // Sign out after registration so user can log in fresh
       await supabase.auth.signOut()
 
       setLoading(false)
-      setSuccessMsg("Registration Successful! Please Sign In.")
+      if (confirmationRequired) {
+        setSuccessMsg("Registration Initiated! Please check your email to verify your account.")
+      } else {
+        setSuccessMsg("Registration Successful! Please Sign In.")
+      }
+
       // Switch to login mode after a brief delay
       setTimeout(() => {
         setAuthMode('login')
         setStep(1)
         setSuccessMsg('')
-      }, 2000)
+      }, 4000)
     } catch (err) {
+      console.error("Registration exception:", err)
       setLoading(false)
       setErrorMsg(err.message || "Registration failed. Please try again.")
     }
