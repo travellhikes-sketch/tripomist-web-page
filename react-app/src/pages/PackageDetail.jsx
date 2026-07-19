@@ -52,9 +52,9 @@ export default function PackageDetail() {
           exclusions: ["Flight / Train Tickets", "Personal Expenses", "Entry fees to monuments", "Travel Insurance"],
           highlights: ["Day 1: Arrival & Local Sightseeing", "Day 2: Adventure Activities", "Day 3: Scenic Drive & Departure"],
           days: [
-            { num: 1, title: "Arrival & Local Sightseeing", desc: "Arrive at the destination and check into your hotel. Later, visit local attractions." },
-            { num: 2, title: "Adventure Activities", desc: "Spend the day enjoying various adventure sports and exploring hidden gems." },
-            { num: 3, title: "Scenic Drive & Departure", desc: "After breakfast, enjoy a scenic drive before heading back home." }
+            { num: 0, title: "Arrival & Local Sightseeing", desc: "Arrive at the destination and check into your hotel. Later, visit local attractions." },
+            { num: 1, title: "Adventure Activities", desc: "Spend the day enjoying various adventure sports and exploring hidden gems." },
+            { num: 2, title: "Scenic Drive & Departure", desc: "After breakfast, enjoy a scenic drive before heading back home." }
           ],
           costings: [
             { type: "Double Sharing", price: "₹19,999 per person" },
@@ -83,7 +83,7 @@ export default function PackageDetail() {
           exclusions: data.exclusions || [],
           highlights: data.itinerary ? data.itinerary.map(item => item.title) : [],
           days: data.itinerary ? data.itinerary.map((item, idx) => ({
-            num: idx + 1,
+            num: idx,
             title: item.title,
             desc: item.description
           })) : [],
@@ -201,7 +201,7 @@ export default function PackageDetail() {
 
             {/* Tabs */}
             <div className="flex gap-3 overflow-x-auto pb-2 mb-10 hide-scrollbar border-b border-gray-100">
-              {['Itinerary', 'Inclusions', 'Costing'].map((tab) => (
+              {['Itinerary', 'Inclusions & Exclusions', 'Costing'].map((tab) => (
                 <button 
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -281,34 +281,65 @@ export default function PackageDetail() {
             )}
 
             {/* Other Tabs Placeholders */}
-            {activeTab === 'Inclusions' && (
+            {activeTab === 'Inclusions & Exclusions' && (
               <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">What included in package and what not ??</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">What's included and what's not</h2>
                 
-                <h3 className="text-lg font-bold text-[#136b8a] mb-4">Included</h3>
-                <ul className="space-y-4 text-gray-700 font-medium">
-                  {trip.inclusions && trip.inclusions.length > 0 ? trip.inclusions.map((inc, i) => (
-                    <li key={i} className="flex gap-3 items-start">
-                      <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                      {inc}
-                    </li>
-                  )) : (
-                    <>
-                      <li className="flex gap-3 items-start">
-                        <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                        Accommodation in hotels, campsites, and lakeside cottages.
-                      </li>
-                      <li className="flex gap-3 items-start">
-                        <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                        Meals included.
-                      </li>
-                      <li className="flex gap-3 items-start">
-                        <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
-                        All sightseeing, permits, and entry fees as per the itinerary.
-                      </li>
-                    </>
-                  )}
-                </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#136b8a] mb-4 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#25D366]">check_circle</span> Included
+                    </h3>
+                    <ul className="space-y-4 text-gray-700 font-medium">
+                      {trip.inclusions && trip.inclusions.length > 0 ? trip.inclusions.map((inc, i) => (
+                        <li key={i} className="flex gap-3 items-start">
+                          <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check</span>
+                          {inc}
+                        </li>
+                      )) : (
+                        <>
+                          <li className="flex gap-3 items-start">
+                            <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check</span>
+                            Accommodation in hotels, campsites, and lakeside cottages.
+                          </li>
+                          <li className="flex gap-3 items-start">
+                            <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check</span>
+                            Meals included.
+                          </li>
+                          <li className="flex gap-3 items-start">
+                            <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check</span>
+                            All sightseeing, permits, and entry fees as per the itinerary.
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-red-500 mb-4 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-red-500">cancel</span> Excluded
+                    </h3>
+                    <ul className="space-y-4 text-gray-700 font-medium">
+                      {trip.exclusions && trip.exclusions.length > 0 ? trip.exclusions.map((exc, i) => (
+                        <li key={i} className="flex gap-3 items-start">
+                          <span className="material-symbols-outlined text-red-500 mt-0.5 text-[20px]">close</span>
+                          {exc}
+                        </li>
+                      )) : (
+                        <>
+                          <li className="flex gap-3 items-start">
+                            <span className="material-symbols-outlined text-red-500 mt-0.5 text-[20px]">close</span>
+                            Flight / Train Tickets.
+                          </li>
+                          <li className="flex gap-3 items-start">
+                            <span className="material-symbols-outlined text-red-500 mt-0.5 text-[20px]">close</span>
+                            Personal Expenses.
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                </div>
               </section>
             )}
             {activeTab === 'Costing' && (
@@ -322,7 +353,7 @@ export default function PackageDetail() {
                 </div>
               </section>
             )}
-            {activeTab !== 'Itinerary' && activeTab !== 'Inclusions' && activeTab !== 'Costing' && (
+            {activeTab !== 'Itinerary' && activeTab !== 'Inclusions & Exclusions' && activeTab !== 'Costing' && (
               <section className="mb-10 min-h-[200px] flex items-center justify-center bg-gray-50 rounded-2xl border border-gray-100">
                 <p className="text-gray-500 font-medium">Content for {activeTab} will be available here.</p>
               </section>
