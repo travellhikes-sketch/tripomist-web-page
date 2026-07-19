@@ -57,17 +57,28 @@ export default function PackageCheckout() {
         ];
       } else {
         options = costings.map(c => ({
-          type: c.type,
+          type: c.type || c.name || c.title || c.sharing_type || '', // Fallback to empty string if missing
           pricePerPerson: parsePriceString(c.price),
-          label: c.type
+          label: c.type || c.name || c.title || c.sharing_type || ''
         }));
       }
       
       // Sort by price ascending to default to lowest
       options.sort((a, b) => a.pricePerPerson - b.pricePerPerson);
+
+      // If types are missing (empty), assign them based on order: Quad, Triple, Double
+      const defaultLabels = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
+      options = options.map((opt, index) => {
+        if (!opt.type || !opt.label) {
+          const fallback = defaultLabels[index] || `Sharing Option ${index + 1}`;
+          return { ...opt, type: fallback, label: fallback };
+        }
+        return opt;
+      });
+
       setSharingOptions(options);
 
-      // Default to lowest
+      // Default to lowest (which is now guaranteed to have a unique type)
       if (options.length > 0) {
         setSelectedSharing(options[0].type);
         setComputedPrice(options[0].pricePerPerson * (data.tripDetails.travellers || 1));
