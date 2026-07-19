@@ -138,18 +138,15 @@ export default function PackageCheckout() {
       console.log("Retry payment ID:", razorpayPaymentId);
       console.log("Booking payload:", bookingPayload);
 
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('bookings')
-        .insert([bookingPayload])
-        .select('booking_id')
-        .single();
+        .insert([bookingPayload]);
         
       if (insertError) {
         console.error("Booking insert failed:", insertError);
         throw insertError;
       }
       
-      setBookingId(data.booking_id);
       setPaymentId(razorpayPaymentId);
       setStep('success');
       
@@ -158,7 +155,11 @@ export default function PackageCheckout() {
       window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
       console.error('Booking save error:', err);
-      setError('Payment was successful but booking save failed. Error: ' + (err.message || err.details || 'Unknown error'));
+      let errMsg = err.message || err.details || 'Unknown error';
+      if (err.code === '23505') {
+        errMsg = 'This payment has already been recorded.';
+      }
+      setError('Payment was successful but booking save failed. Error: ' + errMsg);
       setPaymentId(razorpayPaymentId);
       setStep('failed');
     } finally {
@@ -225,8 +226,7 @@ export default function PackageCheckout() {
           <p className="text-gray-600 text-lg mb-4">Thank you, {formData.fullName}. Your payment was successful.</p>
           
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 w-full mb-8">
-            <p className="text-gray-800 font-bold text-xl mb-3">Booking ID: {bookingId}</p>
-            <p className="text-gray-500 mb-2">Payment ID: {paymentId}</p>
+            <p className="text-gray-800 font-bold text-xl mb-3">Payment Reference: {paymentId}</p>
             <div className="w-full h-px bg-gray-100 my-4"></div>
             <p className="font-semibold text-gray-900">{tripDetails.tripTitle}</p>
             <p className="text-gray-600">{new Date(formData.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} • {tripDetails.travellers} Traveller(s)</p>
