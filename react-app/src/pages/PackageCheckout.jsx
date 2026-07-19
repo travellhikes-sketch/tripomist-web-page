@@ -21,6 +21,7 @@ export default function PackageCheckout() {
   const [checkoutData, setCheckoutData] = useState(null);
   const [formData, setFormData] = useState(null);
   const [tripDetails, setTripDetails] = useState(null);
+  const [user, setUser] = useState(null);
 
   const [selectedSharing, setSelectedSharing] = useState('');
   const [computedPrice, setComputedPrice] = useState(0);
@@ -40,6 +41,9 @@ export default function PackageCheckout() {
       navigate(packageSlug && packageSlug !== 'custom-package' ? `/itinerary/${packageSlug}` : '/');
       return;
     }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
     try {
       const data = JSON.parse(dataStr);
       setCheckoutData(data);
@@ -328,20 +332,50 @@ export default function PackageCheckout() {
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              to="/my-trips"
-              className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-lg">luggage</span>
-              View My Trips
-            </Link>
-            <Link
-              to="/"
-              className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-lg">home</span>
-              Back to Home
-            </Link>
+            {user ? (
+              <Link
+                to="/my-trips"
+                className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">luggage</span>
+                View My Trips
+              </Link>
+            ) : (
+              <div className="flex-1 flex flex-col gap-3">
+                <div className="bg-amber-50 text-amber-800 border border-amber-200 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 mb-2">
+                  <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                  Login to securely save and manage this booking in your account.
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      sessionStorage.setItem('pending_claim', JSON.stringify({ id: bookingId, razorpay_payment_id: paymentId }));
+                      navigate('/login');
+                    }}
+                    className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-lg">login</span>
+                    Login to Save
+                  </button>
+                  <Link
+                    to="/"
+                    className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    Skip for Now
+                  </Link>
+                </div>
+              </div>
+            )}
+            
+            {user && (
+              <Link
+                to="/"
+                className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">home</span>
+                Back to Home
+              </Link>
+            )}
           </div>
         </main>
         <Footer />

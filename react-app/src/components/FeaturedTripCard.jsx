@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import WishlistButton from './WishlistButton'
 
 const FeaturedTripCard = ({ tripTitle, packagesCount, bg, link, className }) => {
   return (
@@ -21,6 +22,7 @@ const FeaturedTripCard = ({ tripTitle, packagesCount, bg, link, className }) => 
           View All <span className="material-symbols-outlined text-[16px] leading-none">arrow_forward</span>
         </div>
       </div>
+      <WishlistButton packageSlug={link?.replace('/itinerary/', '')} />
     </Link>
   )
 }

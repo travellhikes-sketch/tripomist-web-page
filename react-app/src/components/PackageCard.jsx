@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import WishlistButton from './WishlistButton'
 
 const PackageCard = ({ 
   tripTitle, 
@@ -32,7 +33,7 @@ const PackageCard = ({
         <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
         <div className="absolute inset-0 bg-black/10"></div>
         
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-start gap-2">
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start gap-2 z-10 pointer-events-none">
           {/* Label (e.g., MOUNTAINS or other category) */}
           <div className="bg-black/50 backdrop-blur-md text-white font-bold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
             <span className="material-symbols-outlined text-[12px]">location_on</span>
@@ -56,6 +57,11 @@ const PackageCard = ({
               </div>
             )}
           </div>
+        </div>
+
+        {/* Wishlist Button - must be clickable so pointer-events-auto */}
+        <div className="absolute top-4 right-4 z-20">
+          <WishlistButton packageSlug={link?.replace('/itinerary/', '')} className="!static" />
         </div>
       </div>
 

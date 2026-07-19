@@ -196,6 +196,21 @@ export default function MyTrips() {
                         Payment Ref: {booking.razorpay_payment_id}
                       </div>
                     )}
+                    {/* Action Buttons */}
+                    <div className="mt-5 pt-5 border-t border-gray-100 flex flex-wrap gap-3">
+                      <Link 
+                        to={`/my-trip/${booking.id}`}
+                        className="bg-[#136b8a] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#0f556e] transition-colors"
+                      >
+                        View Details
+                      </Link>
+                      <Link 
+                        to="/"
+                        className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 transition-colors"
+                      >
+                        Explore More Trips
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>

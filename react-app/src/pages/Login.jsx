@@ -134,6 +134,33 @@ function Login() {
         window.dispatchEvent(new Event('auth-state-change'))
       }
 
+      // Claim pending booking if exists
+      const pendingClaimStr = sessionStorage.getItem('pending_claim');
+      if (pendingClaimStr && data?.user) {
+        try {
+          const claimData = JSON.parse(pendingClaimStr);
+          if (claimData.id && claimData.razorpay_payment_id) {
+            const { error: claimError } = await supabase
+              .from('bookings')
+              .update({ user_id: data.user.id })
+              .eq('id', claimData.id)
+              .eq('razorpay_payment_id', claimData.razorpay_payment_id)
+              .is('user_id', null);
+            
+            if (claimError) {
+              console.error("Booking claim failed:", claimError);
+            } else {
+              sessionStorage.removeItem('pending_claim');
+              setSuccessMsg("Sign In Successful! Booking saved to your account.");
+              setTimeout(() => { navigate('/my-trips') }, 1500);
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse pending claim", e);
+        }
+      }
+
       setSuccessMsg("Sign In Successful! Redirecting...")
       setTimeout(() => { navigate(redirectTo) }, 1000)
     } catch (err) {
