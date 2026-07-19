@@ -145,3 +145,81 @@ BEGIN
     AND lead_token = p_lead_token;
 END;
 $$;
+
+-- 7. Secure RPC for creating new checkout leads (callable by anon + authenticated)
+--    Returns the new row's id, lead_token, and lead_number so the client
+--    can store them in sessionStorage for later RPC updates.
+CREATE OR REPLACE FUNCTION create_checkout_lead(
+  p_customer_name text,
+  p_phone text,
+  p_email text DEFAULT NULL,
+  p_package_id bigint DEFAULT NULL,
+  p_package_title text DEFAULT NULL,
+  p_destination text DEFAULT NULL,
+  p_travel_date date DEFAULT NULL,
+  p_travellers integer DEFAULT 1,
+  p_selected_sharing text DEFAULT NULL,
+  p_estimated_amount numeric DEFAULT NULL,
+  p_source text DEFAULT NULL,
+  p_special_request text DEFAULT NULL
+)
+RETURNS TABLE (id uuid, lead_token text, lead_number text)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  new_id uuid;
+  new_token text;
+  new_number text;
+BEGIN
+  INSERT INTO public.checkout_leads (
+    customer_name,
+    phone,
+    email,
+    package_id,
+    package_title,
+    destination,
+    travel_date,
+    travellers,
+    selected_sharing,
+    estimated_amount,
+    source,
+    special_request,
+    current_step,
+    lead_status,
+    payment_status
+  ) VALUES (
+    p_customer_name,
+    p_phone,
+    p_email,
+    p_package_id,
+    p_package_title,
+    p_destination,
+    p_travel_date,
+    p_travellers,
+    p_selected_sharing,
+    p_estimated_amount,
+    p_source,
+    p_special_request,
+    'popup_submitted',
+    'checkout_started',
+    'not_started'
+  )
+  RETURNING
+    checkout_leads.id,
+    checkout_leads.lead_token,
+    checkout_leads.lead_number
+  INTO new_id, new_token, new_number;
+
+  RETURN QUERY SELECT new_id, new_token, new_number;
+END;
+$$;
+
+-- Grant EXECUTE to anon and authenticated roles
+GRANT EXECUTE ON FUNCTION create_checkout_lead(
+  text, text, text, bigint, text, text, date, integer, text, numeric, text, text
+) TO anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION update_checkout_lead(
+  uuid, text, text, text, text, text, numeric, text, text
+) TO anon, authenticated;

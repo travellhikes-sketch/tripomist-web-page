@@ -41,10 +41,10 @@ export default function PackageCheckout() {
       const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
       if (!leadStr) return;
       const lead = JSON.parse(leadStr);
-      if (!lead.id || !lead.lead_token) return;
+      if (!lead.id || !lead.token) return;
       await supabase.rpc('update_checkout_lead', {
         p_lead_id: lead.id,
-        p_lead_token: lead.lead_token,
+        p_lead_token: lead.token,
         ...updates,
       });
     } catch (e) {

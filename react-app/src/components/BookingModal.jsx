@@ -36,60 +36,53 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
     }
   };
 
-  // Save or update checkout lead in Supabase
+  // Save or create checkout lead via secure RPC (no direct table access needed)
   const saveCheckoutLead = async () => {
     const parsedPackageId = parseInt(packageId);
-    const leadPayload = {
-      customer_name: formData.fullName,
-      phone: formData.phone,
-      email: formData.email || null,
-      package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
-      package_title: tripTitle || null,
-      destination: destination || tripTitle || null,
-      travel_date: formData.date ? formData.date.toISOString().split('T')[0] : null,
-      travellers: travellers || 1,
-      estimated_amount: price || 0,
-      source: formData.source || null,
-      current_step: 'popup_submitted',
-      lead_status: 'checkout_started',
-      payment_status: 'not_started',
-    };
 
-    // Check for existing lead for the same checkout session
+    // Check for existing lead in this session — try to update it first
     const existingLeadStr = sessionStorage.getItem('tripomist_checkout_lead');
     if (existingLeadStr) {
       try {
         const existingLead = JSON.parse(existingLeadStr);
-        // If we have a valid existing lead for the same package, update it via RPC
-        if (existingLead.id && existingLead.lead_token) {
+        if (existingLead.id && existingLead.token) {
           const { error: rpcError } = await supabase.rpc('update_checkout_lead', {
             p_lead_id: existingLead.id,
-            p_lead_token: existingLead.lead_token,
+            p_lead_token: existingLead.token,
             p_current_step: 'popup_submitted',
           });
           if (!rpcError) {
-            // Update succeeded — reuse existing lead
+            // Reuse existing lead — update succeeded
             return existingLead;
           }
-          // If RPC failed (e.g., lead was deleted), fall through to create new one
+          // Fall through to create a new one if update failed
         }
       } catch (e) {
-        // Corrupted sessionStorage data, fall through to create new
+        // Corrupted sessionStorage — fall through
       }
     }
 
-    // Insert new lead
-    const { data, error: insertError } = await supabase
-      .from('checkout_leads')
-      .insert([leadPayload])
-      .select('id, lead_token')
-      .single();
+    // Create new lead via secure RPC (callable by anon + authenticated)
+    const { data, error: rpcError } = await supabase.rpc('create_checkout_lead', {
+      p_customer_name: formData.fullName,
+      p_phone: formData.phone,
+      p_email: formData.email || null,
+      p_package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
+      p_package_title: tripTitle || null,
+      p_destination: destination || tripTitle || null,
+      p_travel_date: formData.date ? formData.date.toISOString().split('T')[0] : null,
+      p_travellers: travellers || 1,
+      p_estimated_amount: price || 0,
+      p_source: formData.source || null,
+      p_special_request: null,
+    });
 
-    if (insertError) {
-      throw new Error(insertError.message || 'Failed to save your enquiry. Please try again.');
+    if (rpcError) {
+      throw new Error(rpcError.message || 'Failed to save your enquiry. Please try again.');
     }
 
-    return { id: data.id, lead_token: data.lead_token };
+    const lead = Array.isArray(data) ? data[0] : data;
+    return { id: lead.id, token: lead.lead_token, leadNumber: lead.lead_number };
   };
 
   // Step 1: Validate and go to checkout
@@ -118,7 +111,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       // Save checkout lead to Supabase
       const leadRef = await saveCheckoutLead();
       
-      // Store lead reference securely in sessionStorage
+      // Store lead reference in sessionStorage (id + token for later RPC updates)
       sessionStorage.setItem('tripomist_checkout_lead', JSON.stringify(leadRef));
 
       // Save checkout data to sessionStorage (existing flow)
