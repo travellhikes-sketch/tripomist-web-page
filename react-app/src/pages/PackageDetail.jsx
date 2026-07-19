@@ -403,6 +403,7 @@ export default function PackageDetail() {
         navigate={navigate}
         packageId={slug}
         destination={trip.destination || trip.title}
+        costings={trip.costings}
       />
 
       <Footer />

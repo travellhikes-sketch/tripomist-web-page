@@ -418,6 +418,7 @@ export default function ItineraryManaliKasol() {
         navigate={navigate}
         packageId={trip.slug || trip.id || null}
         destination={trip.destination || trip.title}
+        costings={null}
       />
 
       <Footer />

@@ -437,6 +437,11 @@ export default function ItinerarySpiti() {
         navigate={navigate}
         packageId={trip.slug || trip.id || null}
         destination={trip.destination || trip.title}
+        costings={[
+          { type: 'Quad Sharing', price: `₹${trip.numericPrice - 2000} per person` },
+          { type: 'Triple Sharing', price: `₹${trip.numericPrice - 1000} per person` },
+          { type: 'Double Sharing', price: `₹${trip.numericPrice} per person` }
+        ]}
       />
 
       <Footer />

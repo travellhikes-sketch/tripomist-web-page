@@ -297,7 +297,19 @@ const AdminBookings = () => {
                         <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">calendar_month</span> {new Date(booking.travel_date).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">group</span> {booking.travellers}</span>
                       </div>
-                      <div className="font-bold text-[#136b8a] mt-2">₹{booking.total_amount?.toLocaleString()}</div>
+                      <div className="font-bold text-[#136b8a] mt-2">
+                        {booking.final_amount ? `₹${booking.final_amount?.toLocaleString()}` : `₹${booking.total_amount?.toLocaleString()}`}
+                      </div>
+                      {booking.selected_sharing && (
+                        <div className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-1 inline-block">
+                          {booking.selected_sharing}
+                        </div>
+                      )}
+                      {booking.razorpay_payment_id && (
+                        <div className="text-[10px] text-gray-400 mt-1 font-mono truncate max-w-[180px]" title={booking.razorpay_payment_id}>
+                          RZP: {booking.razorpay_payment_id}
+                        </div>
+                      )}
                       {booking.special_request && (
                         <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded mt-2 inline-block max-w-full truncate" title={booking.special_request}>
                           Note: {booking.special_request}
