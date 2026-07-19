@@ -70,11 +70,32 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans animate-pulse">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        <section className="bg-[#136b8a] pt-28 pb-32 relative">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="h-4 bg-teal-800/50 rounded w-24 mb-4"></div>
+            <div className="h-8 bg-teal-800/50 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-teal-800/50 rounded w-64"></div>
+          </div>
+        </section>
+        <main className="flex-1 w-full max-w-3xl mx-auto px-4 -mt-20 pb-20 relative z-20">
+          <div className="bg-white rounded-3xl p-8 md:p-10 space-y-6 border border-gray-100 shadow-sm">
+            <div className="flex gap-6 items-center border-b border-gray-50 pb-6">
+              <div className="w-20 h-20 bg-gray-100 rounded-full"></div>
+              <div className="flex-1 h-10 bg-gray-100 rounded-xl max-w-md"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map(n => (
+                <div key={n} className="space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-1/4"></div>
+                  <div className="h-10 bg-gray-100 rounded-xl"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
