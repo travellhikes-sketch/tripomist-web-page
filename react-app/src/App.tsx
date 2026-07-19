@@ -11,6 +11,7 @@ import International from './pages/International'
 import Review from './pages/Review'
 import PackageDetail from './pages/PackageDetail'
 import Checkout from './pages/Checkout'
+import PackageCheckout from './pages/PackageCheckout'
 import Cart from './pages/Cart'
 import Payment from './pages/Payment'
 import FeaturedGroupTrip from './pages/FeaturedGroupTrip'
@@ -119,6 +120,7 @@ function App() {
           <Route path="/itinerary/udaipur-and-kumbhalgarh" element={<ItineraryUdaipurKumbhalgarh />} />
           <Route path="/itinerary/:slug" element={<PackageDetail />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout/:packageSlug" element={<PackageCheckout />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/login" element={<Login />} />
