@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../utils/supabaseClient';
 
 const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destination, packageId, costings, navigate }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   // Calendar logic
   const today = new Date();
@@ -34,8 +36,64 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
     }
   };
 
+  // Save or update checkout lead in Supabase
+  const saveCheckoutLead = async () => {
+    const parsedPackageId = parseInt(packageId);
+    const leadPayload = {
+      customer_name: formData.fullName,
+      phone: formData.phone,
+      email: formData.email || null,
+      package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
+      package_title: tripTitle || null,
+      destination: destination || tripTitle || null,
+      travel_date: formData.date ? formData.date.toISOString().split('T')[0] : null,
+      travellers: travellers || 1,
+      estimated_amount: price || 0,
+      source: formData.source || null,
+      current_step: 'popup_submitted',
+      lead_status: 'checkout_started',
+      payment_status: 'not_started',
+    };
+
+    // Check for existing lead for the same checkout session
+    const existingLeadStr = sessionStorage.getItem('tripomist_checkout_lead');
+    if (existingLeadStr) {
+      try {
+        const existingLead = JSON.parse(existingLeadStr);
+        // If we have a valid existing lead for the same package, update it via RPC
+        if (existingLead.id && existingLead.lead_token) {
+          const { error: rpcError } = await supabase.rpc('update_checkout_lead', {
+            p_lead_id: existingLead.id,
+            p_lead_token: existingLead.lead_token,
+            p_current_step: 'popup_submitted',
+          });
+          if (!rpcError) {
+            // Update succeeded — reuse existing lead
+            return existingLead;
+          }
+          // If RPC failed (e.g., lead was deleted), fall through to create new one
+        }
+      } catch (e) {
+        // Corrupted sessionStorage data, fall through to create new
+      }
+    }
+
+    // Insert new lead
+    const { data, error: insertError } = await supabase
+      .from('checkout_leads')
+      .insert([leadPayload])
+      .select('id, lead_token')
+      .single();
+
+    if (insertError) {
+      throw new Error(insertError.message || 'Failed to save your enquiry. Please try again.');
+    }
+
+    return { id: data.id, lead_token: data.lead_token };
+  };
+
   // Step 1: Validate and go to checkout
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     e.preventDefault();
     setError(null);
     
@@ -52,34 +110,50 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       return;
     }
 
-    // Save to sessionStorage
-    const checkoutData = {
-      formData: {
-        ...formData,
-        date: formData.date.toISOString(), // Convert Date to string for storage
-      },
-      tripDetails: {
-        tripTitle,
-        price,
-        travellers,
-        destination,
-        packageId,
-        costings,
+    // Prevent double-click
+    if (saving) return;
+    setSaving(true);
+
+    try {
+      // Save checkout lead to Supabase
+      const leadRef = await saveCheckoutLead();
+      
+      // Store lead reference securely in sessionStorage
+      sessionStorage.setItem('tripomist_checkout_lead', JSON.stringify(leadRef));
+
+      // Save checkout data to sessionStorage (existing flow)
+      const checkoutData = {
+        formData: {
+          ...formData,
+          date: formData.date.toISOString(),
+        },
+        tripDetails: {
+          tripTitle,
+          price,
+          travellers,
+          destination,
+          packageId,
+          costings,
+        }
+      };
+      
+      sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+      
+      const slug = packageId || 'custom-package';
+      
+      // Close modal
+      resetAndClose();
+      
+      // Navigate to full-page checkout
+      if (navigate) {
+        navigate(`/checkout/${slug}`);
+      } else {
+        window.location.href = `/checkout/${slug}`;
       }
-    };
-    
-    sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-    
-    const slug = packageId || 'custom-package';
-    
-    // Close modal
-    resetAndClose();
-    
-    // Navigate to full-page checkout
-    if (navigate) {
-      navigate(`/checkout/${slug}`);
-    } else {
-      window.location.href = `/checkout/${slug}`;
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -165,10 +239,26 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
               <option value="Other" className="text-gray-700">Other</option>
             </select>
           </div>
-          <button type="submit" className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2">
-            Continue
-            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+          <button 
+            type="submit" 
+            disabled={saving}
+            className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+          >
+            {saving ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Saving...
+              </>
+            ) : (
+              <>
+                Continue
+                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              </>
+            )}
           </button>
+          <p className="text-[11px] text-gray-400 text-center mt-1 leading-snug">
+            By continuing, you agree that TripoMist may contact you regarding this trip enquiry.
+          </p>
         </form>
       </div>
     </div>

@@ -35,6 +35,23 @@ export default function PackageCheckout() {
   // Derived options
   const [sharingOptions, setSharingOptions] = useState([]);
 
+  // Helper: securely update checkout lead via RPC
+  const updateLead = async (updates) => {
+    try {
+      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+      if (!leadStr) return;
+      const lead = JSON.parse(leadStr);
+      if (!lead.id || !lead.lead_token) return;
+      await supabase.rpc('update_checkout_lead', {
+        p_lead_id: lead.id,
+        p_lead_token: lead.lead_token,
+        ...updates,
+      });
+    } catch (e) {
+      // Non-critical — don't block user flow
+    }
+  };
+
   useEffect(() => {
     const dataStr = sessionStorage.getItem('checkoutData');
     if (!dataStr) {
@@ -61,16 +78,14 @@ export default function PackageCheckout() {
         ];
       } else {
         options = costings.map(c => ({
-          type: c.type || c.name || c.title || c.sharing_type || c.sharing || '', // also read c.sharing
+          type: c.type || c.name || c.title || c.sharing_type || c.sharing || '',
           pricePerPerson: parsePriceString(c.price),
           label: c.type || c.name || c.title || c.sharing_type || c.sharing || ''
         }));
       }
       
-      // Sort by price ascending to default to lowest
       options.sort((a, b) => a.pricePerPerson - b.pricePerPerson);
 
-      // If types are missing (empty), assign them based on order: Quad, Triple, Double
       const defaultLabels = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
       options = options.map((opt, index) => {
         if (!opt.type || !opt.label) {
@@ -82,11 +97,13 @@ export default function PackageCheckout() {
 
       setSharingOptions(options);
 
-      // Default to lowest (which is now guaranteed to have a unique type)
       if (options.length > 0) {
         setSelectedSharing(options[0].type);
         setComputedPrice(options[0].pricePerPerson * (data.tripDetails.travellers || 1));
       }
+
+      // Track: checkout page opened
+      updateLead({ p_current_step: 'checkout_opened' });
     } catch (e) {
       console.error("Failed to parse checkout data", e);
       navigate('/');
@@ -108,6 +125,14 @@ export default function PackageCheckout() {
   const handleSharingSelect = (option) => {
     setSelectedSharing(option.type);
     setComputedPrice(option.pricePerPerson * (tripDetails.travellers || 1));
+    // Track: sharing selected
+    const newAmount = option.pricePerPerson * (tripDetails.travellers || 1);
+    const newAmountWithGst = newAmount + Math.round(newAmount * 0.05);
+    updateLead({
+      p_current_step: 'sharing_selected',
+      p_selected_sharing: option.type,
+      p_estimated_amount: newAmountWithGst,
+    });
   };
 
   const subTotal = computedPrice;
@@ -135,6 +160,7 @@ export default function PackageCheckout() {
     }
 
     const parsedPackageId = parseInt(tripDetails.packageId);
+    const sessionUser = (await supabase.auth.getSession()).data?.session?.user;
     const bookingPayload = {
       customer_name: formData.fullName,
       phone: formData.phone,
@@ -152,33 +178,12 @@ export default function PackageCheckout() {
       payment_status: 'paid',
       booking_status: 'confirmed',
       special_request: formData.specialRequest || null,
-      user_id: (await supabase.auth.getSession()).data?.session?.user?.id || null,
+      user_id: sessionUser?.id || null,
     };
-
-    console.log("Retry payment ID:", razorpayPaymentId);
-    console.log("bookingPayload", bookingPayload);
-    console.log("  customer_name:", bookingPayload.customer_name, '|', typeof bookingPayload.customer_name);
-    console.log("  phone:", bookingPayload.phone, '|', typeof bookingPayload.phone);
-    console.log("  email:", bookingPayload.email, '|', typeof bookingPayload.email);
-    console.log("  travel_date:", bookingPayload.travel_date, '|', typeof bookingPayload.travel_date);
-    console.log("  travellers:", bookingPayload.travellers, '|', typeof bookingPayload.travellers);
-    console.log("  package_id:", bookingPayload.package_id, '|', typeof bookingPayload.package_id);
-    console.log("  package_title:", bookingPayload.package_title, '|', typeof bookingPayload.package_title);
-    console.log("  destination:", bookingPayload.destination, '|', typeof bookingPayload.destination);
-    console.log("  source:", bookingPayload.source, '|', typeof bookingPayload.source);
-    console.log("  special_request:", bookingPayload.special_request, '|', typeof bookingPayload.special_request);
-    console.log("  selected_sharing:", bookingPayload.selected_sharing, '|', typeof bookingPayload.selected_sharing);
-    console.log("  total_amount:", bookingPayload.total_amount, '|', typeof bookingPayload.total_amount);
-    console.log("  final_amount:", bookingPayload.final_amount, '|', typeof bookingPayload.final_amount);
-    console.log("  payment_status:", bookingPayload.payment_status, '|', typeof bookingPayload.payment_status);
-    console.log("  booking_status:", bookingPayload.booking_status, '|', typeof bookingPayload.booking_status);
-    console.log("  razorpay_payment_id:", bookingPayload.razorpay_payment_id, '|', typeof bookingPayload.razorpay_payment_id);
 
     const { error: insertError } = await supabase
       .from('bookings')
       .insert([bookingPayload]);
-
-    console.log("Insert error:", insertError);
 
     if (insertError) {
       // Only enter failure path if Supabase explicitly returned an error
@@ -194,31 +199,38 @@ export default function PackageCheckout() {
       return; // ← stop here, never touch success state
     }
 
-    // INSERT succeeded — null error
-    console.log("Insert successful");
+    // INSERT succeeded
     setPaymentId(razorpayPaymentId);
     sessionStorage.removeItem('checkoutData');
     localStorage.removeItem('cart');
     window.dispatchEvent(new Event('cartUpdated'));
+
+    // Update lead to converted
+    updateLead({
+      p_current_step: 'payment_success',
+      p_lead_status: 'converted',
+      p_payment_status: 'paid',
+      p_razorpay_payment_id: razorpayPaymentId,
+    });
+
     setLoading(false);
-    setStep('success'); // ← last line, nothing can overwrite this
+    setStep('success');
   };
 
   const handleProceedToPayment = async () => {
     if (!selectedSharing) return alert('Please select a sharing option');
 
-    // Check authentication before opening Razorpay
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      setError('Please login to continue your booking and access it later in My Trips.');
-      setTimeout(() => {
-        navigate('/login?redirect=' + encodeURIComponent(window.location.pathname));
-      }, 1500);
-      return;
-    }
-
     setLoading(true);
     setError(null);
+
+    // Track: Razorpay opening
+    updateLead({
+      p_current_step: 'razorpay_opened',
+      p_lead_status: 'payment_pending',
+      p_payment_status: 'pending',
+      p_selected_sharing: selectedSharing,
+      p_estimated_amount: finalPayable,
+    });
 
     const amountInPaise = finalPayable * 100;
 
@@ -251,6 +263,11 @@ export default function PackageCheckout() {
       rzp.on('payment.failed', function (response) {
         setLoading(false);
         setError('Payment failed: ' + (response.error?.description || 'Unknown error'));
+        // Track: payment failed
+        updateLead({
+          p_current_step: 'payment_failed',
+          p_payment_status: 'failed',
+        });
         setStep('failed');
       });
       rzp.open();

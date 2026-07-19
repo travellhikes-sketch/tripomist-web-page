@@ -55,6 +55,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminPackages from './pages/admin/AdminPackages'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminUsers from './pages/admin/AdminUsers'
+import AdminCheckoutLeads from './pages/admin/AdminCheckoutLeads'
 
 // Create a component that forces layout re-render on route change, but respects back button
 function ScrollToTop() {
@@ -86,6 +87,7 @@ function App() {
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="packages" element={<AdminPackages />} />
               <Route path="bookings" element={<AdminBookings />} />
+              <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
               <Route path="users" element={<AdminUsers />} />
             </Route>
           </Route>

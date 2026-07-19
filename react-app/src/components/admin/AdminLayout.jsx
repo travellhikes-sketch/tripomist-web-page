@@ -6,6 +6,7 @@ import {
   Package, 
   CalendarDays, 
   Users, 
+  UserPlus,
   LogOut, 
   Menu, 
   X, 
@@ -26,6 +27,7 @@ const AdminLayout = () => {
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Packages', path: '/admin/packages', icon: Package },
     { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
+    { name: 'Checkout Leads', path: '/admin/checkout-leads', icon: UserPlus },
     { name: 'Users', path: '/admin/users', icon: Users },
   ];
 
