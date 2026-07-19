@@ -106,13 +106,17 @@ export default function PackageCheckout() {
     setComputedPrice(option.pricePerPerson * (tripDetails.travellers || 1));
   };
 
+  const subTotal = computedPrice;
+  const gst = Math.round(subTotal * 0.05);
+  const finalPayable = subTotal + gst;
+
   const saveBookingToSupabase = async (razorpayPaymentId) => {
     try {
       setLoading(true);
       setError(null);
       
       const parsedPackageId = parseInt(tripDetails.packageId);
-      const payload = {
+      const bookingPayload = {
         customer_name: formData.fullName,
         phone: formData.phone,
         email: formData.email || null,
@@ -131,11 +135,12 @@ export default function PackageCheckout() {
         special_request: formData.specialRequest || null,
       };
 
-      console.log("Supabase Insert Payload:", payload);
+      console.log("Retry payment ID:", razorpayPaymentId);
+      console.log("Booking payload:", bookingPayload);
 
       const { data, error: insertError } = await supabase
         .from('bookings')
-        .insert([payload])
+        .insert([bookingPayload])
         .select('booking_id')
         .single();
         
@@ -275,10 +280,6 @@ export default function PackageCheckout() {
       </div>
     );
   }
-
-  const subTotal = computedPrice;
-  const gst = Math.round(subTotal * 0.05);
-  const finalPayable = subTotal + gst;
 
   return (
     <div className="flex flex-col min-h-screen bg-surface-container-lowest font-sans">
