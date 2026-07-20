@@ -29,6 +29,7 @@ import ShippingPolicy from './pages/ShippingPolicy'
 import TermsConditions from './pages/TermsConditions'
 import ContactUs from './pages/ContactUs'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
@@ -74,6 +75,12 @@ function App() {
   const [chatOpen, setChatOpen] = useState(false)
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
+
+  useEffect(() => {
+    const handleOpenChat = () => setChatOpen(true);
+    window.addEventListener('open-chatbot', handleOpenChat);
+    return () => window.removeEventListener('open-chatbot', handleOpenChat);
+  }, []);
 
   return (
     <>
@@ -130,6 +137,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />

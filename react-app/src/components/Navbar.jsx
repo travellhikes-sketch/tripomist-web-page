@@ -70,7 +70,7 @@ function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    navigate('/')
+    navigate('/login')
     setIsOpen(false)
   }
 
@@ -187,6 +187,15 @@ function Navbar() {
             >
               <div className="bg-white rounded-[24px] shadow-2xl p-6 md:p-10 w-full border border-gray-100">
                 <div className="flex flex-col gap-2">
+                  {user && (
+                    <>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-account') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-account">Dashboard</Link>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-trips') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-trips">My Trips</Link>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-trips') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-trips">My Bookings</Link>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/profile') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/profile">Profile</Link>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/contact') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/contact">Support</Link>
+                    </>
+                  )}
                   <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/uttarakhand') ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/uttarakhand">Uttarakhand</Link>
                   <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/himachal') ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/himachal">Himachal</Link>
                   <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/about') ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/about">About Us</Link>
@@ -194,7 +203,7 @@ function Navbar() {
                   {user && (
                     <button 
                       onClick={handleLogout}
-                      className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-black/80 hover:text-black"
+                      className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-red-600 hover:text-red-800 font-bold"
                     >
                       Logout
                     </button>

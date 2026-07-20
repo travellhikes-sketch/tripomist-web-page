@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import GooeyDock from '@/components/ui/gooey-dock'
-import { Home, Map, Plane, Star, ShoppingCart } from 'lucide-react'
+import { Home, Map, Plane, Star, ShoppingCart, Briefcase, Receipt, User, HelpCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const navItems = [
+const publicNavItems = [
   { icon: Home,         label: 'Home',          path: '/' },
   { icon: Map,          label: 'Domestic',      path: '/domestic' },
   { icon: Plane,        label: 'International', path: '/international' },
   { icon: Star,         label: 'Review',        path: '/review' },
   { icon: ShoppingCart, label: 'Cart',          path: '/cart' },
+]
+
+const accountNavItems = [
+  { icon: Home,         label: 'Home',          path: '/' },
+  { icon: Briefcase,    label: 'My Trips',      path: '/my-trips' },
+  { icon: Receipt,      label: 'Bookings',      path: '/my-trips' },
+  { icon: User,         label: 'Profile',       path: '/profile' },
+  { icon: HelpCircle,   label: 'Support',       path: '/support' },
 ]
 
 interface BottomDockProps {
@@ -38,11 +46,24 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
     };
   }, []);
 
-  const items = navItems.map((nav) => ({
+  const isAccountPage = ['/my-account', '/my-trips', '/profile', '/settings'].some(p => location.pathname.startsWith(p)) || location.pathname.startsWith('/my-trip/');
+  const activeItemsList = isAccountPage ? accountNavItems : publicNavItems;
+
+  const items = activeItemsList.map((nav) => ({
     icon: nav.icon,
     label: nav.label,
-    onClick: () => navigate(nav.path),
-    active: location.pathname === nav.path,
+    onClick: () => {
+      if (nav.label === 'Support') {
+        if (isChatOpen) {
+          onCloseChat?.();
+        } else {
+          onOpenChat?.();
+        }
+      } else {
+        navigate(nav.path);
+      }
+    },
+    active: nav.label === 'Support' ? !!isChatOpen : location.pathname === nav.path,
     badge: nav.label === 'Cart' ? cartCount : undefined,
   }))
 

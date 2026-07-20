@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase, safeStorage } from '../utils/supabaseClient';
 
 // Mock Country Codes
@@ -401,17 +401,12 @@ function Login() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-bold text-gray-700">Password</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode('forgot')
-                      setErrorMsg('')
-                      setSuccessMsg('')
-                    }}
+                  <Link
+                    to="/forgot-password"
                     className="text-xs font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer"
                   >
                     Forgot Password?
-                  </button>
+                  </Link>
                 </div>
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-gray-400 material-symbols-outlined text-[20px]">lock</span>
@@ -434,6 +429,11 @@ function Login() {
                 >
                   {loading ? 'Signing In...' : 'Sign In'}
                 </button>
+                <div className="text-center mt-4">
+                  <Link to="/forgot-password" className="text-sm font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer">
+                    Forgot Password?
+                  </Link>
+                </div>
               </div>
             </form>
           )}

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
+import { getPackageDuration } from './MyAccount';
 
 const statusColors = {
   confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -68,6 +69,7 @@ export default function BookingDetail() {
           <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
           <p className="mt-4 text-gray-500 font-medium">Loading booking details...</p>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -86,23 +88,20 @@ export default function BookingDetail() {
             Back to My Trips
           </Link>
         </main>
+        <Footer />
       </div>
     );
   }
 
-  // Calculate pricing breakdown
-  const finalPrice = Number(booking.final_amount || 0);
-  const basePrice = Number(booking.total_amount || 0) || Math.round(finalPrice / 1.05);
-  const gstPrice = finalPrice - basePrice;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const travelDateObj = booking.travel_date ? new Date(booking.travel_date) : null;
 
-  // Check timeline statuses
-  const isBooked = true;
+  // Determine timeline statuses
+  const isCreated = true;
   const isPaid = booking.payment_status?.toLowerCase() === 'paid';
   const isConfirmed = booking.booking_status?.toLowerCase() === 'confirmed' || booking.booking_status?.toLowerCase() === 'completed';
-
-  const downloadPlaceholder = (type) => {
-    alert(`${type} will be available for download once booking details are finalized by the operations team.`);
-  };
+  const isTripCompleted = booking.booking_status?.toLowerCase() === 'completed' || (travelDateObj && travelDateObj < today && booking.booking_status?.toLowerCase() !== 'cancelled');
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -144,15 +143,14 @@ export default function BookingDetail() {
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
             <span className="material-symbols-outlined text-[#136b8a]">route</span>
-            Booking Timeline
+            Booking Status Timeline
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 relative">
-            {/* Steps */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 relative">
             {[
-              { label: 'Booking Initiated', desc: 'Details captured', active: isBooked, done: isBooked },
-              { label: 'Payment Completed', desc: 'Securely received via Razorpay', active: isPaid, done: isPaid },
-              { label: 'Booking Confirmed', desc: 'Confirmed by operator', active: isConfirmed, done: isConfirmed },
-              { label: 'Voucher Issued', desc: 'Travel credentials ready', active: isConfirmed, done: false }
+              { label: 'Booking Created', desc: 'Trip payload registered', active: isCreated, done: isCreated },
+              { label: 'Payment Completed', desc: 'Securely processed via Razorpay', active: isPaid, done: isPaid },
+              { label: 'Booking Confirmed', desc: 'Confirmed by TripoMist operator', active: isConfirmed, done: isConfirmed },
+              { label: 'Trip Completed', desc: 'Completed successfully', active: isTripCompleted, done: isTripCompleted }
             ].map((step, idx) => (
               <div key={idx} className="flex gap-3 sm:flex-col items-start sm:items-center text-left sm:text-center group">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm z-10 transition-all ${
@@ -174,10 +172,35 @@ export default function BookingDetail() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* Left / Middle Span: Package and Traveller Details */}
+          {/* Left Columns: Traveller & Package Details */}
           <div className="md:col-span-2 space-y-6">
             
+            {/* Traveller Details */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-50 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#136b8a]">group</span>
+                Traveller Details
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+                <div>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Full Name</p>
+                  <p className="font-semibold text-gray-800 mt-1">{booking.customer_name || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Email Address</p>
+                  <p className="font-semibold text-gray-800 mt-1">{booking.email || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Phone Number</p>
+                  <p className="font-semibold text-gray-800 mt-1">{booking.phone ? `+91 ${booking.phone}` : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Travellers</p>
+                  <p className="font-semibold text-gray-800 mt-1">{booking.travellers || 1} Person(s)</p>
+                </div>
+              </div>
+            </div>
+
             {/* Package Details */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
               <h3 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-50 flex items-center gap-2">
@@ -194,43 +217,22 @@ export default function BookingDetail() {
                   <p className="font-semibold text-gray-800 mt-1">{booking.destination || '—'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Travel Date</p>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Duration</p>
+                  <p className="font-semibold text-gray-800 mt-1">
+                    {getPackageDuration(booking.destination, booking.package_title)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Departure Date</p>
                   <p className="font-semibold text-gray-800 mt-1">
                     {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Sharing Category</p>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Sharing Type</p>
                   <p className="font-semibold text-gray-800 mt-1">{booking.selected_sharing || '—'}</p>
                 </div>
               </div>
-            </div>
-
-            {/* Traveller Details */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-50 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#136b8a]">group</span>
-                Traveller Details
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Primary Traveller Name</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.customer_name || '—'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Travellers</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.travellers || 1} Person(s)</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Contact Email</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.email || '—'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Contact Phone</p>
-                  <p className="font-semibold text-gray-800 mt-1">+91 {booking.phone || '—'}</p>
-                </div>
-              </div>
-
               {booking.special_request && (
                 <div className="mt-5 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm">
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Special Preferences / Requests</p>
@@ -238,42 +240,47 @@ export default function BookingDetail() {
                 </div>
               )}
             </div>
-
           </div>
 
-          {/* Right Column: Payments & Documents */}
+          {/* Right Column: Payment Details & placeholders */}
           <div className="space-y-6">
-            
-            {/* Payment Summary */}
+            {/* Payment Details */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#136b8a]">payments</span>
-                Payment Summary
+                Payment Details
               </h3>
 
               <div className="space-y-3 text-sm pb-4 border-b border-gray-100">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Base Price</span>
-                  <span className="font-medium text-gray-800">₹{basePrice.toLocaleString('en-IN')}</span>
+                  <span className="text-gray-500">Total Price</span>
+                  <span className="font-semibold text-gray-800">
+                    ₹{(Number(booking.total_amount) || Number(booking.final_amount) || 0).toLocaleString('en-IN')}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">GST (5%)</span>
-                  <span className="font-medium text-gray-800">₹{gstPrice.toLocaleString('en-IN')}</span>
+                  <span className="text-gray-500">Amount Paid</span>
+                  <span className="font-bold text-emerald-700">
+                    ₹{(Number(booking.final_amount) || 0).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Payment Status</span>
+                  <span className="font-semibold capitalize text-gray-800">{booking.payment_status || '—'}</span>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center py-4">
-                <span className="font-bold text-gray-900 text-base">Total Amount Paid</span>
-                <span className="font-bold text-emerald-700 text-lg">₹{finalPrice.toLocaleString('en-IN')}</span>
-              </div>
-
-              <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-mono text-gray-400 break-all space-y-1">
-                <div>RPAY ID: {booking.razorpay_payment_id || '—'}</div>
-                <div>BOOK ID: {booking.booking_id || '—'}</div>
+              <div className="text-xs font-mono text-gray-400 break-all space-y-2 mt-4">
+                <div>Razorpay Payment ID:<br/><span className="text-gray-600 font-semibold">{booking.razorpay_payment_id || '—'}</span></div>
+                <div>Booking Date:<br/>
+                  <span className="text-gray-600 font-semibold">
+                    {booking.created_at ? new Date(booking.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Travel Documents */}
+            {/* Travel Documents (Disabled Placeholders) */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#136b8a]">folder_zip</span>
@@ -281,42 +288,53 @@ export default function BookingDetail() {
               </h3>
               
               <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => downloadPlaceholder('Booking Invoice')}
-                  className="flex items-center justify-between p-3.5 bg-gray-50 hover:bg-[#136b8a]/5 hover:text-[#136b8a] text-gray-700 border border-gray-200/60 rounded-xl transition-all text-sm font-semibold group cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#136b8a]">receipt_long</span>
-                    Download Invoice
-                  </span>
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                </button>
+                {/* Download Voucher */}
+                <div className="relative group">
+                  <button
+                    disabled
+                    className="w-full flex items-center justify-between p-3.5 bg-gray-50 text-gray-400 border border-gray-200/80 rounded-xl cursor-not-allowed text-sm font-semibold opacity-60"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-gray-400">confirmation_number</span>
+                      Download Voucher
+                    </span>
+                    <span className="material-symbols-outlined text-[18px]">download</span>
+                  </button>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-30">
+                    Coming soon
+                  </div>
+                </div>
 
-                <button
-                  onClick={() => downloadPlaceholder('Travel Voucher')}
-                  className="flex items-center justify-between p-3.5 bg-gray-50 hover:bg-[#136b8a]/5 hover:text-[#136b8a] text-gray-700 border border-gray-200/60 rounded-xl transition-all text-sm font-semibold group cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#136b8a]">confirmation_number</span>
-                    Download Voucher
-                  </span>
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                </button>
+                {/* Download Invoice */}
+                <div className="relative group">
+                  <button
+                    disabled
+                    className="w-full flex items-center justify-between p-3.5 bg-gray-50 text-gray-400 border border-gray-200/80 rounded-xl cursor-not-allowed text-sm font-semibold opacity-60"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-gray-400">receipt_long</span>
+                      Download Invoice
+                    </span>
+                    <span className="material-symbols-outlined text-[18px]">download</span>
+                  </button>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-30">
+                    Coming soon
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Need Help Box */}
+            {/* Support Desk Box */}
             <div className="bg-blue-50 border border-blue-100 rounded-3xl p-6 text-sm text-center">
               <span className="material-symbols-outlined text-3xl text-[#136b8a] mb-2 block">contact_support</span>
               <p className="font-semibold text-gray-900">Questions about your trip?</p>
               <p className="text-xs text-gray-500 mt-1">Get in touch with our operations desk anytime.</p>
-              <a href="mailto:support@tripomist.com" className="mt-3 inline-block bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">
+              <a href="mailto:info@tripomist.com" className="mt-3 inline-block bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">
                 Email Operations
               </a>
             </div>
 
           </div>
-
         </div>
 
       </main>

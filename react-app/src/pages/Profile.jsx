@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [totalBookings, setTotalBookings] = useState(0);
   
   // Edit States
   const [editName, setEditName] = useState('');
@@ -21,20 +22,33 @@ export default function Profile() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
+    async function loadProfile() {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
         navigate('/login?redirect=/profile');
-      } else {
-        setUser(user);
-        setEditName(user.user_metadata?.full_name || '');
-        setEditPhone(user.user_metadata?.phone || '');
-        setEditDob(user.user_metadata?.dob || '');
-        setEditGender(user.user_metadata?.gender || '');
-        setEditCity(user.user_metadata?.city || user.user_metadata?.address || '');
-        setEditPhoto(user.user_metadata?.avatar_url || '');
+        return;
+      }
+
+      setUser(currentUser);
+      setEditName(currentUser.user_metadata?.full_name || '');
+      setEditPhone(currentUser.user_metadata?.phone || '');
+      setEditDob(currentUser.user_metadata?.dob || '');
+      setEditGender(currentUser.user_metadata?.gender || '');
+      setEditCity(currentUser.user_metadata?.city || currentUser.user_metadata?.address || '');
+      setEditPhoto(currentUser.user_metadata?.avatar_url || '');
+
+      // Fetch total bookings for profile stats
+      const { data: bookingsData } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('user_id', currentUser.id);
+
+      if (bookingsData) {
+        setTotalBookings(bookingsData.length);
       }
       setLoading(false);
-    });
+    }
+    loadProfile();
   }, [navigate]);
 
   const handleUpdateProfile = async (e) => {
@@ -57,8 +71,23 @@ export default function Profile() {
       if (error) throw error;
       
       setUser(data.user);
+
+      // Upsert into profiles table
+      try {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            full_name: editName,
+            phone: editPhone,
+            avatar_url: editPhoto,
+            updated_at: new Date().toISOString()
+          });
+      } catch (upsertErr) {
+        console.warn('Profiles table upsert failed (continuing with Auth update):', upsertErr);
+      }
+
       setMessage({ text: 'Profile updated successfully!', type: 'success' });
-      // Clear message after 3s
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (err) {
       console.error('Update profile error:', err);
@@ -102,11 +131,14 @@ export default function Profile() {
 
   if (!user) return null;
 
+  const joinedDate = new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const initial = editName ? editName.charAt(0).toUpperCase() : 'U';
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
 
-      <section className="bg-[#136b8a] pt-16 pb-32 relative overflow-hidden">
+      <section className="bg-[#136b8a] pt-20 pb-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503220317375-aaad61436b1b?w=1400&q=80')] bg-cover bg-center opacity-10"></div>
         <div className="max-w-4xl mx-auto px-4 relative z-10 flex items-center gap-2 text-teal-100">
           <Link to="/my-account" className="hover:text-white flex items-center gap-1 transition-colors font-semibold text-sm">
@@ -121,9 +153,33 @@ export default function Profile() {
       </section>
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 -mt-20 pb-20 relative z-20">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-          
-          <form onSubmit={handleUpdateProfile} className="p-6 md:p-10">
+        
+        {/* Profile Card Header Statistics */}
+        <div className="bg-white rounded-t-3xl border-t border-x border-gray-100 px-6 py-5 md:px-10 flex flex-wrap justify-between items-center gap-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-blue-50 text-[#136b8a] rounded-full flex items-center justify-center font-bold text-2xl border-2 border-white shadow-md overflow-hidden">
+              {editPhoto ? (
+                <img src={editPhoto} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                initial
+              )}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 leading-tight">{editName || 'Traveler'}</h2>
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-0.5">Member since {joinedDate}</p>
+            </div>
+          </div>
+          <div className="bg-blue-50/50 border border-blue-100 rounded-2xl px-5 py-2.5 flex items-center gap-3">
+            <span className="material-symbols-outlined text-[#136b8a] text-[28px]">luggage</span>
+            <div>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none">Total Bookings</p>
+              <h4 className="text-lg font-extrabold text-gray-950 mt-1 leading-none">{totalBookings}</h4>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-b-3xl shadow-xl border-b border-x border-gray-100 overflow-hidden">
+          <form onSubmit={handleUpdateProfile} className="p-6 md:p-10 pt-4">
             
             {message.text && (
               <div className={`p-4 mb-6 rounded-xl flex items-start gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
@@ -163,6 +219,7 @@ export default function Profile() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#136b8a]/50 focus:border-[#136b8a] transition-all"
+                  required
                 />
               </div>
 
@@ -232,7 +289,7 @@ export default function Profile() {
               <button 
                 type="submit" 
                 disabled={saving}
-                className="bg-[#136b8a] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#0f556e] disabled:bg-gray-400 transition-colors flex items-center gap-2"
+                className="bg-[#136b8a] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#0f556e] disabled:bg-gray-400 transition-colors flex items-center gap-2 cursor-pointer"
               >
                 {saving ? (
                   <>

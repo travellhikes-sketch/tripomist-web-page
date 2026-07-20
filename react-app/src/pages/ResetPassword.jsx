@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
@@ -8,9 +8,53 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [isRecoverySessionValid, setIsRecoverySessionValid] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let authListener;
+
+    const checkSession = async () => {
+      try {
+        // 1. Check current session
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) {
+          setIsRecoverySessionValid(true);
+          setCheckingSession(false);
+          return;
+        }
+
+        // 2. Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY" || session) {
+            setIsRecoverySessionValid(true);
+          }
+          setCheckingSession(false);
+        });
+        authListener = subscription;
+
+        // If after a short delay we still don't have a session, finish checking
+        setTimeout(() => {
+          setCheckingSession(false);
+        }, 1500);
+
+      } catch (err) {
+        console.error("Session check exception:", err);
+        setCheckingSession(false);
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      if (authListener) {
+        authListener.unsubscribe();
+      }
+    };
+  }, []);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -31,19 +75,23 @@ export default function ResetPassword() {
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       });
 
       if (error) {
-        console.error('Password reset update error:', error);
+        console.error("Password update error:", error);
+        setErrorMsg(error.message);
         setLoading(false);
-        setErrorMsg(error.message || 'Failed to update password. Link may have expired.');
         return;
       }
 
-      setLoading(false);
-      setSuccessMsg('Password updated successfully! Redirecting to login...');
+      setSuccessMsg('Password updated successfully.');
+
+      // Sign out the temporary recovery session if appropriate
+      await supabase.auth.signOut();
+
       setTimeout(() => {
+        setLoading(false);
         navigate('/login');
       }, 2000);
     } catch (err) {
@@ -52,6 +100,49 @@ export default function ResetPassword() {
       setErrorMsg(err.message || 'An error occurred. Please try again.');
     }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative text-center">
+          <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100 flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#136b8a] mb-4"></div>
+            <p className="text-gray-600 font-medium">Verifying reset link...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isRecoverySessionValid) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight drop-shadow-sm">
+            Invalid Link
+          </h2>
+        </div>
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
+          <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100 text-center">
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">error</span>
+              This password reset link is invalid or has expired. Please request a new link.
+            </div>
+            <div className="mt-6">
+              <button
+                onClick={() => navigate('/forgot-password')}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] cursor-pointer"
+              >
+                Request New Link
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
