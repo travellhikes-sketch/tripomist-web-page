@@ -7,7 +7,6 @@ import Footer from '../components/Footer';
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [totalBookings, setTotalBookings] = useState(0);
   
   // Edit States
   const [editName, setEditName] = useState('');
@@ -19,6 +18,11 @@ export default function Profile() {
   
   const [message, setMessage] = useState({ text: '', type: '' });
   const [saving, setSaving] = useState(false);
+  
+  // Upload States
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,20 +40,77 @@ export default function Profile() {
       setEditGender(currentUser.user_metadata?.gender || '');
       setEditCity(currentUser.user_metadata?.city || currentUser.user_metadata?.address || '');
       setEditPhoto(currentUser.user_metadata?.avatar_url || '');
-
-      // Fetch total bookings for profile stats
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('user_id', currentUser.id);
-
-      if (bookingsData) {
-        setTotalBookings(bookingsData.length);
-      }
       setLoading(false);
     }
     loadProfile();
   }, [navigate]);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image size exceeds the 5MB limit.');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError('Only JPG, PNG, and WEBP formats are allowed.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/profile-${Date.now()}.${fileExt}`;
+
+      // Upload file to Supabase Storage bucket 'avatars'
+      const { error: uploadErr } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadErr) throw uploadErr;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Set the photo state immediately (show preview)
+      setEditPhoto(publicUrl);
+
+      // Update Auth user metadata immediately so navbar updates
+      const { error: updateErr } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+      if (updateErr) throw updateErr;
+
+      // Upsert into profiles table immediately
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        });
+
+      setMessage({ text: 'Profile photo uploaded successfully!', type: 'success' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      setUploadError(err.message || 'Image upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -131,10 +192,6 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const dateObj = new Date(user.created_at);
-  const joinedDate = `${dateObj.getDate()} ${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getFullYear()}`;
-  const initial = editName ? editName.charAt(0).toUpperCase() : 'U';
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
@@ -154,33 +211,8 @@ export default function Profile() {
       </section>
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 -mt-20 pb-20 relative z-20">
-        
-        {/* Profile Card Header Statistics */}
-        <div className="bg-white rounded-t-3xl border-t border-x border-gray-100 px-6 py-5 md:px-10 flex flex-wrap justify-between items-center gap-4 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-50 text-[#136b8a] rounded-full flex items-center justify-center font-bold text-2xl border-2 border-white shadow-md overflow-hidden">
-              {editPhoto ? (
-                <img src={editPhoto} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                initial
-              )}
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 leading-tight">{editName || 'Traveler'}</h2>
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-0.5">Member since • {joinedDate}</p>
-            </div>
-          </div>
-          <div className="bg-blue-50/50 border border-blue-100 rounded-2xl px-5 py-2.5 flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#136b8a] text-[28px]">luggage</span>
-            <div>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none">Total Bookings</p>
-              <h4 className="text-lg font-extrabold text-gray-950 mt-1 leading-none">{totalBookings}</h4>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-b-3xl shadow-xl border-b border-x border-gray-100 overflow-hidden">
-          <form onSubmit={handleUpdateProfile} className="p-6 md:p-10 pt-4">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+          <form onSubmit={handleUpdateProfile} className="p-6 md:p-10 pt-8">
             
             {message.text && (
               <div className={`p-4 mb-6 rounded-xl flex items-start gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
@@ -191,24 +223,53 @@ export default function Profile() {
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row gap-8 items-start mb-8 pb-8 border-b border-gray-100">
-              <div className="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-dashed border-blue-200 overflow-hidden">
-                {editPhoto ? (
-                  <img src={editPhoto} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="material-symbols-outlined text-4xl">add_a_photo</span>
-                )}
-              </div>
-              <div className="flex-1 w-full">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Profile Photo URL</label>
+            {/* Profile Photo Upload Circle */}
+            <div className="flex flex-col md:flex-row gap-8 items-center mb-8 pb-8 border-b border-gray-100">
+              <div className="relative group cursor-pointer">
+                <label htmlFor="avatar-upload" className="cursor-pointer block relative">
+                  <div className="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden group-hover:border-primary transition-all relative">
+                    {editPhoto ? (
+                      <img src={editPhoto} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-400">
+                        <span className="material-symbols-outlined text-3xl">add_a_photo</span>
+                      </div>
+                    )}
+                    
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold flex-col gap-1">
+                      <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                      <span>Change</span>
+                    </div>
+
+                    {/* Uploading Progress */}
+                    {uploading && (
+                      <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white text-[10px] font-semibold gap-1">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Uploading...</span>
+                      </div>
+                    )}
+                  </div>
+                </label>
                 <input 
-                  type="url" 
-                  value={editPhoto}
-                  onChange={(e) => setEditPhoto(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#136b8a]/50 focus:border-[#136b8a] transition-all bg-gray-50 hover:bg-white"
+                  type="file" 
+                  id="avatar-upload" 
+                  accept="image/jpeg,image/png,image/webp" 
+                  onChange={handleImageUpload} 
+                  disabled={uploading}
+                  className="hidden" 
                 />
-                <p className="text-xs text-gray-400 mt-2">Enter a direct link to an image to use as your avatar.</p>
+              </div>
+
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="font-bold text-gray-900 text-lg mb-1">Profile Photo</h3>
+                <p className="text-gray-500 text-sm">Click the circle to upload a profile image. JPG, PNG, or WEBP. Max size 5MB.</p>
+                {uploadError && (
+                  <p className="text-red-600 text-xs font-bold mt-2 flex items-center justify-center md:justify-start gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {uploadError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -225,15 +286,15 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 flex justify-between">
-                  Email Address
-                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Read Only</span>
+                <label className="block text-sm font-bold text-gray-700 mb-1 flex items-center justify-between">
+                  Email Address 
+                  <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Read Only</span>
                 </label>
                 <input 
                   type="email" 
-                  value={user.email}
-                  disabled
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                  value={user.email} 
+                  readOnly 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed focus:outline-none"
                 />
               </div>
 
@@ -275,7 +336,7 @@ export default function Profile() {
                   onChange={(e) => setEditGender(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#136b8a]/50 focus:border-[#136b8a] transition-all bg-white"
                 >
-                  <option value="">Prefer not to say</option>
+                  <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
@@ -283,26 +344,19 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-100">
-              <Link to="/my-account" className="px-6 py-3 text-gray-600 font-bold hover:text-gray-900 transition-colors">
+            <div className="flex gap-4">
+              <Link 
+                to="/my-account" 
+                className="flex-1 py-4 border border-gray-200 text-gray-750 font-bold rounded-xl text-center hover:bg-gray-50 transition-colors"
+              >
                 Cancel
               </Link>
               <button 
                 type="submit" 
-                disabled={saving}
-                className="bg-[#136b8a] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#0f556e] disabled:bg-gray-400 transition-colors flex items-center gap-2 cursor-pointer"
+                disabled={saving || uploading}
+                className="flex-1 py-4 bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 text-white font-bold rounded-xl transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center gap-2"
               >
-                {saving ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[20px]">sync</span>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-[20px]">save</span>
-                    Save Changes
-                  </>
-                )}
+                {saving ? 'Saving...' : 'Save Profile'}
               </button>
             </div>
           </form>

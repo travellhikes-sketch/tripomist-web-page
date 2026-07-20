@@ -193,7 +193,7 @@ function Home() {
           </div>
         </section>
 
-        {/* Camera Roll Destinations */}
+        {/* Recommended Packages Section */}
         <section className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
             <div>
@@ -201,11 +201,11 @@ function Home() {
                 <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
                 <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">Hot Selling</span>
               </div>
-              <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold">
-              Most Popular Packages
-            </h2>
+              <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg">
+                Recommended Packages
+              </h2>
             </div>
-            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/most-popular-packages">
+            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/all-departures">
               View All Packages <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
             </Link>
           </div>
@@ -292,114 +292,133 @@ function Home() {
               link="/itinerary/madhyameshwar" 
             />
           </div>
-          </section>
+        </section>
 
-        {/* Featured Group Trips */}
-        <section className="w-full py-6 px-4 md:px-12 lg:px-20 border-t border-gray-100 bg-surface-container-lowest overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
-                <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
-                <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">Hot Selling</span>
+        {/* Best Seller Section */}
+        {bestSellers.length > 0 && (
+          <section className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest overflow-hidden border-t border-gray-50">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
+                  <span className="material-symbols-outlined text-[16px]">award_star</span>
+                  <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">Top Choice</span>
+                </div>
+                <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg">
+                  Best Seller
+                </h2>
               </div>
-              <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg">
-                Featured Group <span className="text-[#136b8a]">Trips</span>
-              </h2>
+              <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/all-departures">
+                View All Sellers <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+              </Link>
             </div>
-            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/featured-group-trips">
-              View All Trips <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
-            </Link>
-          </div>
 
-          <div className="-mx-4 md:mx-0 overflow-visible relative pb-12">
-            <Swiper
-              effect={'coverflow'}
-              grabCursor={true}
-              centeredSlides={true}
-              loop={true}
-              slidesPerView={'auto'}
-              slideToClickedSlide={true}
-              autoplay={{ delay: 5000, disableOnInteraction: false }}
-              coverflowEffect={{
-                rotate: 0,
-                stretch: 0,
-                depth: 150,
-                modifier: 2.5,
-                slideShadows: true,
-              }}
-              modules={[EffectCoverflow]}
-              className="w-full"
-            >
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Chopta Tungnath" 
-                  packagesCount="2" 
-                  bg="https://images.unsplash.com/photo-1610212594957-c5332fc39634?w=1600&q=80"
-                  link="/itinerary/chopta" 
+            <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+              {bestSellers.map((pkg) => (
+                <PackageCard 
+                  key={pkg.id}
+                  bestSeller={true}
+                  className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
+                  tripTitle={pkg.package_title} 
+                  price={`₹${Number(pkg.price || 0).toLocaleString('en-IN')}`} 
+                  duration={pkg.duration || '5N/6D'} 
+                  description={pkg.description || ''}
+                  bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"}
+                  link={`/itinerary/${pkg.id}`} 
                 />
-              </SwiperSlide>
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Kedarnath" 
-                  packagesCount="4" 
-                  bg="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=1600&q=80"
-                  link="/itinerary/kedarnath" 
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Promo Autoplay Banner Slider (Autoplay every 4 seconds) */}
+        <section className="w-full py-8 px-4 md:px-12 lg:px-20 bg-surface-container-lowest overflow-hidden border-t border-gray-50">
+          <Swiper
+            spaceBetween={30}
+            centeredSlides={true}
+            autoplay={{
+              delay: 4000,
+              disableOnInteraction: false,
+            }}
+            loop={true}
+            modules={[Autoplay]}
+            className="w-full rounded-3xl overflow-hidden shadow-lg"
+          >
+            <SwiperSlide>
+              <div className="relative w-full h-[220px] md:h-[280px] bg-slate-900 flex items-center justify-between px-6 md:px-16 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=1200&q=80" 
+                  alt="Chandrataal" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-60"
                 />
-              </SwiperSlide>
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Madhyameshwar" 
-                  packagesCount="1" 
-                  bg="https://images.unsplash.com/photo-1614531341773-3bff8b7cb3fc?w=1600&q=80"
-                  link="/itinerary/madhyameshwar" 
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent"></div>
+                <div className="relative z-10 text-white max-w-xl">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-amber-500 text-black px-2.5 py-1 rounded-full mb-3 inline-block">Special Summer Offer</span>
+                  <h3 className="text-xl md:text-3xl font-extrabold tracking-tight leading-tight mb-2">BURNT OUT? <span className="text-yellow-400">ESCAPE TO CHANDRATAAL</span></h3>
+                  <p className="text-xs md:text-sm text-gray-300 font-semibold uppercase tracking-wider">THIS SUMMER • Trips starting at <span className="text-emerald-400 font-extrabold text-sm md:text-lg">Rs 17,999</span></p>
+                </div>
+                <div className="relative z-10 hidden sm:block">
+                  <Link to="/itinerary/Spiti Valley" className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md inline-flex items-center gap-2">
+                    Book Now
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
+            </SwiperSlide>
+            <SwiperSlide>
+              <div className="relative w-full h-[220px] md:h-[280px] bg-slate-900 flex items-center justify-between px-6 md:px-16 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1200&q=80" 
+                  alt="Spiti Valley" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-60"
                 />
-              </SwiperSlide>
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Ladakh Expedition" 
-                  packagesCount="3" 
-                  bg="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1600&q=80"
-                  link="/itinerary/Ladakh" 
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent"></div>
+                <div className="relative z-10 text-white max-w-xl">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-[#136b8a] text-white px-2.5 py-1 rounded-full mb-3 inline-block">Best Seller</span>
+                  <h3 className="text-xl md:text-3xl font-extrabold tracking-tight leading-tight mb-2">EXPLORE THE MIDDLE LAND: <span className="text-cyan-400">SPITI VALLEY</span></h3>
+                  <p className="text-xs md:text-sm text-gray-300 font-semibold uppercase tracking-wider">WINTER EXPEDITION • starting at <span className="text-emerald-400 font-extrabold text-sm md:text-lg">Rs 16,999</span></p>
+                </div>
+                <div className="relative z-10 hidden sm:block">
+                  <Link to="/itinerary/Spiti Valley" className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md inline-flex items-center gap-2">
+                    Book Now
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
+            </SwiperSlide>
+            <SwiperSlide>
+              <div className="relative w-full h-[220px] md:h-[280px] bg-slate-900 flex items-center justify-between px-6 md:px-16 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1581793746485-04698e79a4e8?w=1200&q=80" 
+                  alt="Ladakh" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-60"
                 />
-              </SwiperSlide>
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Winter Spiti Circuit" 
-                  packagesCount="2" 
-                  bg="https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=1600&q=80"
-                  link="/itinerary/Spiti Valley" 
-                />
-              </SwiperSlide>
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Kashmir Retreat" 
-                  packagesCount="0" 
-                  bg="https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=1600&q=80"
-                  link="/itinerary/Kashmir" 
-                />
-              </SwiperSlide>
-              <SwiperSlide className="!w-auto">
-                <FeaturedTripCard className="w-[75vw] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[380px] md:h-[420px]" 
-                  tripTitle="Andaman Retreat" 
-                  packagesCount="5" 
-                  bg="https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1600&q=80"
-                  link="/itinerary/andaman-retreat" 
-                />
-              </SwiperSlide>
-            </Swiper>
-          </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-transparent"></div>
+                <div className="relative z-10 text-white max-w-xl">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-emerald-500 text-black px-2.5 py-1 rounded-full mb-3 inline-block">Adventure Guide</span>
+                  <h3 className="text-xl md:text-3xl font-extrabold tracking-tight leading-tight mb-2">LADAKH: <span className="text-emerald-300">LAND OF HIGH PASSES</span></h3>
+                  <p className="text-xs md:text-sm text-gray-300 font-semibold uppercase tracking-wider">ROAD TRIP OF A LIFETIME • starting at <span className="text-emerald-400 font-extrabold text-sm md:text-lg">Rs 21,999</span></p>
+                </div>
+                <div className="relative z-10 hidden sm:block">
+                  <Link to="/itinerary/Ladakh" className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md inline-flex items-center gap-2">
+                    Book Now
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
+            </SwiperSlide>
+          </Swiper>
         </section>
 
         {/* International Trips Coming Soon */}
         <section className="w-full py-6 px-4 md:px-12 lg:px-20 border-t border-gray-100 bg-surface-container-lowest overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
             <div>
               <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
                 <span className="material-symbols-outlined text-[16px]">flight_takeoff</span>
                 <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">International</span>
               </div>
               <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg">
-                Soon you can plan <span className="text-[#136b8a]">abroad trips with us</span>
+                Soon you can plan abroad trips with us
               </h2>
             </div>
             <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to="/international">
@@ -407,8 +426,8 @@ function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 pb-8">
-            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+          <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
               tripTitle="Almaty" 
               price="" 
               duration="5N/6D" 
@@ -417,7 +436,7 @@ function Home() {
               link="#" 
               badge="Coming Soon"
             />
-            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
               tripTitle="Kazakhstan" 
               price="" 
               duration="5N/6D" 
@@ -426,7 +445,7 @@ function Home() {
               link="#" 
               badge="Coming Soon"
             />
-            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
               tripTitle="Thailand" 
               price="" 
               duration="6N/7D" 
@@ -435,7 +454,7 @@ function Home() {
               link="#" 
               badge="Coming Soon"
             />
-            <PackageCard className="w-full h-[340px] md:h-[360px]" 
+            <PackageCard className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
               tripTitle="Bali" 
               price="" 
               duration="6N/7D" 
