@@ -31,38 +31,37 @@ const AdminLayout = () => {
     { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
     { name: 'Checkout Leads', path: '/admin/checkout-leads', icon: UserPlus },
     { name: 'Customers', path: '/admin/users', icon: Users },
-    { name: 'Reviews', path: '/admin/reviews', icon: MessageSquare },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-sm">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-20 bg-black/50 md:hidden" 
+          className="fixed inset-0 z-20 bg-black/40 md:hidden transition-opacity" 
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-56 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <span className="text-xl font-bold text-gray-800">TripoMist Admin</span>
+        <div className="flex items-center justify-between h-14 px-5 border-b border-gray-100">
+          <span className="text-base font-bold text-gray-800 tracking-tight">TripoMist Admin</span>
           <button 
             className="md:hidden text-gray-500 hover:text-gray-700" 
             onClick={() => setSidebarOpen(false)}
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="flex flex-col h-[calc(100vh-4rem)] justify-between">
-          <nav className="p-4 space-y-1">
+        <div className="flex flex-col h-[calc(100vh-3.5rem)] justify-between">
+          <nav className="p-3 space-y-0.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
@@ -70,34 +69,34 @@ const AdminLayout = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
                     isActive 
-                      ? 'bg-blue-50 text-blue-700 font-medium' 
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-slate-100 text-slate-900 font-semibold' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <Icon size={20} className={isActive ? 'text-blue-700' : 'text-gray-500'} />
+                  <Icon size={18} className={isActive ? 'text-slate-800' : 'text-gray-400'} />
                   {item.name}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="p-4 border-t border-gray-200 space-y-2">
+          <div className="p-3 border-t border-gray-100 space-y-1">
             <Link 
               to="/" 
               target="_blank"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 transition-colors"
             >
-              <ExternalLink size={20} className="text-gray-500" />
+              <ExternalLink size={18} className="text-gray-400" />
               View Website
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center w-full gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center w-full gap-2.5 px-3 py-2 rounded-md text-red-600 hover:bg-red-50 transition-colors font-medium"
             >
-              <LogOut size={20} />
+              <LogOut size={18} />
               Logout
             </button>
           </div>
@@ -107,21 +106,21 @@ const AdminLayout = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header for Mobile */}
-        <header className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 md:hidden z-10">
-          <span className="text-xl font-bold text-gray-800">Admin</span>
+        <header className="flex items-center justify-between h-14 px-4 bg-white border-b border-gray-100 md:hidden z-10">
+          <span className="text-base font-bold text-gray-800">Admin</span>
           <button 
-            className="text-gray-600 focus:outline-none" 
+            className="text-gray-600 focus:outline-none p-1" 
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu size={24} />
+            <Menu size={20} />
           </button>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto bg-gray-50 p-6">
+        <div className="flex-1 overflow-auto bg-slate-50 p-4 md:p-6">
           <React.Suspense fallback={
             <div className="flex items-center justify-center h-[50vh]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-800"></div>
             </div>
           }>
             <Outlet />

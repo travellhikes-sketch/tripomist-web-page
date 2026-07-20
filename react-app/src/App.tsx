@@ -58,7 +58,6 @@ const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
 const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'));
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
-const AdminReviews = React.lazy(() => import('./pages/admin/AdminReviews'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
 
 // Create a component that forces layout re-render on route change, but respects back button
@@ -111,7 +110,6 @@ function App() {
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
               <Route path="users" element={<AdminUsers />} />
-              <Route path="reviews" element={<AdminReviews />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>

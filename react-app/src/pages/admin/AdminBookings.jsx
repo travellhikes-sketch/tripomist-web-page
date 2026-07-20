@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../supabaseClient';
 import { generatePDFVoucher } from '../../utils/pdfGenerator';
 import { 
   X, Check, XCircle, Copy, Download, Search, 
-  Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock
+  Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
+  MoreVertical
 } from 'lucide-react';
 
 const AdminBookings = () => {
@@ -21,9 +22,10 @@ const AdminBookings = () => {
   // Drawer state
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  // Pagination
+  // Pagination & Selection
   const [currentPage, setCurrentPage] = useState(1);
-  const bookingsPerPage = 10;
+  const [bookingsPerPage, setBookingsPerPage] = useState(25);
+  const [selectedRowIds, setSelectedRowIds] = useState(new Set());
 
   useEffect(() => {
     fetchBookings();
@@ -57,6 +59,7 @@ const AdminBookings = () => {
       const { data, error } = await query;
       if (error) throw error;
       setBookings(data || []);
+      setSelectedRowIds(new Set());
     } catch (err) {
       console.error('Error fetching bookings:', err);
       setError('Failed to load bookings.');
@@ -73,7 +76,7 @@ const AdminBookings = () => {
         .eq('id', id);
       if (error) throw error;
 
-      setBookings(bookings.map(b => 
+      setBookings(prev => prev.map(b => 
         b.id === id ? { ...b, [field]: newValue } : b
       ));
       
@@ -83,6 +86,30 @@ const AdminBookings = () => {
     } catch (err) {
       console.error(`Error updating ${field}:`, err);
       alert(`Failed to update ${field}.`);
+    }
+  };
+
+  const handleBulkAction = async (status) => {
+    if (selectedRowIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to mark ${selectedRowIds.size} bookings as ${status}?`)) return;
+
+    try {
+      setLoading(true);
+      const idsArray = Array.from(selectedRowIds);
+      
+      for (const id of idsArray) {
+         await supabase.from('bookings').update({ booking_status: status }).eq('id', id);
+      }
+      
+      setBookings(prev => prev.map(b => 
+        selectedRowIds.has(b.id) ? { ...b, booking_status: status } : b
+      ));
+      setSelectedRowIds(new Set());
+    } catch (err) {
+      console.error('Bulk update error:', err);
+      alert('Failed to perform bulk update.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -144,426 +171,409 @@ const AdminBookings = () => {
     document.body.removeChild(link);
   };
 
-  const downloadVoucher = (booking) => {
-    generatePDFVoucher(booking, 'download');
-  };
-
   // Derive unique packages for filter
-  const uniquePackages = Array.from(new Set(bookings.map(b => b.package_title))).filter(Boolean);
+  const uniquePackages = useMemo(() => {
+    return Array.from(new Set(bookings.map(b => b.package_title))).filter(Boolean);
+  }, [bookings]);
 
   // Filtering
-  const filteredBookings = bookings.filter(b => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch = 
-      (b.booking_id?.toLowerCase() || '').includes(term) ||
-      (b.customer_name?.toLowerCase() || '').includes(term) ||
-      (b.phone || '').includes(term) ||
-      (b.package_title?.toLowerCase() || '').includes(term) ||
-      (b.destination?.toLowerCase() || '').includes(term);
+  const filteredBookings = useMemo(() => {
+    return bookings.filter(b => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch = 
+        (b.booking_id?.toLowerCase() || '').includes(term) ||
+        (b.customer_name?.toLowerCase() || '').includes(term) ||
+        (b.phone || '').includes(term) ||
+        (b.package_title?.toLowerCase() || '').includes(term);
+        
+      const matchesStatus = statusFilter === 'all' || b.booking_status === statusFilter;
+      const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter;
+      const matchesPackage = packageFilter === 'all' || b.package_title === packageFilter;
       
-    const matchesStatus = statusFilter === 'all' || b.booking_status === statusFilter;
-    const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter;
-    const matchesPackage = packageFilter === 'all' || b.package_title === packageFilter;
-    
-    return matchesSearch && matchesStatus && matchesPayment && matchesPackage;
-  });
+      return matchesSearch && matchesStatus && matchesPayment && matchesPackage;
+    });
+  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter]);
 
   // Pagination Logic
-  const indexOfLastBooking = currentPage * bookingsPerPage;
+  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
+  const validCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+  
+  const indexOfLastBooking = validCurrentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
   const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
-  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'new': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  // Row selection handlers
+  const toggleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedRowIds(new Set(currentBookings.map(b => b.id)));
+    } else {
+      setSelectedRowIds(new Set());
     }
   };
 
-  const getPaymentStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'paid': return 'bg-green-100 text-green-800 border-green-200';
-      case 'refunded': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'failed': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const toggleSelectRow = (id) => {
+    const newSet = new Set(selectedRowIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedRowIds(newSet);
+  };
+
+  const getStatusBadge = (status) => {
+    const colors = {
+      new: 'bg-blue-100 text-blue-700',
+      confirmed: 'bg-emerald-100 text-emerald-700',
+      cancelled: 'bg-rose-100 text-rose-700',
+      completed: 'bg-slate-100 text-slate-700'
+    };
+    return <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider ${colors[status] || colors.new}`}>{status}</span>;
+  };
+
+  const getPaymentBadge = (status) => {
+    const colors = {
+      pending: 'bg-amber-100 text-amber-700',
+      paid: 'bg-emerald-100 text-emerald-700',
+      refunded: 'bg-purple-100 text-purple-700',
+      failed: 'bg-red-100 text-red-700'
+    };
+    return <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider ${colors[status] || colors.pending}`}>{status}</span>;
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12 relative">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
-          <p className="text-gray-500 mt-1">Manage operations, confirm trips, and track payments.</p>
-        </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={exportToCSV}
-            className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium"
-          >
-            <Download size={18} />
-            Export CSV
-          </button>
-          <button 
-            onClick={fetchBookings}
-            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm font-medium"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-start gap-3">
-          <div className="flex-1">
-            <h3 className="font-bold">Error</h3>
-            <p className="text-sm">{error}</p>
+    <div className="flex flex-col h-full animate-fade-in">
+      {/* Sticky Header & Toolbar */}
+      <div className="sticky top-0 z-10 bg-slate-50 pb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Bookings Management</h1>
           </div>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-700">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={exportToCSV}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
+            >
+              <Download size={16} /> Export
+            </button>
+            <button 
+              onClick={fetchBookings}
+              className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Filters Grid */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="relative lg:col-span-2">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search by ID, name, phone, or package..." 
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] transition-all text-sm"
-          />
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center justify-between mb-4 text-sm">
+            <span>{error}</span>
+            <button onClick={() => setError(null)}><X size={16} /></button>
+          </div>
+        )}
+
+        {/* Compact Filters Grid */}
+        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
+          <div className="relative lg:col-span-2">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Search ID, customer, phone..." 
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] transition-all"
+            />
+          </div>
+          
+          <select 
+            value={packageFilter}
+            onChange={(e) => { setPackageFilter(e.target.value); setCurrentPage(1); }}
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+          >
+            <option value="all">All Packages</option>
+            {uniquePackages.map((pkg, idx) => (
+              <option key={idx} value={pkg}>{pkg}</option>
+            ))}
+          </select>
+
+          <select 
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+          >
+            <option value="all">All Status</option>
+            <option value="new">New</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          
+          <select
+            value={paymentFilter}
+            onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+          >
+            <option value="all">All Payments</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="refunded">Refunded</option>
+            <option value="failed">Failed</option>
+          </select>
+
+          <select
+            value={monthFilter}
+            onChange={(e) => { setMonthFilter(e.target.value); setCurrentPage(1); }}
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="this">This Month</option>
+            <option value="last">Last Month</option>
+          </select>
         </div>
         
-        <select 
-          value={packageFilter}
-          onChange={(e) => { setPackageFilter(e.target.value); setCurrentPage(1); }}
-          className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] transition-all cursor-pointer text-sm"
-        >
-          <option value="all">All Packages</option>
-          {uniquePackages.map((pkg, idx) => (
-            <option key={idx} value={pkg}>{pkg}</option>
-          ))}
-        </select>
-
-        <select 
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-          className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] transition-all cursor-pointer text-sm"
-        >
-          <option value="all">All Statuses</option>
-          <option value="new">New</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        
-        <select
-          value={paymentFilter}
-          onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
-          className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] transition-all cursor-pointer text-sm"
-        >
-          <option value="all">All Payments</option>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="refunded">Refunded</option>
-          <option value="failed">Failed</option>
-        </select>
+        {selectedRowIds.size > 0 && (
+          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-2 px-4 flex items-center justify-between text-sm animate-fade-in">
+            <span className="font-semibold text-blue-800">{selectedRowIds.size} bookings selected</span>
+            <div className="flex gap-2">
+               <button onClick={() => handleBulkAction('confirmed')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold transition-colors">Confirm Selected</button>
+               <button onClick={() => handleBulkAction('cancelled')} className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded text-xs font-bold transition-colors">Cancel Selected</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bookings List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[#136b8a]">
-             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a] mb-4"></div>
-             <p className="font-medium text-gray-500">Loading bookings...</p>
-          </div>
-        ) : filteredBookings.length === 0 ? (
-          <div className="text-center py-20">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">No bookings found</h3>
-            <p className="text-gray-500">We couldn't find any bookings matching your criteria.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="py-3 px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider">Booking ID & Date</th>
-                  <th className="py-3 px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider">Customer</th>
-                  <th className="py-3 px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider">Trip Details</th>
-                  <th className="py-3 px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider">Booking Status</th>
-                  <th className="py-3 px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider">Payment Status</th>
-                  <th className="py-3 px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider text-right">Action</th>
+      {/* Table Data */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 flex flex-col min-h-0">
+        <div className="flex-1 overflow-auto">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-full py-12 text-[#136b8a]">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#136b8a] mb-3"></div>
+              <p className="text-sm font-medium text-gray-500">Loading bookings...</p>
+            </div>
+          ) : filteredBookings.length === 0 ? (
+            <div className="text-center py-16">
+              <h3 className="text-base font-bold text-gray-900">No bookings found</h3>
+              <p className="text-sm text-gray-500 mt-1">Adjust filters or search term to see results.</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[900px] text-sm">
+              <thead className="bg-slate-50 sticky top-0 z-10 outline outline-1 outline-gray-200">
+                <tr>
+                  <th className="py-2.5 px-4 w-10 text-center">
+                    <input type="checkbox" 
+                      className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
+                      checked={currentBookings.length > 0 && selectedRowIds.size === currentBookings.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
+                  <th className="py-2.5 px-4 font-semibold text-gray-600">ID & Date</th>
+                  <th className="py-2.5 px-4 font-semibold text-gray-600">Customer</th>
+                  <th className="py-2.5 px-4 font-semibold text-gray-600">Package Details</th>
+                  <th className="py-2.5 px-4 font-semibold text-gray-600 text-right">Amount</th>
+                  <th className="py-2.5 px-4 font-semibold text-gray-600">Status</th>
+                  <th className="py-2.5 px-4 font-semibold text-gray-600 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentBookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50/70 transition-colors">
-                    
-                    <td className="py-3 px-6">
-                      <div className="font-bold text-[#136b8a]">{booking.booking_id}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {new Date(booking.created_at).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric'
-                        })}
+                  <tr key={booking.id} className={`hover:bg-slate-50/70 transition-colors ${selectedRowIds.has(booking.id) ? 'bg-blue-50/30' : ''}`}>
+                    <td className="py-2 px-4 text-center">
+                      <input type="checkbox" 
+                        className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
+                        checked={selectedRowIds.has(booking.id)}
+                        onChange={() => toggleSelectRow(booking.id)}
+                      />
+                    </td>
+                    <td className="py-2 px-4">
+                      <div className="font-bold text-[#136b8a] text-xs">{booking.booking_id}</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5">
+                        {new Date(booking.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </div>
                     </td>
- 
-                    <td className="py-3 px-6">
+                    <td className="py-2 px-4">
                       <div className="font-semibold text-gray-900">{booking.customer_name}</div>
-                      <div className="text-xs text-gray-600 mt-0.5">{booking.phone}</div>
+                      <div className="text-xs text-gray-500">{booking.phone}</div>
                     </td>
- 
-                    <td className="py-3 px-6">
-                      <div className="font-semibold text-gray-900 text-sm truncate max-w-[200px]" title={booking.package_title}>{booking.package_title}</div>
-                      <div className="text-xs text-gray-600 mt-0.5 flex items-center gap-2">
-                        <span>{new Date(booking.travel_date).toLocaleDateString()}</span>
-                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                        <span>{booking.travellers} Pax</span>
+                    <td className="py-2 px-4">
+                      <div className="font-medium text-gray-800 text-xs truncate max-w-[200px]" title={booking.package_title}>{booking.package_title}</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5">
+                        {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString() : 'N/A'} • {booking.travellers} pax
                       </div>
                     </td>
- 
-                    <td className="py-3 px-6">
-                      <select
-                        value={booking.booking_status}
-                        onChange={(e) => handleStatusUpdate(booking.id, 'booking_status', e.target.value)}
-                        className={`text-xs font-semibold px-2.5 py-1 rounded-full border appearance-none cursor-pointer outline-none ${getStatusColor(booking.booking_status)}`}
-                      >
-                        <option value="new">New</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                    <td className="py-2 px-4 text-right">
+                      <div className="font-bold text-gray-900">₹{Number(booking.final_amount || booking.total_amount || 0).toLocaleString()}</div>
                     </td>
- 
-                    <td className="py-3 px-6">
-                      <select
-                        value={booking.payment_status}
-                        onChange={(e) => handleStatusUpdate(booking.id, 'payment_status', e.target.value)}
-                        className={`text-xs font-semibold px-2.5 py-1 rounded-full border appearance-none cursor-pointer outline-none ${getPaymentStatusColor(booking.payment_status)}`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="refunded">Refunded</option>
-                        <option value="failed">Failed</option>
-                      </select>
+                    <td className="py-2 px-4">
+                      <div className="flex flex-col gap-1.5 items-start">
+                        {getStatusBadge(booking.booking_status)}
+                        {getPaymentBadge(booking.payment_status)}
+                      </div>
                     </td>
- 
-                    <td className="py-3 px-6 text-right">
+                    <td className="py-2 px-4 text-right">
                        <button 
                          onClick={() => setSelectedBooking(booking)}
-                         className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border border-transparent hover:border-slate-200"
+                         className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
                        >
                          View Details
                        </button>
                     </td>
-
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
         
-        {/* Pagination */}
-        {!loading && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-            <span className="text-sm text-gray-500">
-              Showing <span className="font-semibold text-gray-900">{indexOfFirstBooking + 1}</span> to <span className="font-semibold text-gray-900">{Math.min(indexOfLastBooking, filteredBookings.length)}</span> of <span className="font-semibold text-gray-900">{filteredBookings.length}</span> bookings
-            </span>
-            <div className="flex gap-1">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-1 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === page ? 'bg-[#136b8a] text-white border border-[#136b8a]' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
+        {/* Compact Pagination */}
+        {!loading && filteredBookings.length > 0 && (
+          <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-4 text-gray-600">
+              <span>Showing <b>{indexOfFirstBooking + 1}-{Math.min(indexOfLastBooking, filteredBookings.length)}</b> of <b>{filteredBookings.length}</b></span>
+              <div className="flex items-center gap-2">
+                <span>Rows per page:</span>
+                <select 
+                  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 outline-none"
+                  value={bookingsPerPage}
+                  onChange={(e) => {
+                    setBookingsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
                 >
-                  {page}
-                </button>
-              ))}
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-1 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={18} />
-              </button>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
             </div>
+            
+            {totalPages > 1 && (
+              <div className="flex gap-1">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={validCurrentPage === 1}
+                  className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="px-3 py-1 font-semibold text-gray-700">Page {validCurrentPage} of {totalPages}</span>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={validCurrentPage === totalPages}
+                  className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Booking Details Drawer (Slide over) */}
+      {/* Drawer */}
       {selectedBooking && (
         <>
-          <div 
-            className="fixed inset-0 bg-black/40 z-40 transition-opacity" 
-            onClick={() => setSelectedBooking(null)} 
-          />
-          <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300 ease-in-out border-l border-gray-200">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Booking Details</h2>
-                  <p className="text-[#136b8a] font-mono text-sm font-bold mt-1">{selectedBooking.booking_id}</p>
-                </div>
-                <button onClick={() => setSelectedBooking(null)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors text-gray-600">
-                  <X size={20} />
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSelectedBooking(null)} />
+          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-slate-50 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-200 border-l border-gray-200 text-sm">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Booking Details</h2>
+                <p className="text-[#136b8a] font-mono text-xs font-bold">{selectedBooking.booking_id}</p>
+              </div>
+              <button onClick={() => setSelectedBooking(null)} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              
+              {/* Quick Actions Header */}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => handleQuickAction(selectedBooking, 'confirm')} className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-emerald-200 transition-colors">
+                  <Check size={14} /> Confirm
+                </button>
+                <button onClick={() => handleQuickAction(selectedBooking, 'cancel')} className="bg-rose-50 text-rose-700 hover:bg-rose-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-rose-200 transition-colors">
+                  <XCircle size={14} /> Cancel
+                </button>
+                <button onClick={() => handleQuickAction(selectedBooking, 'markPaid')} className="col-span-2 bg-[#136b8a]/10 text-[#136b8a] hover:bg-[#136b8a]/20 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-[#136b8a]/20 transition-colors">
+                  <CreditCard size={14} /> Mark Paid
                 </button>
               </div>
 
-              <div className="space-y-6">
-                
-                {/* Timeline status */}
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div className="flex justify-between text-sm mb-3">
-                    <span className="text-gray-500 font-medium">Status</span>
-                    <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider ${getStatusColor(selectedBooking.booking_status)}`}>
-                      {selectedBooking.booking_status}
-                    </span>
+              {/* Customer */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3">
+                <h3 className="text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1"><User size={12}/> Customer</h3>
+                <div className="font-semibold text-gray-900">{selectedBooking.customer_name}</div>
+                <div className="mt-2 text-xs flex justify-between items-center">
+                  <span className="text-gray-600">{selectedBooking.phone}</span>
+                  <button onClick={() => handleQuickAction(selectedBooking, 'copyPhone')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
+                </div>
+                {selectedBooking.email && (
+                  <div className="mt-2 text-xs flex justify-between items-center">
+                    <span className="text-gray-600 truncate">{selectedBooking.email}</span>
+                    <button onClick={() => handleQuickAction(selectedBooking, 'copyEmail')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 font-medium">Payment</span>
-                    <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider ${getPaymentStatusColor(selectedBooking.payment_status)}`}>
-                      {selectedBooking.payment_status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={() => handleQuickAction(selectedBooking, 'confirm')} className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors border border-green-200">
-                    <Check size={16} /> Confirm
-                  </button>
-                  <button onClick={() => handleQuickAction(selectedBooking, 'cancel')} className="flex-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors border border-red-200">
-                    <XCircle size={16} /> Cancel
-                  </button>
-                  <button onClick={() => handleQuickAction(selectedBooking, 'markPaid')} className="flex-1 bg-[#136b8a]/10 text-[#136b8a] hover:bg-[#136b8a]/20 px-3 py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors border border-[#136b8a]/20">
-                    <CreditCard size={16} /> Mark Paid
-                  </button>
-                </div>
-
-                {/* Customer Details */}
-                <div>
-                  <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider mb-3 flex items-center gap-1"><User size={14} /> Customer</h3>
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-                    <div>
-                      <div className="text-xs text-gray-500">Name</div>
-                      <div className="font-semibold text-gray-900">{selectedBooking.customer_name}</div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="text-xs text-gray-500">Phone</div>
-                        <div className="font-semibold text-gray-900">{selectedBooking.phone}</div>
-                      </div>
-                      <button onClick={() => handleQuickAction(selectedBooking, 'copyPhone')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={16} /></button>
-                    </div>
-                    {selectedBooking.email && (
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="text-xs text-gray-500">Email</div>
-                          <div className="font-semibold text-gray-900">{selectedBooking.email}</div>
-                        </div>
-                        <button onClick={() => handleQuickAction(selectedBooking, 'copyEmail')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={16} /></button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Trip Details */}
-                <div>
-                  <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider mb-3 flex items-center gap-1"><Package size={14} /> Package Details</h3>
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-                    <div>
-                      <div className="text-xs text-gray-500">Package</div>
-                      <div className="font-semibold text-[#136b8a]">{selectedBooking.package_title}</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="text-xs text-gray-500">Travel Date</div>
-                        <div className="font-semibold text-gray-900">{selectedBooking.travel_date ? new Date(selectedBooking.travel_date).toLocaleDateString() : 'N/A'}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-500">Travellers</div>
-                        <div className="font-semibold text-gray-900">{selectedBooking.travellers} Person(s)</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-500">Sharing</div>
-                        <div className="font-semibold text-gray-900 capitalize">{selectedBooking.selected_sharing || 'N/A'}</div>
-                      </div>
-                    </div>
-                    {selectedBooking.special_request && (
-                      <div>
-                         <div className="text-xs text-gray-500">Special Request</div>
-                         <div className="text-sm bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 mt-1">{selectedBooking.special_request}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Billing Details */}
-                <div>
-                  <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider mb-3 flex items-center gap-1"><CreditCard size={14} /> Payment & Billing</h3>
-                  <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <div className="text-sm font-semibold text-gray-700">Total Amount</div>
-                      <div className="text-lg font-black text-[#136b8a]">₹{Number(selectedBooking.final_amount || selectedBooking.total_amount || 0).toLocaleString()}</div>
-                    </div>
-                    {selectedBooking.razorpay_payment_id && (
-                       <div>
-                         <div className="text-xs text-gray-500">Razorpay ID</div>
-                         <div className="font-mono text-sm text-gray-800 break-all bg-gray-50 p-1.5 rounded border border-gray-100 mt-1">{selectedBooking.razorpay_payment_id}</div>
-                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Timeline */}
-                <div>
-                  <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider mb-3 flex items-center gap-1"><Clock size={14} /> Timeline</h3>
-                  <div className="bg-white border border-gray-200 rounded-xl p-4">
-                    <div className="text-sm flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-[#136b8a] mt-1.5"></div>
-                      <div>
-                        <div className="font-medium text-gray-900">Booking Created</div>
-                        <div className="text-xs text-gray-500">{new Date(selectedBooking.created_at).toLocaleString('en-IN')}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions Footer */}
-                <div className="pt-4 pb-12 flex gap-3">
-                  <button 
-                    onClick={() => downloadVoucher(selectedBooking)}
-                    className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <Download size={18} /> Download Voucher
-                  </button>
-                </div>
-
+                )}
               </div>
+
+              {/* Package Details */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
+                <h3 className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1"><Package size={12}/> Package Details</h3>
+                <div className="font-semibold text-[#136b8a] text-sm">{selectedBooking.package_title}</div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-500 block">Travel Date</span>
+                    <span className="font-medium">{selectedBooking.travel_date ? new Date(selectedBooking.travel_date).toLocaleDateString() : '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Travellers</span>
+                    <span className="font-medium">{selectedBooking.travellers} Pax</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Sharing</span>
+                    <span className="font-medium capitalize">{selectedBooking.selected_sharing || '-'}</span>
+                  </div>
+                </div>
+                {selectedBooking.special_request && (
+                  <div className="text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 mt-2">
+                    <span className="font-bold">Request:</span> {selectedBooking.special_request}
+                  </div>
+                )}
+              </div>
+
+              {/* Status & Billing */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 text-xs">
+                 <div className="flex justify-between items-center">
+                   <span className="text-gray-500">Booking Status</span>
+                   {getStatusBadge(selectedBooking.booking_status)}
+                 </div>
+                 <div className="flex justify-between items-center">
+                   <span className="text-gray-500">Payment Status</span>
+                   {getPaymentBadge(selectedBooking.payment_status)}
+                 </div>
+                 <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
+                   <span className="font-semibold text-gray-700">Total Paid</span>
+                   <span className="text-base font-bold text-[#136b8a]">₹{Number(selectedBooking.final_amount || selectedBooking.total_amount || 0).toLocaleString()}</span>
+                 </div>
+                 {selectedBooking.razorpay_payment_id && (
+                   <div className="pt-2 border-t border-gray-100">
+                     <span className="text-gray-500 block mb-1">Razorpay ID</span>
+                     <span className="font-mono text-gray-800 break-all bg-gray-50 p-1 rounded border border-gray-100 block">{selectedBooking.razorpay_payment_id}</span>
+                   </div>
+                 )}
+              </div>
+              
+              <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
+                Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
+              </div>
+
+              {/* Action Button */}
+              <button 
+                onClick={() => generatePDFVoucher(selectedBooking, 'download')}
+                className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
+              >
+                <Download size={16} /> Download Voucher
+              </button>
             </div>
           </div>
         </>
       )}
-
     </div>
   );
 };

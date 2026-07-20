@@ -7,18 +7,21 @@ import {
   Users, 
   ArrowUpRight,
   Calendar,
-  Layers,
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  CreditCard,
+  Bell,
+  User as UserIcon,
+  ChevronRight
 } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalRevenue: 0,
-    todayRevenue: 0,
+    thisMonthRevenue: 0,
     totalBookings: 0,
+    totalCustomers: 0,
     todayBookings: 0,
     upcomingTrips: 0,
     pendingPayments: 0,
@@ -26,25 +29,43 @@ const AdminDashboard = () => {
     cancelledBookings: 0
   });
   const [recentBookings, setRecentBookings] = useState([]);
+  const [upcomingDepartures, setUpcomingDepartures] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Dynamic greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const todayStr = new Date().toISOString().split('T')[0];
-        
-        // 1. Fetch bookings
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+
+        // Fetch bookings
         const { data: bookingsData } = await supabase
           .from('bookings')
           .select('*');
+          
+        // Fetch users (customers)
+        const { count: customersCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
 
         let totalRevenue = 0;
-        let todayRevenue = 0;
+        let thisMonthRevenue = 0;
         let todayBookings = 0;
         let upcomingTrips = 0;
         let pendingPayments = 0;
         let confirmedBookings = 0;
         let cancelledBookings = 0;
+        
+        const departuresMap = {}; // key: date_package
 
         if (bookingsData) {
           bookingsData.forEach(b => {
@@ -55,8 +76,8 @@ const AdminDashboard = () => {
             // Revenue calculation
             if (b.payment_status?.toLowerCase() === 'paid') {
               totalRevenue += amount;
-              if (bookingDateStr === todayStr) {
-                todayRevenue += amount;
+              if (b.created_at && b.created_at >= thisMonthStart) {
+                thisMonthRevenue += amount;
               }
             }
 
@@ -65,9 +86,21 @@ const AdminDashboard = () => {
               todayBookings++;
             }
 
-            // Upcoming Trips
+            // Upcoming Trips & Departures Grouping
             if (travelDateStr >= todayStr && b.booking_status?.toLowerCase() !== 'cancelled') {
               upcomingTrips++;
+              
+              const depKey = `${travelDateStr}_${b.package_title}`;
+              if (!departuresMap[depKey]) {
+                departuresMap[depKey] = {
+                  package: b.package_title,
+                  date: travelDateStr,
+                  travellers: 0,
+                  bookings: 0
+                };
+              }
+              departuresMap[depKey].travellers += Number(b.travellers || 1);
+              departuresMap[depKey].bookings += 1;
             }
 
             // Pending Payments
@@ -83,17 +116,22 @@ const AdminDashboard = () => {
             }
           });
 
-          // Sort and set recent
+          // Sort and set recent bookings (Recent Activity)
           const sorted = [...bookingsData]
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 5);
+            .slice(0, 8);
           setRecentBookings(sorted);
+          
+          // Sort upcoming departures
+          const sortedDeps = Object.values(departuresMap).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
+          setUpcomingDepartures(sortedDeps);
         }
 
         setStats({
           totalRevenue,
-          todayRevenue,
+          thisMonthRevenue,
           totalBookings: bookingsData ? bookingsData.length : 0,
+          totalCustomers: customersCount || 0,
           todayBookings,
           upcomingTrips,
           pendingPayments,
@@ -110,102 +148,182 @@ const AdminDashboard = () => {
     loadDashboardData();
   }, []);
 
+  const getRelativeTime = (dateStr) => {
+    const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  };
+
+  const getDaysRemaining = (dateStr) => {
+    const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+    return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : `In ${diff} days`;
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#136b8a]"></div>
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-800"></div>
       </div>
     );
   }
 
+  const currentDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
-    <div className="space-y-8 animate-fade-in pb-12">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#136b8a] to-teal-700 rounded-3xl p-8 text-white shadow-md relative overflow-hidden">
-        <div className="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10 scale-150">
-          <ShoppingBag size={250} />
+    <div className="space-y-6 animate-fade-in pb-12">
+      {/* Compact Dashboard Header */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            {getGreeting()}, Admin 👋
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">Here’s what’s happening with TripoMist today.</p>
         </div>
-        <div className="relative z-10 max-w-xl">
-          <h1 className="text-3xl font-extrabold tracking-tight">Daily Operations Hub 👋</h1>
-          <p className="text-teal-100 mt-2 text-sm leading-relaxed">
-            Monitor real-time bookings, manage upcoming tour departures, and track payment transactions.
-          </p>
-        </div>
-      </div>
-
-      {/* Revenue Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all">
-          <div className="space-y-2">
-            <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Sales (All Time)</span>
-            <h3 className="text-3xl font-black text-gray-900">₹{stats.totalRevenue.toLocaleString('en-IN')}</h3>
-            <p className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full w-fit">Paid Bookings</p>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:block text-sm font-semibold text-gray-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-gray-100">
+            {currentDate}
           </div>
-          <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
-            <TrendingUp size={28} />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all">
-          <div className="space-y-2">
-            <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Today's Sales Revenue</span>
-            <h3 className="text-3xl font-black text-[#136b8a]">₹{stats.todayRevenue.toLocaleString('en-IN')}</h3>
-            <p className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2.5 py-0.5 rounded-full w-fit">Today's Transactions</p>
-          </div>
-          <div className="p-4 bg-blue-50 text-[#136b8a] rounded-2xl">
-            <Clock size={28} />
+          <button className="relative p-2 text-gray-500 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-colors">
+            <Bell size={18} />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+          </button>
+          <div className="w-9 h-9 bg-[#136b8a] text-white rounded-lg flex items-center justify-center shadow-sm">
+            <UserIcon size={18} />
           </div>
         </div>
       </div>
 
-      {/* Daily Operations stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      {/* Primary Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Total Revenue</span>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">₹{stats.totalRevenue.toLocaleString('en-IN')}</h3>
+          </div>
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><TrendingUp size={20} /></div>
+        </div>
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">This Month</span>
+            <h3 className="text-2xl font-bold text-[#136b8a] mt-1">₹{stats.thisMonthRevenue.toLocaleString('en-IN')}</h3>
+          </div>
+          <div className="p-3 bg-blue-50 text-[#136b8a] rounded-lg"><Calendar size={20} /></div>
+        </div>
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Total Bookings</span>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.totalBookings}</h3>
+          </div>
+          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg"><ShoppingBag size={20} /></div>
+        </div>
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Total Customers</span>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.totalCustomers}</h3>
+          </div>
+          <div className="p-3 bg-orange-50 text-orange-600 rounded-lg"><Users size={20} /></div>
+        </div>
+      </div>
+
+      {/* Secondary Compact Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
-          { label: "Today's Bookings", val: stats.todayBookings, color: "text-[#136b8a] bg-slate-50 border-slate-100" },
-          { label: "Upcoming Trips", val: stats.upcomingTrips, color: "text-indigo-600 bg-indigo-50/50 border-indigo-100" },
-          { label: "Pending Payments", val: stats.pendingPayments, color: "text-amber-600 bg-amber-50/50 border-amber-100" },
-          { label: "Confirmed Bookings", val: stats.confirmedBookings, color: "text-emerald-600 bg-emerald-50/50 border-emerald-100" },
-          { label: "Cancelled Bookings", val: stats.cancelledBookings, color: "text-rose-600 bg-rose-50/50 border-rose-100" },
-          { label: "Total Invoiced", val: stats.totalBookings, color: "text-slate-700 bg-slate-100/50 border-slate-200" }
+          { label: "Today's Bookings", val: stats.todayBookings, color: "text-[#136b8a] bg-blue-50 border-blue-100" },
+          { label: "Upcoming Trips", val: stats.upcomingTrips, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
+          { label: "Pending Payments", val: stats.pendingPayments, color: "text-amber-600 bg-amber-50 border-amber-100" },
+          { label: "Confirmed", val: stats.confirmedBookings, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+          { label: "Cancelled", val: stats.cancelledBookings, color: "text-rose-600 bg-rose-50 border-rose-100" }
         ].map((s, idx) => (
-          <div key={idx} className={`p-4 rounded-2xl border text-center flex flex-col justify-center items-center shadow-sm ${s.color}`}>
-            <span className="text-[10px] font-bold uppercase tracking-wider block opacity-70 mb-1 leading-tight">{s.label}</span>
-            <span className="text-2xl font-black">{s.val}</span>
+          <div key={idx} className={`p-3 rounded-lg border text-center flex flex-col justify-center items-center shadow-sm ${s.color}`}>
+            <span className="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-0.5">{s.label}</span>
+            <span className="text-lg font-bold">{s.val}</span>
           </div>
         ))}
       </div>
 
-      {/* Recent activity detail list */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-gray-900 text-lg">Live Activity Log</h3>
-          <Link to="/admin/bookings" className="text-xs text-[#136b8a] font-bold hover:underline flex items-center gap-0.5">
-            Manage Bookings <ArrowUpRight size={14} />
-          </Link>
+      {/* Main Content Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Upcoming Departures */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-gray-900 text-sm">Upcoming Departures</h3>
+            <Link to="/admin/bookings" className="text-xs text-[#136b8a] font-semibold hover:underline flex items-center">
+              View All <ChevronRight size={14} />
+            </Link>
+          </div>
+          <div className="p-4 flex-1">
+            {upcomingDepartures.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 text-sm">No upcoming trips scheduled.</div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingDepartures.map((dep, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                    <div className="min-w-0 flex-1 pr-4">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate" title={dep.package}>{dep.package}</h4>
+                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                        <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(dep.date).toLocaleDateString()}</span>
+                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                        <span className="flex items-center gap-1"><Users size={12}/> {dep.travellers} pax ({dep.bookings} bookings)</span>
+                      </div>
+                    </div>
+                    <div className="text-right whitespace-nowrap">
+                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{getDaysRemaining(dep.date)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {recentBookings.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            No bookings registered.
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
+          <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-gray-900 text-sm">Recent Activity</h3>
+            <Link to="/admin/bookings" className="text-xs text-[#136b8a] font-semibold hover:underline flex items-center">
+              Manage <ChevronRight size={14} />
+            </Link>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {recentBookings.map((b, idx) => (
-              <div key={idx} className="flex items-center justify-between border-b border-slate-50 pb-3 last:border-0 last:pb-0">
-                <div className="min-w-0">
-                  <h4 className="font-bold text-gray-900 text-sm truncate">{b.customer_name}</h4>
-                  <p className="text-xs text-gray-400 truncate mt-0.5">{b.package_title} • Travel: {b.travel_date}</p>
-                </div>
-                <div className="text-right">
-                  <span className="font-black text-slate-800 text-xs">₹{Number(b.final_amount || b.total_amount || 0).toLocaleString()}</span>
-                  <div className={`text-[10px] font-bold capitalize mt-1 ${
-                    b.booking_status?.toLowerCase() === 'confirmed' ? 'text-emerald-600' : 'text-amber-600'
-                  }`}>{b.booking_status}</div>
-                </div>
+          <div className="p-4 flex-1 overflow-auto max-h-[400px]">
+            {recentBookings.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 text-sm">No recent activity.</div>
+            ) : (
+              <div className="space-y-4">
+                {recentBookings.map((b, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <div className="mt-1 flex-shrink-0">
+                      {b.booking_status === 'cancelled' ? (
+                        <div className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><XCircle size={12}/></div>
+                      ) : b.payment_status === 'paid' ? (
+                        <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><CheckCircle size={12}/></div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><ShoppingBag size={12}/></div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-900">
+                        <span className="font-semibold">{b.customer_name}</span> 
+                        {b.booking_status === 'cancelled' ? ' cancelled booking for ' : ' booked '}
+                        <span className="font-medium text-gray-700">{b.package_title}</span>
+                      </p>
+                      <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                        <span>₹{Number(b.final_amount || b.total_amount || 0).toLocaleString()}</span>
+                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                        <span className={`capitalize font-semibold ${b.payment_status === 'paid' ? 'text-green-600' : 'text-amber-600'}`}>{b.payment_status}</span>
+                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                        <span>{getRelativeTime(b.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        </div>
+
       </div>
     </div>
   );
