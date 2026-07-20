@@ -253,33 +253,33 @@ const AdminBookings = () => {
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="py-4 px-6 font-semibold text-gray-600 text-sm">Booking ID & Date</th>
-                  <th className="py-4 px-6 font-semibold text-gray-600 text-sm">Customer</th>
-                  <th className="py-4 px-6 font-semibold text-gray-600 text-sm">Trip Details</th>
-                  <th className="py-4 px-6 font-semibold text-gray-600 text-sm">Booking Status</th>
-                  <th className="py-4 px-6 font-semibold text-gray-600 text-sm">Payment Status</th>
-                  <th className="py-4 px-6 font-semibold text-gray-600 text-sm text-right">Actions</th>
+                  <th className="py-2.5 px-6 font-semibold text-gray-600 text-sm">Booking ID & Date</th>
+                  <th className="py-2.5 px-6 font-semibold text-gray-600 text-sm">Customer</th>
+                  <th className="py-2.5 px-6 font-semibold text-gray-600 text-sm">Trip Details</th>
+                  <th className="py-2.5 px-6 font-semibold text-gray-600 text-sm">Booking Status</th>
+                  <th className="py-2.5 px-6 font-semibold text-gray-600 text-sm">Payment Status</th>
+                  <th className="py-2.5 px-6 font-semibold text-gray-600 text-sm text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors group">
                     
-                    <td className="py-4 px-6">
+                    <td className="py-2 px-6">
                       <div className="font-bold text-[#136b8a]">{booking.booking_id}</div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 mt-0.5">
                         {new Date(booking.created_at).toLocaleDateString('en-IN', {
                           day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                         })}
                       </div>
                       {booking.source && (
-                        <div className="text-[10px] uppercase font-bold text-gray-400 mt-2">Via {booking.source}</div>
+                        <div className="text-[10px] uppercase font-bold text-gray-400 mt-1">Via {booking.source}</div>
                       )}
                     </td>
-
-                    <td className="py-4 px-6">
+ 
+                    <td className="py-2 px-6">
                       <div className="font-semibold text-gray-900">{booking.customer_name}</div>
-                      <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                      <div className="text-sm text-gray-600 mt-0.5 flex items-center gap-1">
                         <span className="material-symbols-outlined text-[14px]">call</span>
                         {booking.phone}
                       </div>
@@ -290,38 +290,38 @@ const AdminBookings = () => {
                         </div>
                       )}
                     </td>
-
-                    <td className="py-4 px-6">
+ 
+                    <td className="py-2 px-6">
                       <div className="font-semibold text-gray-900">{booking.package_title}</div>
-                      <div className="text-sm text-gray-600 mt-1 flex gap-3">
+                      <div className="text-sm text-gray-600 mt-0.5 flex gap-3">
                         <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">calendar_month</span> {new Date(booking.travel_date).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">group</span> {booking.travellers}</span>
                       </div>
-                      <div className="font-bold text-[#136b8a] mt-2">
+                      <div className="font-bold text-[#136b8a] mt-1">
                         {booking.final_amount ? `₹${booking.final_amount?.toLocaleString()}` : `₹${booking.total_amount?.toLocaleString()}`}
                       </div>
                       {booking.selected_sharing && (
-                        <div className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-1 inline-block">
+                        <div className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-0.5 inline-block">
                           {booking.selected_sharing}
                         </div>
                       )}
                       {booking.razorpay_payment_id && (
-                        <div className="text-[10px] text-gray-400 mt-1 font-mono truncate max-w-[180px]" title={booking.razorpay_payment_id}>
+                        <div className="text-[10px] text-gray-400 mt-0.5 font-mono truncate max-w-[180px]" title={booking.razorpay_payment_id}>
                           RZP: {booking.razorpay_payment_id}
                         </div>
                       )}
                       {booking.special_request && (
-                        <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded mt-2 inline-block max-w-full truncate" title={booking.special_request}>
+                        <div className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded mt-1 inline-block max-w-full truncate" title={booking.special_request}>
                           Note: {booking.special_request}
                         </div>
                       )}
                     </td>
-
-                    <td className="py-4 px-6">
+ 
+                    <td className="py-2 px-6">
                       <select
                         value={booking.booking_status}
                         onChange={(e) => handleStatusUpdate(booking.id, 'booking_status', e.target.value)}
-                        className={`text-sm font-semibold px-3 py-1.5 rounded-full border appearance-none cursor-pointer outline-none ${getStatusColor(booking.booking_status)}`}
+                        className={`text-sm font-semibold px-3 py-1 rounded border appearance-none cursor-pointer outline-none ${getStatusColor(booking.booking_status)}`}
                       >
                         <option value="new">New</option>
                         <option value="confirmed">Confirmed</option>
@@ -329,12 +329,12 @@ const AdminBookings = () => {
                         <option value="cancelled">Cancelled</option>
                       </select>
                     </td>
-
-                    <td className="py-4 px-6">
+ 
+                    <td className="py-2 px-6">
                       <select
                         value={booking.payment_status}
                         onChange={(e) => handleStatusUpdate(booking.id, 'payment_status', e.target.value)}
-                        className={`text-sm font-semibold px-3 py-1.5 rounded-full border appearance-none cursor-pointer outline-none ${getPaymentStatusColor(booking.payment_status)}`}
+                        className={`text-sm font-semibold px-3 py-1 rounded border appearance-none cursor-pointer outline-none ${getPaymentStatusColor(booking.payment_status)}`}
                       >
                         <option value="pending">Pending</option>
                         <option value="paid">Paid</option>
@@ -342,11 +342,11 @@ const AdminBookings = () => {
                         <option value="failed">Failed</option>
                       </select>
                     </td>
-
-                    <td className="py-4 px-6 text-right">
+ 
+                    <td className="py-2 px-6 text-right">
                       <button 
                         onClick={() => handleDelete(booking.id, booking.booking_id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete Booking"
                       >
                         <span className="material-symbols-outlined">delete</span>

@@ -47,6 +47,7 @@ const AdminCheckoutLeads = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -111,7 +112,14 @@ const AdminCheckoutLeads = () => {
       (l.package_title?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || l.lead_status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    let matchesDate = true;
+    if (dateFilter) {
+      const leadDateStr = l.created_at ? l.created_at.split('T')[0] : '';
+      matchesDate = leadDateStr === dateFilter;
+    }
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const totalPages = Math.ceil(filteredLeads.length / LEADS_PER_PAGE);
@@ -188,15 +196,34 @@ const AdminCheckoutLeads = () => {
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search by name, phone, email, package..."
-          value={searchTerm}
-          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-          className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name, phone, email, package..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Filter by Day:</span>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          />
+          {dateFilter && (
+            <button
+              onClick={() => { setDateFilter(''); setCurrentPage(1); }}
+              className="text-xs font-bold text-red-500 hover:text-red-700 bg-red-55 px-2 py-1.5 rounded-lg border border-red-200 transition-all"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table */}

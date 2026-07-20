@@ -333,15 +333,24 @@ function Home() {
         {/* Promo Autoplay Banner Slider (Autoplay every 4 seconds) */}
         <section className="w-full py-8 px-0 overflow-hidden border-t border-gray-50 bg-surface-container-lowest">
           <Swiper
-            spaceBetween={16}
-            slidesPerView={1.15}
+            effect={'coverflow'}
+            grabCursor={true}
             centeredSlides={true}
+            loop={true}
+            slidesPerView={1.15}
+            spaceBetween={0}
             autoplay={{
               delay: 4000,
               disableOnInteraction: false,
             }}
-            loop={true}
-            modules={[Autoplay]}
+            coverflowEffect={{
+              rotate: 0,
+              stretch: -24,
+              depth: 100,
+              modifier: 2.5,
+              slideShadows: false,
+            }}
+            modules={[EffectCoverflow, Autoplay]}
             className="w-full overflow-visible"
           >
             <SwiperSlide className="overflow-visible">
