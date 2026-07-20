@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { getPackageDuration } from './MyAccount';
+import { generatePDFVoucher } from '../utils/pdfGenerator';
 
 const statusColors = {
   confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -327,6 +328,18 @@ export default function MyTrips() {
                         >
                           View Details
                         </Link>
+                        <button 
+                          onClick={() => generatePDFVoucher(booking, 'download')}
+                          className="bg-white border border-gray-200 text-[#136b8a] px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          Download Voucher
+                        </button>
+                        <button 
+                          onClick={() => generatePDFVoucher(booking, 'open')}
+                          className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          View Voucher
+                        </button>
                       </div>
                     </div>
                   </div>

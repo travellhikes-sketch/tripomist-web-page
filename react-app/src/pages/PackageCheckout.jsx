@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
+import { generatePDFVoucher } from '../utils/pdfGenerator';
 
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TBICP09xzQRaAw';
 
@@ -346,6 +347,53 @@ export default function PackageCheckout() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="text-left">
+                  <h3 className="font-bold text-gray-900 text-sm">Download your trip booking voucher</h3>
+                  <p className="text-xs text-gray-500 mt-1">Get your A4-styled voucher PDF with QR code and helpline details.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => generatePDFVoucher({
+                      booking_id: bookingId || 'TMP-' + Date.now().toString().slice(-6),
+                      created_at: new Date().toISOString(),
+                      package_title: tripDetails.tripTitle,
+                      travel_date: formData.date,
+                      travellers: tripDetails.travellers,
+                      selected_sharing: selectedSharing,
+                      customer_name: formData.fullName,
+                      phone: formData.phone,
+                      email: formData.email,
+                      final_amount: finalPayable,
+                      total_amount: parsePriceString(tripDetails.price)
+                    }, 'download')}
+                    className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">download</span>
+                    Download PDF
+                  </button>
+                  <button 
+                    onClick={() => generatePDFVoucher({
+                      booking_id: bookingId || 'TMP-' + Date.now().toString().slice(-6),
+                      created_at: new Date().toISOString(),
+                      package_title: tripDetails.tripTitle,
+                      travel_date: formData.date,
+                      travellers: tripDetails.travellers,
+                      selected_sharing: selectedSharing,
+                      customer_name: formData.fullName,
+                      phone: formData.phone,
+                      email: formData.email,
+                      final_amount: finalPayable,
+                      total_amount: parsePriceString(tripDetails.price)
+                    }, 'open')}
+                    className="bg-white text-gray-700 border border-gray-200 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">visibility</span>
+                    View PDF
+                  </button>
+                </div>
               </div>
 
               <div className="bg-teal-50 border border-teal-100 rounded-xl px-4 py-3 text-sm text-teal-700 flex items-start gap-2">

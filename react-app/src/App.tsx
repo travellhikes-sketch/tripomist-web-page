@@ -50,14 +50,16 @@ import AllDepartures from './pages/AllDepartures'
 import UpcomingDepartures from './pages/UpcomingDepartures'
 import BottomDock from './components/BottomDock'
 import Chatbot from './components/Chatbot'
-import AdminLayout from './components/admin/AdminLayout'
-import AdminRoute from './components/admin/AdminRoute'
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminPackages from './pages/admin/AdminPackages'
-import AdminBookings from './pages/admin/AdminBookings'
-import AdminUsers from './pages/admin/AdminUsers'
-import AdminCheckoutLeads from './pages/admin/AdminCheckoutLeads'
+const AdminLayout = React.lazy(() => import('./components/admin/AdminLayout'));
+const AdminRoute = React.lazy(() => import('./components/admin/AdminRoute'));
+const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
+const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'));
+const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
+const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
+const AdminReviews = React.lazy(() => import('./pages/admin/AdminReviews'));
+const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
 
 // Create a component that forces layout re-render on route change, but respects back button
 function ScrollToTop() {
@@ -88,15 +90,29 @@ function App() {
       <div className={isAdminRoute ? "" : "pb-36 md:pb-0"}>
         <Routes>
           {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminRoute />}>
-            <Route element={<AdminLayout />}>
+          <Route path="/admin/login" element={
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+              <AdminLogin />
+            </React.Suspense>
+          } />
+          <Route path="/admin" element={
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+              <AdminRoute />
+            </React.Suspense>
+          }>
+            <Route element={
+              <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+                <AdminLayout />
+              </React.Suspense>
+            }>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="packages" element={<AdminPackages />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="reviews" element={<AdminReviews />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>
 

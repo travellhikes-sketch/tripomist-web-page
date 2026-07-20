@@ -10,7 +10,9 @@ import {
   LogOut, 
   Menu, 
   X, 
-  ExternalLink 
+  ExternalLink,
+  MessageSquare,
+  Settings
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -28,7 +30,9 @@ const AdminLayout = () => {
     { name: 'Packages', path: '/admin/packages', icon: Package },
     { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
     { name: 'Checkout Leads', path: '/admin/checkout-leads', icon: UserPlus },
-    { name: 'Users', path: '/admin/users', icon: Users },
+    { name: 'Customers', path: '/admin/users', icon: Users },
+    { name: 'Reviews', path: '/admin/reviews', icon: MessageSquare },
+    { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
   return (
@@ -115,7 +119,13 @@ const AdminLayout = () => {
 
         {/* Page Content */}
         <div className="flex-1 overflow-auto bg-gray-50 p-6">
-          <Outlet />
+          <React.Suspense fallback={
+            <div className="flex items-center justify-center h-[50vh]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+            </div>
+          }>
+            <Outlet />
+          </React.Suspense>
         </div>
       </main>
     </div>

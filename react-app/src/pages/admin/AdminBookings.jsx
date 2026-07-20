@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
+import { generatePDFVoucher } from '../../utils/pdfGenerator';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -12,6 +13,10 @@ const AdminBookings = () => {
   const [monthFilter, setMonthFilter] = useState('all'); // all | this | last | custom
   const [customMonth, setCustomMonth] = useState(''); // format YYYY-MM
 
+
+  const downloadVoucher = (booking) => {
+    generatePDFVoucher(booking, 'download');
+  };
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -343,13 +348,27 @@ const AdminBookings = () => {
                       </select>
                     </td>
  
-                    <td className="py-2 px-6 text-right">
+                    <td className="py-2 px-6 text-right flex items-center justify-end gap-2">
+                       <button 
+                         onClick={() => alert(`Resending voucher email for Booking ${booking.booking_id} to ${booking.email || 'customer'}`)}
+                         className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                         title="Email Voucher Again"
+                       >
+                         <span className="material-symbols-outlined text-[20px]">mail</span>
+                       </button>
+                       <button 
+                         onClick={() => downloadVoucher(booking)}
+                         className="p-1.5 text-gray-400 hover:text-[#136b8a] hover:bg-slate-100 rounded-lg transition-colors"
+                         title="Download Voucher"
+                       >
+                         <span className="material-symbols-outlined text-[20px]">download</span>
+                       </button>
                       <button 
                         onClick={() => handleDelete(booking.id, booking.booking_id)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete Booking"
                       >
-                        <span className="material-symbols-outlined">delete</span>
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
                       </button>
                     </td>
 
