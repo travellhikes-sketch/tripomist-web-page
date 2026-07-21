@@ -7,10 +7,13 @@ import {
   MoreVertical, Phone, MessageCircle
 } from 'lucide-react';
 
+import AdminManualBookingModal from '../../components/admin/AdminManualBookingModal';
+
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showManualBooking, setShowManualBooking] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -248,6 +251,12 @@ const AdminBookings = () => {
           </div>
           <div className="flex items-center gap-2">
             <button 
+              onClick={() => setShowManualBooking(true)}
+              className="flex items-center gap-1.5 bg-[#136b8a] border border-[#136b8a] text-white px-3 py-1.5 rounded-md hover:bg-[#0f556e] transition-colors shadow-sm text-sm font-semibold"
+            >
+              New Booking
+            </button>
+            <button 
               onClick={exportToCSV}
               className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
             >
@@ -261,6 +270,12 @@ const AdminBookings = () => {
             </button>
           </div>
         </div>
+
+        <AdminManualBookingModal 
+          isOpen={showManualBooking}
+          onClose={() => setShowManualBooking(false)}
+          onSuccess={fetchBookings}
+        />
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center justify-between mb-4 text-sm">
@@ -498,7 +513,14 @@ const AdminBookings = () => {
 
               {/* Customer */}
               <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <h3 className="text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1"><User size={12}/> Customer</h3>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><User size={12}/> Customer</h3>
+                  {selectedBooking.user_id ? (
+                    <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Account Linked</span>
+                  ) : (
+                    <span className="text-[9px] uppercase font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Not Linked</span>
+                  )}
+                </div>
                 <div className="font-semibold text-gray-900">{selectedBooking.customer_name}</div>
                 
                 <div className="mt-2 text-xs flex justify-between items-center">
@@ -515,6 +537,16 @@ const AdminBookings = () => {
                     <span className="text-gray-600 truncate">{selectedBooking.email}</span>
                     <button onClick={() => handleQuickAction(selectedBooking, 'copyEmail')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
                   </div>
+                )}
+                
+                {!selectedBooking.user_id && (
+                  <button onClick={() => {
+                    const msg = `Hi ${selectedBooking.customer_name}, your TripoMist booking has been added to our system.\n\nYou can view your booking, payment status and trip details by logging in to the TripoMist website using the same phone number or email used during booking.\n\nBooking ID: ${selectedBooking.booking_id || selectedBooking.booking_reference || selectedBooking.id}`;
+                    navigator.clipboard.writeText(msg);
+                    alert('Login instructions copied to clipboard!');
+                  }} className="mt-3 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 rounded-md text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1">
+                    <Copy size={12}/> Copy Login Instructions
+                  </button>
                 )}
               </div>
 

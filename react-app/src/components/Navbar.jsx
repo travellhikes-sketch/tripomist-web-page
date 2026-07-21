@@ -10,8 +10,9 @@ function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const searchRef = useRef(null)
   
-  const suggestionsList = ['Manali-Kasol', 'Jibhi-Thirthan', 'Kedarnath', 'Chopta-Tungnath']
-
+  const [settings, setSettings] = useState(null)
+  const [packageSuggestions, setPackageSuggestions] = useState([])
+  
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -38,6 +39,17 @@ function Navbar() {
   }, [])
 
   useEffect(() => {
+    // Fetch navbar settings
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'navbar').single()
+      if (data) {
+        setSettings(data.setting_value)
+      }
+    }
+    fetchSettings()
+  }, [])
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false)
@@ -47,25 +59,33 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const handleSearch = (query) => {
-    const destinationPaths = ['/uttarakhand', '/ladakh', '/spiti', '/kashmir', '/goa', '/rajasthan', '/kerala', '/meghalaya', '/himachal', '/andaman', '/international', '/group-trips', '/all-departures']
-    
-    setSearchQuery(query) // Update state just in case it was called from a suggestion
-    
-    if (!query.trim()) {
-      if (destinationPaths.includes(location.pathname)) {
-        navigate(location.pathname) // Clear search param
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      const fetchSuggestions = async () => {
+        const { data } = await supabase
+          .from('Pakage')
+          .select('title, destination')
+          .eq('status', 'active')
+          .or(`title.ilike.%${searchQuery}%,destination.ilike.%${searchQuery}%`)
+          .limit(5)
+        
+        if (data) {
+          // Deduplicate suggestions
+          const uniqueSuggestions = Array.from(new Set(data.map(p => p.title || p.destination))).filter(Boolean)
+          setPackageSuggestions(uniqueSuggestions)
+        }
       }
-      setShowSuggestions(false)
-      return
-    }
-
-    if (destinationPaths.includes(location.pathname)) {
-      navigate(`${location.pathname}?search=${encodeURIComponent(query.trim())}`)
+      fetchSuggestions()
     } else {
-      navigate(`/search?search=${encodeURIComponent(query.trim())}`)
+      setPackageSuggestions([])
     }
+  }, [searchQuery])
+
+  const handleSearch = (query) => {
+    setSearchQuery(query)
     setShowSuggestions(false)
+    if (!query.trim()) return
+    navigate(`/search?search=${encodeURIComponent(query.trim())}`)
   }
 
   const handleLogout = async () => {
@@ -85,7 +105,11 @@ function Navbar() {
           {/* Brand */}
           <div className="flex items-center gap-6">
             <Link className="font-headline-md text-headline-md font-bold tracking-tight text-black flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
-              TripoMist
+              {settings?.logo_image_url ? (
+                <img src={settings.logo_image_url} alt="TripoMist" className="h-8" />
+              ) : (
+                settings?.logo_text || "TripoMist"
+              )}
             </Link>
           </div>
           
@@ -93,7 +117,7 @@ function Navbar() {
           <div ref={searchRef} className="hidden md:flex flex-1 max-w-sm mx-auto relative">
             <input 
               type="text" 
-              placeholder="Search destinations..." 
+              placeholder={settings?.search_placeholder || "Search destinations..."}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -115,7 +139,7 @@ function Navbar() {
             </button>
             
             <AnimatePresence>
-              {showSuggestions && (searchQuery.trim().length > 0 || suggestionsList.length > 0) && (
+              {showSuggestions && searchQuery.trim().length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -123,7 +147,7 @@ function Navbar() {
                   className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
                 >
                   <div className="py-2">
-                    {suggestionsList.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())).map((suggestion, idx) => (
+                    {packageSuggestions.map((suggestion, idx) => (
                       <div 
                         key={idx}
                         onClick={() => handleSearch(suggestion)}
@@ -133,7 +157,7 @@ function Navbar() {
                         {suggestion}
                       </div>
                     ))}
-                    {searchQuery.trim().length > 0 && suggestionsList.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                    {packageSuggestions.length === 0 && (
                       <div 
                         onClick={() => handleSearch(searchQuery)}
                         className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
@@ -154,7 +178,7 @@ function Navbar() {
               className={`font-semibold px-5 py-2 rounded-full transition-all text-sm hover:opacity-90 min-w-[80px] border ${isOpen ? 'bg-white text-black border-gray-200 shadow-sm' : 'bg-primary text-white border-transparent'}`}
               onClick={() => setIsOpen(!isOpen)}
             >
-              {isOpen ? 'Close' : 'Menu'}
+              {isOpen ? 'Close' : (settings?.menu_button_text || 'Menu')}
             </button>
             
             {user ? (
@@ -168,8 +192,8 @@ function Navbar() {
                 )}
               </Link>
             ) : (
-              <Link to="/login" className="bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 flex items-center gap-1 shadow-sm">
-                <span className="material-symbols-outlined text-[16px]">login</span> Login
+              <Link to={settings?.login_route || "/login"} className="bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 flex items-center gap-1 shadow-sm">
+                <span className="material-symbols-outlined text-[16px]">login</span> {settings?.login_button_text || 'Login'}
               </Link>
             )}
           </div>
@@ -196,9 +220,16 @@ function Navbar() {
                       <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/contact') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/contact">Support</Link>
                     </>
                   )}
-                  <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/uttarakhand') ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/uttarakhand">Uttarakhand</Link>
-                  <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/himachal') ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/himachal">Himachal</Link>
-                  <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/about') ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/about">About Us</Link>
+                  {settings?.main_links && settings.main_links.map((link, idx) => (
+                    <Link 
+                      key={idx}
+                      className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive(link.route) ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} 
+                      onClick={() => setIsOpen(false)} 
+                      to={link.route}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
                   
                   {user && (
                     <button 

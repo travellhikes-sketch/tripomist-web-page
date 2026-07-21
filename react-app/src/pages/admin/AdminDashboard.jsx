@@ -20,6 +20,7 @@ import {
   AlertCircle,
   X
 } from 'lucide-react';
+import AdminManualBookingModal from '../../components/admin/AdminManualBookingModal';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -41,20 +42,6 @@ const AdminDashboard = () => {
 
   // Manual Booking Modal State
   const [showManualBooking, setShowManualBooking] = useState(false);
-  const [manualBookingData, setManualBookingData] = useState({
-    customer_name: '',
-    phone: '',
-    email: '',
-    package_title: '',
-    travel_date: '',
-    travellers: 1,
-    selected_sharing: 'double',
-    total_amount: 0,
-    booking_status: 'confirmed',
-    payment_status: 'paid'
-  });
-  const [submitting, setSubmitting] = useState(false);
-
   // Dynamic greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -228,40 +215,6 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Action failed:', err);
       alert('Failed to perform action.');
-    }
-  };
-
-  const handleManualBookingSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const newBooking = {
-        booking_id: `MNL${Date.now().toString().slice(-6)}`,
-        customer_name: manualBookingData.customer_name,
-        phone: manualBookingData.phone,
-        email: manualBookingData.email,
-        package_title: manualBookingData.package_title,
-        travel_date: manualBookingData.travel_date,
-        travellers: manualBookingData.travellers,
-        selected_sharing: manualBookingData.selected_sharing,
-        total_amount: manualBookingData.total_amount,
-        final_amount: manualBookingData.total_amount,
-        booking_status: manualBookingData.booking_status,
-        payment_status: manualBookingData.payment_status,
-        created_at: new Date().toISOString()
-      };
-      
-      const { error } = await supabase.from('bookings').insert([newBooking]);
-      if (error) throw error;
-      
-      alert('Manual booking added successfully!');
-      setShowManualBooking(false);
-      loadDashboardData();
-    } catch (err) {
-      console.error(err);
-      alert('Error creating manual booking');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -477,82 +430,11 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Manual Booking Modal */}
-      {showManualBooking && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-fade-in text-sm">
-            <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-slate-50">
-              <h2 className="font-bold text-gray-900 text-lg">New Manual Booking</h2>
-              <button onClick={() => setShowManualBooking(false)} className="text-gray-500 hover:text-gray-900 bg-gray-200 hover:bg-gray-300 rounded-full p-1"><X size={16}/></button>
-            </div>
-            <div className="p-5 overflow-auto flex-1">
-              <form id="manualBookingForm" onSubmit={handleManualBookingSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Customer Name *</label>
-                    <input required type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.customer_name} onChange={e=>setManualBookingData({...manualBookingData, customer_name: e.target.value})}/>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Phone *</label>
-                    <input required type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.phone} onChange={e=>setManualBookingData({...manualBookingData, phone: e.target.value})}/>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Email</label>
-                    <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.email} onChange={e=>setManualBookingData({...manualBookingData, email: e.target.value})}/>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Package Title *</label>
-                    <input required type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.package_title} onChange={e=>setManualBookingData({...manualBookingData, package_title: e.target.value})}/>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Travel Date *</label>
-                    <input required type="date" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.travel_date} onChange={e=>setManualBookingData({...manualBookingData, travel_date: e.target.value})}/>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Travellers *</label>
-                    <input required type="number" min="1" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.travellers} onChange={e=>setManualBookingData({...manualBookingData, travellers: e.target.value})}/>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Sharing Type</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.selected_sharing} onChange={e=>setManualBookingData({...manualBookingData, selected_sharing: e.target.value})}>
-                      <option value="single">Single</option>
-                      <option value="double">Double</option>
-                      <option value="triple">Triple</option>
-                      <option value="quad">Quad</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Total Amount (₹) *</label>
-                    <input required type="number" min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.total_amount} onChange={e=>setManualBookingData({...manualBookingData, total_amount: e.target.value})}/>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Booking Status</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.booking_status} onChange={e=>setManualBookingData({...manualBookingData, booking_status: e.target.value})}>
-                      <option value="new">New</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Payment Status</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={manualBookingData.payment_status} onChange={e=>setManualBookingData({...manualBookingData, payment_status: e.target.value})}>
-                      <option value="pending">Pending</option>
-                      <option value="paid">Paid</option>
-                      <option value="failed">Failed</option>
-                    </select>
-                  </div>
-                </div>
-              </form>
-            </div>
-            <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
-              <button onClick={() => setShowManualBooking(false)} className="px-4 py-2 font-bold text-gray-600 hover:bg-gray-200 rounded-md transition-colors text-sm">Cancel</button>
-              <button type="submit" form="manualBookingForm" disabled={submitting} className="px-6 py-2 font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-md transition-colors text-sm disabled:opacity-50">
-                {submitting ? 'Saving...' : 'Create Booking'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminManualBookingModal 
+        isOpen={showManualBooking} 
+        onClose={() => setShowManualBooking(false)} 
+        onSuccess={loadDashboardData} 
+      />
     </div>
   );
 };

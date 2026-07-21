@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
+const LISTING_CATEGORIES = [
+  { label: 'Recommended Packages', value: 'recommended' },
+  { label: 'Best Seller', value: 'best-seller' },
+  { label: 'Trek', value: 'trek' },
+  { label: 'Group Departures', value: 'group-departures' },
+  { label: 'Weekend Departures', value: 'weekend-departures' },
+  { label: 'Family Trips', value: 'family-trips' },
+  { label: 'Honeymoon Trips', value: 'honeymoon-trips' },
+  { label: 'Upcoming Trips', value: 'upcoming-trips' },
+  { label: 'Domestic Trips', value: 'domestic' },
+  { label: 'International Trips', value: 'international' }
+];
+
 const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [title, setTitle] = useState('');
+  const [listingCategories, setListingCategories] = useState([]);
   const [slug, setSlug] = useState('');
   const [state, setState] = useState('');
   const [destination, setDestination] = useState('');
@@ -56,8 +70,17 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setInclusions(initialData.inclusions ? JSON.stringify(initialData.inclusions, null, 2) : '');
       setExclusions(initialData.exclusions ? JSON.stringify(initialData.exclusions, null, 2) : '');
       setCostings(initialData.costings ? JSON.stringify(initialData.costings, null, 2) : '');
+      setListingCategories(initialData.listing_categories || []);
     }
   }, [initialData]);
+
+  const toggleListingCategory = (val) => {
+    setListingCategories(prev =>
+      prev.includes(val)
+        ? prev.filter(c => c !== val)
+        : [...prev, val]
+    );
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -86,6 +109,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     const pkg = {
       title: title.trim(),
       slug: slug.trim(),
+      listing_categories: listingCategories,
       state: state.trim() || null,
       destination: destination.trim() || null,
       duration: duration.trim() || null,
@@ -240,6 +264,35 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 <div className="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
                 <span className="ml-2 text-sm font-medium text-gray-700">Best Seller</span>
               </label>
+            </div>
+          </div>
+
+          {/* Package Listing Categories */}
+          <div className="border-t border-gray-200 pt-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Package Listing Categories</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {LISTING_CATEGORIES.map(cat => (
+                <label key={cat.value} className="flex items-center gap-3 cursor-pointer group relative">
+                  <input 
+                    type="checkbox" 
+                    className="absolute opacity-0 w-0 h-0" 
+                    checked={listingCategories.includes(cat.value)} 
+                    onChange={() => toggleListingCategory(cat.value)} 
+                  />
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    listingCategories.includes(cat.value)
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'border-gray-300 group-hover:border-blue-500'
+                  }`}>
+                    {listingCategories.includes(cat.value) && (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-700 select-none">{cat.label}</span>
+                </label>
+              ))}
             </div>
           </div>
 

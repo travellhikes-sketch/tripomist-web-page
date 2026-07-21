@@ -20,6 +20,8 @@ export default function PackageDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isReadMore, setIsReadMore] = useState(false)
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  
+  const [siteSettings, setSiteSettings] = useState(null)
 
   useEffect(() => {
     async function fetchPackage() {
@@ -92,6 +94,16 @@ export default function PackageDetail() {
       }
       setLoading(false)
     }
+
+    async function fetchSettings() {
+      const { data } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'package_detail_settings').single()
+      if (data) {
+        setSiteSettings(data.setting_value)
+      }
+    }
+
+    fetchSettings()
+
     if (slug) {
       fetchPackage()
     } else {
@@ -140,8 +152,17 @@ export default function PackageDetail() {
 
   const handleSendEnquiry = () => {
     if(!trip) return;
-    const message = `Hey *TripoMist* I'm interested in *${trip.title}*\nMy Full Name: \nPrefer Travel date: \nDestination: ${trip.title}\nHow Many people travel with me : ${travellers}`;
-    const whatsappUrl = `https://wa.me/919990802608?text=${encodeURIComponent(message)}`;
+    
+    let template = siteSettings?.whatsapp_template || "Hey *TripoMist* I'm interested in *{package_title}*\nMy Full Name: \nPrefer Travel date: \nDestination: {package_title}\nHow Many people travel with me : {travellers}";
+    let message = template
+      .replace(/{package_title}/g, trip.title)
+      .replace(/{price}/g, `₹${trip.numericPrice * travellers}`)
+      .replace(/{duration}/g, trip.duration || '')
+      .replace(/{travellers}/g, travellers)
+      .replace(/{departure_from}/g, trip.pickup || '');
+
+    const phone = siteSettings?.whatsapp_number || "919990802608";
+    const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   }
 
@@ -189,7 +210,7 @@ export default function PackageDetail() {
             {/* Title & Description */}
             <div className="mb-6">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-sans tracking-tight">
-                About {trip.title} Trip From Delhi
+                About {trip.title} Trip {trip.pickup ? `From ${trip.pickup}` : ''}
               </h1>
               <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-2">
                 {isReadMore ? trip.description : `${trip.description?.slice(0, 80) || ''}...`}
@@ -369,10 +390,18 @@ export default function PackageDetail() {
               <div className="mb-6 border-b border-gray-100 pb-5">
                 <span className="font-semibold text-gray-900 text-sm block mb-1">Starting Price</span>
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="text-[#136b8a] text-3xl font-bold">{trip.price} <span className="text-sm text-gray-500 font-medium">+ 5% GST</span></span>
+                  <span className="text-[#136b8a] text-3xl font-bold">{trip.price} <span className="text-sm text-gray-500 font-medium">{siteSettings?.gst_label || '+ 5% GST'}</span></span>
                   <div className="flex items-center gap-1 text-xs font-semibold">
-                    <span className="line-through text-gray-500 font-normal">₹{strikePrice.toLocaleString()}</span>
-                    <span className="text-red-500 font-bold">₹3,000 Off</span>
+                    {trip.originalPrice && trip.originalPrice !== trip.price && trip.originalPrice !== '₹0' ? (
+                      <span className="line-through text-gray-500 font-normal">{trip.originalPrice}</span>
+                    ) : (
+                      <span className="line-through text-gray-500 font-normal">₹{(trip.numericPrice + 3000).toLocaleString()}</span>
+                    )}
+                    {trip.discountText ? (
+                      <span className="text-red-500 font-bold">{trip.discountText}</span>
+                    ) : (
+                      <span className="text-red-500 font-bold">₹3,000 Off</span>
+                    )}
                   </div>
                 </div>
                 <p className="text-gray-500 text-sm font-medium">Per Person</p>
@@ -409,7 +438,7 @@ export default function PackageDetail() {
                 className="w-full mt-4 bg-[#25D366] hover:bg-[#20b858] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg cursor-pointer"
               >
                 <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg" alt="WhatsApp" className="w-5 h-5 filter invert" />
-                Send Enquiry to trip experts
+                {siteSettings?.default_enquiry_text || 'Send Enquiry to trip experts'}
               </button>
               <p className="text-center text-gray-500 text-[11px] font-medium mt-2 mb-2">
                 fill the blanks to send enquiry to expert

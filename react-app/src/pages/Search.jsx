@@ -1,155 +1,101 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import PackageCard from '../components/PackageCard'
+import { supabase } from '../utils/supabaseClient'
 
 function Search() {
   const location = useLocation()
-  const navigate = useNavigate()
-  const [searchVal, setSearchVal] = useState('')
-  const [tripsList, setTripsList] = useState([
-    {
-      id: "ladakh-expedition",
-      name: "Ladakh Expedition",
-      style: "Mountains",
-      durationText: "6N/7D",
-      price: 21999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "andaman-escape",
-      name: "Andaman Escape",
-      style: "Beaches",
-      durationText: "4N/5D",
-      price: 18500,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "munnar-retreat",
-      name: "Munnar Retreat",
-      style: "Weekend",
-      durationText: "2N/3D",
-      price: 8999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "spiti-valley-expedition",
-      name: "Spiti Valley Expedition",
-      style: "Mountains",
-      durationText: "5N/6D",
-      price: 24999,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "rishikesh-retreat",
-      name: "Rishikesh Retreat",
-      style: "Weekend",
-      durationText: "1N/2D",
-      price: 5499,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    },
-    {
-      id: "jaipur-heritage",
-      name: "Jaipur Heritage",
-      style: "Weekend",
-      durationText: "2N/3D",
-      price: 6200,
-      isFav: false,
-      img: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"
-    }
-  ])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [packages, setPackages] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
-    const query = params.get('search') || params.get('query') || ''
-    setSearchVal(query)
-  }, [location])
+    const query = params.get('search') || ''
+    setSearchQuery(query)
 
-  const toggleFavorite = (id) => {
-    setTripsList(prev => prev.map(t => t.id === id ? { ...t, isFav: !t.isFav } : t))
-  }
+    async function fetchSearchResults() {
+      if (!query.trim()) {
+        setPackages([])
+        setLoading(false)
+        return
+      }
 
-  const doSearch = () => {
-    navigate(`/search?search=${encodeURIComponent(searchVal.trim())}`)
-  }
+      setLoading(true)
+      setError(null)
+      try {
+        const { data, error: fetchErr } = await supabase
+          .from('Pakage')
+          .select('*')
+          .eq('status', 'active')
+          .or(`title.ilike.%${query}%,destination.ilike.%${query}%,state.ilike.%${query}%,short_description.ilike.%${query}%`)
+        
+        if (fetchErr) throw fetchErr
+        setPackages(data || [])
+      } catch (err) {
+        console.error('Search error:', err)
+        setError('Failed to fetch search results. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const filteredTrips = tripsList.filter(trip => {
-    const query = searchVal.toLowerCase().trim()
-    if (!query) return true
-    return trip.name.toLowerCase().includes(query) || trip.style.toLowerCase().includes(query)
-  })
+    fetchSearchResults()
+  }, [location.search])
 
   return (
-    <div className="text-on-background bg-background font-body-md text-body-md antialiased min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
 
-      <main className="flex-grow w-full pb-12">
-        {/* Hero Video/Image Banner */}
-        <section className="relative w-full h-[40vh] min-h-[300px] overflow-hidden mb-12">
-          <img
-            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80"
-            alt="Search results"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          
-          <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
-            <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight mb-2">
-              Your Search
-            </h1>
-            {searchVal && (
-              <p className="text-primary font-bold text-xl md:text-2xl">{searchVal}</p>
-            )}
+      <main className="w-full flex-grow pt-24 pb-16 px-4 md:px-12 lg:px-20 max-w-[1600px] mx-auto">
+        <div className="mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-on-surface tracking-tight mb-2">
+            Search Results
+          </h1>
+          {searchQuery && (
+            <p className="text-on-surface-variant text-lg">
+              Showing results for <span className="font-semibold text-primary">"{searchQuery}"</span>
+            </p>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
+            <p className="font-medium">Searching for trips...</p>
           </div>
-        </section>
-
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-
-        {/* Results Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="font-bold text-slate-800 text-lg">
-            {searchVal 
-              ? `Found ${filteredTrips.length} departures matching "${searchVal}"` 
-              : `Showing all ${filteredTrips.length} departures`}
-          </h2>
-        </div>
-
-        {/* Results Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTrips.map(trip => (
-            <div key={trip.id} className="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full trip-card">
-              <div className="relative h-48 w-full overflow-hidden">
-                <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={trip.name} src={trip.img} />
-                <div className="absolute top-3 left-3 bg-primary text-on-primary px-3 py-1 rounded-md font-label-sm text-label-sm shadow-sm backdrop-blur-md bg-opacity-90 font-bold">{trip.style}</div>
-              </div>
-              <div className="p-4 flex-grow flex flex-col">
-                <h3 className="font-headline-md text-headline-md text-on-surface font-bold group-hover:text-primary transition-colors">{trip.name}</h3>
-                <div className="flex items-center gap-1 text-on-surface-variant mb-4 mt-1">
-                  <span className="material-symbols-outlined text-[16px]">schedule</span>
-                  <span className="font-body-md text-body-md text-sm">{trip.durationText}</span>
-                </div>
-                <div className="mt-auto flex items-end justify-between pt-4 border-t border-outline-variant/10">
-                  <div>
-                    <span className="block font-label-sm text-label-sm text-outline uppercase tracking-wider text-[10px]">Starting from</span>
-                    <span className="font-headline-md text-headline-md text-primary font-bold">₹{trip.price.toLocaleString('en-IN')}</span>
-                  </div>
-                  <Link 
-                    to={`/itinerary/${trip.name.toLowerCase().replace(/\s+/g, '-')}`} 
-                    className="bg-primary text-on-primary px-4 py-2 rounded-lg font-body-md text-body-md font-semibold hover:bg-surface-tint transition-colors no-underline"
-                  >
-                    View Detail
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-red-500">
+            <span className="material-symbols-outlined text-5xl mb-4">error</span>
+            <p className="font-medium text-lg">{error}</p>
+          </div>
+        ) : packages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 bg-surface-container-low rounded-3xl border border-outline-variant/30 text-center px-4">
+            <span className="material-symbols-outlined text-6xl text-outline mb-4">search_off</span>
+            <h2 className="text-2xl font-bold text-on-surface mb-2">No results found</h2>
+            <p className="text-on-surface-variant max-w-md">
+              We couldn't find any packages matching "{searchQuery}". Try checking for typos or searching for a different destination.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            {packages.map((pkg) => (
+              <PackageCard
+                key={pkg.id}
+                tripTitle={pkg.title}
+                price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Price on request'}
+                duration={pkg.duration || 'Flexible'}
+                description={pkg.short_description || pkg.destination || ''}
+                bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"}
+                link={`/itinerary/${pkg.slug}`}
+                bestSeller={pkg.best_seller}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       <Footer />

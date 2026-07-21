@@ -8,6 +8,7 @@ import HoneymoonTrips from './pages/HoneymoonTrips'
 import Home from './pages/Home'
 import Domestic from './pages/Domestic'
 import International from './pages/International'
+import CategoryPackages from './pages/CategoryPackages'
 import Review from './pages/Review'
 import PackageDetail from './pages/PackageDetail'
 import Checkout from './pages/Checkout'
@@ -36,15 +37,7 @@ import Profile from './pages/Profile'
 import MyAccount from './pages/MyAccount'
 import MyTrips from './pages/MyTrips'
 import BookingDetail from './pages/BookingDetail'
-import Uttarakhand from './pages/Uttarakhand'
-import Himachal from './pages/Himachal'
-import Kashmir from './pages/Kashmir'
-import Rajasthan from './pages/Rajasthan'
-import Meghalaya from './pages/Meghalaya'
-import Ladakh from './pages/Ladakh'
-import Spiti from './pages/Spiti'
-import Kerala from './pages/Kerala'
-import Goa from './pages/Goa'
+// Removed legacy hardcoded destination imports
 import AboutUs from './pages/AboutUs'
 import AllDepartures from './pages/AllDepartures'
 import UpcomingDepartures from './pages/UpcomingDepartures'
@@ -59,6 +52,20 @@ const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'));
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
+import AdminSiteSettings from './pages/admin/AdminSiteSettings';
+const AdminBanners = React.lazy(() => import('./pages/admin/AdminBanners'));
+const AdminDestinations = React.lazy(() => import('./pages/admin/AdminDestinations'));
+const AdminInterests = React.lazy(() => import('./pages/admin/AdminInterests'));
+const AdminHomepageSections = React.lazy(() => import('./pages/admin/AdminHomepageSections'));
+const DestinationPackages = React.lazy(() => import('./pages/DestinationPackages'));
+const CustomerLayout = React.lazy(() => import('./components/customer/CustomerLayout'));
+const CustomerRoute = React.lazy(() => import('./components/customer/CustomerRoute'));
+const CustomerDashboard = React.lazy(() => import('./pages/customer/CustomerDashboard'));
+const CustomerTrips = React.lazy(() => import('./pages/customer/CustomerTrips'));
+const CustomerTripDetails = React.lazy(() => import('./pages/customer/CustomerTripDetails'));
+const CustomerPayments = React.lazy(() => import('./pages/customer/CustomerPayments'));
+const CustomerProfile = React.lazy(() => import('./pages/customer/CustomerProfile'));
+const CustomerSupport = React.lazy(() => import('./pages/customer/CustomerSupport'));
 
 // Create a component that forces layout re-render on route change, but respects back button
 function ScrollToTop() {
@@ -110,12 +117,72 @@ function App() {
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
               <Route path="users" element={<AdminUsers />} />
-              <Route path="settings" element={<AdminSettings />} />
+              <Route path="settings" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminSettings /></React.Suspense>
+              } />
+              <Route path="site-settings" element={<AdminSiteSettings />} />
+              <Route path="banners" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminBanners /></React.Suspense>
+              } />
+              <Route path="destinations" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminDestinations /></React.Suspense>
+              } />
+              <Route path="interests" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminInterests /></React.Suspense>
+              } />
+              <Route path="sections" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminHomepageSections /></React.Suspense>
+              } />
+            </Route>
+          </Route>
+
+          {/* Customer Portal Routes */}
+          <Route path="/account" element={
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+              <CustomerRoute />
+            </React.Suspense>
+          }>
+            <Route element={
+              <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+                <CustomerLayout />
+              </React.Suspense>
+            }>
+              <Route index element={
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <CustomerDashboard />
+                </React.Suspense>
+              } />
+              <Route path="trips" element={
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <CustomerTrips />
+                </React.Suspense>
+              } />
+              <Route path="trips/:id" element={
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <CustomerTripDetails />
+                </React.Suspense>
+              } />
+              <Route path="payments" element={
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <CustomerPayments />
+                </React.Suspense>
+              } />
+              <Route path="profile" element={
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <CustomerProfile />
+                </React.Suspense>
+              } />
+              <Route path="support" element={
+                <React.Suspense fallback={<div>Loading...</div>}>
+                  <CustomerSupport />
+                </React.Suspense>
+              } />
             </Route>
           </Route>
 
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/trips/:categorySlug" element={<CategoryPackages />} />
           <Route path="/group-trips" element={<GroupTrips />} />
           <Route path="/weekend-trips" element={<WeekendTrips />} />
           <Route path="/treks" element={<Treks />} />
@@ -126,15 +193,21 @@ function App() {
           <Route path="/international" element={<International />} />
           <Route path="/review" element={<Review />} />
           <Route path="/domestic" element={<Domestic />} />
-          <Route path="/uttarakhand" element={<Uttarakhand />} />
-          <Route path="/himachal" element={<Himachal />} />
-          <Route path="/kashmir" element={<Kashmir />} />
-          <Route path="/rajasthan" element={<Rajasthan />} />
-          <Route path="/meghalaya" element={<Meghalaya />} />
-          <Route path="/ladakh" element={<Ladakh />} />
-          <Route path="/spiti" element={<Spiti />} />
-          <Route path="/kerala" element={<Kerala />} />
-          <Route path="/goa" element={<Goa />} />
+          <Route path="/destinations/:destinationSlug" element={
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+              <DestinationPackages />
+            </React.Suspense>
+          } />
+          {/* Legacy Redirects */}
+          <Route path="/uttarakhand" element={<Navigate to="/destinations/uttarakhand" replace />} />
+          <Route path="/himachal" element={<Navigate to="/destinations/himachal" replace />} />
+          <Route path="/kashmir" element={<Navigate to="/destinations/kashmir" replace />} />
+          <Route path="/rajasthan" element={<Navigate to="/destinations/rajasthan" replace />} />
+          <Route path="/meghalaya" element={<Navigate to="/destinations/meghalaya" replace />} />
+          <Route path="/ladakh" element={<Navigate to="/destinations/ladakh" replace />} />
+          <Route path="/spiti" element={<Navigate to="/destinations/spiti-valley" replace />} />
+          <Route path="/kerala" element={<Navigate to="/destinations/kerala" replace />} />
+          <Route path="/goa" element={<Navigate to="/destinations/goa" replace />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/search" element={<Search />} />
           <Route path="/featured-group-trips" element={<FeaturedGroupTrip />} />

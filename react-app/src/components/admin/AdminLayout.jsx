@@ -12,7 +12,12 @@ import {
   X, 
   ExternalLink,
   MessageSquare,
-  Settings
+  Settings,
+  Image,
+  MapPin,
+  Heart,
+  Layout,
+  Globe
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -31,6 +36,11 @@ const AdminLayout = () => {
     { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
     { name: 'Checkout Leads', path: '/admin/checkout-leads', icon: UserPlus },
     { name: 'Customers', path: '/admin/users', icon: Users },
+    { name: 'Banners', path: '/admin/banners', icon: Image },
+    { name: 'Destinations', path: '/admin/destinations', icon: MapPin },
+    { name: 'Interests', path: '/admin/interests', icon: Heart },
+    { name: 'Sections', path: '/admin/sections', icon: Layout },
+    { name: 'Site Settings', path: '/admin/site-settings', icon: Globe },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
 
