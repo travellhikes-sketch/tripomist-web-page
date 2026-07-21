@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import { Plus, Edit, Trash2, Search, Filter, Download, X, AlertCircle } from 'lucide-react';
+import AdminBookingModal from '../../components/admin/AdminBookingModal';
 
 const AdminManualBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -160,31 +161,8 @@ const AdminManualBookings = () => {
     setCurrentBooking(null);
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setError(null);
-    try {
-      if (currentBooking) {
-        const { error } = await supabase
-          .from('bookings')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentBooking.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('bookings')
-          .insert([formData]);
-        if (error) throw error;
-      }
-      fetchBookings();
-      closeModal();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  // Handle save logic moved to AdminBookingModal
+
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this booking?")) return;
@@ -335,126 +313,12 @@ const AdminManualBookings = () => {
         )}
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl my-8">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-gray-900">{currentBooking ? 'Edit Booking' : 'New Manual Booking'}</h2>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 p-2"><X size={20} /></button>
-            </div>
-            
-            <form onSubmit={handleSave} className="p-6 space-y-8">
-              {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg flex items-center gap-2"><AlertCircle size={18} /> {error}</div>}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                <div className="col-span-1 md:col-span-2">
-                  <h3 className="text-sm font-bold text-gray-900 border-b pb-2 mb-2 uppercase tracking-wide">Customer Details</h3>
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name *</label>
-                  <input type="text" name="customer_name" required value={formData.customer_name} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                  <input type="email" name="customer_email" value={formData.customer_email || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label>
-                  <input type="text" name="customer_phone" required value={formData.customer_phone || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-
-                <div className="col-span-1 md:col-span-2 mt-4">
-                  <h3 className="text-sm font-bold text-gray-900 border-b pb-2 mb-2 uppercase tracking-wide">Trip Details</h3>
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Select Package</label>
-                  <select name="package_id" value={formData.package_id || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]">
-                    <option value="">-- Custom Package / None --</option>
-                    {packages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Package Title (Editable) *</label>
-                  <input type="text" name="package_title" required value={formData.package_title || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Travel Date *</label>
-                  <input type="date" name="travel_date" required value={formData.travel_date || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Travellers</label>
-                    <input type="number" min="1" name="travellers_count" value={formData.travellers_count} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Sharing</label>
-                    <select name="sharing_type" value={formData.sharing_type || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]">
-                      <option value="Single Sharing">Single</option>
-                      <option value="Double Sharing">Double</option>
-                      <option value="Triple Sharing">Triple</option>
-                      <option value="Quad Sharing">Quad</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="col-span-1 md:col-span-2 mt-4">
-                  <h3 className="text-sm font-bold text-gray-900 border-b pb-2 mb-2 uppercase tracking-wide">Payment Details</h3>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Total Amount (₹) *</label>
-                  <input type="number" step="0.01" name="total_amount" required value={formData.total_amount} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Advance (₹)</label>
-                    <input type="number" step="0.01" name="advance_payment" value={formData.advance_payment} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Remaining (₹)</label>
-                    <input type="number" readOnly value={formData.remaining_payment} className="w-full p-2 border bg-gray-50 rounded-lg text-gray-500 font-medium" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Payment Method</label>
-                  <input type="text" name="payment_method" placeholder="e.g. UPI, Bank Transfer" value={formData.payment_method || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
-                    <input type="text" readOnly value={formData.payment_status} className="w-full p-2 border bg-gray-50 rounded-lg text-gray-500 font-medium capitalize" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Booking Status</label>
-                    <select name="booking_status" value={formData.booking_status} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]">
-                      <option value="enquiry">Enquiry</option>
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Notes / Special Requirements</label>
-                  <textarea name="notes" rows={3} value={formData.notes || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:ring-1 focus:ring-[#136b8a]"></textarea>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                <button type="button" onClick={closeModal} className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Cancel</button>
-                <button type="submit" className="px-5 py-2 text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-lg font-medium shadow-sm">Save Booking</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AdminBookingModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSuccess={fetchBookings}
+        bookingId={currentBooking ? currentBooking.id : null}
+      />
     </div>
   );
 };

@@ -182,9 +182,10 @@ export default function PackageCheckout() {
       user_id: sessionUser?.id || null,
     };
 
-    const { error: insertError } = await supabase
+    const { error: insertError, data: insertedBookings } = await supabase
       .from('bookings')
-      .insert([bookingPayload]);
+      .insert([bookingPayload])
+      .select();
 
     if (insertError) {
       // Only enter failure path if Supabase explicitly returned an error
@@ -200,7 +201,20 @@ export default function PackageCheckout() {
       return; // ← stop here, never touch success state
     }
 
-    // INSERT succeeded
+    // INSERT succeeded, create primary traveller
+    if (insertedBookings && insertedBookings.length > 0) {
+      const newBookingId = insertedBookings[0].id;
+      const travellerPayload = {
+        booking_id: newBookingId,
+        full_name: formData.fullName,
+        phone: formData.phone,
+        email: formData.email || null,
+        is_primary: true
+      };
+      // We do not await this strictly for failure, but good practice
+      await supabase.from('booking_travellers').insert([travellerPayload]);
+    }
+
     setPaymentId(razorpayPaymentId);
     sessionStorage.removeItem('checkoutData');
     localStorage.removeItem('cart');

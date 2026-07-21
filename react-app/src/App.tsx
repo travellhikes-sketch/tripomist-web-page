@@ -47,6 +47,8 @@ const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
 const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'));
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
+const AdminRoomAllocation = React.lazy(() => import('./pages/admin/AdminRoomAllocation'));
+const AdminBookingActivityLogs = React.lazy(() => import('./pages/admin/AdminBookingActivityLogs'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
 import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 const AdminBanners = React.lazy(() => import('./pages/admin/AdminBanners'));
@@ -55,6 +57,7 @@ const AdminInterests = React.lazy(() => import('./pages/admin/AdminInterests'));
 const AdminHomepageSections = React.lazy(() => import('./pages/admin/AdminHomepageSections'));
 const AdminManualBookings = React.lazy(() => import('./pages/admin/AdminManualBookings'));
 const AdminWebsitePages = React.lazy(() => import('./pages/admin/AdminWebsitePages'));
+const AdminMenuManager = React.lazy(() => import('./pages/admin/AdminMenuManager'));
 const AdminReviews = React.lazy(() => import('./pages/admin/AdminReviews'));
 const DestinationPackages = React.lazy(() => import('./pages/DestinationPackages'));
 const CustomerLayout = React.lazy(() => import('./components/customer/CustomerLayout'));
@@ -118,6 +121,12 @@ function App() {
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
               } />
               <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
+              <Route path="room-allocation" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminRoomAllocation /></React.Suspense>
+              } />
+              <Route path="booking-activity-logs" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminBookingActivityLogs /></React.Suspense>
+              } />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminSettings /></React.Suspense>
@@ -137,6 +146,9 @@ function App() {
               } />
               <Route path="website-pages/:pageKey" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminWebsitePages /></React.Suspense>
+              } />
+              <Route path="website-pages/menu-manager" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminMenuManager /></React.Suspense>
               } />
               <Route path="reviews" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminReviews /></React.Suspense>

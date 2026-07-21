@@ -20,7 +20,7 @@ import {
   AlertCircle,
   X
 } from 'lucide-react';
-import AdminManualBookingModal from '../../components/admin/AdminManualBookingModal';
+import AdminBookingModal from '../../components/admin/AdminBookingModal';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -430,10 +430,10 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <AdminManualBookingModal 
+      <AdminBookingModal 
         isOpen={showManualBooking} 
-        onClose={() => setShowManualBooking(false)} 
-        onSuccess={loadDashboardData} 
+        onClose={() => setShowManualBooking(false)}
+        onSuccess={loadDashboardData}
       />
     </div>
   );

@@ -34,7 +34,11 @@ const AdminLayout = () => {
 
   // Open collapsibles based on current route on mount/route change
   useEffect(() => {
-    if (location.pathname.startsWith('/admin/manual-bookings') || location.pathname.startsWith('/admin/bookings') || location.pathname.startsWith('/admin/checkout-leads')) {
+    if (location.pathname.startsWith('/admin/manual-bookings') || 
+        location.pathname.startsWith('/admin/bookings') || 
+        location.pathname.startsWith('/admin/checkout-leads') ||
+        location.pathname.startsWith('/admin/room-allocation') ||
+        location.pathname.startsWith('/admin/booking-activity-logs')) {
       setIsBookingsOpen(true);
     }
     if (location.pathname.startsWith('/admin/banners') || location.pathname.startsWith('/admin/destinations') || location.pathname.startsWith('/admin/interests') || location.pathname.startsWith('/admin/sections') || location.pathname.startsWith('/admin/site-settings')) {
@@ -126,6 +130,12 @@ const AdminLayout = () => {
                 <Link to="/admin/checkout-leads" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/checkout-leads') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   Checkout Leads
                 </Link>
+                <Link to="/admin/room-allocation" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/room-allocation') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
+                  Room Allocation
+                </Link>
+                <Link to="/admin/booking-activity-logs" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/booking-activity-logs') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
+                  Activity Logs
+                </Link>
               </div>
             )}
           </div>
@@ -193,6 +203,9 @@ const AdminLayout = () => {
             </button>
             {isWebsitePagesOpen && (
               <div className="pl-9 pr-2 space-y-1 mt-1">
+                <Link to="/admin/website-pages/menu-manager" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/admin/website-pages/menu-manager' ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
+                  Menu Manager
+                </Link>
                 <Link to="/admin/website-pages/about-us" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/admin/website-pages/about-us' ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   About Us
                 </Link>

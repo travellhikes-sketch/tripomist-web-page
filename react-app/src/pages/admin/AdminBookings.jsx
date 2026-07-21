@@ -7,13 +7,14 @@ import {
   MoreVertical, Phone, MessageCircle
 } from 'lucide-react';
 
-import AdminManualBookingModal from '../../components/admin/AdminManualBookingModal';
+import AdminBookingModal from '../../components/admin/AdminBookingModal';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showManualBooking, setShowManualBooking] = useState(false);
+  const [editBookingId, setEditBookingId] = useState(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -271,10 +272,11 @@ const AdminBookings = () => {
           </div>
         </div>
 
-        <AdminManualBookingModal 
-          isOpen={showManualBooking}
-          onClose={() => setShowManualBooking(false)}
-          onSuccess={fetchBookings}
+        <AdminBookingModal 
+          isOpen={showManualBooking || !!editBookingId}
+          onClose={() => { setShowManualBooking(false); setEditBookingId(null); }}
+          onSuccess={() => { fetchBookings(); setEditBookingId(null); setShowManualBooking(false); setSelectedBooking(null); }}
+          bookingId={editBookingId}
         />
 
         {error && (
@@ -602,12 +604,20 @@ const AdminBookings = () => {
               </div>
 
               {/* Action Button */}
-              <button 
-                onClick={() => generatePDFVoucher(selectedBooking, 'download')}
-                className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
-              >
-                <Download size={16} /> Download Voucher
-              </button>
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                <button 
+                  onClick={() => setEditBookingId(selectedBooking.id)}
+                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <Edit size={16} /> Edit Booking
+                </button>
+                <button 
+                  onClick={() => generatePDFVoucher(selectedBooking, 'download')}
+                  className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <Download size={16} /> Voucher
+                </button>
+              </div>
             </div>
           </div>
         </>

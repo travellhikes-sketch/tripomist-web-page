@@ -298,13 +298,10 @@ const AdminSiteSettings = () => {
                 </div>
                 
                 <div className="md:col-span-2">
-                  <label className={labelClass}>Main Links (JSON Array: label, route)</label>
-                  <textarea 
-                    defaultValue={JSON.stringify(settings.navbar.main_links || [], null, 2)}
-                    onBlur={e => handleJsonChange('navbar', 'main_links', e.target.value)}
-                    className={`${inputClass} font-mono text-xs`} 
-                    rows={8} 
-                  />
+                  <label className={labelClass}>Main Links</label>
+                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800">
+                    <p className="font-medium">Manage links, icons, badges, mega menus, schedules, and visibility from Website Pages → Menu Manager.</p>
+                  </div>
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
@@ -346,14 +343,11 @@ const AdminSiteSettings = () => {
                   <input type="text" value={settings.footer.copyright_text || ''} onChange={e => handleChange('footer', 'copyright_text', e.target.value)} className={inputClass} />
                 </div>
 
-                <div>
-                  <label className={labelClass}>Footer Columns (JSON Array: title, links)</label>
-                  <textarea 
-                    defaultValue={JSON.stringify(settings.footer.columns || [], null, 2)}
-                    onBlur={e => handleJsonChange('footer', 'columns', e.target.value)}
-                    className={`${inputClass} font-mono text-xs`} 
-                    rows={12} 
-                  />
+                <div className="md:col-span-1">
+                  <label className={labelClass}>Footer Navigation</label>
+                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800">
+                    <p className="font-medium">Manage links, icons, badges, mega menus, schedules, and visibility from Website Pages → Menu Manager.</p>
+                  </div>
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
