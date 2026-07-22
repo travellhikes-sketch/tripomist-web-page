@@ -5,6 +5,7 @@ import { supabase } from '../../supabaseClient';
 const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [title, setTitle] = useState('');
   const [listingCategories, setListingCategories] = useState([]);
+  const [selectedPlacements, setSelectedPlacements] = useState([]);
   const [slug, setSlug] = useState('');
   const [state, setState] = useState('');
   const [destination, setDestination] = useState('');
@@ -25,26 +26,28 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [costings, setCostings] = useState('');
   const [jsonError, setJsonError] = useState('');
 
-  const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [dynamicSections, setDynamicSections] = useState([]);
+  const [dynamicInterests, setDynamicInterests] = useState([]);
+  const [dynamicDestinations, setDynamicDestinations] = useState([]);
 
-  // Fetch dynamic listing categories
+  // Fetch all placement options
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchPlacements = async () => {
       try {
-        const { data, error } = await supabase
-          .from('homepage_sections')
-          .select('section_key, title')
-          .eq('is_active', true)
-          .not('section_key', 'in', '("destinations","interests")')
-          .order('display_order');
-        if (!error && data) {
-          setDynamicCategories(data.map(item => ({ label: item.title, value: item.section_key })));
-        }
+        const [secRes, intRes, destRes] = await Promise.all([
+          supabase.from('homepage_sections').select('id, section_key, title').eq('is_active', true).not('section_key', 'in', '("destinations","interests")').order('display_order'),
+          supabase.from('interest_categories').select('id, slug, name').eq('is_active', true).order('display_order'),
+          supabase.from('destinations').select('id, slug, name').eq('is_active', true).order('display_order')
+        ]);
+        
+        if (secRes.data) setDynamicSections(secRes.data);
+        if (intRes.data) setDynamicInterests(intRes.data);
+        if (destRes.data) setDynamicDestinations(destRes.data);
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error('Error fetching placements:', err);
       }
     };
-    fetchCategories();
+    fetchPlacements();
   }, []);
 
   // Auto-generate slug from title
@@ -77,15 +80,34 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setExclusions(initialData.exclusions ? JSON.stringify(initialData.exclusions, null, 2) : '');
       setCostings(initialData.costings ? JSON.stringify(initialData.costings, null, 2) : '');
       setListingCategories(initialData.listing_categories || []);
+
+      const fetchExistingPlacements = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('package_placements')
+            .select('*')
+            .eq('package_id', initialData.id);
+          if (!error && data) {
+            setSelectedPlacements(data.map(p => ({ type: p.placement_type, id: p.placement_id, slug: p.placement_slug })));
+          }
+        } catch(err) {
+          console.error(err);
+        }
+      };
+      if (initialData.id) fetchExistingPlacements();
     }
   }, [initialData]);
 
   const toggleListingCategory = (val) => {
-    setListingCategories(prev =>
-      prev.includes(val)
-        ? prev.filter(c => c !== val)
-        : [...prev, val]
-    );
+    setListingCategories(prev => prev.includes(val) ? prev.filter(c => c !== val) : [...prev, val]);
+  };
+
+  const togglePlacement = (type, id, slug) => {
+    setSelectedPlacements(prev => {
+      const exists = prev.find(p => p.type === type && p.id === id);
+      if (exists) return prev.filter(p => !(p.type === type && p.id === id));
+      return [...prev, { type, id, slug }];
+    });
   };
 
   const handleSubmit = (e) => {
@@ -133,6 +155,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       inclusions: parsedInclusions,
       exclusions: parsedExclusions,
       costings: parsedCostings,
+      package_placements: selectedPlacements,
     };
     onSubmit(pkg);
   };
@@ -257,35 +280,68 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             </div>
           </div>
 
-          {/* Package Listing Categories */}
-          <div className="border-t border-gray-200 pt-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Package Listing Categories</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {dynamicCategories.length === 0 && (
-                <div className="text-sm text-gray-500 col-span-full">No active categories found in Website Management.</div>
-              )}
-              {dynamicCategories.map(cat => (
-                <label key={cat.value} className="flex items-center gap-3 cursor-pointer group relative">
-                  <input 
-                    type="checkbox" 
-                    className="absolute opacity-0 w-0 h-0" 
-                    checked={listingCategories.includes(cat.value)} 
-                    onChange={() => toggleListingCategory(cat.value)} 
-                  />
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                    listingCategories.includes(cat.value)
-                      ? 'bg-blue-600 border-blue-600'
-                      : 'border-gray-300 group-hover:border-blue-500'
-                  }`}>
-                    {listingCategories.includes(cat.value) && (
-                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-700 select-none">{cat.label}</span>
-                </label>
-              ))}
+          {/* Placements */}
+          <div className="border-t border-gray-200 pt-5 space-y-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Package Placements</h3>
+            
+            {/* Homepage Sections */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Homepage Sections</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {dynamicSections.length === 0 && <div className="text-sm text-gray-500">No active homepage sections.</div>}
+                {dynamicSections.map(sec => {
+                  const isChecked = selectedPlacements.some(p => p.type === 'homepage_section' && p.id === sec.id);
+                  return (
+                    <label key={sec.id} className="flex items-center gap-3 cursor-pointer group relative">
+                      <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('homepage_section', sec.id, sec.section_key)} />
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                        {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                      <span className="text-sm text-gray-700 select-none">{sec.title}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Interests */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Interests</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {dynamicInterests.length === 0 && <div className="text-sm text-gray-500">No active interests.</div>}
+                {dynamicInterests.map(int => {
+                  const isChecked = selectedPlacements.some(p => p.type === 'interest' && p.id === int.id);
+                  return (
+                    <label key={int.id} className="flex items-center gap-3 cursor-pointer group relative">
+                      <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('interest', int.id, int.slug)} />
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                        {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                      <span className="text-sm text-gray-700 select-none">{int.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Destinations */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Destinations</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {dynamicDestinations.length === 0 && <div className="text-sm text-gray-500">No active destinations.</div>}
+                {dynamicDestinations.map(dest => {
+                  const isChecked = selectedPlacements.some(p => p.type === 'destination' && p.id === dest.id);
+                  return (
+                    <label key={dest.id} className="flex items-center gap-3 cursor-pointer group relative">
+                      <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('destination', dest.id, dest.slug)} />
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                        {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                      <span className="text-sm text-gray-700 select-none">{dest.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
             </div>
           </div>
 

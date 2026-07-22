@@ -48,13 +48,15 @@ function Home() {
           const fetchPromises = pkgSections.map(async (sec) => {
             try {
               const { data, error } = await supabase
-                .from('Pakage')
-                .select('*')
-                .eq('status', 'active')
-                .contains('listing_categories', [sec.section_key]);
+                .from('package_placements')
+                .select('*, Pakage!inner(*)')
+                .eq('placement_type', 'homepage_section')
+                .eq('placement_id', sec.id)
+                .eq('Pakage.status', 'active');
               
               if (error) throw error;
-              return { ...sec, packagesData: data || [], fetchError: null };
+              const pkgs = data ? data.map(d => d.Pakage) : [];
+              return { ...sec, packagesData: pkgs, fetchError: null };
             } catch (err) {
               console.error(`Error fetching ${sec.section_key}:`, err);
               return { ...sec, packagesData: [], fetchError: 'Failed to load packages.' };

@@ -140,3 +140,67 @@ SET listing_categories = (
 )
 WHERE featured = true OR best_seller = true;
 
+
+-- 8. Create package_placements table
+CREATE TABLE IF NOT EXISTS public.package_placements (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    package_id UUID NOT NULL REFERENCES public."Pakage"(id) ON DELETE CASCADE,
+    placement_type TEXT NOT NULL CHECK (placement_type IN ('homepage_section', 'interest', 'destination')),
+    placement_id UUID NOT NULL,
+    placement_slug TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Unique constraint to prevent duplicate placements for the same package
+CREATE UNIQUE INDEX IF NOT EXISTS unique_package_placement ON public.package_placements (package_id, placement_type, placement_id);
+
+-- RLS Policies
+ALTER TABLE public.package_placements ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public SELECT package_placements" ON public.package_placements;
+CREATE POLICY "Public SELECT package_placements" ON public.package_placements 
+FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admin ALL package_placements" ON public.package_placements;
+CREATE POLICY "Admin ALL package_placements" ON public.package_placements 
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- Data Migration: Migrate existing listing_categories array and destinations
+DO 
+DECLARE
+    pkg RECORD;
+    cat TEXT;
+    target_id UUID;
+BEGIN
+    FOR pkg IN SELECT id, listing_categories, destination FROM public."Pakage" LOOP
+        IF pkg.listing_categories IS NOT NULL THEN
+            FOR cat IN SELECT jsonb_array_elements_text(pkg.listing_categories) LOOP
+                -- Try to find in homepage_sections
+                SELECT id INTO target_id FROM public.homepage_sections WHERE section_key = cat LIMIT 1;
+                IF FOUND THEN
+                    INSERT INTO public.package_placements (package_id, placement_type, placement_id, placement_slug)
+                    VALUES (pkg.id, 'homepage_section', target_id, cat)
+                    ON CONFLICT DO NOTHING;
+                ELSE
+                    -- Try to find in interest_categories
+                    SELECT id INTO target_id FROM public.interest_categories WHERE slug = cat LIMIT 1;
+                    IF FOUND THEN
+                        INSERT INTO public.package_placements (package_id, placement_type, placement_id, placement_slug)
+                        VALUES (pkg.id, 'interest', target_id, cat)
+                        ON CONFLICT DO NOTHING;
+                    END IF;
+                END IF;
+            END LOOP;
+        END IF;
+
+        IF pkg.destination IS NOT NULL AND pkg.destination <> '' THEN
+            SELECT id INTO target_id FROM public.destinations WHERE slug = pkg.destination LIMIT 1;
+            IF FOUND THEN
+                INSERT INTO public.package_placements (package_id, placement_type, placement_id, placement_slug)
+                VALUES (pkg.id, 'destination', target_id, pkg.destination)
+                ON CONFLICT DO NOTHING;
+            END IF;
+        END IF;
+    END LOOP;
+END ;
+

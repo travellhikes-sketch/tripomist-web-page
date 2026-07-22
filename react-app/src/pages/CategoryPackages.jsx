@@ -20,23 +20,25 @@ const CategoryPackages = () => {
       setLoading(true);
       setError(null);
       try {
-        // Fetch section title
-        const { data: sData } = await supabase
-          .from('homepage_sections')
-          .select('title')
-          .eq('section_key', categorySlug)
-          .single();
-        
-        if (sData) setSectionData(sData);
+        // Fetch section or interest title
+        let titleData = null;
+        const { data: sData } = await supabase.from('homepage_sections').select('title').eq('section_key', categorySlug).single();
+        if (sData) {
+          titleData = sData;
+        } else {
+          const { data: iData } = await supabase.from('interest_categories').select('name').eq('slug', categorySlug).single();
+          if (iData) titleData = { title: iData.name };
+        }
+        if (titleData) setSectionData(titleData);
 
         const { data, error: fetchErr } = await supabase
-          .from('Pakage')
-          .select('*')
-          .eq('status', 'active')
-          .contains('listing_categories', [categorySlug]);
+          .from('package_placements')
+          .select('*, Pakage!inner(*)')
+          .eq('placement_slug', categorySlug)
+          .eq('Pakage.status', 'active');
 
         if (fetchErr) throw fetchErr;
-        setPackages(data || []);
+        setPackages(data ? data.map(d => d.Pakage) : []);
       } catch (err) {
         console.error('Error fetching category packages:', err);
         setError('Failed to load packages. Please try again later.');

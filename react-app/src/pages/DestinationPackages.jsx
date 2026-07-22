@@ -21,16 +21,27 @@ const DestinationPackages = () => {
       const formattedSearchTerm = destinationSlug.replace(/-/g, ' ');
       
       try {
+        const { data: destData } = await supabase
+          .from('destinations')
+          .select('name')
+          .eq('slug', destinationSlug)
+          .single();
+          
+        if (destData && destData.name) {
+          document.title = `${destData.name} Packages - TripoMist`;
+        }
+
         const { data, error: fetchErr } = await supabase
-          .from('Pakage')
-          .select('*')
-          .eq('status', 'active')
-          .or(`state.eq.${destinationSlug},destination.eq.${destinationSlug}`);
+          .from('package_placements')
+          .select('*, Pakage!inner(*)')
+          .eq('placement_slug', destinationSlug)
+          .eq('placement_type', 'destination')
+          .eq('Pakage.status', 'active');
 
         console.log('Destination fetch response:', { data, error: fetchErr });
 
         if (fetchErr) throw fetchErr;
-        setPackages(data || []);
+        setPackages(data ? data.map(d => d.Pakage) : []);
       } catch (err) {
         console.error('Error fetching destination packages:', err);
         setError('Failed to load packages. Please try again later.');

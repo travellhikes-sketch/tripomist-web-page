@@ -70,30 +70,57 @@ const AdminPackages = () => {
   }, [successMsg]);
 
   // ── Create / Update ─────────────────────────────────────
-  const handleFormSubmit = async (pkg) => {
+  const handleFormSubmit = async (pkgData) => {
     setSaving(true);
     setError(null);
     try {
+      const { package_placements, ...pkg } = pkgData;
+      let packageId = null;
+
       if (editingPkg) {
         // UPDATE
+        packageId = editingPkg.id;
         const { error: updateErr } = await supabase
           .from('Pakage')
           .update(pkg)
-          .eq('id', editingPkg.id);
+          .eq('id', packageId);
         if (updateErr) throw updateErr;
-        setSuccessMsg(`"${pkg.title}" updated successfully.`);
       } else {
         // INSERT
-        console.log('Sending insert payload:', pkg);
         const { data, error: insertErr } = await supabase
           .from('Pakage')
           .insert([pkg])
           .select();
-        console.log('Insert response data:', data, 'error:', insertErr);
         if (insertErr) throw insertErr;
         if (!data || data.length === 0) throw new Error("Insert succeeded but database returned no rows (possible RLS read policy issue).");
-        setSuccessMsg(`"${pkg.title}" created successfully.`);
+        packageId = data[0].id;
       }
+
+      // Handle package placements
+      if (packageId) {
+        // Delete old placements
+        const { error: delErr } = await supabase
+          .from('package_placements')
+          .delete()
+          .eq('package_id', packageId);
+        if (delErr) throw delErr;
+
+        // Insert new placements
+        if (package_placements && package_placements.length > 0) {
+          const placementsToInsert = package_placements.map(p => ({
+            package_id: packageId,
+            placement_type: p.type,
+            placement_id: p.id,
+            placement_slug: p.slug
+          }));
+          const { error: placeErr } = await supabase
+            .from('package_placements')
+            .insert(placementsToInsert);
+          if (placeErr) throw placeErr;
+        }
+      }
+
+      setSuccessMsg(`"${pkg.title}" saved successfully.`);
       setShowForm(false);
       setEditingPkg(null);
       await fetchPackages();
@@ -292,7 +319,6 @@ const AdminPackages = () => {
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">Duration</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">Price (₹)</th>
                     <th className="text-center px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">Status</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">Listing Categories</th>
                     <th className="text-right px-4 py-3 font-semibold text-gray-600 whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
@@ -325,18 +351,6 @@ const AdminPackages = () => {
                         <button onClick={() => toggleField(pkg, 'status')} title="Toggle status">
                           <StatusBadge status={pkg.status} />
                         </button>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex flex-wrap gap-1 max-w-[200px]">
-                          {(pkg.listing_categories || []).map(cat => (
-                            <span key={cat} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                              {formatSlugToTitle(cat)}
-                            </span>
-                          ))}
-                          {(!pkg.listing_categories || pkg.listing_categories.length === 0) && (
-                            <span className="text-xs text-gray-400">—</span>
-                          )}
-                        </div>
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center justify-end gap-1">

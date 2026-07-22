@@ -15,7 +15,7 @@ export default function PackageDetail() {
   const [trip, setTrip] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('Itinerary')
-  const [travellers, setTravellers] = useState(2)
+  const [travellers, setTravellers] = useState(1)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
   
   const [activeAccordion, setActiveAccordion] = useState(0)
