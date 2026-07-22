@@ -31,17 +31,25 @@ DECLARE
     pkg RECORD;
     cat TEXT;
     target_id UUID;
+    norm_cat TEXT;
 BEGIN
     FOR pkg IN SELECT id, listing_categories, destination, featured, best_seller FROM public."Pakage" LOOP
         
         -- Migrate categories (including featured and best_seller logic)
         IF pkg.listing_categories IS NOT NULL THEN
-            FOR cat IN SELECT jsonb_array_elements_text(pkg.listing_categories) LOOP
+            FOR cat IN SELECT jsonb_array_elements_text(pkg.listing_categories::jsonb) LOOP
+                -- Fix best-seller vs best_seller mismatch
+                IF cat = 'best-seller' THEN
+                    norm_cat := 'best_seller';
+                ELSE
+                    norm_cat := cat;
+                END IF;
+
                 -- Try to find in homepage_sections
-                SELECT id INTO target_id FROM public.homepage_sections WHERE section_key = cat LIMIT 1;
+                SELECT id INTO target_id FROM public.homepage_sections WHERE section_key = norm_cat LIMIT 1;
                 IF FOUND THEN
                     INSERT INTO public.package_placements (package_id, placement_type, placement_id, placement_slug)
-                    VALUES (pkg.id, 'homepage_section', target_id, cat)
+                    VALUES (pkg.id, 'homepage_section', target_id, norm_cat)
                     ON CONFLICT DO NOTHING;
                 ELSE
                     -- Try to find in interest_categories
@@ -66,10 +74,10 @@ BEGIN
         END IF;
 
         IF pkg.best_seller = true THEN
-            SELECT id INTO target_id FROM public.homepage_sections WHERE section_key = 'best-seller' LIMIT 1;
+            SELECT id INTO target_id FROM public.homepage_sections WHERE section_key = 'best_seller' LIMIT 1;
             IF FOUND THEN
                 INSERT INTO public.package_placements (package_id, placement_type, placement_id, placement_slug)
-                VALUES (pkg.id, 'homepage_section', target_id, 'best-seller')
+                VALUES (pkg.id, 'homepage_section', target_id, 'best_seller')
                 ON CONFLICT DO NOTHING;
             END IF;
         END IF;
