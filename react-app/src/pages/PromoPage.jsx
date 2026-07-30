@@ -18,7 +18,7 @@ function PromoPage() {
       try {
         // Fetch promo
         const { data: promoData, error: promoError } = await supabase
-          .from('promo_strips')
+          .from('promotional_banners')
           .select('*')
           .eq('slug', slug)
           .eq('is_active', true)
@@ -63,7 +63,7 @@ function PromoPage() {
 
   useEffect(() => {
     if (promo) {
-      document.title = `${promo.text} - TripoMist`;
+      document.title = `${promo.page_title || promo.title || promo.internal_name} - TripoMist`;
     }
   }, [promo]);
 
@@ -92,28 +92,23 @@ function PromoPage() {
       <Navbar />
       <div className="flex-grow pb-20">
         {/* Hero Section */}
-      {promo.hero_banner_url && (
+      {(promo.desktop_image || promo.mobile_image) && (
         <div className="relative w-full h-[40vh] md:h-[50vh] lg:h-[60vh] overflow-hidden">
-          {promo.hero_media_type === 'video' ? (
-            <video 
-              src={promo.hero_banner_url}
-              autoPlay loop muted playsInline
-              className="absolute top-0 left-0 w-full h-full object-cover"
-            />
-          ) : (
+          <picture>
+            {promo.mobile_image && <source media="(max-width: 768px)" srcSet={promo.mobile_image} />}
             <img 
-              src={promo.hero_banner_url} 
-              alt={promo.text} 
+              src={promo.desktop_image || promo.mobile_image} 
+              alt={promo.page_title || promo.title} 
               className="w-full h-full object-cover"
             />
-          )}
+          </picture>
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center uppercase tracking-wide">
-              {promo.text}
+              {promo.page_title || promo.title}
             </h1>
-            {promo.subtitle && (
+            {(promo.page_subtitle || promo.subtitle) && (
               <p className="text-white/90 text-lg md:text-xl mt-4 text-center max-w-2xl">
-                {promo.subtitle}
+                {promo.page_subtitle || promo.subtitle}
               </p>
             )}
           </div>
@@ -121,14 +116,14 @@ function PromoPage() {
       )}
 
       {/* Title if no Hero */}
-      {!promo.hero_banner_url && (
+      {!(promo.desktop_image || promo.mobile_image) && (
         <div className="bg-[#136b8a] py-12 md:py-20 text-center px-4">
           <h1 className="text-3xl md:text-5xl font-bold text-white uppercase tracking-wide">
-            {promo.text}
+            {promo.page_title || promo.title}
           </h1>
-          {promo.subtitle && (
+          {(promo.page_subtitle || promo.subtitle) && (
             <p className="text-white/90 text-lg mt-4 max-w-2xl mx-auto">
-              {promo.subtitle}
+              {promo.page_subtitle || promo.subtitle}
             </p>
           )}
         </div>
@@ -136,19 +131,27 @@ function PromoPage() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12">
         {/* About Section */}
-        {promo.description && (
+        {(promo.content || promo.full_description) && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">About the Promotion</h2>
             <div className="text-gray-700 text-base md:text-lg leading-relaxed whitespace-pre-wrap">
-              {showFullDesc ? promo.description : promo.description.slice(0, 300) + (promo.description.length > 300 ? '...' : '')}
+              {showFullDesc ? (promo.content || promo.full_description) : (promo.content || promo.full_description).slice(0, 300) + ((promo.content || promo.full_description).length > 300 ? '...' : '')}
             </div>
-            {promo.description.length > 300 && (
+            {(promo.content || promo.full_description).length > 300 && (
               <button 
                 onClick={() => setShowFullDesc(!showFullDesc)}
                 className="mt-3 text-[#136b8a] font-semibold hover:underline"
               >
                 {showFullDesc ? 'Read Less' : 'Read More'}
               </button>
+            )}
+            
+            {promo.cta_link && (
+               <div className="mt-8">
+                 <a href={promo.cta_link} className="inline-block bg-[#136b8a] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#0f556e] transition shadow-md">
+                   {promo.cta_text || 'View Offer'}
+                 </a>
+               </div>
             )}
           </div>
         )}

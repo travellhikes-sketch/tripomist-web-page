@@ -15,7 +15,9 @@ const AdminBanners = () => {
     button_text: 'Explore Now', button_link: '', display_order: 0, is_active: true,
     slug: '', mobile_banner: '', short_description: '', full_description: '',
     duration: '', price: '', original_price: '', discount_text: '', destination: '', state: '',
-    itinerary: '', inclusions: '', exclusions: '', costings: '', status: 'active', is_clickable: true
+    itinerary: '', inclusions: '', exclusions: '', costings: '', status: 'active', is_clickable: true,
+    internal_name: '', promo_stripe_text: '', page_title: '', page_subtitle: '', content: '',
+    cta_text: 'View Offer', cta_link: '', start_date: '', end_date: ''
   };
   const [formData, setFormData] = useState(initialFormState);
   const [jsonError, setJsonError] = useState('');
@@ -59,7 +61,9 @@ const AdminBanners = () => {
       exclusions: banner.exclusions ? JSON.stringify(banner.exclusions, null, 2) : '',
       costings: banner.costings ? JSON.stringify(banner.costings, null, 2) : '',
       is_clickable: banner.is_clickable ?? true,
-      status: banner.status || 'active'
+      status: banner.status || 'active',
+      start_date: banner.start_date ? new Date(banner.start_date).toISOString().slice(0, 16) : '',
+      end_date: banner.end_date ? new Date(banner.end_date).toISOString().slice(0, 16) : ''
     });
     setIsEditing(true);
   };
@@ -94,6 +98,8 @@ const AdminBanners = () => {
       inclusions: parsedInclusions,
       exclusions: parsedExclusions,
       costings: parsedCostings,
+      start_date: formData.start_date ? new Date(formData.start_date).toISOString() : null,
+      end_date: formData.end_date ? new Date(formData.end_date).toISOString() : null,
     };
 
     try {
@@ -221,6 +227,22 @@ const AdminBanners = () => {
             </div>
             <div><label className={labelClass}>Short Description</label><textarea name="short_description" value={formData.short_description || ''} onChange={handleInputChange} className={inputClass} rows={2} /></div>
             <div><label className={labelClass}>Full Description</label><textarea name="full_description" value={formData.full_description || ''} onChange={handleInputChange} className={inputClass} rows={4} /></div>
+          </div>
+
+          {/* Dynamic Promo Offer Page Content */}
+          <div className="space-y-4">
+            <h3 className="text-md font-semibold border-b pb-2">3b. Promo Offer Page & Stripe Fields</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label className={labelClass}>Internal Promo Name</label><input type="text" name="internal_name" value={formData.internal_name || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>Promo Stripe Text</label><input type="text" name="promo_stripe_text" value={formData.promo_stripe_text || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>Promo Page Title</label><input type="text" name="page_title" value={formData.page_title || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>Promo Page Subtitle</label><input type="text" name="page_subtitle" value={formData.page_subtitle || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>CTA Button Text</label><input type="text" name="cta_text" value={formData.cta_text || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>CTA Button Link</label><input type="text" name="cta_link" value={formData.cta_link || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>Start Date</label><input type="datetime-local" name="start_date" value={formData.start_date || ''} onChange={handleInputChange} className={inputClass} /></div>
+              <div><label className={labelClass}>End Date</label><input type="datetime-local" name="end_date" value={formData.end_date || ''} onChange={handleInputChange} className={inputClass} /></div>
+            </div>
+            <div><label className={labelClass}>Full Offer Content</label><textarea name="content" value={formData.content || ''} onChange={handleInputChange} className={inputClass} rows={4} /></div>
           </div>
 
           {/* Detail JSONs */}

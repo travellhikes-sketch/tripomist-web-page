@@ -30,6 +30,9 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [showPrimaryBadge, setShowPrimaryBadge] = useState(true);
   const [showSecondaryBadge, setShowSecondaryBadge] = useState(true);
   const [isClickable, setIsClickable] = useState(true);
+  const [cardCtaText, setCardCtaText] = useState('Click');
+  const [cardCtaAction, setCardCtaAction] = useState('open_package');
+  const [cardCtaUrl, setCardCtaUrl] = useState('');
 
   const [dynamicSections, setDynamicSections] = useState([]);
   const [dynamicInterests, setDynamicInterests] = useState([]);
@@ -96,6 +99,9 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setShowPrimaryBadge(initialData.show_primary_badge ?? true);
       setShowSecondaryBadge(initialData.show_secondary_badge ?? true);
       setIsClickable(initialData.is_clickable ?? true);
+      setCardCtaText(initialData.card_cta_text || 'Click');
+      setCardCtaAction(initialData.card_cta_action || 'open_package');
+      setCardCtaUrl(initialData.card_cta_url || '');
 
       const fetchExistingPlacements = async () => {
         try {
@@ -177,6 +183,9 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       show_primary_badge: showPrimaryBadge,
       show_secondary_badge: showSecondaryBadge,
       is_clickable: isClickable,
+      card_cta_text: cardCtaText.trim() || 'Click',
+      card_cta_action: cardCtaAction,
+      card_cta_url: cardCtaUrl.trim() || null,
     };
     onSubmit(pkg);
   };
@@ -334,6 +343,29 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   <input type="checkbox" checked={showSecondaryBadge} onChange={e => setShowSecondaryBadge(e.target.checked)} className="w-4 h-4 mr-2" />
                   <label className="text-sm font-medium text-gray-700">Show Secondary Badge</label>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Button */}
+          <div className="border-t border-gray-200 pt-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Card Button Customization</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className={labelClass}>Button Text</label>
+                <input type="text" value={cardCtaText} onChange={e => setCardCtaText(e.target.value)} className={inputClass} placeholder="Default: Click" />
+              </div>
+              <div>
+                <label className={labelClass}>Button Action</label>
+                <select value={cardCtaAction} onChange={e => setCardCtaAction(e.target.value)} className={inputClass}>
+                  <option value="open_package">Open Package Page</option>
+                  <option value="coming_soon">Coming Soon / Disabled</option>
+                  <option value="custom_url">Custom URL</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Custom URL</label>
+                <input type="text" value={cardCtaUrl} onChange={e => setCardCtaUrl(e.target.value)} className={inputClass} placeholder="https://..." disabled={cardCtaAction !== 'custom_url'} />
               </div>
             </div>
           </div>

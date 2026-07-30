@@ -44,7 +44,9 @@ const AdminRoute = React.lazy(() => import('./components/admin/AdminRoute'));
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
-const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'));
+const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'))
+const AdminCancelledBookings = React.lazy(() => import('./pages/admin/AdminCancelledBookings'))
+const AdminServiceRecovery = React.lazy(() => import('./pages/admin/AdminServiceRecovery'))
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
 
@@ -119,7 +121,9 @@ function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="packages" element={<AdminPackages />} />
-              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="bookings" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminBookings /></React.Suspense>} />
+              <Route path="bookings/cancelled" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminCancelledBookings /></React.Suspense>} />
+              <Route path="service-recovery" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceRecovery /></React.Suspense>} />
               <Route path="manual-bookings" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
               } />
@@ -259,6 +263,7 @@ function App() {
           <Route path="/itinerary/udaipur-and-kumbhalgarh" element={<ItineraryUdaipurKumbhalgarh />} />
           <Route path="/explore/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ExploreDepartment /></React.Suspense>} />
           <Route path="/promo/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
+          <Route path="/offers/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
           <Route path="/itinerary/:slug" element={<PackageDetail />} />
           <Route path="/banner/:slug" element={<PackageDetail />} />
           <Route path="/checkout" element={<Checkout />} />

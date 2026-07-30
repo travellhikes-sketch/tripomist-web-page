@@ -16,6 +16,11 @@ const AdminBookings = () => {
   const [showManualBooking, setShowManualBooking] = useState(false);
   const [editBookingId, setEditBookingId] = useState(null);
   
+  // Cancellation Modal State
+  const [cancelModal, setCancelModal] = useState({ isOpen: false, booking: null });
+  const [cancelReason, setCancelReason] = useState('');
+  const [refundStatus, setRefundStatus] = useState('no_refund');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -123,9 +128,9 @@ const AdminBookings = () => {
         await handleStatusUpdate(booking.id, 'booking_status', 'confirmed');
         break;
       case 'cancel':
-        if (window.confirm('Are you sure you want to cancel this booking?')) {
-          await handleStatusUpdate(booking.id, 'booking_status', 'cancelled');
-        }
+        setCancelModal({ isOpen: true, booking });
+        setCancelReason('');
+        setRefundStatus('No Refund');
         break;
       case 'markPaid':
         await handleStatusUpdate(booking.id, 'payment_status', 'paid');
@@ -140,6 +145,75 @@ const AdminBookings = () => {
         break;
       default:
         break;
+    }
+  };
+
+  const submitCancel = async () => {
+    if (!cancelReason.trim()) {
+      alert("Please provide a cancellation reason.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const b = cancelModal.booking;
+      
+      // Log activity
+      const session = await supabase.auth.getSession();
+      const userId = session.data?.session?.user?.id || null;
+
+      // Update booking status
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          booking_status: 'cancelled', 
+          refund_status: refundStatus,
+          cancellation_reason: cancelReason,
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: userId
+        })
+        .eq('id', b.id);
+      if (error) throw error;
+
+      // Log activity
+      await supabase.from('booking_activity_logs').insert([{
+        booking_id: b.id,
+        action: 'Booking Cancelled',
+        field_name: 'booking_status',
+        old_value: b.booking_status,
+        new_value: `cancelled (Reason: ${cancelReason})`,
+        changed_by: userId
+      }]);
+
+      setBookings(prev => prev.map(bk => 
+        bk.id === b.id ? { ...bk, booking_status: 'cancelled', refund_status: refundStatus, cancellation_reason: cancelReason, cancelled_at: new Date().toISOString() } : bk
+      ));
+      
+      if (selectedBooking?.id === b.id) {
+        setSelectedBooking(prev => ({ ...prev, booking_status: 'cancelled', refund_status: refundStatus, cancellation_reason: cancelReason, cancelled_at: new Date().toISOString() }));
+      }
+      
+      setCancelModal({ isOpen: false, booking: null });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to cancel booking.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkProblem = async (booking) => {
+    const issue = window.prompt(`Enter issue description for booking ${booking.booking_id}:`);
+    if (!issue) return;
+    try {
+      const { error } = await supabase.from('service_recovery_cases').insert([{
+        booking_id: booking.id,
+        issue_description: issue,
+        status: 'open'
+      }]);
+      if (error) throw error;
+      alert('Service recovery case created.');
+    } catch (err) {
+      alert('Failed to create service recovery case.');
     }
   };
 
@@ -511,6 +585,9 @@ const AdminBookings = () => {
                 <button onClick={() => handleQuickAction(selectedBooking, 'markPaid')} className="col-span-2 bg-[#136b8a]/10 text-[#136b8a] hover:bg-[#136b8a]/20 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-[#136b8a]/20 transition-colors">
                   <CreditCard size={14} /> Mark Paid
                 </button>
+                <button onClick={() => handleMarkProblem(selectedBooking)} className="col-span-2 bg-amber-50 text-amber-700 hover:bg-amber-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-amber-200 transition-colors mt-1">
+                   Problem Faced (Service Recovery)
+                </button>
               </div>
 
               {/* Customer */}
@@ -621,6 +698,42 @@ const AdminBookings = () => {
             </div>
           </div>
         </>
+      )}
+      {/* Cancel Modal */}
+      {cancelModal.isOpen && cancelModal.booking && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Cancel Booking</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Cancellation *</label>
+              <textarea 
+                value={cancelReason} 
+                onChange={e => setCancelReason(e.target.value)} 
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-rose-500 outline-none" 
+                rows="3" 
+                required
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Refund Status</label>
+              <select 
+                value={refundStatus} 
+                onChange={e => setRefundStatus(e.target.value)}
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-rose-500 outline-none"
+              >
+                <option value="Not Applicable">Not Applicable</option>
+                <option value="No Refund">No Refund</option>
+                <option value="Refund Pending">Refund Pending</option>
+                <option value="Partially Refunded">Partially Refunded</option>
+                <option value="Fully Refunded">Fully Refunded</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+              <button onClick={submitCancel} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700">Confirm Cancellation</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

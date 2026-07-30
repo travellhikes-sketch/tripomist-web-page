@@ -15,7 +15,7 @@ const publicNavItems = [
 const accountNavItems = [
   { icon: Home,         label: 'Home',          path: '/' },
   { icon: Briefcase,    label: 'My Trips',      path: '/my-trips' },
-  { icon: Receipt,      label: 'Bookings',      path: '/my-trips' },
+  { icon: Receipt,      label: 'Bookings',      path: '/bookings' },
   { icon: User,         label: 'Profile',       path: '/profile' },
   { icon: ShoppingCart, label: 'Cart',          path: '/cart' },
 ]
@@ -63,7 +63,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
         navigate(nav.path);
       }
     },
-    active: nav.label === 'Support' ? !!isChatOpen : location.pathname === nav.path,
+    active: nav.label === 'Support' ? !!isChatOpen : (location.pathname === nav.path || (nav.path !== '/' && location.pathname.startsWith(nav.path))),
     badge: nav.label === 'Cart' ? cartCount : undefined,
   }))
 

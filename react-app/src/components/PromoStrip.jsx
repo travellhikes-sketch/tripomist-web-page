@@ -10,16 +10,24 @@ export default function PromoStrip() {
   }, []);
 
   const fetchPromo = async () => {
+    const now = new Date().toISOString();
+    
     const { data, error } = await supabase
-      .from('promo_strips')
+      .from('promotional_banners')
       .select('*')
       .eq('is_active', true)
-      .order('display_order', { ascending: true })
-      .limit(1)
-      .single();
+      .order('display_order', { ascending: true });
 
-    if (!error && data) {
-      setPromo(data);
+    if (!error && data && data.length > 0) {
+      const validPromo = data.find(p => {
+        if (!p.promo_stripe_text) return false;
+        if (p.start_date && new Date(p.start_date) > new Date()) return false;
+        if (p.end_date && new Date(p.end_date) < new Date()) return false;
+        return true;
+      });
+      if (validPromo) {
+        setPromo(validPromo);
+      }
     }
   };
 
@@ -27,38 +35,24 @@ export default function PromoStrip() {
 
   const content = (
     <div 
-      className={`relative overflow-hidden text-xs sm:text-sm font-medium py-2 px-4 text-center w-full ${promo.is_clickable ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+      className={`relative overflow-hidden text-xs sm:text-sm font-medium py-2 px-4 text-center w-full cursor-pointer hover:opacity-90 transition-opacity`}
       style={{ backgroundColor: promo.bg_color || '#0b1b32', color: promo.text_color || '#ffffff' }}
     >
-      <span className="relative z-10">{promo.text}</span>
+      <span className="relative z-10">{promo.promo_stripe_text}</span>
       
       {/* Shine animation effect */}
-      {promo.shine_enabled && (
-        <div 
-          className="absolute top-0 -inset-full h-full w-1/2 z-0 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-70 motion-safe:animate-shine"
-          style={{ animationDuration: `${promo.animation_speed || 2}s` }}
-        />
-      )}
+      <div 
+        className="absolute top-0 -inset-full h-full w-1/2 z-0 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-70 motion-safe:animate-shine"
+        style={{ animationDuration: '3s' }}
+      />
     </div>
   );
 
-  const destinationUrl = promo.link_url || (promo.slug ? `/promo/${promo.slug}` : null);
+  const destinationUrl = `/offers/${promo.slug}`;
 
-  if (promo.is_clickable && destinationUrl) {
-    if (destinationUrl.startsWith('http')) {
-      return (
-        <a href={destinationUrl} target={promo.open_in_new_tab ? '_blank' : '_self'} rel="noopener noreferrer" className="block w-full">
-          {content}
-        </a>
-      );
-    } else {
-      return (
-        <Link to={destinationUrl} target={promo.open_in_new_tab ? '_blank' : '_self'} className="block w-full">
-          {content}
-        </Link>
-      );
-    }
-  }
-
-  return content;
+  return (
+    <Link to={destinationUrl} className="block w-full">
+      {content}
+    </Link>
+  );
 }

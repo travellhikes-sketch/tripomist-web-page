@@ -17,18 +17,32 @@ const PackageCard = ({
   className,
   secondaryBadgeText,
   showSecondaryBadge,
-  isClickable = true
+  isClickable = true,
+  cardCtaText = 'Click',
+  cardCtaAction = 'open_package',
+  cardCtaUrl = ''
 }) => {
   const displayPrice = price ? (typeof price === 'string' && !price.includes('/-') ? `${price}/-` : price) : null;
   const displayOriginalPrice = originalPrice ? (typeof originalPrice === 'string' && !originalPrice.includes('/-') ? `${originalPrice}/-` : originalPrice) : null;
   
-  const hasValidLink = link && link !== '#';
-  const shouldBeClickable = isClickable && hasValidLink;
+  let finalLink = link;
+  let finalIsClickable = isClickable;
+  let displayCtaText = cardCtaText || 'Click';
+
+  if (cardCtaAction === 'coming_soon') {
+      finalIsClickable = false;
+      displayCtaText = cardCtaText && cardCtaText !== 'Click' ? cardCtaText : 'Coming Soon';
+  } else if (cardCtaAction === 'custom_url' && cardCtaUrl) {
+      finalLink = cardCtaUrl;
+  }
+
+  const hasValidLink = finalLink && finalLink !== '#';
+  const shouldBeClickable = finalIsClickable && hasValidLink;
   
   let finalSecondaryBadge = (showSecondaryBadge && secondaryBadgeText) ? secondaryBadgeText : null;
 
   const CardWrapper = shouldBeClickable ? Link : 'div';
-  const wrapperProps = shouldBeClickable ? { to: link || '#' } : {};
+  const wrapperProps = shouldBeClickable ? { to: finalLink || '#' } : {};
 
   return (
     <CardWrapper 
@@ -90,7 +104,7 @@ const PackageCard = ({
           <div className={`relative overflow-hidden group/btn bg-gray-50 rounded-full px-3 py-1.5 border border-gray-100 flex items-center transition-all ${shouldBeClickable ? 'cursor-pointer' : 'cursor-default'}`}>
             {shouldBeClickable && <div className="absolute inset-0 w-0 bg-[#136b8a] transition-all duration-300 ease-out group-hover/btn:w-full z-0"></div>}
             <div className={`relative z-10 flex items-center font-bold text-[12px] whitespace-nowrap transition-colors duration-300 ${shouldBeClickable ? 'text-gray-900 group-hover/btn:text-white' : 'text-gray-400'}`}>
-              <span className={shouldBeClickable ? "mr-1" : ""}>{shouldBeClickable ? 'Click' : 'Coming Soon'}</span>
+              <span className={shouldBeClickable ? "mr-1" : ""}>{displayCtaText}</span>
               {shouldBeClickable && <span className="material-symbols-outlined text-[16px]">arrow_outward</span>}
             </div>
           </div>

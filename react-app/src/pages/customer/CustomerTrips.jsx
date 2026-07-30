@@ -126,6 +126,20 @@ const CustomerTrips = () => {
                       {trip.travellers} Person(s)
                     </div>
                   </div>
+                  
+                  {trip.booking_status === 'cancelled' && (
+                    <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 mt-2 space-y-1.5 text-sm">
+                      {trip.cancellation_reason && (
+                        <p className="text-rose-900"><span className="font-semibold">Reason:</span> {trip.cancellation_reason}</p>
+                      )}
+                      {trip.cancelled_at && (
+                        <p className="text-rose-800"><span className="font-semibold">Cancelled On:</span> {new Date(trip.cancelled_at).toLocaleDateString('en-IN')}</p>
+                      )}
+                      {trip.refund_status && (
+                        <p className="text-rose-800"><span className="font-semibold">Refund Status:</span> {trip.refund_status}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">

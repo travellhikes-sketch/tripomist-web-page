@@ -135,9 +135,25 @@ const AdminLayout = () => {
                 <Link to="/admin/booking-activity-logs" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/booking-activity-logs') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   Activity Logs
                 </Link>
+                <Link to="/admin/bookings/cancelled" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/admin/bookings/cancelled' ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
+                  Cancelled Bookings
+                </Link>
               </div>
             )}
           </div>
+          
+          <Link
+            to="/admin/service-recovery"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
+              location.pathname.startsWith('/admin/service-recovery')
+                ? 'bg-slate-100 text-slate-900 font-semibold' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ShieldAlert size={18} className={location.pathname.startsWith('/admin/service-recovery') ? 'text-rose-600' : 'text-gray-400'} />
+            Service Recovery
+          </Link>
 
           <Link
             to="/admin/users"
