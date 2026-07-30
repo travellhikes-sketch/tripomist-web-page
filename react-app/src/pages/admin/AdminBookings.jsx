@@ -4,7 +4,7 @@ import { generatePDFVoucher } from '../../utils/pdfGenerator';
 import { 
   X, Check, XCircle, Copy, Download, Search, 
   Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
-  MoreVertical, Phone, MessageCircle
+  MoreVertical, Phone, MessageCircle, Edit
 } from 'lucide-react';
 
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
