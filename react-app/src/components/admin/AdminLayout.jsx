@@ -19,7 +19,8 @@ import {
   Layout,
   Globe,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert
 } from 'lucide-react';
 
 const AdminLayout = () => {
