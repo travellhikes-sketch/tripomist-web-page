@@ -1,4 +1,3 @@
-import { supabase } from '../utils/supabaseClient';
 import React, { useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import BookingModal from '../components/BookingModal'
@@ -156,33 +155,8 @@ export default function ItineraryChopta() {
     window.dispatchEvent(new Event('cartUpdated'));
   }
 
-  const handleBookNow = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const slugStr = trip.slug || trip.title.toLowerCase().replace(/ /g, '-');
-      const dataStr = JSON.stringify({
-        formData: { 
-          fullName: session.user.user_metadata?.full_name || '', 
-          phone: session.user.phone || '', 
-          email: session.user.email || '', 
-          date: '', 
-          source: '', 
-          specialRequest: '' 
-        },
-        tripDetails: { 
-          packageId: trip.id || slugStr, 
-          tripTitle: trip.title, 
-          destination: trip.pickup || trip.title, 
-          travellers: travellers, 
-          price: trip.numericPrice,
-          costings: trip.costings || []
-        }
-      });
-      sessionStorage.setItem('checkoutData', dataStr);
-      navigate(`/checkout/${slugStr}`);
-    } else {
-      setIsBookingModalOpen(true);
-    }
+  const handleBookNow = () => {
+    setIsBookingModalOpen(true)
   }
 
   const toggleAccordion = (index) => {

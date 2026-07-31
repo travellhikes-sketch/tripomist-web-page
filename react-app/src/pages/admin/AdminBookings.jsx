@@ -4,12 +4,10 @@ import { generatePDFVoucher } from '../../utils/pdfGenerator';
 import { 
   X, Check, XCircle, Copy, Download, Search, 
   Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
-  MoreVertical, Phone, MessageCircle, Edit, Tag, Building
+  MoreVertical, Phone, MessageCircle, Edit
 } from 'lucide-react';
 
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
-import ConfirmModal from '../../components/admin/ConfirmModal';
-import ServiceRecoveryCreationModal from '../../components/admin/ServiceRecoveryCreationModal';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -21,17 +19,11 @@ const AdminBookings = () => {
   // Cancellation Modal State
   const [cancelModal, setCancelModal] = useState({ isOpen: false, booking: null });
   const [cancelReason, setCancelReason] = useState('');
-  const [cancelNotes, setCancelNotes] = useState('');
-  const [cancelResolution, setCancelResolution] = useState('Cancel Without Refund');
-  const [voucherAmount, setVoucherAmount] = useState('');
-  const [voucherExpiry, setVoucherExpiry] = useState('');
-  const [voucherNotes, setVoucherNotes] = useState('');
-  const [confirmVoucherAmount, setConfirmVoucherAmount] = useState(false);
+  const [refundStatus, setRefundStatus] = useState('no_refund');
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
-  const [salesChannelFilter, setSalesChannelFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all'); // all | this | last | custom
   const [customMonth, setCustomMonth] = useState(''); // format YYYY-MM
   const [packageFilter, setPackageFilter] = useState('all');
@@ -43,9 +35,6 @@ const AdminBookings = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [bookingsPerPage, setBookingsPerPage] = useState(25);
   const [selectedRowIds, setSelectedRowIds] = useState(new Set());
-  
-  const [confirmModalConfig, setConfirmModalConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'danger' });
-  const [serviceRecoveryModal, setServiceRecoveryModal] = useState({ isOpen: false, booking: null });
 
   useEffect(() => {
     fetchBookings();
@@ -109,34 +98,28 @@ const AdminBookings = () => {
     }
   };
 
-  const handleBulkAction = (status) => {
+  const handleBulkAction = async (status) => {
     if (selectedRowIds.size === 0) return;
-    setConfirmModalConfig({
-      isOpen: true,
-      title: 'Bulk Action',
-      message: `Are you sure you want to mark ${selectedRowIds.size} bookings as ${status}?`,
-      type: 'amber',
-      onConfirm: async () => {
-        try {
-          setLoading(true);
-          const idsArray = Array.from(selectedRowIds);
-          
-          for (const id of idsArray) {
-             await supabase.from('bookings').update({ booking_status: status }).eq('id', id);
-          }
-          
-          setBookings(prev => prev.map(b => 
-            selectedRowIds.has(b.id) ? { ...b, booking_status: status } : b
-          ));
-          setSelectedRowIds(new Set());
-        } catch (err) {
-          console.error('Bulk update error:', err);
-          alert('Failed to perform bulk update.');
-        } finally {
-          setLoading(false);
-        }
+    if (!window.confirm(`Are you sure you want to mark ${selectedRowIds.size} bookings as ${status}?`)) return;
+
+    try {
+      setLoading(true);
+      const idsArray = Array.from(selectedRowIds);
+      
+      for (const id of idsArray) {
+         await supabase.from('bookings').update({ booking_status: status }).eq('id', id);
       }
-    });
+      
+      setBookings(prev => prev.map(b => 
+        selectedRowIds.has(b.id) ? { ...b, booking_status: status } : b
+      ));
+      setSelectedRowIds(new Set());
+    } catch (err) {
+      console.error('Bulk update error:', err);
+      alert('Failed to perform bulk update.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQuickAction = async (booking, actionType) => {
@@ -147,15 +130,7 @@ const AdminBookings = () => {
       case 'cancel':
         setCancelModal({ isOpen: true, booking });
         setCancelReason('');
-        setCancelNotes('');
-        setCancelResolution('Cancel Without Refund');
-        
-        // Default coupon amount to paid amount
-        const paid = Number(booking.final_payable_amount || booking.final_amount || booking.total_amount || 0);
-        setVoucherAmount(paid > 0 ? paid.toString() : '');
-        setVoucherExpiry('');
-        setVoucherNotes('');
-        setConfirmVoucherAmount(false);
+        setRefundStatus('No Refund');
         break;
       case 'markPaid':
         await handleStatusUpdate(booking.id, 'payment_status', 'paid');
@@ -178,68 +153,73 @@ const AdminBookings = () => {
       alert("Please provide a cancellation reason.");
       return;
     }
-    
-    if (cancelResolution === 'Convert Paid Amount to Coupon') {
-        if (!voucherAmount || isNaN(voucherAmount) || parseFloat(voucherAmount) <= 0) {
-            alert("Please enter a valid positive coupon amount.");
-            return;
-        }
-        const maxCoupon = parseFloat(cancelModal.booking.final_payable_amount || cancelModal.booking.final_amount || cancelModal.booking.total_amount || 0);
-        if (parseFloat(voucherAmount) > maxCoupon) {
-            alert(`Coupon amount cannot be greater than the actual paid amount (₹${maxCoupon}).`);
-            return;
-        }
-        if (!voucherExpiry) {
-            alert("Please select a coupon expiry date.");
-            return;
-        }
-        if (new Date(voucherExpiry) <= new Date()) {
-            alert("Coupon expiry date must be in the future.");
-            return;
-        }
-        if (!confirmVoucherAmount) {
-            alert("Please confirm the coupon amount.");
-            return;
-        }
-    }
-
     setLoading(true);
     try {
       const b = cancelModal.booking;
-      const isVoucher = cancelResolution === 'Convert Paid Amount to Coupon';
       
-      const { data, error } = await supabase.rpc('cancel_booking_with_voucher', {
-          p_booking_id: b.id,
-          p_cancellation_reason: cancelReason,
-          p_refund_status: cancelResolution,
-          p_cancellation_notes: cancelNotes,
-          p_issue_voucher: isVoucher,
-          p_voucher_amount: isVoucher ? parseFloat(voucherAmount) : 0,
-          p_voucher_expiry: isVoucher ? new Date(voucherExpiry).toISOString() : null,
-          p_voucher_notes: isVoucher ? voucherNotes : null
-      });
+      // Log activity
+      const session = await supabase.auth.getSession();
+      const userId = session.data?.session?.user?.id || null;
 
+      // Update booking status
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          booking_status: 'cancelled', 
+          refund_status: refundStatus,
+          cancellation_reason: cancelReason,
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: userId
+        })
+        .eq('id', b.id);
       if (error) throw error;
 
-      alert('Booking cancelled successfully.');
-      fetchBookings();
+      // Log activity
+      await supabase.from('booking_activity_logs').insert([{
+        booking_id: b.id,
+        action: 'Booking Cancelled',
+        field_name: 'booking_status',
+        old_value: b.booking_status,
+        new_value: `cancelled (Reason: ${cancelReason})`,
+        changed_by: userId
+      }]);
+
+      setBookings(prev => prev.map(bk => 
+        bk.id === b.id ? { ...bk, booking_status: 'cancelled', refund_status: refundStatus, cancellation_reason: cancelReason, cancelled_at: new Date().toISOString() } : bk
+      ));
+      
+      if (selectedBooking?.id === b.id) {
+        setSelectedBooking(prev => ({ ...prev, booking_status: 'cancelled', refund_status: refundStatus, cancellation_reason: cancelReason, cancelled_at: new Date().toISOString() }));
+      }
+      
       setCancelModal({ isOpen: false, booking: null });
-      setSelectedBooking(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to cancel booking: ' + err.message);
+      alert('Failed to cancel booking.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMarkProblem = (booking) => {
-    setServiceRecoveryModal({ isOpen: true, booking });
+  const handleMarkProblem = async (booking) => {
+    const issue = window.prompt(`Enter issue description for booking ${booking.booking_id}:`);
+    if (!issue) return;
+    try {
+      const { error } = await supabase.from('service_recovery_cases').insert([{
+        booking_id: booking.id,
+        issue_description: issue,
+        status: 'open'
+      }]);
+      if (error) throw error;
+      alert('Service recovery case created.');
+    } catch (err) {
+      alert('Failed to create service recovery case.');
+    }
   };
 
   const exportToCSV = () => {
     if (filteredBookings.length === 0) return;
-    const headers = ['Booking ID', 'Booking Date', 'Customer', 'Phone', 'Email', 'Package', 'Travel Date', 'Travellers', 'Amount', 'Payment Status', 'Booking Status', 'Sales Channel', 'Partner Company', 'Razorpay ID'];
+    const headers = ['Booking ID', 'Booking Date', 'Customer', 'Phone', 'Email', 'Package', 'Travel Date', 'Travellers', 'Amount', 'Payment Status', 'Booking Status', 'Razorpay ID'];
     const rows = filteredBookings.map(b => [
       b.booking_id,
       new Date(b.created_at).toLocaleDateString(),
@@ -252,8 +232,6 @@ const AdminBookings = () => {
       b.final_amount || b.total_amount || 0,
       b.payment_status,
       b.booking_status,
-      b.sales_channel || 'unclassified',
-      b.b2b_partner_company || '',
       b.razorpay_payment_id || ''
     ]);
 
@@ -289,27 +267,10 @@ const AdminBookings = () => {
       const matchesStatus = statusFilter === 'all' || b.booking_status === statusFilter;
       const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter;
       const matchesPackage = packageFilter === 'all' || b.package_title === packageFilter;
-      const matchesSales = salesChannelFilter === 'all' || b.sales_channel === salesChannelFilter || (!b.sales_channel && salesChannelFilter === 'unclassified');
       
-      return matchesSearch && matchesStatus && matchesPayment && matchesPackage && matchesSales;
+      return matchesSearch && matchesStatus && matchesPayment && matchesPackage;
     });
-  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter, salesChannelFilter]);
-  
-  // Summary Stats
-  const summaryStats = useMemo(() => {
-    let b2bCount = 0, b2cCount = 0, b2bValue = 0, b2cValue = 0;
-    filteredBookings.forEach(b => {
-      const amt = Number(b.final_amount || b.total_amount || 0);
-      if (b.sales_channel === 'b2b') {
-        b2bCount++;
-        b2bValue += amt;
-      } else if (b.sales_channel === 'b2c') {
-        b2cCount++;
-        b2cValue += amt;
-      }
-    });
-    return { b2bCount, b2cCount, b2bValue, b2cValue };
-  }, [filteredBookings]);
+  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
@@ -391,25 +352,7 @@ const AdminBookings = () => {
           onSuccess={() => { fetchBookings(); setEditBookingId(null); setShowManualBooking(false); setSelectedBooking(null); }}
           bookingId={editBookingId}
         />
-        
-        <ConfirmModal 
-          isOpen={confirmModalConfig.isOpen}
-          onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
-          title={confirmModalConfig.title}
-          message={confirmModalConfig.message}
-          onConfirm={confirmModalConfig.onConfirm}
-          type={confirmModalConfig.type}
-        />
 
-        <ServiceRecoveryCreationModal 
-          isOpen={serviceRecoveryModal.isOpen}
-          onClose={() => setServiceRecoveryModal({ isOpen: false, booking: null })}
-          booking={serviceRecoveryModal.booking}
-          onSuccess={(data) => {
-            alert('Service recovery case created successfully.');
-          }}
-        />
-        
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center justify-between mb-4 text-sm">
             <span>{error}</span>
@@ -429,17 +372,6 @@ const AdminBookings = () => {
               className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] transition-all"
             />
           </div>
-          
-          <select 
-            value={salesChannelFilter}
-            onChange={(e) => { setSalesChannelFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
-          >
-            <option value="all">All Sales Types</option>
-            <option value="unclassified">Unclassified</option>
-            <option value="b2c">B2C</option>
-            <option value="b2b">B2B</option>
-          </select>
           
           <select 
             value={packageFilter}
@@ -496,26 +428,6 @@ const AdminBookings = () => {
             </div>
           </div>
         )}
-        
-        {/* Summary Stats Row */}
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
-          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500 font-semibold uppercase">Total B2B Bookings</p>
-            <p className="text-lg font-bold text-gray-900">{summaryStats.b2bCount}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500 font-semibold uppercase">Total B2C Bookings</p>
-            <p className="text-lg font-bold text-gray-900">{summaryStats.b2cCount}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500 font-semibold uppercase">B2B Sales Value</p>
-            <p className="text-lg font-bold text-[#136b8a]">₹{summaryStats.b2bValue.toLocaleString()}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500 font-semibold uppercase">B2C Sales Value</p>
-            <p className="text-lg font-bold text-emerald-600">₹{summaryStats.b2cValue.toLocaleString()}</p>
-          </div>
-        </div>
       </div>
 
       {/* Table Data */}
@@ -583,8 +495,6 @@ const AdminBookings = () => {
                       <div className="flex flex-col gap-1.5 items-start">
                         {getStatusBadge(booking.booking_status)}
                         {getPaymentBadge(booking.payment_status)}
-                        {booking.sales_channel === 'b2b' && <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider bg-purple-100 text-purple-800">B2B</span>}
-                        {booking.sales_channel === 'b2c' && <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider bg-indigo-100 text-indigo-800">B2C</span>}
                       </div>
                     </td>
                     <td className="py-2 px-4 text-right">
@@ -718,51 +628,6 @@ const AdminBookings = () => {
                   </button>
                 )}
               </div>
-              
-              {/* Sales Classification */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <h3 className="text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1"><Tag size={12}/> Sales Classification</h3>
-                <div className="grid grid-cols-1 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">Sales Type</label>
-                    <select 
-                      value={selectedBooking.sales_channel || 'unclassified'}
-                      onChange={(e) => handleStatusUpdate(selectedBooking.id, 'sales_channel', e.target.value)}
-                      className="w-full text-xs p-2 border border-gray-300 rounded"
-                    >
-                      <option value="unclassified">Unclassified</option>
-                      <option value="b2c">B2C - Service Provided by TripoMist</option>
-                      <option value="b2b">B2B - Transferred/Sold to Partner</option>
-                    </select>
-                  </div>
-                  {selectedBooking.sales_channel === 'b2b' && (
-                    <>
-                      <div>
-                         <label className="text-xs font-semibold text-gray-700 block mb-1 flex items-center gap-1"><Building size={12}/> Partner Company *</label>
-                         <input 
-                           type="text" 
-                           value={selectedBooking.b2b_partner_company || ''}
-                           onChange={(e) => setSelectedBooking(prev => ({ ...prev, b2b_partner_company: e.target.value }))}
-                           onBlur={(e) => handleStatusUpdate(selectedBooking.id, 'b2b_partner_company', e.target.value)}
-                           className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
-                           placeholder="Enter agency name"
-                         />
-                      </div>
-                      <div>
-                         <label className="text-xs font-semibold text-gray-700 block mb-1">B2B Notes</label>
-                         <input 
-                           type="text" 
-                           value={selectedBooking.b2b_notes || ''}
-                           onChange={(e) => setSelectedBooking(prev => ({ ...prev, b2b_notes: e.target.value }))}
-                           onBlur={(e) => handleStatusUpdate(selectedBooking.id, 'b2b_notes', e.target.value)}
-                           className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
-                           placeholder="Optional notes"
-                         />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
 
               {/* Package Details */}
               <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
@@ -836,124 +701,36 @@ const AdminBookings = () => {
       )}
       {/* Cancel Modal */}
       {cancelModal.isOpen && cancelModal.booking && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="bg-rose-600 px-6 py-4 flex justify-between items-center text-white">
-               <h3 className="text-lg font-bold">Cancel Booking</h3>
-               <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="text-rose-100 hover:text-white"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Cancel Booking</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Cancellation *</label>
+              <textarea 
+                value={cancelReason} 
+                onChange={e => setCancelReason(e.target.value)} 
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-rose-500 outline-none" 
+                rows="3" 
+                required
+              />
             </div>
-            
-            <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
-              
-              {/* Read Only Summary */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm shadow-sm">
-                 <div><span className="block text-xs text-gray-500 uppercase font-semibold">Reference</span><span className="font-bold text-gray-900">{cancelModal.booking.booking_id}</span></div>
-                 <div><span className="block text-xs text-gray-500 uppercase font-semibold">Customer</span><span className="font-semibold">{cancelModal.booking.customer_name}</span></div>
-                 <div className="md:col-span-2"><span className="block text-xs text-gray-500 uppercase font-semibold">Package</span><span className="font-medium truncate block" title={cancelModal.booking.package_title}>{cancelModal.booking.package_title}</span></div>
-                 
-                 <div><span className="block text-xs text-gray-500 uppercase font-semibold">Travel Date</span><span>{cancelModal.booking.travel_date ? new Date(cancelModal.booking.travel_date).toLocaleDateString() : '-'}</span></div>
-                 <div><span className="block text-xs text-gray-500 uppercase font-semibold">Total Cost</span><span className="font-bold">₹{Number(cancelModal.booking.total_amount || 0).toLocaleString()}</span></div>
-                 <div><span className="block text-xs text-gray-500 uppercase font-semibold">Total Paid</span><span className="font-bold text-emerald-600">₹{Number(cancelModal.booking.final_amount || cancelModal.booking.total_amount || 0).toLocaleString()}</span></div>
-                 <div><span className="block text-xs text-gray-500 uppercase font-semibold">Status</span>{getPaymentBadge(cancelModal.booking.payment_status)}</div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                 <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Cancellation Reason *</label>
-                      <textarea 
-                        value={cancelReason} 
-                        onChange={e => setCancelReason(e.target.value)} 
-                        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm" 
-                        rows="3" 
-                        required
-                        placeholder="Why is this booking being cancelled?"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Internal Cancellation Notes</label>
-                      <textarea 
-                        value={cancelNotes} 
-                        onChange={e => setCancelNotes(e.target.value)} 
-                        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm" 
-                        rows="2"
-                        placeholder="Visible only to admins"
-                      />
-                    </div>
-                 </div>
-
-                 <div className="space-y-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">Cancellation Resolution *</label>
-                      <select 
-                        value={cancelResolution} 
-                        onChange={e => setCancelResolution(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none font-medium text-gray-800"
-                      >
-                        <option value="Cancel Without Refund">Cancel Without Refund</option>
-                        <option value="Convert Paid Amount to Coupon">Convert Paid Amount to Coupon</option>
-                        <option value="Refund Pending">Refund Pending</option>
-                        <option value="Partial Refund">Partial Refund</option>
-                        <option value="Fully Refunded">Fully Refunded</option>
-                      </select>
-                    </div>
-
-                    {cancelResolution === 'Convert Paid Amount to Coupon' && (
-                      <div className="mt-4 p-4 border border-emerald-200 bg-emerald-50 rounded-lg space-y-3 animate-fade-in">
-                        <div>
-                           <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Amount (₹) *</label>
-                           <input 
-                             type="number" 
-                             min="0"
-                             value={voucherAmount}
-                             onChange={e => setVoucherAmount(e.target.value)}
-                             className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-                             placeholder="e.g. 5000"
-                           />
-                        </div>
-                        <div>
-                           <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Validity / Expiry Date *</label>
-                           <input 
-                             type="date" 
-                             value={voucherExpiry}
-                             onChange={e => setVoucherExpiry(e.target.value)}
-                             className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-                             min={new Date().toISOString().split('T')[0]}
-                           />
-                        </div>
-                        <div>
-                           <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Notes</label>
-                           <input 
-                             type="text" 
-                             value={voucherNotes}
-                             onChange={e => setVoucherNotes(e.target.value)}
-                             className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-                             placeholder="Optional"
-                           />
-                        </div>
-                        <div className="flex items-start gap-2 mt-2 pt-2 border-t border-emerald-200">
-                           <input 
-                             type="checkbox" 
-                             id="confirmVoucher"
-                             checked={confirmVoucherAmount}
-                             onChange={e => setConfirmVoucherAmount(e.target.checked)}
-                             className="mt-1"
-                           />
-                           <label htmlFor="confirmVoucher" className="text-xs text-emerald-900 font-medium cursor-pointer">
-                             I confirm that the coupon amount is exactly equal to the amount paid by the customer, and should be issued.
-                           </label>
-                        </div>
-                      </div>
-                    )}
-                 </div>
-              </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Refund Status</label>
+              <select 
+                value={refundStatus} 
+                onChange={e => setRefundStatus(e.target.value)}
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-rose-500 outline-none"
+              >
+                <option value="Not Applicable">Not Applicable</option>
+                <option value="No Refund">No Refund</option>
+                <option value="Refund Pending">Refund Pending</option>
+                <option value="Partially Refunded">Partially Refunded</option>
+                <option value="Fully Refunded">Fully Refunded</option>
+              </select>
             </div>
-
-            <div className="bg-gray-100 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-              <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Abort</button>
-              <button onClick={submitCancel} className="px-5 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-colors shadow-sm flex items-center gap-2">
-                 <XCircle size={16} /> Confirm Cancellation
-              </button>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+              <button onClick={submitCancel} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700">Confirm Cancellation</button>
             </div>
           </div>
         </div>

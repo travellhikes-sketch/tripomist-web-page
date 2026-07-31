@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { X, Check, Plus, Trash2, AlertCircle, Search, Loader } from 'lucide-react';
+import { X, Check, Plus, Trash2, AlertCircle } from 'lucide-react';
 
 const optionalNumber = (value) => {
   if (value === '' || value === null || value === undefined) return null;
@@ -11,10 +11,7 @@ const optionalNumber = (value) => {
 const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isSearchingPackages, setIsSearchingPackages] = useState(false);
-  const [packageSearchTerm, setPackageSearchTerm] = useState('');
-  const [packageResults, setPackageResults] = useState([]);
-  const [showPackageDropdown, setShowPackageDropdown] = useState(false);
+  const [packages, setPackages] = useState([]);
   const [error, setError] = useState(null);
   const [activityLogs, setActivityLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('details'); // details, travellers, activity
@@ -34,10 +31,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
     payment_method: '',
     notes: '',
     booking_source: 'manual',
-    booking_reference: '',
-    sales_channel: 'unclassified',
-    b2b_partner_company: '',
-    b2b_notes: ''
+    booking_reference: ''
   };
 
   const initialTraveller = {
@@ -78,37 +72,14 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
         setOriginalData(null);
         setActivityLogs([]);
         setActiveTab('details');
-        setPackageSearchTerm('');
-        setPackageResults([]);
       }
     }
   }, [isOpen, bookingId]);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (!packageSearchTerm.trim()) {
-        setPackageResults([]);
-        return;
-      }
-      setIsSearchingPackages(true);
-      try {
-        const { data, error } = await supabase
-          .from('Pakage')
-          .select('id, name, slug, destinations, price, is_active, duration')
-          .or(`name.ilike.%${packageSearchTerm}%,slug.ilike.%${packageSearchTerm}%,destinations.ilike.%${packageSearchTerm}%`)
-          .order('is_active', { ascending: false })
-          .limit(10);
-        if (error) throw error;
-        setPackageResults(data || []);
-      } catch (err) {
-        console.error('Error searching packages:', err);
-      } finally {
-        setIsSearchingPackages(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [packageSearchTerm]);
+  const loadPackages = async () => {
+    const { data } = await supabase.from('Pakage').select('id, name, price');
+    if (data) setPackages(data);
+  };
 
   const loadBooking = async (id) => {
     setLoading(true);
@@ -190,18 +161,17 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const selectPackage = (pkg) => {
-    setFormData(prev => ({
-      ...prev,
-      package_id: pkg ? pkg.id : null,
-      package_title: pkg ? pkg.name : '',
-      total_amount: pkg && !prev.total_amount ? pkg.price : prev.total_amount
-    }));
-    setShowPackageDropdown(false);
-    setPackageSearchTerm('');
+    if (name === 'package_id') {
+      const selectedPkg = packages.find(p => p.id === value);
+      setFormData(prev => ({
+        ...prev,
+        package_id: value,
+        package_title: selectedPkg ? selectedPkg.name : '',
+        total_amount: selectedPkg && !prev.total_amount ? selectedPkg.price : prev.total_amount
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleTravellerChange = (index, field, value) => {
@@ -260,11 +230,6 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
         return;
       }
     }
-    
-    if (formData.sales_channel === 'b2b' && !formData.b2b_partner_company?.trim()) {
-      setError('Partner Company is required for B2B bookings.');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -303,7 +268,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
         if (updateError) throw updateError;
         
         // Log changes
-        const fieldsToTrack = ['booking_status', 'payment_status', 'travel_date', 'total_amount', 'package_title', 'sales_channel', 'b2b_partner_company'];
+        const fieldsToTrack = ['booking_status', 'payment_status', 'travel_date', 'total_amount', 'package_title'];
         for (const field of fieldsToTrack) {
           if (originalData[field] !== finalBookingData[field]) {
             await logActivity(currentBookingId, `Updated ${field.replace('_', ' ')}`, field, originalData[field], finalBookingData[field]);
@@ -415,72 +380,16 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-100">
                   <h3 className="text-sm font-bold text-gray-900 border-b pb-2 mb-4 uppercase tracking-wide">Trip Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="md:col-span-2 relative">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Search & Select Package</label>
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input 
-                          type="text" 
-                          placeholder="Search 'Udaipur'..." 
-                          value={packageSearchTerm}
-                          onChange={e => {
-                            setPackageSearchTerm(e.target.value);
-                            setShowPackageDropdown(true);
-                          }}
-                          onFocus={() => setShowPackageDropdown(true)}
-                          className="w-full pl-9 pr-3 py-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm"
-                        />
-                        {isSearchingPackages && (
-                          <Loader className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" size={14} />
-                        )}
-                      </div>
-                      
-                      {showPackageDropdown && (packageSearchTerm.trim() !== '' || packageResults.length > 0) && (
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                          <button 
-                            type="button" 
-                            onClick={() => selectPackage(null)} 
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-100 text-sm font-medium text-[#136b8a]"
-                          >
-                            + Use Custom Package Title
-                          </button>
-                          
-                          {packageResults.length === 0 && packageSearchTerm.trim() !== '' && !isSearchingPackages ? (
-                            <div className="px-4 py-3 text-sm text-gray-500">No matching package found.</div>
-                          ) : (
-                            packageResults.map(pkg => (
-                              <button 
-                                key={pkg.id} 
-                                type="button" 
-                                onClick={() => selectPackage(pkg)}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                              >
-                                <div className="flex justify-between items-start">
-                                  <div className="font-semibold text-gray-900 text-sm">{pkg.name}</div>
-                                  {!pkg.is_active && <span className="text-[10px] bg-red-100 text-red-700 px-1.5 rounded">Inactive</span>}
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1 flex gap-2">
-                                  <span>{pkg.destinations || 'No destinations'}</span>
-                                  {pkg.duration && <span>• {pkg.duration}</span>}
-                                  {pkg.price && <span>• ₹{pkg.price}</span>}
-                                </div>
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="mt-3">
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Package Title (Selected or Custom) *</label>
-                        <input 
-                          type="text" 
-                          name="package_title" 
-                          required 
-                          value={formData.package_title || ''} 
-                          onChange={handleInputChange} 
-                          className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm bg-gray-50" 
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Select Package</label>
+                      <select name="package_id" value={formData.package_id || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                        <option value="">-- Custom Package / None --</option>
+                        {packages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Package Title (Editable) *</label>
+                      <input type="text" name="package_title" required value={formData.package_title || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Travel Date *</label>
@@ -515,32 +424,6 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                         <option value="whatsapp">WhatsApp</option>
                       </select>
                     </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-100">
-                  <h3 className="text-sm font-bold text-gray-900 border-b pb-2 mb-4 uppercase tracking-wide">Sales Classification</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Sales Type</label>
-                      <select name="sales_channel" value={formData.sales_channel || 'unclassified'} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
-                        <option value="unclassified">Unclassified</option>
-                        <option value="b2c">B2C - Service Provided by TripoMist</option>
-                        <option value="b2b">B2B - Transferred/Sold to Partner</option>
-                      </select>
-                    </div>
-                    {formData.sales_channel === 'b2b' && (
-                      <>
-                        <div>
-                          <label className="block text-xs font-bold text-[#136b8a] mb-1">Partner Company *</label>
-                          <input type="text" name="b2b_partner_company" required value={formData.b2b_partner_company || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] border-[#136b8a] bg-blue-50 text-sm" placeholder="Agency Name" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">B2B Notes</label>
-                          <input type="text" name="b2b_notes" value={formData.b2b_notes || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" placeholder="Optional" />
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
 

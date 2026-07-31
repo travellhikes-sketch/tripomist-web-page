@@ -8,14 +8,11 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Users,
-  Ticket,
-  Copy
+  Users
 } from 'lucide-react';
 
 const CustomerTrips = () => {
   const [bookings, setBookings] = useState([]);
-  const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming'); // upcoming, completed, cancelled
 
@@ -27,28 +24,17 @@ const CustomerTrips = () => {
     setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      const [{ data: bData, error: bErr }, { data: vData, error: vErr }] = await Promise.all([
-        supabase
-          .from('bookings')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('travel_date', { ascending: false }),
-        supabase
-          .from('customer_vouchers_view')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false })
-      ]);
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('travel_date', { ascending: false });
         
-      if (!bErr && bData) setBookings(bData);
-      if (!vErr && vData) setVouchers(vData);
+      if (!error && data) {
+        setBookings(data);
+      }
     }
     setLoading(false);
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert('Voucher code copied to clipboard!');
   };
 
   const now = new Date();
@@ -67,20 +53,6 @@ const CustomerTrips = () => {
     if (s === 'confirmed') return <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded"><CheckCircle size={12}/> Confirmed</span>;
     if (s === 'cancelled') return <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100 px-2 py-0.5 rounded"><XCircle size={12}/> Cancelled</span>;
     return <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded"><Clock size={12}/> Pending</span>;
-  };
-
-  const getVoucherStatusBadge = (status, expiry) => {
-    const isExpired = status === 'active' && new Date(expiry) < new Date();
-    if (isExpired) return <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700">Expired</span>;
-    
-    switch(status) {
-      case 'active': 
-      case 'partially_used': return <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700">Active</span>;
-      case 'redeemed': return <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-700">Fully Redeemed</span>;
-      case 'void':
-      case 'cancelled': return <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700">Void</span>;
-      default: return <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-700">{status}</span>;
-    }
   };
 
   if (loading) {
@@ -117,12 +89,6 @@ const CustomerTrips = () => {
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'cancelled' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
         >
           Cancelled
-        </button>
-        <button 
-          onClick={() => setActiveTab('vouchers')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'vouchers' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
-        >
-          <Ticket size={16} /> My Coupons
         </button>
       </div>
 
@@ -190,62 +156,6 @@ const CustomerTrips = () => {
               </div>
             </div>
           ))
-        )}
-        
-        {activeTab === 'vouchers' && (
-          <div className="space-y-4">
-            {vouchers.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 py-12 text-center flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
-                  <Ticket size={32} />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">No Coupons</h3>
-                <p className="text-gray-500 text-sm max-w-sm">You do not have any active or past coupons.</p>
-              </div>
-            ) : (
-              vouchers.map(v => (
-                <div key={v.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
-                  <div className="md:w-48 bg-emerald-50 flex flex-col items-center justify-center p-6 border-b md:border-b-0 md:border-r border-emerald-100">
-                    <Ticket size={40} className="text-emerald-400 mb-2" />
-                    <span className="font-bold text-xl text-emerald-700">₹{Number(v.remaining_amount).toLocaleString()}</span>
-                    <span className="text-xs text-emerald-600 font-medium uppercase mt-1">Available Balance</span>
-                  </div>
-                  
-                  <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg md:text-xl font-bold text-gray-900">{v.issued_reason || 'TripoMist Coupon'}</h3>
-                        {getVoucherStatusBadge(v.status, v.expires_at)}
-                      </div>
-                      
-                      <div className="flex items-center gap-2 mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3 w-fit">
-                        <span className="text-sm font-medium text-gray-500">Code:</span>
-                        <span className="font-mono font-bold text-lg text-gray-900 tracking-wider">{v.code}</span>
-                        <button onClick={() => copyToClipboard(v.code)} className="ml-2 text-gray-400 hover:text-[#136b8a] transition-colors" title="Copy Code">
-                          <Copy size={18} />
-                        </button>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span className="block text-xs font-semibold uppercase text-gray-400 mb-0.5">Original Amount</span>
-                          <span className="font-medium text-gray-900">₹{Number(v.original_amount).toLocaleString()}</span>
-                        </div>
-                        <div>
-                          <span className="block text-xs font-semibold uppercase text-gray-400 mb-0.5">Valid Until</span>
-                          <span className="font-medium text-gray-900">{new Date(v.expires_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      
-                      {v.internal_notes && v.internal_notes.trim() !== '' && (
-                        <p className="mt-3 text-sm text-gray-500 italic">"{v.internal_notes}"</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         )}
       </div>
 

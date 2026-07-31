@@ -33,19 +33,8 @@ export default function PackageCheckout() {
   const [bookingId, setBookingId] = useState('');
   const [paymentId, setPaymentId] = useState('');
 
-  // Coupon states
-  const [voucherCode, setVoucherCode] = useState('');
-  const [appliedVoucher, setAppliedVoucher] = useState(null);
-  const [voucherLoading, setVoucherLoading] = useState(false);
-  const [voucherError, setVoucherError] = useState('');
-  const [couponAttempts, setCouponAttempts] = useState(0);
-  const [lastCouponAttempt, setLastCouponAttempt] = useState(0);
-
   // Derived options
   const [sharingOptions, setSharingOptions] = useState([]);
-
-  // Idempotency Key to prevent duplicate submissions
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   // Helper: securely update checkout lead via RPC
   const updateLead = async (updates) => {
@@ -72,13 +61,6 @@ export default function PackageCheckout() {
     }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
-      if (session?.user) {
-        const pendingCoupon = sessionStorage.getItem('pending_coupon_code');
-        if (pendingCoupon) {
-          setVoucherCode(pendingCoupon);
-          sessionStorage.removeItem('pending_coupon_code');
-        }
-      }
     });
     try {
       const data = JSON.parse(dataStr);
@@ -156,84 +138,7 @@ export default function PackageCheckout() {
 
   const subTotal = computedPrice;
   const gst = Math.round(subTotal * 0.05);
-  const totalBeforeVoucher = subTotal + gst;
-  
-  let voucherDiscount = 0;
-  if (appliedVoucher) {
-    voucherDiscount = Math.min(totalBeforeVoucher, appliedVoucher.remaining_amount);
-  }
-  
-  const finalPayable = totalBeforeVoucher - voucherDiscount;
-
-  const handleApplyVoucher = async () => {
-    if (!user) {
-      sessionStorage.setItem('pending_coupon_code', voucherCode);
-      navigate('/login');
-      return;
-    }
-    if (!voucherCode.trim()) {
-      setVoucherError('Please enter a coupon code.');
-      return;
-    }
-    
-    // Rate limit: max 5 attempts per minute
-    const now = Date.now();
-    if (now - lastCouponAttempt > 60000) {
-      setCouponAttempts(1);
-    } else {
-      if (couponAttempts >= 5) {
-        setVoucherError('Too many attempts. Please try again later.');
-        return;
-      }
-      setCouponAttempts(prev => prev + 1);
-    }
-    setLastCouponAttempt(now);
-    
-    setVoucherLoading(true);
-    setVoucherError('');
-    try {
-      // Phase A: Reserve voucher balance server-side without deducting remaining_amount
-      const { data: resData, error: resErr } = await supabase.rpc('reserve_voucher_for_checkout', {
-        p_voucher_code: voucherCode.trim(),
-        p_requested_amount: totalBeforeVoucher
-      });
-      
-      if (resErr) {
-        throw new Error(resErr.message || 'Failed to reserve voucher.');
-      }
-
-      if (!resData || !resData.success) {
-        throw new Error('Voucher reservation failed.');
-      }
-      
-      setAppliedVoucher({
-        id: resData.voucher_id,
-        code: resData.voucher_code,
-        remaining_amount: resData.voucher_remaining_balance,
-        reserved_amount: resData.reserved_amount,
-        reservation_id: resData.reservation_id,
-        expires_at: resData.expires_at
-      });
-      setVoucherCode('');
-    } catch (err) {
-      setVoucherError(err.message);
-    } finally {
-      setVoucherLoading(false);
-    }
-  };
-
-  const handleRemoveVoucher = async () => {
-    if (appliedVoucher?.reservation_id) {
-      try {
-        await supabase.rpc('release_voucher_reservation', {
-          p_reservation_id: appliedVoucher.reservation_id
-        });
-      } catch (err) {
-        console.error('Failed to release voucher reservation:', err);
-      }
-    }
-    setAppliedVoucher(null);
-  };
+  const finalPayable = subTotal + gst;
 
   const saveBookingToSupabase = async (razorpayPaymentId) => {
     setLoading(true);
@@ -268,17 +173,11 @@ export default function PackageCheckout() {
       travel_date: travelDate,
       travellers: tripDetails.travellers,
       total_amount: parsePriceString(tripDetails.price),
-      amount_before_voucher: totalBeforeVoucher,
-      voucher_discount: voucherDiscount,
-      final_payable_amount: finalPayable,
-      checkout_idempotency_key: idempotencyKey,
-      voucher_id: appliedVoucher?.id || null,
-      payment_id: razorpayPaymentId || null,
-      payment_status: finalPayable === 0 ? 'paid' : 'paid',
       selected_sharing: selectedSharing,
-      final_amount: finalPayable, // legacy field fallback
+      final_amount: finalPayable,
+      razorpay_payment_id: razorpayPaymentId,
+      payment_status: 'paid',
       booking_status: 'confirmed',
-      sales_channel: 'b2c',
       special_request: formData.specialRequest || null,
       user_id: sessionUser?.id || null,
     };
@@ -289,19 +188,20 @@ export default function PackageCheckout() {
       .select();
 
     if (insertError) {
+      // Only enter failure path if Supabase explicitly returned an error
       console.error("Booking insert failed:", insertError);
       let errMsg = insertError.message || insertError.details || 'Unknown error';
       if (insertError.code === '23505') {
         errMsg = 'This payment has already been recorded.';
       }
-      setError('Payment was recorded but booking save failed. Error: ' + errMsg);
+      setError('Payment was successful but booking save failed. Error: ' + errMsg);
       setPaymentId(razorpayPaymentId);
       setLoading(false);
       setStep('failed');
-      return;
+      return; // ← stop here, never touch success state
     }
 
-    // INSERT succeeded, create primary traveller and process voucher finalization
+    // INSERT succeeded, create primary traveller
     if (insertedBookings && insertedBookings.length > 0) {
       const newBookingId = insertedBookings[0].id;
       const travellerPayload = {
@@ -311,24 +211,8 @@ export default function PackageCheckout() {
         email: formData.email || null,
         is_primary: true
       };
+      // We do not await this strictly for failure, but good practice
       await supabase.from('booking_travellers').insert([travellerPayload]);
-
-      // Phase B: Finalize voucher redemption server-side atomically after payment
-      if (appliedVoucher?.reservation_id) {
-        try {
-          const { error: finalizeErr } = await supabase.rpc('finalize_voucher_redemption', {
-            p_reservation_id: appliedVoucher.reservation_id,
-            p_booking_id: newBookingId,
-            p_razorpay_payment_id: razorpayPaymentId
-          });
-          
-          if (finalizeErr) {
-            console.error("Voucher finalization failed:", finalizeErr);
-          }
-        } catch (err) {
-          console.error("Voucher finalization error:", err);
-        }
-      }
     }
 
     setPaymentId(razorpayPaymentId);
@@ -353,12 +237,6 @@ export default function PackageCheckout() {
 
     setLoading(true);
     setError(null);
-    
-    if (finalPayable === 0 && appliedVoucher) {
-      // 100% Covered by voucher, bypass Razorpay
-      await saveBookingToSupabase('PAID_BY_VOUCHER');
-      return;
-    }
 
     // Track: Razorpay opening
     updateLead({
@@ -389,25 +267,18 @@ export default function PackageCheckout() {
         saveBookingToSupabase(response.razorpay_payment_id);
       },
       modal: {
-        ondismiss: async function () {
+        ondismiss: function () {
           setLoading(false);
-          setError('Payment window closed. Your voucher balance remains un-deducted and safely available in your account.');
-          // Release reservation
-          if (appliedVoucher?.reservation_id) {
-            await supabase.rpc('release_voucher_reservation', { p_reservation_id: appliedVoucher.reservation_id });
-          }
         }
       }
     };
 
     try {
       const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', async function (response) {
+      rzp.on('payment.failed', function (response) {
         setLoading(false);
-        setError('Payment failed: ' + (response.error?.description || 'Payment was cancelled.') + ' Your voucher balance remains un-deducted.');
-        if (appliedVoucher?.reservation_id) {
-          await supabase.rpc('release_voucher_reservation', { p_reservation_id: appliedVoucher.reservation_id });
-        }
+        setError('Payment failed: ' + (response.error?.description || 'Unknown error'));
+        // Track: payment failed
         updateLead({
           p_current_step: 'payment_failed',
           p_payment_status: 'failed',
@@ -832,7 +703,7 @@ export default function PackageCheckout() {
                 </div>
               </div>
 
-              <div className="space-y-3 mb-4 border-b border-gray-100 pb-4">
+              <div className="space-y-3 mb-6 border-b border-gray-100 pb-6">
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
                   <span>Subtotal ({tripDetails.travellers} × ₹{(computedPrice / (tripDetails.travellers || 1)).toLocaleString()})</span>
                   <span>₹{subTotal.toLocaleString()}</span>
@@ -841,51 +712,6 @@ export default function PackageCheckout() {
                   <span>Taxes (GST 5%)</span>
                   <span>₹{gst.toLocaleString()}</span>
                 </div>
-              </div>
-
-              {/* Coupon Section */}
-              <div className="mb-6 pb-6 border-b border-gray-100">
-                {appliedVoucher ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex justify-between items-center">
-                    <div>
-                      <div className="text-emerald-800 font-bold text-sm flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">local_activity</span>
-                        Coupon Applied
-                      </div>
-                      <div className="text-emerald-600 text-xs mt-0.5">{appliedVoucher.code}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-emerald-700 font-bold">-₹{voucherDiscount.toLocaleString()}</div>
-                      <button 
-                        onClick={() => setAppliedVoucher(null)}
-                        className="text-emerald-600 hover:text-emerald-800 text-xs font-semibold underline mt-1"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Have a Coupon Code?</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={voucherCode}
-                        onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                        placeholder="Enter code"
-                        className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
-                      />
-                      <button 
-                        onClick={handleApplyVoucher}
-                        disabled={voucherLoading || !voucherCode.trim()}
-                        className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                      >
-                        {voucherLoading ? 'Applying...' : 'Apply'}
-                      </button>
-                    </div>
-                    {voucherError && <p className="text-rose-600 text-xs mt-2 font-medium">{voucherError}</p>}
-                  </div>
-                )}
               </div>
 
               <div className="flex justify-between items-end mb-8 bg-[#eff6f9] p-4 rounded-xl border border-[#cde5ef]">
