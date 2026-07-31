@@ -20,7 +20,8 @@ import {
   Globe,
   ChevronDown,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Ticket
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -154,6 +155,19 @@ const AdminLayout = () => {
           >
             <ShieldAlert size={18} className={location.pathname.startsWith('/admin/service-recovery') ? 'text-rose-600' : 'text-gray-400'} />
             Service Recovery
+          </Link>
+          
+          <Link
+            to="/admin/vouchers"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
+              location.pathname.startsWith('/admin/vouchers')
+                ? 'bg-slate-100 text-slate-900 font-semibold' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Ticket size={18} className={location.pathname.startsWith('/admin/vouchers') ? 'text-emerald-600' : 'text-gray-400'} />
+            Vouchers
           </Link>
 
           <Link

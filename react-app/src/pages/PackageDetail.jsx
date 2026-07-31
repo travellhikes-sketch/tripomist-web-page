@@ -169,8 +169,33 @@ export default function PackageDetail() {
     window.dispatchEvent(new Event('cartUpdated'));
   }
 
-  const handleBookNow = () => {
-    setIsBookingModalOpen(true)
+  const handleBookNow = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      // Create checkout session data and navigate to /checkout/:slug
+      const dataStr = JSON.stringify({
+        formData: { 
+          fullName: session.user.user_metadata?.full_name || '', 
+          phone: session.user.phone || '', 
+          email: session.user.email || '', 
+          date: '', 
+          source: '', 
+          specialRequest: '' 
+        },
+        tripDetails: { 
+          packageId: trip.id, 
+          tripTitle: trip.title, 
+          destination: trip.pickup, 
+          travellers: travellers, 
+          price: trip.numericPrice,
+          costings: trip.costings
+        }
+      });
+      sessionStorage.setItem('checkoutData', dataStr);
+      navigate(location.pathname.startsWith('/banner/') ? `/checkout/custom-package` : `/checkout/${slug}`);
+    } else {
+      setIsBookingModalOpen(true);
+    }
   }
 
   const toggleAccordion = (index) => {

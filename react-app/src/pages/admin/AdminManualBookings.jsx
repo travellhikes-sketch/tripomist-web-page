@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import { Plus, Edit, Trash2, Search, Filter, Download, X, AlertCircle } from 'lucide-react';
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
+import ConfirmModal from '../../components/admin/ConfirmModal';
 
 const AdminManualBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -10,6 +11,8 @@ const AdminManualBookings = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
+  
+  const [confirmModalConfig, setConfirmModalConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'danger' });
   const [searchTerm, setSearchTerm] = useState('');
   
   // Filters
@@ -164,15 +167,22 @@ const AdminManualBookings = () => {
   // Handle save logic moved to AdminBookingModal
 
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this booking?")) return;
-    try {
-      const { error } = await supabase.from('bookings').delete().eq('id', id);
-      if (error) throw error;
-      fetchBookings();
-    } catch (err) {
-      alert("Error deleting: " + err.message);
-    }
+  const handleDelete = (id) => {
+    setConfirmModalConfig({
+      isOpen: true,
+      title: 'Delete Booking',
+      message: 'Are you sure you want to delete this booking? This action cannot be undone.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('bookings').delete().eq('id', id);
+          if (error) throw error;
+          fetchBookings();
+        } catch (err) {
+          alert("Error deleting: " + err.message);
+        }
+      }
+    });
   };
 
   const exportToCSV = () => {
@@ -318,6 +328,15 @@ const AdminManualBookings = () => {
         onClose={closeModal}
         onSuccess={fetchBookings}
         bookingId={currentBooking ? currentBooking.id : null}
+      />
+      
+      <ConfirmModal 
+        isOpen={confirmModalConfig.isOpen}
+        onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        onConfirm={confirmModalConfig.onConfirm}
+        type={confirmModalConfig.type}
       />
     </div>
   );
