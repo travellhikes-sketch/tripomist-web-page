@@ -187,37 +187,41 @@ export default function PackageCheckout() {
       
       // Calculate sharing options
       const { price, travellers, costings } = data.tripDetails;
-      let options = [];
+      let rawOptions = [];
       if (!costings || !Array.isArray(costings) || costings.length === 0) {
-        options = [
+        rawOptions = [
           { type: 'Quad Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1) * 0.85), label: 'Quad Sharing' },
           { type: 'Triple Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1) * 0.93), label: 'Triple Sharing' },
           { type: 'Double Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1)), label: 'Double Sharing' },
         ];
       } else {
-        options = costings.map(c => ({
+        rawOptions = costings.map(c => ({
           type: c.type || c.name || c.title || c.sharing_type || c.sharing || '',
           pricePerPerson: parsePriceString(c.price),
           label: c.type || c.name || c.title || c.sharing_type || c.sharing || ''
         }));
       }
-      
-      options.sort((a, b) => a.pricePerPerson - b.pricePerPerson);
 
-      const defaultLabels = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
-      options = options.map((opt, index) => {
-        if (!opt.type || !opt.label) {
-          const fallback = defaultLabels[index] || `Sharing Option ${index + 1}`;
-          return { ...opt, type: fallback, label: fallback };
-        }
-        return opt;
-      });
+      // Filter: Show only Quad Sharing, Triple Sharing, Double Sharing
+      const allowedTypes = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
+      let options = rawOptions.filter(opt => allowedTypes.includes(opt.type));
+
+      // Display order: Quad, Triple, Double
+      const orderMap = { 'Quad Sharing': 1, 'Triple Sharing': 2, 'Double Sharing': 3 };
+      options.sort((a, b) => (orderMap[a.type] || 99) - (orderMap[b.type] || 99));
 
       setSharingOptions(options);
 
-      if (options.length > 0) {
-        setSelectedSharing(options[0].type);
-        setComputedPrice(options[0].pricePerPerson * (data.tripDetails.travellers || 1));
+      // Verify Quad Sharing is present, otherwise set config error
+      const hasQuad = options.some(opt => opt.type === 'Quad Sharing');
+      if (!hasQuad) {
+        setError('Package configuration error: Quad Sharing is missing.');
+        setCheckoutBlocked(true);
+      } else {
+        // Auto-select Quad Sharing
+        const quadOpt = options.find(opt => opt.type === 'Quad Sharing');
+        setSelectedSharing('Quad Sharing');
+        setComputedPrice(quadOpt.pricePerPerson * (data.tripDetails.travellers || 1));
       }
 
       // Track: checkout page opened

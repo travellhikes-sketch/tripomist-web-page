@@ -133,13 +133,18 @@ BEGIN
     END IF;
 
     -- Match selected_sharing to costings JSONB array
+    IF p_selected_sharing NOT IN ('Quad Sharing', 'Triple Sharing', 'Double Sharing') THEN
+        RAISE EXCEPTION 'Invalid occupancy sharing type. Must be Quad Sharing, Triple Sharing, or Double Sharing.';
+    END IF;
+
     IF v_package.costings IS NULL OR jsonb_typeof(v_package.costings) IS DISTINCT FROM 'array' OR jsonb_array_length(v_package.costings) = 0 THEN
         RAISE EXCEPTION 'Package does not contain valid costings options.';
     END IF;
 
     FOR v_costing_item IN SELECT * FROM jsonb_to_recordset(v_package.costings) AS x(type TEXT, price TEXT)
     Loop
-        IF LOWER(TRIM(v_costing_item.type)) = LOWER(TRIM(p_selected_sharing)) THEN
+        -- Match exactly on normalized types
+        IF v_costing_item.type = p_selected_sharing THEN
             v_costing_found := true;
             v_canonical_sharing := v_costing_item.type;
             
