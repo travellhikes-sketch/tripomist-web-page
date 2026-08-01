@@ -117,7 +117,6 @@ serve(async (req) => {
       const rawName  = (body as any).p_customer_name ?? ''
       const rawPhone = (body as any).p_phone ?? ''
       const rawEmail = (body as any).p_email ?? ''
-      const pPackageId      = (body as any).p_package_id ?? null
       const pPackageTitle   = (body as any).p_package_title ?? null
       const pDestination    = (body as any).p_destination ?? null
       const pTravelDate     = (body as any).p_travel_date ?? null
@@ -126,6 +125,54 @@ serve(async (req) => {
       const pSource         = (body as any).p_source ?? null
       const pSpecialRequest = (body as any).p_special_request ?? null
       const pSelectedSharing = (body as any).p_selected_sharing ?? (body as any).selected_sharing ?? (body as any).selectedSharing ?? null
+
+      const rawPackageReference = (body as any).p_package_id as unknown;
+      const packageReference = String(rawPackageReference ?? '').trim();
+
+      let packageId: number | null = null;
+
+      if (/^\d+$/.test(packageReference)) {
+        const parsedId = Number(packageReference);
+        if (Number.isSafeInteger(parsedId) && parsedId > 0) {
+          packageId = parsedId;
+        }
+      }
+
+      if (packageId === null && packageReference !== '') {
+        const { data: packageRow, error: packageLookupError } =
+          await adminClient
+            .from('Pakage')
+            .select('id, title, destination')
+            .ilike('slug', packageReference)
+            .maybeSingle();
+
+        if (packageLookupError || !packageRow || !packageRow.id) {
+          return new Response(
+            JSON.stringify({ error: "Package configuration could not be resolved" }),
+            {
+              status: 400,
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json'
+              },
+            }
+          );
+        }
+        packageId = packageRow.id;
+      }
+
+      if (packageId === null || !Number.isSafeInteger(packageId) || packageId <= 0) {
+        return new Response(
+          JSON.stringify({ error: "Package configuration could not be resolved" }),
+          {
+            status: 400,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            },
+          }
+        );
+      }
 
       // Normalize
       const normName  = String(rawName).trim()
@@ -176,24 +223,42 @@ serve(async (req) => {
       const emailHash = await computeHmacSha256(rateLimitSalt, normEmail)
 
       // Consume rate limits atomically in database
-      const { error: limitErr1 } = await adminClient.rpc('consume_guest_lead_rate_limit', {
+      const { error: rateLimitError } = await adminClient.rpc('consume_guest_lead_rate_limit', {
         p_ip_hash: ipHash,
-        p_contact_hash: phoneHash
+        p_phone_hash: phoneHash,
+        p_email_hash: emailHash
       })
-      if (limitErr1) {
-        return new Response(JSON.stringify({ error: limitErr1.message || 'Rate limit exceeded.' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
 
-      const { error: limitErr2 } = await adminClient.rpc('consume_guest_lead_rate_limit', {
-        p_ip_hash: ipHash,
-        p_contact_hash: emailHash
-      })
-      if (limitErr2) {
-        return new Response(JSON.stringify({ error: limitErr2.message || 'Rate limit exceeded.' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      if (rateLimitError) {
+        const message = String(rateLimitError.message || '');
+        const isRealRateLimit =
+          rateLimitError.code === 'P0001' &&
+          message.includes('Guest lead rate limit exceeded');
+
+        console.error('Guest lead rate-limit RPC error', {
+          code: rateLimitError.code,
+          message: rateLimitError.message,
+          details: rateLimitError.details,
+          hint: rateLimitError.hint,
+        });
+
+        if (isRealRateLimit) {
+          return new Response(
+            JSON.stringify({
+              error: 'Too many checkout attempts. Please wait and retry.'
+            }),
+            {
+              status: 429,
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json'
+              },
+            }
+          );
+        }
+
+        // Unexpected rate-limit infrastructure errors must not block lead creation.
+        // Continue to create_checkout_lead below.
       }
 
       // Token flow: Generate a cryptographically secure 32-byte raw lead token
@@ -214,7 +279,7 @@ serve(async (req) => {
         p_customer_name: normName,
         p_phone: normPhone,
         p_email: normEmail,
-        p_package_id: pPackageId,
+        p_package_id: packageId,
         p_package_title: pPackageTitle,
         p_destination: pDestination,
         p_travel_date: pTravelDate,
@@ -226,28 +291,70 @@ serve(async (req) => {
         p_lead_token_hash: clientTokenHash,
       })
 
-      if (leadError || !leadData) {
-        return new Response(JSON.stringify({ error: 'Failed to create guest lead.' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      const rawLeadToken = rawToken;
+      const lead = Array.isArray(leadData) ? leadData[0] : leadData;
+      const resolvedLeadId =
+        lead?.id ??
+        lead?.checkout_lead_id ??
+        null;
+
+      if (leadError) {
+        console.error('create_checkout_lead RPC failed', {
+          code: leadError.code,
+          message: leadError.message,
+          details: leadError.details,
+          hint: leadError.hint,
+        });
+
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to create checkout session'
+          }),
+          {
+            status: 500,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            },
+          }
+        );
       }
 
-      const lead = Array.isArray(leadData) ? leadData[0] : leadData
-      if (!lead || !lead.checkout_lead_id) {
-        return new Response(JSON.stringify({ error: 'Failed to retrieve lead identifiers.' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      if (!resolvedLeadId) {
+        console.error('create_checkout_lead returned no lead ID', {
+          responseKeys:
+            lead && typeof lead === 'object'
+              ? Object.keys(lead)
+              : [],
+        });
+
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to create checkout session'
+          }),
+          {
+            status: 500,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            },
+          }
+        );
       }
 
-      // Return raw token to browser once
       return new Response(JSON.stringify({
         success: true,
-        leadId:    lead.checkout_lead_id,
-        leadToken: rawToken,
-        leadNumber: lead.lead_number ?? null,
+        leadId: resolvedLeadId,
+        leadToken: rawLeadToken,
+        leadNumber: lead?.lead_number ?? null,
+        packageId: packageId,
       }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
+      });
     }
 // Security: Edge Function must authorize every guest initialize/status/prepare/verify/release action using the checkout lead token.
     let guestAuthorized = false

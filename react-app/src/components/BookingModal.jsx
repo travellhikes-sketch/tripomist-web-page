@@ -65,7 +65,10 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
             throw new Error("Failed to save your enquiry. Please try again.");
           }
           // Reuse existing lead — update succeeded
-          return existingLead;
+          return {
+            ...existingLead,
+            packageId: Number(existingLead.packageId || packageId)
+          };
         }
       } catch (e) {
         if (e.message.includes('attempts') || e.message.includes('Failed to save')) {
@@ -104,11 +107,12 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       throw new Error("Failed to save your enquiry. Please try again.");
     }
 
-    // Store the response using: id, token, leadNumber
+    // Store the response using: id, token, leadNumber, packageId
     return {
       id: data.leadId,
       token: data.leadToken,
-      leadNumber: data.leadNumber
+      leadNumber: data.leadNumber,
+      packageId: Number(data.packageId)
     };
   };
 
@@ -143,6 +147,10 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       // Save checkout lead to Supabase
       const leadRef = await saveCheckoutLead(yyyymmdd);
       
+      if (!leadRef || !leadRef.packageId || !Number.isInteger(leadRef.packageId) || leadRef.packageId <= 0) {
+        throw new Error('Package configuration could not be resolved');
+      }
+
       // Store lead reference in sessionStorage (id + token for later RPC updates)
       sessionStorage.setItem('tripomist_checkout_lead', JSON.stringify(leadRef));
 
@@ -157,7 +165,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           price,
           travellers,
           destination,
-          packageId,
+          packageId: leadRef.packageId,
           costings,
         }
       };
