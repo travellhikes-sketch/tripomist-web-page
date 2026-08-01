@@ -101,6 +101,20 @@ export default function PackageCheckout() {
         const session = (await supabase.auth.getSession()).data?.session;
         if (!session) return;
 
+        // Prefill logged-in customer name, phone and email from profile/auth
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+
+        setFormData(prev => ({
+          ...prev,
+          fullName: prev?.fullName || profile?.full_name || currentUser.user_metadata?.full_name || '',
+          phone: prev?.phone || profile?.phone || currentUser.phone || '',
+          email: prev?.email || currentUser.email || ''
+        }));
+
         const { data: statusData, error: statusErr } = await supabase.functions.invoke('razorpay-checkout', {
           body: {
             action: 'checkout_status',
@@ -187,41 +201,59 @@ export default function PackageCheckout() {
       
       // Calculate sharing options
       const { price, travellers, costings } = data.tripDetails;
-      let rawOptions = [];
-      if (!costings || !Array.isArray(costings) || costings.length === 0) {
-        rawOptions = [
-          { type: 'Quad Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1) * 0.85), label: 'Quad Sharing' },
-          { type: 'Triple Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1) * 0.93), label: 'Triple Sharing' },
-          { type: 'Double Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1)), label: 'Double Sharing' },
-        ];
-      } else {
-        rawOptions = costings.map(c => ({
-          type: c.type || c.name || c.title || c.sharing_type || c.sharing || '',
-          pricePerPerson: parsePriceString(c.price),
-          label: c.type || c.name || c.title || c.sharing_type || c.sharing || ''
-        }));
+      let options = [];
+
+      // Find Quad base price
+      let quadBasePrice = 0;
+      if (costings && Array.isArray(costings)) {
+        const quadCosting = costings.find(c => (c.type || c.name || c.title || c.sharing_type || c.sharing || '') === 'Quad Sharing');
+        if (quadCosting) {
+          quadBasePrice = parsePriceString(quadCosting.price);
+        }
       }
 
-      // Filter: Show only Quad Sharing, Triple Sharing, Double Sharing
-      const allowedTypes = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
-      let options = rawOptions.filter(opt => allowedTypes.includes(opt.type));
+      // If Quad Sharing is missing or costings are empty, fallback to estimate
+      if (!quadBasePrice) {
+        quadBasePrice = Math.round((price || 0) / (travellers || 1) * 0.85);
+      }
 
-      // Display order: Quad, Triple, Double
-      const orderMap = { 'Quad Sharing': 1, 'Triple Sharing': 2, 'Double Sharing': 3 };
-      options.sort((a, b) => (orderMap[a.type] || 99) - (orderMap[b.type] || 99));
+      // Find Upgrade costs
+      let tripleUpgrade = 0;
+      let doubleUpgrade = 0;
+
+      if (costings && Array.isArray(costings)) {
+        const tripleCosting = costings.find(c => (c.type || c.name || c.title || c.sharing_type || c.sharing || '') === 'Triple Sharing Upgrade');
+        if (tripleCosting) {
+          tripleUpgrade = parsePriceString(tripleCosting.price);
+        }
+        const doubleCosting = costings.find(c => (c.type || c.name || c.title || c.sharing_type || c.sharing || '') === 'Double Sharing Upgrade');
+        if (doubleCosting) {
+          doubleUpgrade = parsePriceString(doubleCosting.price);
+        }
+      }
+
+      // Fallback upgrade estimates if costings did not specify upgrades
+      if (!tripleUpgrade && !doubleUpgrade) {
+        tripleUpgrade = Math.round((price || 0) / (travellers || 1) * 0.93) - quadBasePrice;
+        doubleUpgrade = Math.round((price || 0) / (travellers || 1)) - quadBasePrice;
+      }
+
+      options = [
+        { type: 'Quad Sharing', pricePerPerson: quadBasePrice, label: 'Quad Sharing' },
+        { type: 'Triple Sharing', pricePerPerson: quadBasePrice + tripleUpgrade, label: 'Triple Sharing' },
+        { type: 'Double Sharing', pricePerPerson: quadBasePrice + doubleUpgrade, label: 'Double Sharing' }
+      ];
 
       setSharingOptions(options);
 
       // Verify Quad Sharing is present, otherwise set config error
-      const hasQuad = options.some(opt => opt.type === 'Quad Sharing');
-      if (!hasQuad) {
+      if (quadBasePrice <= 0) {
         setError('Package configuration error: Quad Sharing is missing.');
         setCheckoutBlocked(true);
       } else {
         // Auto-select Quad Sharing
-        const quadOpt = options.find(opt => opt.type === 'Quad Sharing');
         setSelectedSharing('Quad Sharing');
-        setComputedPrice(quadOpt.pricePerPerson * (data.tripDetails.travellers || 1));
+        setComputedPrice(quadBasePrice * (data.tripDetails.travellers || 1));
       }
 
       // Track: checkout page opened
@@ -306,6 +338,30 @@ export default function PackageCheckout() {
     setVoucherLoading(true);
     setVoucherError('');
     try {
+      // Validate customer fields before initialize
+      if (!formData?.fullName || !formData.fullName.trim()) {
+        throw new Error('Full Name is required.');
+      }
+      if (!formData?.phone || !formData.phone.trim()) {
+        throw new Error('Phone Number is required.');
+      }
+      if (!formData?.email || !formData.email.trim()) {
+        throw new Error('Email Address is required.');
+      }
+      if (!formData?.date) {
+        throw new Error('Travel Date is required.');
+      }
+      const travelDateObj = new Date(formData.date);
+      if (isNaN(travelDateObj.getTime()) || travelDateObj <= new Date()) {
+        throw new Error('Travel Date must be a future date.');
+      }
+      if (!tripDetails?.travellers || tripDetails.travellers < 1 || tripDetails.travellers > 50) {
+        throw new Error('Number of travellers must be between 1 and 50.');
+      }
+      if (!selectedSharing || !['Quad Sharing', 'Triple Sharing', 'Double Sharing'].includes(selectedSharing)) {
+        throw new Error('Please select a valid room sharing occupancy.');
+      }
+
       // 3. On checkout, we must have initialized a booking first.
       // If no booking exists, initialize it now on coupon application.
       let currentBookingId = bookingId;
@@ -460,6 +516,30 @@ export default function PackageCheckout() {
     setError(null);
 
     try {
+      // Validate customer fields before initialize
+      if (!formData?.fullName || !formData.fullName.trim()) {
+        throw new Error('Full Name is required.');
+      }
+      if (!formData?.phone || !formData.phone.trim()) {
+        throw new Error('Phone Number is required.');
+      }
+      if (!formData?.email || !formData.email.trim()) {
+        throw new Error('Email Address is required.');
+      }
+      if (!formData?.date) {
+        throw new Error('Travel Date is required.');
+      }
+      const travelDateObj = new Date(formData.date);
+      if (isNaN(travelDateObj.getTime()) || travelDateObj <= new Date()) {
+        throw new Error('Travel Date must be a future date.');
+      }
+      if (!tripDetails?.travellers || tripDetails.travellers < 1 || tripDetails.travellers > 50) {
+        throw new Error('Number of travellers must be between 1 and 50.');
+      }
+      if (!selectedSharing || !['Quad Sharing', 'Triple Sharing', 'Double Sharing'].includes(selectedSharing)) {
+        throw new Error('Please select a valid room sharing occupancy.');
+      }
+
       let currentBookingId = bookingId;
       let finalAmount = serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher;
 

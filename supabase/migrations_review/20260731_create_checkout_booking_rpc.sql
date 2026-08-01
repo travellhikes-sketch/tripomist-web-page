@@ -141,39 +141,78 @@ BEGIN
         RAISE EXCEPTION 'Package does not contain valid costings options.';
     END IF;
 
-    FOR v_costing_item IN SELECT * FROM jsonb_to_recordset(v_package.costings) AS x(type TEXT, price TEXT)
-    Loop
-        -- Match exactly on normalized types
-        IF v_costing_item.type = p_selected_sharing THEN
-            v_costing_found := true;
-            v_canonical_sharing := v_costing_item.type;
-            
-            -- Parse price string safely
-            DECLARE
-                v_clean_price TEXT;
-            BEGIN
-                -- 2. Use regex pattern '[₹,[:space:]]'
-                v_clean_price := REGEXP_REPLACE(v_costing_item.price, '[₹,[:space:]]', '', 'g');
-                v_clean_price := REGEXP_REPLACE(v_clean_price, 'perperson', '', 'gi');
-                v_clean_price := TRIM(v_clean_price);
-                
-                -- Check if it contains digits only
-                IF v_clean_price ~ '^[0-9]+$' THEN
-                    v_price_per_person := v_clean_price::NUMERIC;
-                ELSE
-                    RAISE EXCEPTION 'Malformed price string in package configuration: %', v_costing_item.price;
-                END IF;
-            EXCEPTION WHEN OTHERS THEN
-                RAISE EXCEPTION 'Failed parsing price string: %', v_costing_item.price;
-            END;
-            
-            EXIT;
-        END IF;
-    END LOOP;
+    -- Fetch Quad Sharing base price
+    DECLARE
+        v_quad_record RECORD;
+        v_quad_found BOOLEAN := false;
+        v_quad_price NUMERIC(12, 2) := 0;
+        v_upgrade_val NUMERIC(12, 2) := 0;
+        v_upgrade_record RECORD;
+    BEGIN
+        -- Find Quad Sharing base
+        FOR v_quad_record IN SELECT * FROM jsonb_to_recordset(v_package.costings) AS x(type TEXT, price TEXT) LOOP
+            IF v_quad_record.type = 'Quad Sharing' THEN
+                DECLARE
+                    v_clean_price TEXT;
+                BEGIN
+                    v_clean_price := REGEXP_REPLACE(v_quad_record.price, '[₹,[:space:]]', '', 'g');
+                    v_clean_price := REGEXP_REPLACE(v_clean_price, 'perperson', '', 'gi');
+                    v_clean_price := TRIM(v_clean_price);
+                    IF v_clean_price ~ '^[0-9]+$' THEN
+                        v_quad_price := v_clean_price::NUMERIC;
+                        v_quad_found := true;
+                    END IF;
+                EXCEPTION WHEN OTHERS THEN
+                    NULL;
+                END;
+            END IF;
+        END LOOP;
 
-    IF NOT v_costing_found THEN
-        RAISE EXCEPTION 'Selected sharing option is not offered on this package.';
-    END IF;
+        IF NOT v_quad_found OR v_quad_price <= 0 THEN
+            RAISE EXCEPTION 'Package configuration error: Quad Sharing is missing.';
+        END IF;
+
+        IF p_selected_sharing = 'Quad Sharing' THEN
+            v_price_per_person := v_quad_price;
+        ELSE
+            -- Find Upgrade cost costing item
+            -- Looking for either 'Triple Sharing Upgrade' or 'Double Sharing Upgrade'
+            -- We never show the word Upgrade to the customer in label, but costings database row matches the requested upgrade names.
+            DECLARE
+                v_upgrade_name TEXT;
+            BEGIN
+                IF p_selected_sharing = 'Triple Sharing' THEN
+                    v_upgrade_name := 'Triple Sharing Upgrade';
+                ELSIF p_selected_sharing = 'Double Sharing' THEN
+                    v_upgrade_name := 'Double Sharing Upgrade';
+                END IF;
+
+                FOR v_upgrade_record IN SELECT * FROM jsonb_to_recordset(v_package.costings) AS x(type TEXT, price TEXT) LOOP
+                    IF v_upgrade_record.type = v_upgrade_name THEN
+                        DECLARE
+                            v_clean_price TEXT;
+                        BEGIN
+                            v_clean_price := REGEXP_REPLACE(v_upgrade_record.price, '[₹,[:space:]]', '', 'g');
+                            v_clean_price := REGEXP_REPLACE(v_clean_price, 'perperson', '', 'gi');
+                            v_clean_price := TRIM(v_clean_price);
+                            IF v_clean_price ~ '^[0-9]+$' THEN
+                                v_upgrade_val := v_clean_price::NUMERIC;
+                                v_costing_found := true;
+                            END IF;
+                        EXCEPTION WHEN OTHERS THEN
+                            NULL;
+                        END;
+                    END IF;
+                END LOOP;
+
+                IF NOT v_costing_found THEN
+                    RAISE EXCEPTION 'Sharing option upgrade costing % is not offered on this package.', v_upgrade_name;
+                END IF;
+
+                v_price_per_person := v_quad_price + v_upgrade_val;
+            END;
+        END IF;
+    END;
 
     IF v_price_per_person IS NULL OR v_price_per_person <= 0 THEN
         RAISE EXCEPTION 'Invalid price per person calculated.';
