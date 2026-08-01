@@ -5,8 +5,6 @@ import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
 
-const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TBICP09xzQRaAw';
-
 // Helper: parse price string like "₹19,999 per person" to number
 function parsePriceString(priceStr) {
   if (typeof priceStr === 'number') return priceStr;
@@ -44,8 +42,30 @@ export default function PackageCheckout() {
   // Derived options
   const [sharingOptions, setSharingOptions] = useState([]);
 
-  // Idempotency Key to prevent duplicate submissions
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // Server-authorized amount variable
+  const [serverFinalPayable, setServerFinalPayable] = useState(null);
+
+  // 6. Track whether payment process has started
+  const [paymentStarted, setPaymentStarted] = useState(false);
+
+  // State to block proceed payment button
+  const [checkoutBlocked, setCheckoutBlocked] = useState(false);
+
+  // 8. Restore or persist idempotencyKey inside checkoutData/sessionStorage
+  const [idempotencyKey] = useState(() => {
+    try {
+      const storedData = sessionStorage.getItem('checkoutData');
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        if (parsed.idempotencyKey) {
+          return parsed.idempotencyKey;
+        }
+      }
+    } catch (e) {
+      console.error('Error recovering idempotency key:', e);
+    }
+    return crypto.randomUUID();
+  });
 
   // Helper: securely update checkout lead via RPC
   const updateLead = async (updates) => {
@@ -65,11 +85,84 @@ export default function PackageCheckout() {
   };
 
   useEffect(() => {
+    // 7. Verify RAZORPAY_KEY ID exists; throw config error if missing
+    if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
+      setError('Payment gateway configuration is missing. Please contact support.');
+    }
+
     const dataStr = sessionStorage.getItem('checkoutData');
     if (!dataStr) {
       navigate(packageSlug && packageSlug !== 'custom-package' ? `/itinerary/${packageSlug}` : '/');
       return;
     }
+    // Define an async helper to handle session and state restoration from server status
+    const loadCheckoutStatus = async (currentUser) => {
+      try {
+        const session = (await supabase.auth.getSession()).data?.session;
+        if (!session) return;
+
+        const { data: statusData, error: statusErr } = await supabase.functions.invoke('razorpay-checkout', {
+          body: {
+            action: 'checkout_status',
+            idempotencyKey
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        if (!statusErr && statusData && statusData.success && statusData.found) {
+          setBookingId(statusData.bookingId);
+          setServerFinalPayable(statusData.finalPayableAmount);
+
+          if (statusData.selectedSharing) {
+            setSelectedSharing(statusData.selectedSharing);
+          }
+          if (statusData.activeReservation) {
+            setAppliedVoucher({
+              id: statusData.activeReservation.reservationId,
+              code: statusData.activeReservation.code,
+              remaining_amount: statusData.activeReservation.reservedAmount,
+              reserved_amount: statusData.activeReservation.reservedAmount,
+              reservation_id: statusData.activeReservation.reservationId,
+              expires_at: statusData.activeReservation.expiresAt,
+              finalPayableAmount: statusData.finalPayableAmount,
+              isExpired: statusData.activeReservation.isExpired
+            });
+          }
+          if (statusData.latestPaymentAttempt) {
+            setPaymentStarted(true);
+          }
+
+          // Handle paid, failed, cancelled and expired statuses
+          const attemptStatus = statusData.latestPaymentAttempt?.status;
+
+          if (statusData.paymentStatus === 'paid') {
+            // Restore paymentId and clean checkout storage for paid bookings
+            setPaymentId(statusData.paymentId || 'PAID_VERIFIED');
+            sessionStorage.removeItem('checkoutData');
+            localStorage.removeItem('cart');
+            window.dispatchEvent(new Event('cartUpdated'));
+            setStep('success');
+          } else if (attemptStatus === 'preparing' || attemptStatus === 'verification_pending') {
+            setCheckoutBlocked(true);
+            setError('Payment verification/reconciliation is in progress. Please check My Trips or contact support.');
+          } else if (attemptStatus === 'failed' || attemptStatus === 'cancelled' || attemptStatus === 'expired') {
+            setCheckoutBlocked(true);
+            setError('Payment attempt closed. Please start a new checkout.');
+          } else if (statusData.activeReservation?.isExpired) {
+            setCheckoutBlocked(true);
+            setError('Coupon reservation expired. Please start a new checkout.');
+          } else if (attemptStatus === 'verified' && statusData.paymentStatus !== 'paid') {
+            setCheckoutBlocked(true);
+            setError('Payment reconciliation required. Please check My Trips or contact support.');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching checkout status:', err);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
       if (session?.user) {
@@ -78,10 +171,16 @@ export default function PackageCheckout() {
           setVoucherCode(pendingCoupon);
           sessionStorage.removeItem('pending_coupon_code');
         }
+        loadCheckoutStatus(session.user);
       }
     });
     try {
       const data = JSON.parse(dataStr);
+      // Preserve idempotency key back into sessionStorage structure for reload persistence
+      if (!data.idempotencyKey) {
+        data.idempotencyKey = idempotencyKey;
+        sessionStorage.setItem('checkoutData', JSON.stringify(data));
+      }
       setCheckoutData(data);
       setFormData(data.formData);
       setTripDetails(data.tripDetails);
@@ -142,6 +241,8 @@ export default function PackageCheckout() {
   }
 
   const handleSharingSelect = (option) => {
+    // 4. Disable room occupancy selection after booking initialize
+    if (bookingId) return;
     setSelectedSharing(option.type);
     setComputedPrice(option.pricePerPerson * (tripDetails.travellers || 1));
     // Track: sharing selected
@@ -166,7 +267,16 @@ export default function PackageCheckout() {
   const finalPayable = totalBeforeVoucher - voucherDiscount;
 
   const handleApplyVoucher = async () => {
-    if (!user) {
+    // 11. Apply Coupon par live session check
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      // 10. Login redirect: preserve same idempotency key and details
+      const currentData = {
+        formData,
+        tripDetails,
+        idempotencyKey
+      };
+      sessionStorage.setItem('checkoutData', JSON.stringify(currentData));
       sessionStorage.setItem('pending_coupon_code', voucherCode);
       navigate('/login');
       return;
@@ -192,28 +302,78 @@ export default function PackageCheckout() {
     setVoucherLoading(true);
     setVoucherError('');
     try {
-      // Phase A: Reserve voucher balance server-side without deducting remaining_amount
-      const { data: resData, error: resErr } = await supabase.rpc('reserve_voucher_for_checkout', {
-        p_voucher_code: voucherCode.trim(),
-        p_requested_amount: totalBeforeVoucher
-      });
-      
-      if (resErr) {
-        throw new Error(resErr.message || 'Failed to reserve voucher.');
+      // 3. On checkout, we must have initialized a booking first.
+      // If no booking exists, initialize it now on coupon application.
+      let currentBookingId = bookingId;
+      if (!currentBookingId) {
+        let travelDate = '';
+        try {
+          const raw = formData.date;
+          if (typeof raw === 'string') {
+            travelDate = raw.split('T')[0];
+          } else if (raw instanceof Date) {
+            travelDate = raw.toISOString().split('T')[0];
+          } else {
+            travelDate = String(raw).split('T')[0];
+          }
+        } catch (e) {
+          travelDate = '';
+        }
+
+        const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
+          body: {
+            action: 'initialize',
+            packageId: parseInt(tripDetails.packageId),
+            travelDate,
+            travellers: tripDetails.travellers,
+            selectedSharing,
+            idempotencyKey,
+            specialRequest: formData.specialRequest || null,
+            source: formData.source || null
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        if (initErr || !initData || !initData.success) {
+          throw new Error('Failed to initialize booking transaction before applying coupon.');
+        }
+
+        currentBookingId = initData.bookingId;
+        setBookingId(initData.bookingId);
+        // 2. initialize response sets serverFinalPayable
+        setServerFinalPayable(initData.finalPayableAmount);
       }
 
-      if (!resData || !resData.success) {
-        throw new Error('Voucher reservation failed.');
+      // 5. Coupon Apply par call reserve_coupon
+      const { data: resData, error: resErr } = await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'reserve_coupon',
+          bookingId: currentBookingId,
+          couponCode: voucherCode.trim()
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (resErr || !resData || !resData.success) {
+        throw new Error(resErr?.message || 'Failed to reserve coupon balance.');
       }
       
+      // 6. Use only server returned discount/final amount
       setAppliedVoucher({
-        id: resData.voucher_id,
-        code: resData.voucher_code,
-        remaining_amount: resData.voucher_remaining_balance,
-        reserved_amount: resData.reserved_amount,
-        reservation_id: resData.reservation_id,
-        expires_at: resData.expires_at
+        id: resData.reservationId,
+        code: voucherCode.trim(),
+        remaining_amount: resData.reservedAmount,
+        reserved_amount: resData.reservedAmount,
+        reservation_id: resData.reservationId,
+        expires_at: resData.expiresAt,
+        finalPayableAmount: resData.finalPayableAmount
       });
+      // 2. update serverFinalPayable from reserve_coupon response
+      setServerFinalPayable(resData.finalPayableAmount);
       setVoucherCode('');
     } catch (err) {
       setVoucherError(err.message);
@@ -222,202 +382,234 @@ export default function PackageCheckout() {
     }
   };
 
-  const handleRemoveVoucher = async () => {
-    if (appliedVoucher?.reservation_id) {
-      try {
-        await supabase.rpc('release_voucher_reservation', {
-          p_reservation_id: appliedVoucher.reservation_id
-        });
-      } catch (err) {
-        console.error('Failed to release voucher reservation:', err);
-      }
-    }
-    setAppliedVoucher(null);
-  };
-
-  const saveBookingToSupabase = async (razorpayPaymentId) => {
+  const verifyPaymentServer = async (razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentAttemptId) => {
     setLoading(true);
     setError(null);
 
-    // Safe date extraction — handles both ISO string and Date object
-    let travelDate = '';
     try {
-      const raw = formData.date;
-      if (typeof raw === 'string') {
-        travelDate = raw.split('T')[0];
-      } else if (raw instanceof Date) {
-        travelDate = raw.toISOString().split('T')[0];
-      } else {
-        travelDate = String(raw).split('T')[0];
+      const session = (await supabase.auth.getSession()).data?.session;
+      const { data: verifyData, error: verifyErr } = await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'verify',
+          bookingId,
+          paymentAttemptId,
+          razorpayOrderId,
+          razorpayPaymentId,
+          razorpaySignature
+        },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
+      });
+
+      if (verifyErr || !verifyData || !verifyData.success) {
+        throw new Error(verifyErr?.message || 'Payment verification failed on the server.');
       }
-    } catch (e) {
-      console.error('Date parse error:', e);
-      travelDate = '';
-    }
 
-    const parsedPackageId = parseInt(tripDetails.packageId);
-    const sessionUser = (await supabase.auth.getSession()).data?.session?.user;
-    const bookingPayload = {
-      customer_name: formData.fullName,
-      phone: formData.phone,
-      email: formData.email || null,
-      source: formData.source || null,
-      package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
-      package_title: tripDetails.tripTitle,
-      destination: tripDetails.destination || null,
-      travel_date: travelDate,
-      travellers: tripDetails.travellers,
-      total_amount: parsePriceString(tripDetails.price),
-      amount_before_voucher: totalBeforeVoucher,
-      voucher_discount: voucherDiscount,
-      final_payable_amount: finalPayable,
-      checkout_idempotency_key: idempotencyKey,
-      voucher_id: appliedVoucher?.id || null,
-      payment_id: razorpayPaymentId || null,
-      payment_status: finalPayable === 0 ? 'paid' : 'paid',
-      selected_sharing: selectedSharing,
-      final_amount: finalPayable, // legacy field fallback
-      booking_status: 'confirmed',
-      sales_channel: 'b2c',
-      special_request: formData.specialRequest || null,
-      user_id: sessionUser?.id || null,
-    };
-
-    const { error: insertError, data: insertedBookings } = await supabase
-      .from('bookings')
-      .insert([bookingPayload])
-      .select();
-
-    if (insertError) {
-      console.error("Booking insert failed:", insertError);
-      let errMsg = insertError.message || insertError.details || 'Unknown error';
-      if (insertError.code === '23505') {
-        errMsg = 'This payment has already been recorded.';
-      }
-      setError('Payment was recorded but booking save failed. Error: ' + errMsg);
       setPaymentId(razorpayPaymentId);
+      // 9. Clear saved checkout data only after successful checkout completes
+      sessionStorage.removeItem('checkoutData');
+      localStorage.removeItem('cart');
+      window.dispatchEvent(new Event('cartUpdated'));
+
+      updateLead({
+        p_current_step: 'payment_success',
+        p_lead_status: 'converted',
+        p_payment_status: 'paid',
+        p_razorpay_payment_id: razorpayPaymentId,
+      });
+
+      setLoading(false);
+      setStep('success');
+    } catch (err) {
+      console.error('Verification error:', err);
+      // 4. Save real razorpay payment ID to fail state for webhook confirmation
+      setPaymentId(razorpayPaymentId);
+      setError(err.message || 'Verification failed. Please contact support.');
       setLoading(false);
       setStep('failed');
-      return;
     }
-
-    // INSERT succeeded, create primary traveller and process voucher finalization
-    if (insertedBookings && insertedBookings.length > 0) {
-      const newBookingId = insertedBookings[0].id;
-      const travellerPayload = {
-        booking_id: newBookingId,
-        full_name: formData.fullName,
-        phone: formData.phone,
-        email: formData.email || null,
-        is_primary: true
-      };
-      await supabase.from('booking_travellers').insert([travellerPayload]);
-
-      // Phase B: Finalize voucher redemption server-side atomically after payment
-      if (appliedVoucher?.reservation_id) {
-        try {
-          const { error: finalizeErr } = await supabase.rpc('finalize_voucher_redemption', {
-            p_reservation_id: appliedVoucher.reservation_id,
-            p_booking_id: newBookingId,
-            p_razorpay_payment_id: razorpayPaymentId
-          });
-          
-          if (finalizeErr) {
-            console.error("Voucher finalization failed:", finalizeErr);
-          }
-        } catch (err) {
-          console.error("Voucher finalization error:", err);
-        }
-      }
-    }
-
-    setPaymentId(razorpayPaymentId);
-    sessionStorage.removeItem('checkoutData');
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('cartUpdated'));
-
-    // Update lead to converted
-    updateLead({
-      p_current_step: 'payment_success',
-      p_lead_status: 'converted',
-      p_payment_status: 'paid',
-      p_razorpay_payment_id: razorpayPaymentId,
-    });
-
-    setLoading(false);
-    setStep('success');
   };
 
   const handleProceedToPayment = async () => {
-    if (!selectedSharing) return alert('Please select a sharing option');
-
-    setLoading(true);
-    setError(null);
-    
-    if (finalPayable === 0 && appliedVoucher) {
-      // 100% Covered by voucher, bypass Razorpay
-      await saveBookingToSupabase('PAID_BY_VOUCHER');
+    // 12. Replace native alert with normal page error
+    if (!selectedSharing) {
+      setError('Please select a room sharing type before proceeding.');
       return;
     }
 
-    // Track: Razorpay opening
-    updateLead({
-      p_current_step: 'razorpay_opened',
-      p_lead_status: 'payment_pending',
-      p_payment_status: 'pending',
-      p_selected_sharing: selectedSharing,
-      p_estimated_amount: finalPayable,
-    });
+    // 3. Proceed par live session check
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      // Session missing: preserve checkoutData in sessionStorage and send user to /login
+      const currentData = {
+        formData,
+        tripDetails,
+        idempotencyKey
+      };
+      sessionStorage.setItem('checkoutData', JSON.stringify(currentData));
+      navigate('/login');
+      return;
+    }
 
-    const amountInPaise = finalPayable * 100;
-
-    const options = {
-      key: RAZORPAY_KEY,
-      amount: amountInPaise,
-      currency: 'INR',
-      name: 'TripoMist',
-      description: `${tripDetails.tripTitle} - ${selectedSharing}`,
-      prefill: {
-        name: formData.fullName,
-        email: formData.email,
-        contact: `+91${formData.phone}`
-      },
-      theme: {
-        color: '#136b8a'
-      },
-      handler: function (response) {
-        saveBookingToSupabase(response.razorpay_payment_id);
-      },
-      modal: {
-        ondismiss: async function () {
-          setLoading(false);
-          setError('Payment window closed. Your voucher balance remains un-deducted and safely available in your account.');
-          // Release reservation
-          if (appliedVoucher?.reservation_id) {
-            await supabase.rpc('release_voucher_reservation', { p_reservation_id: appliedVoucher.reservation_id });
-          }
-        }
-      }
-    };
+    setLoading(true);
+    setError(null);
 
     try {
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', async function (response) {
-        setLoading(false);
-        setError('Payment failed: ' + (response.error?.description || 'Payment was cancelled.') + ' Your voucher balance remains un-deducted.');
-        if (appliedVoucher?.reservation_id) {
-          await supabase.rpc('release_voucher_reservation', { p_reservation_id: appliedVoucher.reservation_id });
+      let currentBookingId = bookingId;
+      let finalAmount = serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher;
+
+      // 3. On checkout call Edge action initialize
+      if (!currentBookingId) {
+        let travelDate = '';
+        try {
+          const raw = formData.date;
+          if (typeof raw === 'string') {
+            travelDate = raw.split('T')[0];
+          } else if (raw instanceof Date) {
+            travelDate = raw.toISOString().split('T')[0];
+          } else {
+            travelDate = String(raw).split('T')[0];
+          }
+        } catch (e) {
+          travelDate = '';
         }
+
+        // 4. Send no customer details or price to initialize
+        const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
+          body: {
+            action: 'initialize',
+            packageId: parseInt(tripDetails.packageId),
+            travelDate,
+            travellers: tripDetails.travellers,
+            selectedSharing,
+            idempotencyKey,
+            specialRequest: formData.specialRequest || null,
+            source: formData.source || null
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        if (initErr || !initData || !initData.success) {
+          throw new Error('Failed to initialize booking transaction.');
+        }
+
+        currentBookingId = initData.bookingId;
+        setBookingId(initData.bookingId);
+        setServerFinalPayable(initData.finalPayableAmount);
+        finalAmount = initData.finalPayableAmount;
+      }
+
+      // 7. If final amount = 0, call full_coupon
+      if (finalAmount === 0 && appliedVoucher?.reservation_id) {
+        const { data: fullCouponData, error: fullCouponErr } = await supabase.functions.invoke('razorpay-checkout', {
+          body: {
+            action: 'full_coupon',
+            bookingId: currentBookingId,
+            reservationId: appliedVoucher.reservation_id
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        if (fullCouponErr || !fullCouponData || !fullCouponData.success) {
+          throw new Error(fullCouponErr?.message || 'Failed to complete zero amount coupon checkout.');
+        }
+
+        setPaymentId('PAID_BY_VOUCHER');
+        sessionStorage.removeItem('checkoutData');
+        localStorage.removeItem('cart');
+        window.dispatchEvent(new Event('cartUpdated'));
+
+        setLoading(false);
+        setStep('success');
+        return;
+      }
+
+      // 8. Otherwise call prepare and open Razorpay using returned order ID/amount
+      const { data: prepareData, error: prepareErr } = await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'prepare',
+          bookingId: currentBookingId,
+          idempotencyKey
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (prepareErr || !prepareData || !prepareData.success) {
+        throw new Error(prepareErr?.message || 'Failed to prepare payment transaction order.');
+      }
+
+      // 6. Set paymentStarted state variable to true upon successful prepare response
+      setPaymentStarted(true);
+
+      updateLead({
+        p_current_step: 'razorpay_opened',
+        p_lead_status: 'payment_pending',
+        p_payment_status: 'pending',
+        p_selected_sharing: selectedSharing,
+        p_estimated_amount: finalAmount,
+      });
+
+      // 7. Retrieve VITE_RAZORPAY_KEY_ID from import.meta.env
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKeyId) {
+        throw new Error('Payment gateway configuration key missing.');
+      }
+
+      const options = {
+        key: razorpayKeyId,
+        // 1. Map expectedAmountPaise instead of amount
+        amount: prepareData.expectedAmountPaise,
+        currency: 'INR',
+        name: 'TripoMist',
+        description: `${tripDetails.tripTitle} - ${selectedSharing}`,
+        order_id: prepareData.razorpayOrderId,
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: `+91${formData.phone}`
+        },
+        theme: {
+          color: '#136b8a'
+        },
+        // 9. Razorpay success handler must call verify
+        handler: function (response) {
+          verifyPaymentServer(
+            response.razorpay_payment_id,
+            response.razorpay_order_id,
+            response.razorpay_signature,
+            prepareData.paymentAttemptId
+          );
+        },
+        modal: {
+          // 12. Razorpay close/failure par reservation release mat karo; retry message dikhao
+          ondismiss: function () {
+            setLoading(false);
+            setError('Payment window closed. If amount was deducted, verification will complete shortly. Otherwise, please try again.');
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        setLoading(false);
+        // 12. Razorpay close/failure par reservation release mat karo; retry message dikhao
+        setError('Payment failed: ' + (response.error?.description || 'Please try again. If money was debited, it will reflect within 24 hours.'));
         updateLead({
           p_current_step: 'payment_failed',
           p_payment_status: 'failed',
         });
-        setStep('failed');
       });
       rzp.open();
     } catch (err) {
       setLoading(false);
-      setError('Could not open payment gateway. Please try again.');
+      setError(err.message || 'Could not open payment gateway. Please try again.');
     }
   };
 
@@ -474,21 +666,21 @@ export default function PackageCheckout() {
                   { icon: 'calendar_month', label: 'Travel Date', value: travelDateDisplay },
                   { icon: 'group', label: 'Travellers', value: tripDetails.travellers + ' Traveller(s)' },
                   { icon: 'hotel', label: 'Room Sharing', value: selectedSharing },
-                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${finalPayable.toLocaleString('en-IN')}`, highlight: true },
+                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher).toLocaleString('en-IN')}`, highlight: true },
                   { icon: 'verified', label: 'Payment Status', value: 'Paid', badge: 'paid' },
                   { icon: 'task_alt', label: 'Booking Status', value: 'Confirmed', badge: 'confirmed' },
                 ].map(({ icon, label, value, mono, highlight, badge }) => (
                   <div key={label} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-8 h-8 bg-[#136b8a]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="material-symbols-outlined text-[#136b8a] text-[18px]">{icon}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{label}</p>
-                      {badge === 'paid' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">✓ Paid</span>}
-                      {badge === 'confirmed' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-bold rounded-full border border-teal-200">✓ Confirmed</span>}
-                      {!badge && <p className={`font-semibold ${highlight ? 'text-emerald-700 text-lg' : 'text-gray-900'} ${mono ? 'font-mono text-sm break-all' : ''}`}>{value}</p>}
-                    </div>
-                  </div>
+                     <div className="w-8 h-8 bg-[#136b8a]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                       <span className="material-symbols-outlined text-[#136b8a] text-[18px]">{icon}</span>
+                     </div>
+                     <div className="min-w-0">
+                       <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{label}</p>
+                       {badge === 'paid' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">✓ Paid</span>}
+                       {badge === 'confirmed' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-bold rounded-full border border-teal-200">✓ Confirmed</span>}
+                       {!badge && <p className={`font-semibold ${highlight ? 'text-emerald-700 text-lg' : 'text-gray-900'} ${mono ? 'font-mono text-sm break-all' : ''}`}>{value}</p>}
+                     </div>
+                   </div>
                 ))}
               </div>
 
@@ -509,7 +701,7 @@ export default function PackageCheckout() {
                       customer_name: formData.fullName,
                       phone: formData.phone,
                       email: formData.email,
-                      final_amount: finalPayable,
+                      final_amount: serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'download')}
                     className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
@@ -528,7 +720,7 @@ export default function PackageCheckout() {
                       customer_name: formData.fullName,
                       phone: formData.phone,
                       email: formData.email,
-                      final_amount: finalPayable,
+                      final_amount: serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'open')}
                     className="bg-white text-gray-700 border border-gray-200 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
@@ -634,14 +826,13 @@ export default function PackageCheckout() {
           
           <div className="flex flex-col gap-4 w-full max-w-md">
             {paymentId && (
-              <button 
-                onClick={() => saveBookingToSupabase(paymentId)} 
-                disabled={loading}
-                className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+              <Link
+                to="/my-trips"
+                className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
-                {loading ? 'Retrying...' : 'Retry Saving Booking'}
-                {!loading && <span className="material-symbols-outlined text-lg">refresh</span>}
-              </button>
+                Check My Trips
+                <span className="material-symbols-outlined text-lg">luggage</span>
+              </Link>
             )}
             {!paymentId && (
               <button onClick={() => { setStep('checkout'); setError(null); }} className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all">
@@ -694,8 +885,9 @@ export default function PackageCheckout() {
                   <input 
                     type="text" 
                     value={formData.fullName} 
+                    disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -703,12 +895,13 @@ export default function PackageCheckout() {
                   <input 
                     type="date" 
                     value={formData.date ? formData.date.split('T')[0] : ''} 
+                    disabled={!!bookingId}
                     onChange={(e) => {
                       if (e.target.value) {
                         setFormData({...formData, date: e.target.value});
                       }
                     }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -735,6 +928,7 @@ export default function PackageCheckout() {
                     type="number" 
                     min="1"
                     value={tripDetails.travellers} 
+                    disabled={!!bookingId}
                     onChange={(e) => {
                       const val = parseInt(e.target.value) || 1;
                       setTripDetails({...tripDetails, travellers: val});
@@ -742,15 +936,16 @@ export default function PackageCheckout() {
                       const opt = sharingOptions.find(o => o.type === selectedSharing);
                       if (opt) setComputedPrice(opt.pricePerPerson * val);
                     }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Source</label>
                   <select 
                     value={formData.source} 
+                    disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, source: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   >
                     <option value="">Select source</option>
                     <option value="Facebook">Facebook</option>
@@ -766,8 +961,9 @@ export default function PackageCheckout() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Special Request (Optional)</label>
                   <textarea 
                     value={formData.specialRequest || ''} 
+                    disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, specialRequest: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     rows="3"
                     placeholder="Any dietary requirements or special requests..."
                   ></textarea>
@@ -786,11 +982,16 @@ export default function PackageCheckout() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sharingOptions.map((option) => {
                   const isActive = selectedSharing === option.type;
+                  const isOccupancyDisabled = !!bookingId;
                   return (
                     <div 
                       key={option.type}
-                      onClick={() => handleSharingSelect(option)}
-                      className={`cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col gap-2 ${
+                      onClick={() => !isOccupancyDisabled && handleSharingSelect(option)}
+                      className={`rounded-2xl p-5 border-2 transition-all flex flex-col gap-2 ${
+                        isOccupancyDisabled
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer'
+                      } ${
                         isActive 
                           ? 'border-[#136b8a] bg-[#eff6f9] shadow-md scale-[1.02]' 
                           : 'border-gray-200 bg-white hover:border-[#136b8a]/50 hover:bg-gray-50'
@@ -843,61 +1044,67 @@ export default function PackageCheckout() {
                 </div>
               </div>
 
-              {/* Coupon Section */}
-              <div className="mb-6 pb-6 border-b border-gray-100">
-                {appliedVoucher ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex justify-between items-center">
+              {/* 10. Coupon field Proceed to Payment button ke just above rakho */}
+              {/* 7. Hide/Disable coupon application block after payment has started or checkout is blocked */}
+              {!paymentStarted && !checkoutBlocked && (
+                <div className="mb-6 pb-6 border-b border-gray-100">
+                  {appliedVoucher ? (
+                    (() => {
+                      const isExpired = appliedVoucher.expires_at && new Date(appliedVoucher.expires_at) <= new Date();
+                      return (
+                        <div className={`${isExpired ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'} border rounded-xl p-3 flex justify-between items-center`}>
+                          <div>
+                            <div className={`${isExpired ? 'text-rose-800' : 'text-emerald-800'} font-bold text-sm flex items-center gap-1`}>
+                              <span className="material-symbols-outlined text-[16px]">{isExpired ? 'error' : 'local_activity'}</span>
+                              {isExpired ? 'Coupon Reservation Expired' : 'Coupon Applied'}
+                            </div>
+                            <div className={`${isExpired ? 'text-rose-600' : 'text-emerald-600'} text-xs mt-0.5`}>{appliedVoucher.code}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`${isExpired ? 'text-rose-700' : 'text-emerald-700'} font-bold`}>
+                              -₹{appliedVoucher.remaining_amount.toLocaleString()}
+                            </div>
+                            <p className="text-[10px] font-semibold mt-1">
+                              {isExpired ? 'Coupon reservation expired. Please start a new checkout.' : 'Coupon locked for 15 minutes'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
                     <div>
-                      <div className="text-emerald-800 font-bold text-sm flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">local_activity</span>
-                        Coupon Applied
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Have a Coupon Code?</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={voucherCode}
+                          onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                          placeholder="Enter code"
+                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
+                        />
+                        <button                          onClick={handleApplyVoucher}
+                          disabled={voucherLoading || !voucherCode.trim()}
+                          className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                        >
+                          {voucherLoading ? 'Applying...' : 'Apply'}
+                        </button>
                       </div>
-                      <div className="text-emerald-600 text-xs mt-0.5">{appliedVoucher.code}</div>
+                      {voucherError && <p className="text-rose-600 text-xs mt-2 font-medium">{voucherError}</p>}
                     </div>
-                    <div className="text-right">
-                      <div className="text-emerald-700 font-bold">-₹{voucherDiscount.toLocaleString()}</div>
-                      <button 
-                        onClick={() => setAppliedVoucher(null)}
-                        className="text-emerald-600 hover:text-emerald-800 text-xs font-semibold underline mt-1"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Have a Coupon Code?</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={voucherCode}
-                        onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                        placeholder="Enter code"
-                        className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
-                      />
-                      <button 
-                        onClick={handleApplyVoucher}
-                        disabled={voucherLoading || !voucherCode.trim()}
-                        className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                      >
-                        {voucherLoading ? 'Applying...' : 'Apply'}
-                      </button>
-                    </div>
-                    {voucherError && <p className="text-rose-600 text-xs mt-2 font-medium">{voucherError}</p>}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-between items-end mb-8 bg-[#eff6f9] p-4 rounded-xl border border-[#cde5ef]">
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
                 </div>
-                <span className="font-extrabold text-[#136b8a] text-2xl">₹{finalPayable.toLocaleString()}</span>
+                <span className="font-extrabold text-[#136b8a] text-2xl">₹{(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher).toLocaleString()}</span>
               </div>
 
               <button 
                 onClick={handleProceedToPayment}
-                disabled={loading || !selectedSharing}
+                disabled={loading || !selectedSharing || checkoutBlocked}
                 className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-[#136b8a]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
               >
                 {loading ? (
