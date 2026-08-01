@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-checkout-lead-id, x-checkout-lead-token',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
@@ -46,6 +46,25 @@ async function verifyHmacSha256(secret: string, data: string, signature: string)
   return await crypto.subtle.verify('HMAC', key, sigBuf, dataBuf)
 }
 
+async function computeHmacSha256(secret: string, message: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const keyBuf = encoder.encode(secret)
+  const msgBuf = encoder.encode(message)
+  
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyBuf,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  
+  const sigBuf = await crypto.subtle.sign('HMAC', key, msgBuf)
+  return Array.from(new Uint8Array(sigBuf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 serve(async (req) => {
   // 8. Only POST and OPTIONS allowed
   if (req.method === 'OPTIONS') {
@@ -60,12 +79,8 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized credentials' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    const leadIdHeader = req.headers.get('x-checkout-lead-id')
+    const leadTokenHeader = req.headers.get('x-checkout-lead-token')
 
     // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
@@ -79,24 +94,214 @@ serve(async (req) => {
       })
     }
 
-    // Verify user JWT token to authenticate user identity
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized token session' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // Database Client utilizing service_role key to invoke secure RPCs
     const adminClient = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Authenticate user if Authorization header exists
+    let user = null
+    if (authHeader) {
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      })
+      const { data: { user: u }, error: userError } = await userClient.auth.getUser()
+      if (!userError && u) {
+        user = u
+      }
+    }
 
     // Parse payload
     const body: CheckoutRequest = await req.json()
     const { action } = body
+
+    if (action === 'create_guest_lead') {
+      // Read all fields sent by BookingModal using p_ prefix keys
+      const rawName  = (body as any).p_customer_name ?? ''
+      const rawPhone = (body as any).p_phone ?? ''
+      const rawEmail = (body as any).p_email ?? ''
+      const pPackageId      = (body as any).p_package_id ?? null
+      const pPackageTitle   = (body as any).p_package_title ?? null
+      const pDestination    = (body as any).p_destination ?? null
+      const pTravelDate     = (body as any).p_travel_date ?? null
+      const pTravellers     = (body as any).p_travellers ?? null
+      const pEstimatedAmt   = (body as any).p_estimated_amount ?? null
+      const pSource         = (body as any).p_source ?? null
+      const pSpecialRequest = (body as any).p_special_request ?? null
+
+      // Normalize
+      const normName  = String(rawName).trim()
+      const normEmail = String(rawEmail).trim().toLowerCase()
+      
+      // Normalize Indian 10-digit phone to +91XXXXXXXXXX; accept valid existing E.164 numbers
+      let normPhone = String(rawPhone).trim()
+      const digitsOnly = normPhone.replace(/\D/g, '')
+      if (digitsOnly.length === 10) {
+        normPhone = `+91${digitsOnly}`
+      } else if (normPhone.startsWith('+')) {
+        normPhone = `+${digitsOnly}`
+      } else {
+        normPhone = `+${digitsOnly}`
+      }
+
+      // Validate
+      if (!normName || normName.length < 2) {
+        return new Response(JSON.stringify({ error: 'Full name is required (min 2 characters).' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      if (!normPhone || !/^\+[1-9]\d{7,14}$/.test(normPhone)) {
+        return new Response(JSON.stringify({ error: 'A valid phone number (e.g. +91XXXXXXXXXX) is required.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      if (!normEmail || !/^[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(normEmail)) {
+        return new Response(JSON.stringify({ error: 'A valid email address is required.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Fetch salt
+      const rateLimitSalt = Deno.env.get('LEAD_RATE_LIMIT_SALT') ?? ''
+      if (!rateLimitSalt) {
+        return new Response(JSON.stringify({ error: 'System configuration error: salt missing' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Get trusted Edge IP
+      const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
+
+      // Hash inputs using HMAC-SHA256
+      const ipHash = await computeHmacSha256(rateLimitSalt, clientIp)
+      const phoneHash = await computeHmacSha256(rateLimitSalt, normPhone)
+      const emailHash = await computeHmacSha256(rateLimitSalt, normEmail)
+
+      // Consume rate limits atomically in database
+      const { error: limitErr1 } = await adminClient.rpc('consume_guest_lead_rate_limit', {
+        p_ip_hash: ipHash,
+        p_contact_hash: phoneHash
+      })
+      if (limitErr1) {
+        return new Response(JSON.stringify({ error: limitErr1.message || 'Rate limit exceeded.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { error: limitErr2 } = await adminClient.rpc('consume_guest_lead_rate_limit', {
+        p_ip_hash: ipHash,
+        p_contact_hash: emailHash
+      })
+      if (limitErr2) {
+        return new Response(JSON.stringify({ error: limitErr2.message || 'Rate limit exceeded.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Token flow: Edge generates raw token
+      const rawToken = crypto.randomUUID()
+      const textEncoder = new TextEncoder()
+      const tokenBytes = textEncoder.encode(rawToken)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+      // Call service-role create_checkout_lead RPC
+      const { data: leadData, error: leadError } = await adminClient.rpc('create_checkout_lead', {
+        p_lead_token_hash: clientTokenHash,
+      })
+
+      if (leadError || !leadData) {
+        return new Response(JSON.stringify({ error: leadError?.message || 'Failed to create guest lead.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const lead = Array.isArray(leadData) ? leadData[0] : leadData
+      if (!lead || !lead.checkout_lead_id) {
+        return new Response(JSON.stringify({ error: 'Failed to retrieve lead identifiers.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Update remaining client details directly via adminClient
+      const { error: updateErr } = await adminClient
+        .from('checkout_leads')
+        .update({
+          customer_name: normName,
+          phone: normPhone,
+          email: normEmail,
+          package_id: pPackageId,
+          package_title: pPackageTitle,
+          destination: pDestination,
+          travel_date: pTravelDate,
+          travellers: pTravellers,
+          estimated_amount: pEstimatedAmt,
+          source: pSource,
+          special_request: pSpecialRequest,
+        })
+        .eq('id', lead.checkout_lead_id)
+
+      if (updateErr) {
+        return new Response(JSON.stringify({ error: updateErr.message || 'Failed to update lead details.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Return raw token to browser once
+      return new Response(JSON.stringify({
+        success: true,
+        leadId:    lead.checkout_lead_id,
+        leadToken: rawToken,
+        leadNumber: lead.lead_number ?? null,
+      }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+// Security: Edge Function must authorize every guest initialize/status/prepare/verify/release action using the checkout lead token.
+    let guestAuthorized = false
+    let currentLeadId = null
+    let guestName = null
+    let guestPhone = null
+    let guestEmail = null
+
+    if (!user && leadIdHeader && leadTokenHeader) {
+      // Look up and verify checkout lead token
+      const { data: leadData } = await adminClient
+        .from('checkout_leads')
+        .select('id, lead_token_hash, customer_name, phone, email, lead_status, created_at')
+        .eq('id', leadIdHeader)
+        .maybeSingle()
+
+      if (leadData && leadData.lead_token_hash) {
+        // Enforce token hash equality check
+        const textEncoder = new TextEncoder()
+        const tokenBytes = textEncoder.encode(leadTokenHeader)
+        const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        const clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+        if (leadData.lead_token_hash === clientTokenHash) {
+          const now = new Date()
+          // Expiry limit: 24 hours
+          const createdAt = new Date(leadData.created_at)
+          const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000)
+          const isExpired = expiresAt <= now
+
+          if (leadData.lead_status !== 'converted' && leadData.lead_status !== 'failed' && !isExpired) {
+            guestAuthorized = true
+            currentLeadId = leadData.id
+            guestName = leadData.customer_name
+            guestPhone = leadData.phone
+            guestEmail = leadData.email
+          }
+        }
+      }
+    }
+
+    if (!user && !guestAuthorized) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: missing token session or active lead authentication' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     if (action === 'checkout_status') {
       const { idempotencyKey } = body
@@ -107,8 +312,8 @@ serve(async (req) => {
         })
       }
 
-      // Find booking using idempotencyKey + user_id
-      const { data: booking, error: bookingErr } = await adminClient
+      // Find booking using idempotencyKey
+      let query = adminClient
         .from('bookings')
         .select(`
           id,
@@ -119,11 +324,18 @@ serve(async (req) => {
           selected_sharing,
           special_request,
           sales_channel,
-          razorpay_payment_id
+          razorpay_payment_id,
+          user_id
         `)
         .eq('checkout_idempotency_key', idempotencyKey)
-        .eq('user_id', user.id)
-        .maybeSingle()
+
+      if (user) {
+        query = query.eq('user_id', user.id)
+      } else {
+        query = query.eq('checkout_lead_id', currentLeadId)
+      }
+
+      const { data: booking, error: bookingErr } = await query.maybeSingle()
 
       if (bookingErr) {
         return new Response(JSON.stringify({ error: 'Database error fetching status' }), {
@@ -133,7 +345,15 @@ serve(async (req) => {
       }
 
       if (!booking) {
-        return new Response(JSON.stringify({ success: false, found: false }), {
+        return new Response(JSON.stringify({
+          success: true,
+          found: false,
+          guestDetails: !user && guestAuthorized ? {
+            fullName: guestName,
+            phone: guestPhone,
+            email: guestEmail
+          } : null
+        }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -194,6 +414,11 @@ serve(async (req) => {
         travellers: booking.travellers,
         selectedSharing: booking.selected_sharing,
         specialRequest: booking.special_request,
+        guestDetails: !user && guestAuthorized ? {
+          fullName: guestName,
+          phone: guestPhone,
+          email: guestEmail
+        } : null,
         activeReservation: activeReservation ? {
           reservationId: activeReservation.id,
           reservedAmount: activeReservation.reserved_amount,
@@ -222,14 +447,18 @@ serve(async (req) => {
 
       // Invoke create_checkout_booking RPC
       const { data: initData, error: initError } = await adminClient.rpc('create_checkout_booking', {
-        p_user_id: user.id,
+        p_user_id: user ? user.id : null,
         p_package_id: packageId,
         p_travel_date: travelDate,
         p_travellers: travellers,
         p_selected_sharing: selectedSharing,
         p_checkout_idempotency_key: idempotencyKey,
         p_special_request: specialRequest || null,
-        p_source: source || null
+        p_source: source || null,
+        p_guest_name: !user ? guestName : null,
+        p_guest_phone: !user ? guestPhone : null,
+        p_guest_email: !user ? guestEmail : null,
+        p_checkout_lead_id: currentLeadId
       })
 
       if (initError || !initData || !initData.success) {
@@ -250,6 +479,13 @@ serve(async (req) => {
     }
 
     if (action === 'reserve_coupon') {
+      if (!user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: login required to reserve coupon' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
       const { bookingId, couponCode } = body
       if (!bookingId || !couponCode) {
         return new Response(JSON.stringify({ error: 'Required reservation parameters missing' }), {
@@ -305,6 +541,13 @@ serve(async (req) => {
     }
 
     if (action === 'full_coupon') {
+      if (!user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: login required to finalize coupon' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
       const { bookingId, reservationId } = body
       if (!bookingId || !reservationId) {
         return new Response(JSON.stringify({ error: 'Required coupon finalization parameters missing' }), {
@@ -366,10 +609,10 @@ serve(async (req) => {
         })
       }
 
-      // 1. Prepare se pehle booking.user_id === logged-in user.id verify karo
+      // 1. Prepare se pehle booking ownership verify karo
       const { data: booking, error: bookingErr } = await adminClient
         .from('bookings')
-        .select('user_id')
+        .select('user_id, checkout_lead_id')
         .eq('id', bookingId)
         .single()
 
@@ -380,17 +623,28 @@ serve(async (req) => {
         })
       }
 
-      if (booking.user_id !== user.id) {
-        return new Response(JSON.stringify({ error: 'Access forbidden: user identity mismatch' }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      if (booking.user_id !== null) {
+        if (!user || booking.user_id !== user.id) {
+          return new Response(JSON.stringify({ error: 'Access forbidden: user identity mismatch' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      } else {
+        // Guest booking: Must be guestAuthorized and lead_id must match
+        if (!guestAuthorized || booking.checkout_lead_id !== currentLeadId) {
+          return new Response(JSON.stringify({ error: 'Access forbidden: guest authorization mismatch' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
       }
 
       // Prepare payment attempt in database via RPC
       const { data: prepareData, error: prepareError } = await adminClient.rpc('prepare_payment_attempt', {
         p_booking_id: bookingId,
         p_idempotency_key: idempotencyKey,
+        p_checkout_lead_id: currentLeadId
       })
 
       if (prepareError || !prepareData || !prepareData.success) {
@@ -520,7 +774,7 @@ serve(async (req) => {
       // Fetch payment attempt to authenticate and obtain db order ID
       const { data: attempt, error: attemptErr } = await adminClient
         .from('payment_attempts')
-        .select('user_id, razorpay_order_id, expected_amount_paise')
+        .select('user_id, checkout_lead_id, razorpay_order_id, expected_amount_paise')
         .eq('id', paymentAttemptId)
         .single()
 
@@ -531,12 +785,21 @@ serve(async (req) => {
         })
       }
 
-      // 2. Verify se pehle payment_attempt.user_id === user.id verify karo
-      if (attempt.user_id !== user.id) {
-        return new Response(JSON.stringify({ error: 'Access forbidden: ownership mismatch' }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      // 2. Verify se pehle payment_attempt ownership verify karo
+      if (attempt.user_id !== null) {
+        if (!user || attempt.user_id !== user.id) {
+          return new Response(JSON.stringify({ error: 'Access forbidden: ownership mismatch' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      } else {
+        if (!guestAuthorized || attempt.checkout_lead_id !== currentLeadId) {
+          return new Response(JSON.stringify({ error: 'Access forbidden: guest verification authorization mismatch' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
       }
 
       const dbOrderId = attempt.razorpay_order_id
@@ -665,10 +928,57 @@ serve(async (req) => {
       })
     }
 
+    // update_guest_lead: requires verified lead headers; leadId in body must match currentLeadId from auth gate
+    if (action === 'update_guest_lead') {
+      // Must be guest-authorized (headers already verified above)
+      if (!guestAuthorized || !currentLeadId) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: valid lead token headers required.' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const bodyLeadId = (body as any).leadId ?? (body as any).p_lead_id ?? null
+      if (!bodyLeadId || bodyLeadId !== currentLeadId) {
+        return new Response(JSON.stringify({ error: 'Forbidden: leadId does not match authenticated lead.' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Whitelist permitted update fields only — never accept financial or booking fields
+      const FORBIDDEN_FIELDS = ['payment_status', 'booking_id', 'razorpay_payment_id']
+      for (const f of FORBIDDEN_FIELDS) {
+        if (f in (body as any)) {
+          return new Response(JSON.stringify({ error: `Field '${f}' cannot be updated via this action.` }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }      // Only permit: current_step, selected_sharing, estimated_amount
+      const pCurrentStep     = (body as any).p_current_step ?? (body as any).current_step ?? null
+      const pSelectedSharing = (body as any).p_selected_sharing ?? (body as any).selected_sharing ?? null
+      const pEstimatedAmount = (body as any).p_estimated_amount ?? (body as any).estimated_amount ?? null
+
+      const { data: updateData, error: updateError } = await adminClient.rpc('update_checkout_lead', {
+        p_lead_id: currentLeadId,
+        p_lead_token: leadTokenHeader,
+        p_current_step: pCurrentStep,
+        p_selected_sharing: pSelectedSharing,
+        p_estimated_amount: pEstimatedAmount,
+      })
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message || 'Failed to update guest lead.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // fallback unsupported action
     return new Response(JSON.stringify({ error: 'Unsupported action request' }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Server error processing request' }), {
