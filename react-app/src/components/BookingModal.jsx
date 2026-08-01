@@ -55,14 +55,23 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
               'x-checkout-lead-token': existingLead.token,
             },
           });
-          if (!rpcError) {
-            // Reuse existing lead — update succeeded
-            return existingLead;
+          if (rpcError) {
+            const isRateLimit = rpcError.status === 429 || 
+                                (rpcError.message && rpcError.message.includes('429')) || 
+                                (rpcError.context && rpcError.context.status === 429);
+            if (isRateLimit) {
+              throw new Error("Too many booking attempts. Please wait 10 minutes and try again.");
+            }
+            throw new Error("Failed to save your enquiry. Please try again.");
           }
-          // Fall through to create a new one if update failed
+          // Reuse existing lead — update succeeded
+          return existingLead;
         }
       } catch (e) {
-        // Corrupted sessionStorage — fall through
+        if (e.message.includes('attempts') || e.message.includes('Failed to save')) {
+          throw e;
+        }
+        // Otherwise corrupted sessionStorage — fall through to create
       }
     }
 
@@ -86,7 +95,13 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
     });
 
     if (rpcError) {
-      throw new Error('Failed to save your enquiry. Please try again.');
+      const isRateLimit = rpcError.status === 429 || 
+                          (rpcError.message && rpcError.message.includes('429')) || 
+                          (rpcError.context && rpcError.context.status === 429);
+      if (isRateLimit) {
+        throw new Error("Too many booking attempts. Please wait 10 minutes and try again.");
+      }
+      throw new Error("Failed to save your enquiry. Please try again.");
     }
 
     // Store the response using: id, token, leadNumber
