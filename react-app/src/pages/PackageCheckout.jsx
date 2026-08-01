@@ -5,7 +5,6 @@ import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
 
-// Helper: parse price string like "₹19,999 per person" to number
 function parsePriceString(priceStr) {
   if (typeof priceStr === 'number') return priceStr;
   if (!priceStr) return 0;
@@ -17,6 +16,7 @@ export default function PackageCheckout() {
   const { packageSlug } = useParams();
   const navigate = useNavigate();
 
+  const [step, setStep] = useState('checkout'); // 'checkout' | 'success' | 'failed'
   const [checkoutData, setCheckoutData] = useState(null);
   const [formData, setFormData] = useState(null);
   const [tripDetails, setTripDetails] = useState(null);
@@ -25,7 +25,6 @@ export default function PackageCheckout() {
   const [selectedSharing, setSelectedSharing] = useState('');
   const [computedPrice, setComputedPrice] = useState(0);
   
-  const [step, setStep] = useState('checkout'); // 'checkout' | 'success' | 'failed'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [bookingId, setBookingId] = useState('');
@@ -51,6 +50,9 @@ export default function PackageCheckout() {
   // State to block proceed payment button
   const [checkoutBlocked, setCheckoutBlocked] = useState(false);
 
+  // Lock status of individual profile details
+  const [profileLocked, setProfileLocked] = useState({ name: false, phone: false, email: false });
+
   // 8. Restore or persist idempotencyKey inside checkoutData/sessionStorage
   const [idempotencyKey] = useState(() => {
     try {
@@ -67,17 +69,23 @@ export default function PackageCheckout() {
     return crypto.randomUUID();
   });
 
-  // Helper: securely update checkout lead via RPC
+  // Helper: securely update checkout lead via Edge action
   const updateLead = async (updates) => {
     try {
       const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
       if (!leadStr) return;
       const lead = JSON.parse(leadStr);
       if (!lead.id || !lead.token) return;
-      await supabase.rpc('update_checkout_lead', {
-        p_lead_id: lead.id,
-        p_lead_token: lead.token,
-        ...updates,
+      await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'update_guest_lead',
+          leadId: lead.id,
+          ...updates,
+        },
+        headers: {
+          'x-checkout-lead-id':    lead.id,
+          'x-checkout-lead-token': lead.token,
+        },
       });
     } catch (e) {
       // Non-critical — don't block user flow
@@ -99,33 +107,68 @@ export default function PackageCheckout() {
     const loadCheckoutStatus = async (currentUser) => {
       try {
         const session = (await supabase.auth.getSession()).data?.session;
-        if (!session) return;
+        
+        let profile = null;
+        if (currentUser) {
+          // Prefill logged-in customer name, phone and email from profile/auth
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('full_name, phone')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+          profile = prof;
+        }
 
-        // Prefill logged-in customer name, phone and email from profile/auth
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, phone')
-          .eq('id', currentUser.id)
-          .maybeSingle();
+        if (currentUser) {
+          const prefillName = profile?.full_name || currentUser.user_metadata?.full_name || '';
+          const prefillPhone = profile?.phone || currentUser.phone || '';
+          const prefillEmail = currentUser.email || '';
 
-        setFormData(prev => ({
-          ...prev,
-          fullName: prev?.fullName || profile?.full_name || currentUser.user_metadata?.full_name || '',
-          phone: prev?.phone || profile?.phone || currentUser.phone || '',
-          email: prev?.email || currentUser.email || ''
-        }));
+          setFormData(prev => ({
+            ...prev,
+            fullName: prefillName || prev?.fullName || '',
+            phone: prefillPhone || prev?.phone || '',
+            email: prefillEmail || prev?.email || ''
+          }));
+
+          // Track locked status
+          setProfileLocked({
+            name: !!prefillName,
+            phone: !!prefillPhone,
+            email: !!prefillEmail
+          });
+
+          // If phone/name is missing, show "Complete Profile" once
+          if (!prefillName || !prefillPhone) {
+            setError('Please Complete your Profile: Name and Phone Number are required.');
+          }
+        }
+
+        const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+        const lead = leadStr ? JSON.parse(leadStr) : null;
+        const leadId = lead?.id || '';
+        const leadToken = lead?.token || '';
+
+        const headers = {};
+        if (session) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+        if (leadId) {
+          headers['x-checkout-lead-id'] = leadId;
+        }
+        if (leadToken) {
+          headers['x-checkout-lead-token'] = leadToken;
+        }
 
         const { data: statusData, error: statusErr } = await supabase.functions.invoke('razorpay-checkout', {
           body: {
             action: 'checkout_status',
             idempotencyKey
           },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
+          headers
         });
 
-        if (!statusErr && statusData && statusData.success && statusData.found) {
+        if (!statusErr && statusData && statusData.success && (statusData.found || statusData.guestDetails)) {
           setBookingId(statusData.bookingId);
           setServerFinalPayable(statusData.finalPayableAmount);
 
@@ -146,6 +189,21 @@ export default function PackageCheckout() {
           }
           if (statusData.latestPaymentAttempt) {
             setPaymentStarted(true);
+          }
+
+          // Lock guest parameters verified on Edge response
+          if (!currentUser && statusData.guestDetails) {
+            setFormData(prev => ({
+              ...prev,
+              fullName: statusData.guestDetails.fullName || prev?.fullName || '',
+              phone: statusData.guestDetails.phone || prev?.phone || '',
+              email: statusData.guestDetails.email || prev?.email || ''
+            }));
+            setProfileLocked({
+              name: !!statusData.guestDetails.fullName,
+              phone: !!statusData.guestDetails.phone,
+              email: !!statusData.guestDetails.email
+            });
           }
 
           // Handle paid, failed, cancelled and expired statuses
@@ -178,15 +236,16 @@ export default function PackageCheckout() {
     };
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-      if (session?.user) {
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      if (currentUser) {
         const pendingCoupon = sessionStorage.getItem('pending_coupon_code');
         if (pendingCoupon) {
           setVoucherCode(pendingCoupon);
           sessionStorage.removeItem('pending_coupon_code');
         }
-        loadCheckoutStatus(session.user);
       }
+      loadCheckoutStatus(currentUser);
     });
     try {
       const data = JSON.parse(dataStr);
@@ -212,11 +271,6 @@ export default function PackageCheckout() {
         }
       }
 
-      // If Quad Sharing is missing or costings are empty, fallback to estimate
-      if (!quadBasePrice) {
-        quadBasePrice = Math.round((price || 0) / (travellers || 1) * 0.85);
-      }
-
       // Find Upgrade costs
       let tripleUpgrade = 0;
       let doubleUpgrade = 0;
@@ -232,29 +286,24 @@ export default function PackageCheckout() {
         }
       }
 
-      // Fallback upgrade estimates if costings did not specify upgrades
-      if (!tripleUpgrade && !doubleUpgrade) {
-        tripleUpgrade = Math.round((price || 0) / (travellers || 1) * 0.93) - quadBasePrice;
-        doubleUpgrade = Math.round((price || 0) / (travellers || 1)) - quadBasePrice;
-      }
-
-      options = [
-        { type: 'Quad Sharing', pricePerPerson: quadBasePrice, label: 'Quad Sharing' },
-        { type: 'Triple Sharing', pricePerPerson: quadBasePrice + tripleUpgrade, label: 'Triple Sharing' },
-        { type: 'Double Sharing', pricePerPerson: quadBasePrice + doubleUpgrade, label: 'Double Sharing' }
-      ];
-
-      setSharingOptions(options);
-
-      // Verify Quad Sharing is present, otherwise set config error
-      if (quadBasePrice <= 0) {
-        setError('Package configuration error: Quad Sharing is missing.');
+      // Verify Quad Sharing, Triple Sharing Upgrade, and Double Sharing Upgrade are present and valid, otherwise block checkout
+      if (quadBasePrice <= 0 || tripleUpgrade <= 0 || doubleUpgrade <= 0) {
+        setError('Package configuration error: occupancy upgrades are missing.');
         setCheckoutBlocked(true);
+        options = [];
       } else {
+        options = [
+          { type: 'Quad Sharing', pricePerPerson: quadBasePrice, label: 'Quad Sharing' },
+          { type: 'Triple Sharing', pricePerPerson: quadBasePrice + tripleUpgrade, label: 'Triple Sharing' },
+          { type: 'Double Sharing', pricePerPerson: quadBasePrice + doubleUpgrade, label: 'Double Sharing' }
+        ];
+
         // Auto-select Quad Sharing
         setSelectedSharing('Quad Sharing');
         setComputedPrice(quadBasePrice * (data.tripDetails.travellers || 1));
       }
+
+      setSharingOptions(options);
 
       // Track: checkout page opened
       updateLead({ p_current_step: 'checkout_opened' });
@@ -362,6 +411,32 @@ export default function PackageCheckout() {
         throw new Error('Please select a valid room sharing occupancy.');
       }
 
+      const session = (await supabase.auth.getSession()).data?.session;
+
+      // If user is logged-in, make sure their profile name/phone are updated/saved via upsert
+      if (session?.user) {
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!currentProfile?.full_name || !currentProfile?.phone) {
+          const { error: upsertErr } = await supabase
+            .from('profiles')
+            .upsert({
+              id: session.user.id,
+              full_name: currentProfile?.full_name || formData.fullName.trim(),
+              phone: currentProfile?.phone || formData.phone.trim(),
+              email: formData.email.trim(),
+              updated_at: new Date().toISOString()
+            });
+          if (upsertErr) {
+            throw new Error(`Profile update failed: ${upsertErr.message}`);
+          }
+        }
+      }
+
       // 3. On checkout, we must have initialized a booking first.
       // If no booking exists, initialize it now on coupon application.
       let currentBookingId = bookingId;
@@ -448,6 +523,22 @@ export default function PackageCheckout() {
 
     try {
       const session = (await supabase.auth.getSession()).data?.session;
+      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+      const lead = leadStr ? JSON.parse(leadStr) : null;
+      const leadId = lead?.id || '';
+      const leadToken = lead?.token || '';
+
+      const headers = {};
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      if (leadId) {
+        headers['x-checkout-lead-id'] = leadId;
+      }
+      if (leadToken) {
+        headers['x-checkout-lead-token'] = leadToken;
+      }
+
       const { data: verifyData, error: verifyErr } = await supabase.functions.invoke('razorpay-checkout', {
         body: {
           action: 'verify',
@@ -457,9 +548,7 @@ export default function PackageCheckout() {
           razorpayPaymentId,
           razorpaySignature
         },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
+        headers
       });
 
       if (verifyErr || !verifyData || !verifyData.success) {
@@ -500,17 +589,6 @@ export default function PackageCheckout() {
 
     // 3. Proceed par live session check
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      // Session missing: preserve checkoutData in sessionStorage and send user to /login
-      const currentData = {
-        formData,
-        tripDetails,
-        idempotencyKey
-      };
-      sessionStorage.setItem('checkoutData', JSON.stringify(currentData));
-      navigate('/login');
-      return;
-    }
 
     setLoading(true);
     setError(null);
@@ -540,8 +618,48 @@ export default function PackageCheckout() {
         throw new Error('Please select a valid room sharing occupancy.');
       }
 
+      // If user is logged-in, make sure their profile name/phone are updated/saved via upsert
+      if (session?.user) {
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!currentProfile?.full_name || !currentProfile?.phone) {
+          const { error: upsertErr } = await supabase
+            .from('profiles')
+            .upsert({
+              id: session.user.id,
+              full_name: currentProfile?.full_name || formData.fullName.trim(),
+              phone: currentProfile?.phone || formData.phone.trim(),
+              email: formData.email.trim(),
+              updated_at: new Date().toISOString()
+            });
+          if (upsertErr) {
+            throw new Error(`Profile update failed: ${upsertErr.message}`);
+          }
+        }
+      }
+
       let currentBookingId = bookingId;
       let finalAmount = serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher;
+
+      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+      const lead = leadStr ? JSON.parse(leadStr) : null;
+      const leadId = lead?.id || '';
+      const leadToken = lead?.token || '';
+
+      const headers = {};
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      if (leadId) {
+        headers['x-checkout-lead-id'] = leadId;
+      }
+      if (leadToken) {
+        headers['x-checkout-lead-token'] = leadToken;
+      }
 
       // 3. On checkout call Edge action initialize
       if (!currentBookingId) {
@@ -559,7 +677,7 @@ export default function PackageCheckout() {
           travelDate = '';
         }
 
-        // 4. Send no customer details or price to initialize
+        // 4. Send no customer details or price to initialize except when guest checkout
         const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
           body: {
             action: 'initialize',
@@ -569,11 +687,13 @@ export default function PackageCheckout() {
             selectedSharing,
             idempotencyKey,
             specialRequest: formData.specialRequest || null,
-            source: formData.source || null
+            source: formData.source || null,
+            // Include guest identity fields if session is missing
+            guestName: !session ? formData.fullName.trim() : null,
+            guestPhone: !session ? formData.phone.trim() : null,
+            guestEmail: !session ? formData.email.trim() : null
           },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
+          headers
         });
 
         if (initErr || !initData || !initData.success) {
@@ -594,9 +714,7 @@ export default function PackageCheckout() {
             bookingId: currentBookingId,
             reservationId: appliedVoucher.reservation_id
           },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
+          headers
         });
 
         if (fullCouponErr || !fullCouponData || !fullCouponData.success) {
@@ -620,9 +738,7 @@ export default function PackageCheckout() {
           bookingId: currentBookingId,
           idempotencyKey
         },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        headers
       });
 
       if (prepareErr || !prepareData || !prepareData.success) {
@@ -970,8 +1086,9 @@ export default function PackageCheckout() {
                     type="text" 
                     value={formData.fullName} 
                     disabled={!!bookingId}
+                    readOnly={profileLocked.name}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.name ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -993,8 +1110,10 @@ export default function PackageCheckout() {
                   <input 
                     type="tel" 
                     value={formData.phone} 
-                    readOnly
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -1002,8 +1121,10 @@ export default function PackageCheckout() {
                   <input 
                     type="email" 
                     value={formData.email} 
-                    readOnly
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -1158,21 +1279,28 @@ export default function PackageCheckout() {
                   ) : (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Have a Coupon Code?</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={voucherCode}
-                          onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                          placeholder="Enter code"
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
-                        />
-                        <button                          onClick={handleApplyVoucher}
-                          disabled={voucherLoading || !voucherCode.trim()}
-                          className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                        >
-                          {voucherLoading ? 'Applying...' : 'Apply'}
-                        </button>
-                      </div>
+                      {!user ? (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                          Please <Link to="/login" className="font-bold underline text-[#136b8a]">login / signup</Link> to apply vouchers to this booking.
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={voucherCode}
+                            onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                            placeholder="Enter code"
+                            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
+                          />
+                          <button
+                            onClick={handleApplyVoucher}
+                            disabled={voucherLoading || !voucherCode.trim()}
+                            className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                          >
+                            {voucherLoading ? 'Applying...' : 'Apply'}
+                          </button>
+                        </div>
+                      )}
                       {voucherError && <p className="text-rose-600 text-xs mt-2 font-medium">{voucherError}</p>}
                     </div>
                   )}

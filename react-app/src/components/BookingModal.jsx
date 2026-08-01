@@ -38,18 +38,22 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
 
   // Save or create checkout lead via secure RPC (no direct table access needed)
   const saveCheckoutLead = async (formattedDate) => {
-    const parsedPackageId = parseInt(packageId);
-
     // Check for existing lead in this session — try to update it first
     const existingLeadStr = sessionStorage.getItem('tripomist_checkout_lead');
     if (existingLeadStr) {
       try {
         const existingLead = JSON.parse(existingLeadStr);
         if (existingLead.id && existingLead.token) {
-          const { error: rpcError } = await supabase.rpc('update_checkout_lead', {
-            p_lead_id: existingLead.id,
-            p_lead_token: existingLead.token,
-            p_current_step: 'popup_submitted',
+          const { error: rpcError } = await supabase.functions.invoke('razorpay-checkout', {
+            body: {
+              action: 'update_guest_lead',
+              leadId: existingLead.id,
+              p_current_step: 'popup_submitted',
+            },
+            headers: {
+              'x-checkout-lead-id':    existingLead.id,
+              'x-checkout-lead-token': existingLead.token,
+            },
           });
           if (!rpcError) {
             // Reuse existing lead — update succeeded
@@ -63,26 +67,34 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
     }
 
     // Create new lead via secure RPC (callable by anon + authenticated)
-    const { data, error: rpcError } = await supabase.rpc('create_checkout_lead', {
-      p_customer_name: formData.fullName,
-      p_phone: formData.phone,
-      p_email: formData.email || null,
-      p_package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
-      p_package_title: tripTitle || null,
-      p_destination: destination || tripTitle || null,
-      p_travel_date: formattedDate,
-      p_travellers: travellers || 1,
-      p_estimated_amount: price || 0,
-      p_source: formData.source || null,
-      p_special_request: null,
+    const { data, error: rpcError } = await supabase.functions.invoke('razorpay-checkout', {
+      body: {
+        action: 'create_guest_lead',
+        p_customer_name: formData.fullName,
+        p_phone: formData.phone,
+        p_email: formData.email || null,
+        p_package_id: packageId,
+        p_package_title: tripTitle || null,
+        p_destination: destination || null,
+        p_travel_date: formattedDate,
+        p_travellers: travellers || 1,
+        p_selected_sharing: null,
+        p_estimated_amount: price || 0,
+        p_source: formData.source || null,
+        p_special_request: null
+      }
     });
 
     if (rpcError) {
-      throw new Error(rpcError.message || 'Failed to save your enquiry. Please try again.');
+      throw new Error('Failed to save your enquiry. Please try again.');
     }
 
-    const lead = Array.isArray(data) ? data[0] : data;
-    return { id: lead.id, token: lead.lead_token, leadNumber: lead.lead_number };
+    // Store the response using: id, token, leadNumber
+    return {
+      id: data.leadId,
+      token: data.leadToken,
+      leadNumber: data.leadNumber
+    };
   };
 
   // Step 1: Validate and go to checkout

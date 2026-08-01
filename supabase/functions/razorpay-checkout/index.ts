@@ -125,6 +125,7 @@ serve(async (req) => {
       const pEstimatedAmt   = (body as any).p_estimated_amount ?? null
       const pSource         = (body as any).p_source ?? null
       const pSpecialRequest = (body as any).p_special_request ?? null
+      const pSelectedSharing = (body as any).p_selected_sharing ?? (body as any).selected_sharing ?? (body as any).selectedSharing ?? null
 
       // Normalize
       const normName  = String(rawName).trim()
@@ -195,8 +196,13 @@ serve(async (req) => {
         })
       }
 
-      // Token flow: Edge generates raw token
-      const rawToken = crypto.randomUUID()
+      // Token flow: Generate a cryptographically secure 32-byte raw lead token
+      const rawTokenBytes = new Uint8Array(32)
+      crypto.getRandomValues(rawTokenBytes)
+      // Convert it to lowercase hex
+      const rawToken = Array.from(rawTokenBytes).map(b => b.toString(16).padStart(2, '0')).join('')
+
+      // Calculate its SHA-256 lowercase hex hash
       const textEncoder = new TextEncoder()
       const tokenBytes = textEncoder.encode(rawToken)
       const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
@@ -205,11 +211,23 @@ serve(async (req) => {
 
       // Call service-role create_checkout_lead RPC
       const { data: leadData, error: leadError } = await adminClient.rpc('create_checkout_lead', {
+        p_customer_name: normName,
+        p_phone: normPhone,
+        p_email: normEmail,
+        p_package_id: pPackageId,
+        p_package_title: pPackageTitle,
+        p_destination: pDestination,
+        p_travel_date: pTravelDate,
+        p_travellers: pTravellers,
+        p_selected_sharing: pSelectedSharing,
+        p_estimated_amount: pEstimatedAmt,
+        p_source: pSource,
+        p_special_request: pSpecialRequest,
         p_lead_token_hash: clientTokenHash,
       })
 
       if (leadError || !leadData) {
-        return new Response(JSON.stringify({ error: leadError?.message || 'Failed to create guest lead.' }), {
+        return new Response(JSON.stringify({ error: 'Failed to create guest lead.' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
@@ -217,30 +235,6 @@ serve(async (req) => {
       const lead = Array.isArray(leadData) ? leadData[0] : leadData
       if (!lead || !lead.checkout_lead_id) {
         return new Response(JSON.stringify({ error: 'Failed to retrieve lead identifiers.' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Update remaining client details directly via adminClient
-      const { error: updateErr } = await adminClient
-        .from('checkout_leads')
-        .update({
-          customer_name: normName,
-          phone: normPhone,
-          email: normEmail,
-          package_id: pPackageId,
-          package_title: pPackageTitle,
-          destination: pDestination,
-          travel_date: pTravelDate,
-          travellers: pTravellers,
-          estimated_amount: pEstimatedAmt,
-          source: pSource,
-          special_request: pSpecialRequest,
-        })
-        .eq('id', lead.checkout_lead_id)
-
-      if (updateErr) {
-        return new Response(JSON.stringify({ error: updateErr.message || 'Failed to update lead details.' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
