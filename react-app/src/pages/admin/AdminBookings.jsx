@@ -32,10 +32,7 @@ const AdminBookings = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [salesChannelFilter, setSalesChannelFilter] = useState('all');
-  // Classification modal state
-  const [classifyModal, setClassifyModal] = useState({ isOpen: false, booking: null, channel: '' });
-  const [b2bCompany, setB2bCompany] = useState('');
-  const [b2bNotes, setB2bNotes] = useState('');
+
   const [monthFilter, setMonthFilter] = useState('all'); // all | this | last | custom
   const [customMonth, setCustomMonth] = useState(''); // format YYYY-MM
   const [packageFilter, setPackageFilter] = useState('all');
@@ -50,6 +47,10 @@ const AdminBookings = () => {
 
   const [confirmModalConfig, setConfirmModalConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'danger' });
   const [serviceRecoveryModal, setServiceRecoveryModal] = useState({ isOpen: false, booking: null });
+  // Classification UI state
+  const [classificationChannel, setClassificationChannel] = useState('');
+  const [b2bCompany, setB2bCompany] = useState('');
+  const [b2bNotes, setB2bNotes] = useState('');
 
   useEffect(() => {
     fetchBookings();
@@ -179,7 +180,7 @@ const AdminBookings = () => {
     }
   };
 
-const classifyBooking = async (booking, newChannel) => {
+const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user?.id) { alert(`Auth error: ${userError?.message || 'Admin session not found'}`); return; }
@@ -189,10 +190,10 @@ const classifyBooking = async (booking, newChannel) => {
       classified_at: new Date().toISOString()
     };
     if (newChannel === 'b2b') {
-      const company = (booking.b2b_partner_company || '').trim();
+      const company = (companyArg || '').trim();
       if (!company) { alert('Partner/Company name required for B2B classification.'); return; }
       payload.b2b_partner_company = company;
-      payload.b2b_notes = (booking.b2b_notes || '').trim() || null;
+      payload.b2b_notes = (notesArg || '').trim() || null;
     } else {
       payload.b2b_partner_company = null;
       payload.b2b_notes = null;
@@ -204,6 +205,22 @@ const classifyBooking = async (booking, newChannel) => {
     const { error } = await supabase.from('bookings').update(payload).eq('id', booking.id);
     if (error) throw error;
     await fetchBookings();
+
+    // Update selectedBooking state so drawer displays updated details
+    setSelectedBooking(prev => {
+      if (prev && prev.id === booking.id) {
+        return {
+          ...prev,
+          sales_channel: payload.sales_channel,
+          b2b_partner_company: payload.b2b_partner_company,
+          b2b_notes: payload.b2b_notes,
+          classified_by: payload.classified_by,
+          classified_at: payload.classified_at
+        };
+      }
+      return prev;
+    });
+    alert('Classification saved successfully.');
   } catch (err) {
     console.error('Classification update error:', err);
     alert('Failed to update classification: ' + err.message);
@@ -648,12 +665,17 @@ const classifyBooking = async (booking, newChannel) => {
       </div>
     </td>
     <td className="py-2 px-4 text-right">
-       <button
-           onClick={() => setClassifyModal({ isOpen: true, booking, channel: '' })}
-           className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
-         >
-           Classify / Change Type
-         </button>
+      <button
+        onClick={() => {
+          setSelectedBooking(booking);
+          setClassificationChannel(booking.sales_channel || 'unclassified');
+          setB2bCompany(booking.b2b_partner_company || '');
+          setB2bNotes(booking.b2b_notes || '');
+        }}
+        className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
+      >
+        View Details
+      </button>
     </td>
   </tr>
 ))}
@@ -707,69 +729,6 @@ const classifyBooking = async (booking, newChannel) => {
         )}
       </div>
 
-       {/* Classification Modal */}
-       {classifyModal.isOpen && (
-         <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setClassifyModal({ isOpen: false, booking: null, channel: '' })} />
-       )}
-       {classifyModal.isOpen && (
-         <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-slate-50 shadow-2xl z-50 p-4 overflow-y-auto">
-           <h2 className="text-xl font-bold mb-4">Classify Booking</h2>
-           <div className="mb-2">
-             <label className="block text-sm font-medium mb-1">Sales Channel</label>
-             <select value={classifyModal.channel} onChange={e => setClassifyModal(prev => ({ ...prev, channel: e.target.value }))} className="w-full border rounded p-2">
-               <option value="">Select...</option>
-               <option value="b2b">B2B</option>
-               <option value="b2c">B2C</option>
-               <option value="unclassified">Unclassified</option>
-             </select>
-           </div>
-           {classifyModal.channel === 'b2b' && (
-             <>
-               <div className="mb-2">
- <label className="block text-sm font-medium mb-1">Partner / Company Name *</label>
- <input type="text" value={b2bCompany} onChange={e => setB2bCompany(e.target.value)} className="w-full border rounded p-2" />
-               </div>
-               <div className="mb-2">
- <label className="block text-sm font-medium mb-1">Notes (optional)</label>
- <textarea value={b2bNotes} onChange={e => setB2bNotes(e.target.value)} className="w-full border rounded p-2" rows={3} />
-               </div>
-             </>
-           )}
-           <div className="flex justify-end space-x-2 mt-4">
-             <button onClick={() => setClassifyModal({ isOpen: false, booking: null, channel: '' })} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-             <button onClick={async () => {
-               const { booking, channel } = classifyModal;
-               if (!channel) { alert('Select a sales channel'); return; }
-               if (channel === 'b2b' && !b2bCompany.trim()) { alert('Partner/Company name required'); return; }
-                // payload will be constructed later
-
-               try {
- const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user?.id) { alert(`Auth error: ${userError?.message || 'Admin session not found'}`); return; }
-
- const payload = {
-   sales_channel: channel,
-   b2b_partner_company: channel === 'b2b' ? b2bCompany.trim() : null,
-   b2b_notes: channel === 'b2b' ? (b2bNotes.trim() || null) : null,
-   classified_by: user?.id || null,
-   classified_at: new Date().toISOString()
- };
-
- const { error } = await supabase.from('bookings').update(payload).eq('id', booking.id);
- if (error) throw error;
-
- await fetchBookings();
- setClassifyModal({ isOpen: false, booking: null, channel: '' });
- setB2bCompany('');
- setB2bNotes('');
-               } catch (err) {
- console.error(err);
- alert('Classification failed: ' + err.message);
-               }
-             }} className="px-4 py-2 bg-[#136b8a] text-white rounded">Save</button>
-           </div>
-         </div>
-       )}
 
       {/* Drawer */}
       {selectedBooking && (
@@ -851,24 +810,23 @@ const classifyBooking = async (booking, newChannel) => {
   <div>
     <label className="text-xs font-semibold text-gray-700 block mb-1">Sales Type</label>
     <select
-      value={selectedBooking.sales_channel || 'unclassified'}
-      onChange={(e) => classifyBooking(selectedBooking, e.target.value)}
-       className="w-full text-xs p-2 border border-gray-300 rounded"
+      value={classificationChannel}
+      onChange={(e) => setClassificationChannel(e.target.value)}
+      className="w-full text-xs p-2 border border-gray-300 rounded"
     >
       <option value="unclassified">Unclassified</option>
       <option value="b2c">B2C - Service Provided by TripoMist</option>
       <option value="b2b">B2B - Transferred/Sold to Partner</option>
     </select>
   </div>
-  {selectedBooking.sales_channel === 'b2b' && (
+  {classificationChannel === 'b2b' && (
     <>
       <div>
          <label className="text-xs font-semibold text-gray-700 block mb-1 flex items-center gap-1"><Building size={12}/> Partner Company *</label>
          <input
            type="text"
-           value={selectedBooking.b2b_partner_company || ''}
-           onChange={(e) => setSelectedBooking(prev => ({ ...prev, b2b_partner_company: e.target.value }))}
-           onBlur={(e) => handleStatusUpdate(selectedBooking.id, 'b2b_partner_company', e.target.value)}
+           value={b2bCompany}
+           onChange={(e) => setB2bCompany(e.target.value)}
            className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
            placeholder="Enter agency name"
          />
@@ -877,15 +835,19 @@ const classifyBooking = async (booking, newChannel) => {
          <label className="text-xs font-semibold text-gray-700 block mb-1">B2B Notes</label>
          <input
            type="text"
-           value={selectedBooking.b2b_notes || ''}
-           onChange={(e) => setSelectedBooking(prev => ({ ...prev, b2b_notes: e.target.value }))}
-           onBlur={(e) => handleStatusUpdate(selectedBooking.id, 'b2b_notes', e.target.value)}
+           value={b2bNotes}
+           onChange={(e) => setB2bNotes(e.target.value)}
            className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
            placeholder="Optional notes"
          />
       </div>
     </>
-  )}
+  <button
+    onClick={() => classifyBooking(selectedBooking, classificationChannel, b2bCompany, b2bNotes)}
+    className="w-full bg-[#136b8a] text-white text-xs font-bold py-2 rounded hover:bg-[#0f556e] transition-colors"
+  >
+    Save Classification
+  </button>
 </div>
               </div>
 
