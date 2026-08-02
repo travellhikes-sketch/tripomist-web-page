@@ -390,27 +390,26 @@ export default function PackageCheckout() {
   
   const finalPayable = totalBeforeVoucher - voucherDiscount;
 
+  const isFullVoucherReservation = !!(appliedVoucher && 
+    !(appliedVoucher.expires_at && new Date(appliedVoucher.expires_at) <= new Date()) && 
+    Number(appliedVoucher.remaining_amount) >= totalBeforeVoucher
+  );
+  
+  const safeFinalPayable = (
+    serverFinalPayable !== null &&
+    serverFinalPayable !== undefined &&
+    Number.isFinite(Number(serverFinalPayable)) &&
+    Number(serverFinalPayable) >= 0 &&
+    (Number(serverFinalPayable) > 0 || isFullVoucherReservation)
+  ) ? Number(serverFinalPayable) : totalBeforeVoucher;
+
   const handleApplyVoucher = async () => {
-    // 11. Apply Coupon par live session check
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      // 10. Login redirect: preserve same idempotency key and details
-      const currentData = {
-        formData,
-        tripDetails,
-        idempotencyKey
-      };
-      sessionStorage.setItem('checkoutData', JSON.stringify(currentData));
-      sessionStorage.setItem('pending_coupon_code', voucherCode);
-      navigate('/login');
-      return;
-    }
     if (!voucherCode.trim()) {
       setVoucherError('Please enter a coupon code.');
       return;
     }
     
-    // Rate limit: max 5 attempts per minute
+    // Rate limit check
     const now = Date.now();
     if (now - lastCouponAttempt > 60000) {
       setCouponAttempts(1);
@@ -451,6 +450,21 @@ export default function PackageCheckout() {
       }
 
       const session = (await supabase.auth.getSession()).data?.session;
+      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+      const lead = leadStr ? JSON.parse(leadStr) : null;
+      const leadId = lead?.id || '';
+      const leadToken = lead?.token || '';
+
+      const headers = {};
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      if (leadId) {
+        headers['x-checkout-lead-id'] = leadId;
+      }
+      if (leadToken) {
+        headers['x-checkout-lead-token'] = leadToken;
+      }
 
       // If user is logged-in, make sure their profile name/phone are updated/saved via upsert
       if (session?.user) {
@@ -476,7 +490,7 @@ export default function PackageCheckout() {
         }
       }
 
-      // 3. On checkout, we must have initialized a booking first.
+      // On checkout, we must have initialized a booking first.
       // If no booking exists, initialize it now on coupon application.
       let currentBookingId = bookingId;
       if (!currentBookingId) {
@@ -505,9 +519,7 @@ export default function PackageCheckout() {
             specialRequest: formData.specialRequest || null,
             source: formData.source || null
           },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
+          headers
         });
 
         if (initErr || !initData || !initData.success) {
@@ -516,27 +528,35 @@ export default function PackageCheckout() {
 
         currentBookingId = initData.bookingId;
         setBookingId(initData.bookingId);
-        // 2. initialize response sets serverFinalPayable
         setServerFinalPayable(initData.finalPayableAmount);
       }
 
-      // 5. Coupon Apply par call reserve_coupon
+      // Coupon Apply par call reserve_coupon
       const { data: resData, error: resErr } = await supabase.functions.invoke('razorpay-checkout', {
         body: {
           action: 'reserve_coupon',
           bookingId: currentBookingId,
           couponCode: voucherCode.trim()
         },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        headers
       });
 
-      if (resErr || !resData || !resData.success) {
-        throw new Error(resErr?.message || 'Failed to reserve coupon balance.');
+      if (resErr) {
+        let errMsg = 'Invalid coupon code.';
+        try {
+          const bodyText = await resErr.context?.response?.text();
+          if (bodyText) {
+            const parsed = JSON.parse(bodyText);
+            if (parsed.error) errMsg = parsed.error;
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+
+      if (!resData || !resData.success) {
+        throw new Error('Failed to reserve coupon balance.');
       }
       
-      // 6. Use only server returned discount/final amount
       setAppliedVoucher({
         id: resData.reservationId,
         code: voucherCode.trim(),
@@ -546,11 +566,10 @@ export default function PackageCheckout() {
         expires_at: resData.expiresAt,
         finalPayableAmount: resData.finalPayableAmount
       });
-      // 2. update serverFinalPayable from reserve_coupon response
       setServerFinalPayable(resData.finalPayableAmount);
       setVoucherCode('');
     } catch (err) {
-      setVoucherError(err.message);
+      setVoucherError(err.message || 'Invalid coupon code.');
     } finally {
       setVoucherLoading(false);
     }
@@ -682,7 +701,7 @@ export default function PackageCheckout() {
       }
 
       let currentBookingId = bookingId;
-      let finalAmount = serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher;
+      let finalAmount = safeFinalPayable;
 
       const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
       const lead = leadStr ? JSON.parse(leadStr) : null;
@@ -905,7 +924,7 @@ export default function PackageCheckout() {
                   { icon: 'calendar_month', label: 'Travel Date', value: travelDateDisplay },
                   { icon: 'group', label: 'Travellers', value: tripDetails.travellers + ' Traveller(s)' },
                   { icon: 'hotel', label: 'Room Sharing', value: selectedSharing },
-                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${formatMoney(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher)}`, highlight: true },
+                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${formatMoney(safeFinalPayable)}`, highlight: true },
                   { icon: 'verified', label: 'Payment Status', value: 'Paid', badge: 'paid' },
                   { icon: 'task_alt', label: 'Booking Status', value: 'Confirmed', badge: 'confirmed' },
                 ].map(({ icon, label, value, mono, highlight, badge }) => (
@@ -940,7 +959,7 @@ export default function PackageCheckout() {
                       customer_name: formData.fullName,
                       phone: formData.phone,
                       email: formData.email,
-                      final_amount: serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher,
+                      final_amount: safeFinalPayable,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'download')}
                     className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
@@ -959,7 +978,7 @@ export default function PackageCheckout() {
                       customer_name: formData.fullName,
                       phone: formData.phone,
                       email: formData.email,
-                      final_amount: serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher,
+                      final_amount: safeFinalPayable,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'open')}
                     className="bg-white text-gray-700 border border-gray-200 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
@@ -1320,28 +1339,23 @@ export default function PackageCheckout() {
                   ) : (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Have a Coupon Code?</label>
-                      {!user ? (
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-                          Please <Link to="/login" className="font-bold underline text-[#136b8a]">login / signup</Link> to apply vouchers to this booking.
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={voucherCode}
-                            onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                            placeholder="Enter code"
-                            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
-                          />
-                          <button
-                            onClick={handleApplyVoucher}
-                            disabled={voucherLoading || !voucherCode.trim()}
-                            className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                          >
-                            {voucherLoading ? 'Applying...' : 'Apply'}
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={voucherCode}
+                          onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                          placeholder="Enter code"
+                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
+                          disabled={voucherLoading}
+                        />
+                        <button
+                          onClick={handleApplyVoucher}
+                          disabled={voucherLoading || !voucherCode.trim()}
+                          className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                        >
+                          {voucherLoading ? 'Applying...' : 'Apply'}
+                        </button>
+                      </div>
                       {voucherError && <p className="text-rose-600 text-xs mt-2 font-medium">{voucherError}</p>}
                     </div>
                   )}
@@ -1352,7 +1366,7 @@ export default function PackageCheckout() {
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
                 </div>
-                <span className="font-extrabold text-[#136b8a] text-2xl">₹{formatMoney(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher)}</span>
+                <span className="font-extrabold text-[#136b8a] text-2xl">₹{formatMoney(safeFinalPayable)}</span>
               </div>
 
               <button 
