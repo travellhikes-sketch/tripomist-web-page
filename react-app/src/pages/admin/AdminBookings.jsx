@@ -842,6 +842,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
          />
       </div>
     </>
+  )}
   <button
     onClick={() => classifyBooking(selectedBooking, classificationChannel, b2bCompany, b2bNotes)}
     className="w-full bg-[#136b8a] text-white text-xs font-bold py-2 rounded hover:bg-[#0f556e] transition-colors"
