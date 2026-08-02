@@ -165,7 +165,29 @@ const AdminBookings = () => {
         setConfirmVoucherAmount(false);
         break;
       case 'markPaid':
-        await handleStatusUpdate(booking.id, 'payment_status', 'paid');
+        {
+          const existingPaid = Number(booking.cash_paid_amount ?? booking.advance_payment ?? 0);
+          const fullPayable = Number(booking.final_payable_amount ?? booking.final_amount ?? booking.total_amount ?? 0);
+          const amt = existingPaid > 0 ? existingPaid : fullPayable;
+
+          const { error: updateErr } = await supabase
+            .from('bookings')
+            .update({ payment_status: 'paid', cash_paid_amount: amt })
+            .eq('id', booking.id);
+
+          if (updateErr) {
+            alert(`Failed to mark paid: ${updateErr.message}`);
+            break;
+          }
+
+          setBookings(prev => prev.map(b =>
+            b.id === booking.id ? { ...b, payment_status: 'paid', cash_paid_amount: amt } : b
+          ));
+
+          if (selectedBooking?.id === booking.id) {
+            setSelectedBooking(prev => ({ ...prev, payment_status: 'paid', cash_paid_amount: amt }));
+          }
+        }
         break;
       case 'copyPhone':
         navigator.clipboard.writeText(booking.phone);
