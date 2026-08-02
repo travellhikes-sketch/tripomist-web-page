@@ -221,7 +221,11 @@ const AdminBookings = () => {
 
       if (error) throw error;
 
-      alert('Booking cancelled successfully.');
+      if (isVoucher && data?.voucher_code) {
+        window.prompt('Voucher code generated! Copy to clipboard:', data.voucher_code);
+      } else {
+        alert('Booking cancelled successfully.');
+      }
       fetchBookings();
       setCancelModal({ isOpen: false, booking: null });
       setSelectedBooking(null);
@@ -406,7 +410,12 @@ const AdminBookings = () => {
           onClose={() => setServiceRecoveryModal({ isOpen: false, booking: null })}
           booking={serviceRecoveryModal.booking}
           onSuccess={(data) => {
-            alert('Service recovery case created successfully.');
+            if (data?.voucher_code) {
+              window.prompt('Service recovery voucher generated! Copy to clipboard:', data.voucher_code);
+            } else {
+              alert('Service recovery case created successfully.');
+            }
+            fetchBookings();
           }}
         />
         

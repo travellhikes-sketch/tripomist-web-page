@@ -13,6 +13,13 @@ import {
   Copy
 } from 'lucide-react';
 
+function formatMoney(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? amount.toLocaleString('en-IN')
+    : '0';
+}
+
 const CustomerTrips = () => {
   const [bookings, setBookings] = useState([]);
   const [vouchers, setVouchers] = useState([]);
@@ -128,68 +135,70 @@ const CustomerTrips = () => {
 
       {/* Trip List */}
       <div className="space-y-4">
-        {filteredTrips.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 py-12 text-center flex flex-col items-center justify-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
-              <MapPin size={32} />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">No {activeTab} trips found</h3>
-            <p className="text-gray-500 text-sm max-w-sm">When you book a trip, it will appear here.</p>
-          </div>
-        ) : (
-          filteredTrips.map(trip => (
-            <div key={trip.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col md:flex-row">
-              <div className="md:w-48 bg-slate-100 flex items-center justify-center p-6 border-b md:border-b-0 md:border-r border-gray-200">
-                <MapPin size={40} className="text-slate-300" />
+        {activeTab !== 'vouchers' && (
+          filteredTrips.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 py-12 text-center flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
+                <MapPin size={32} />
               </div>
-              
-              <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#136b8a] transition-colors">{trip.package_title}</h3>
-                    {getStatusBadge(trip.booking_status)}
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Calendar size={16} className="text-gray-400" />
-                      {new Date(trip.travel_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Users size={16} className="text-gray-400" />
-                      {trip.travellers} Person(s)
-                    </div>
-                  </div>
-                  
-                  {trip.booking_status === 'cancelled' && (
-                    <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 mt-2 space-y-1.5 text-sm">
-                      {trip.cancellation_reason && (
-                        <p className="text-rose-900"><span className="font-semibold">Reason:</span> {trip.cancellation_reason}</p>
-                      )}
-                      {trip.cancelled_at && (
-                        <p className="text-rose-800"><span className="font-semibold">Cancelled On:</span> {new Date(trip.cancelled_at).toLocaleDateString('en-IN')}</p>
-                      )}
-                      {trip.refund_status && (
-                        <p className="text-rose-800"><span className="font-semibold">Refund Status:</span> {trip.refund_status}</p>
-                      )}
-                    </div>
-                  )}
+              <h3 className="text-lg font-bold text-gray-900 mb-1">No {activeTab} trips found</h3>
+              <p className="text-gray-500 text-sm max-w-sm">When you book a trip, it will appear here.</p>
+            </div>
+          ) : (
+            filteredTrips.map(trip => (
+              <div key={trip.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col md:flex-row">
+                <div className="md:w-48 bg-slate-100 flex items-center justify-center p-6 border-b md:border-b-0 md:border-r border-gray-200">
+                  <MapPin size={40} className="text-slate-300" />
                 </div>
                 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
                   <div>
-                    <p className="text-xs text-gray-500">Booking ID: <span className="font-mono font-bold text-gray-700">{trip.booking_id || trip.booking_reference || trip.id}</span></p>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#136b8a] transition-colors">{trip.package_title}</h3>
+                      {getStatusBadge(trip.booking_status)}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Calendar size={16} className="text-gray-400" />
+                        {new Date(trip.travel_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Users size={16} className="text-gray-400" />
+                        {trip.travellers} Person(s)
+                      </div>
+                    </div>
+                    
+                    {trip.booking_status === 'cancelled' && (
+                      <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 mt-2 space-y-1.5 text-sm">
+                        {trip.cancellation_reason && (
+                          <p className="text-rose-900"><span className="font-semibold">Reason:</span> {trip.cancellation_reason}</p>
+                        )}
+                        {trip.cancelled_at && (
+                          <p className="text-rose-800"><span className="font-semibold">Cancelled On:</span> {new Date(trip.cancelled_at).toLocaleDateString('en-IN')}</p>
+                        )}
+                        {trip.refund_status && (
+                          <p className="text-rose-800"><span className="font-semibold">Refund Status:</span> {trip.refund_status}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <Link 
-                    to={`/account/trips/${trip.id}`} 
-                    className="flex items-center gap-1 text-[#136b8a] font-bold text-sm hover:underline"
-                  >
-                    View Details <ChevronRight size={16} />
-                  </Link>
+                  
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-500">Booking ID: <span className="font-mono font-bold text-gray-700">{trip.booking_id || trip.booking_reference || trip.id}</span></p>
+                    </div>
+                    <Link 
+                      to={`/account/trips/${trip.id}`} 
+                      className="flex items-center gap-1 text-[#136b8a] font-bold text-sm hover:underline"
+                    >
+                      View Details <ChevronRight size={16} />
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))
+          )
         )}
         
         {activeTab === 'vouchers' && (
@@ -207,7 +216,7 @@ const CustomerTrips = () => {
                 <div key={v.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
                   <div className="md:w-48 bg-emerald-50 flex flex-col items-center justify-center p-6 border-b md:border-b-0 md:border-r border-emerald-100">
                     <Ticket size={40} className="text-emerald-400 mb-2" />
-                    <span className="font-bold text-xl text-emerald-700">₹{Number(v.remaining_amount).toLocaleString()}</span>
+                    <span className="font-bold text-xl text-emerald-700">₹{formatMoney(v.remaining_amount)}</span>
                     <span className="text-xs text-emerald-600 font-medium uppercase mt-1">Available Balance</span>
                   </div>
                   
@@ -229,7 +238,7 @@ const CustomerTrips = () => {
                       <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                         <div>
                           <span className="block text-xs font-semibold uppercase text-gray-400 mb-0.5">Original Amount</span>
-                          <span className="font-medium text-gray-900">₹{Number(v.original_amount).toLocaleString()}</span>
+                          <span className="font-medium text-gray-900">₹{formatMoney(v.original_amount)}</span>
                         </div>
                         <div>
                           <span className="block text-xs font-semibold uppercase text-gray-400 mb-0.5">Valid Until</span>
