@@ -264,11 +264,24 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       const b = cancelModal.booking;
       const isVoucher = cancelResolution === 'Convert Paid Amount to Coupon';
 
+      let mappedRefundStatus = 'Refund Pending';
+      if (cancelResolution === 'Cancel Without Refund') {
+        mappedRefundStatus = 'No Refund';
+      } else if (cancelResolution === 'Convert Paid Amount to Coupon') {
+        mappedRefundStatus = 'No Refund';
+      } else if (cancelResolution === 'Refund Pending') {
+        mappedRefundStatus = 'Refund Pending';
+      } else if (cancelResolution === 'Partial Refund') {
+        mappedRefundStatus = 'Partially Refunded';
+      } else if (cancelResolution === 'Fully Refunded') {
+        mappedRefundStatus = 'Fully Refunded';
+      }
+
       const { data, error } = await supabase.rpc('admin_cancel_booking_with_coupon', {
           p_booking_id: b.id,
           p_cancellation_reason: cancelReason,
           p_cancellation_notes: cancelNotes,
-          p_refund_status: cancelResolution,
+          p_refund_status: mappedRefundStatus,
           p_issue_coupon: isVoucher,
           p_coupon_amount: isVoucher ? parseFloat(voucherAmount) : null,
           p_coupon_expiry: isVoucher ? new Date(voucherExpiry).toISOString() : null,
