@@ -175,12 +175,21 @@ const AdminVouchers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredVouchers.map((v) => (
+            {filteredVouchers.map((v) => {
+                const couponCode = v.code ?? v.voucher_code ?? '-';
+                const rawAmount = Number(v.original_amount ?? v.amount ?? 0);
+                const rawBalance = Number(v.remaining_amount ?? v.current_balance ?? 0);
+                const amount = Number.isFinite(rawAmount) ? rawAmount.toLocaleString() : '0';
+                const balance = Number.isFinite(rawBalance) ? rawBalance.toLocaleString() : '0';
+                const expiryValue = v.expires_at ?? v.expiry_date ?? null;
+                const expiryDate = expiryValue ? new Date(expiryValue) : null;
+                const validExpiry = expiryDate && !Number.isNaN(expiryDate.getTime());
+              return (
                 <tr key={v.id} className="hover:bg-slate-50 transition-colors">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <div className="font-mono font-bold text-[#136b8a]">{v.voucher_code}</div>
-                      <button onClick={() => { navigator.clipboard.writeText(v.voucher_code); alert('Copied code!'); }} className="text-gray-400 hover:text-emerald-600 p-0.5 rounded" title="Copy Code">
+                      <div className="font-mono font-bold text-[#136b8a]">{couponCode}</div>
+                      <button onClick={() => { navigator.clipboard.writeText(couponCode); alert('Coupon code copied'); }} className="text-gray-400 hover:text-emerald-600 p-0.5 rounded" title="Copy Code">
                         <span className="material-symbols-outlined text-[14px]">content_copy</span>
                       </button>
                     </div>
@@ -199,23 +208,27 @@ const AdminVouchers = () => {
                     <div className="text-xs text-gray-600 font-mono">{v.bookings?.booking_id || '-'}</div>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <div className="font-medium text-gray-900">{Number(v.original_amount).toLocaleString()}</div>
+                    <div className="font-medium text-gray-900">{amount}</div>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <div className="font-bold text-emerald-600">{Number(v.current_balance).toLocaleString()}</div>
+                    <div className="font-bold text-emerald-600">{balance}</div>
                   </td>
                   <td className="py-3 px-4">
                     <div className="text-xs text-gray-500">Issued: {new Date(v.created_at).toLocaleDateString()}</div>
-                    <div className="text-xs font-semibold text-gray-700">Exp: {new Date(v.expiry_date).toLocaleDateString()}</div>
+                    {expiryDate ? (
+                      <div className="text-xs font-semibold text-gray-700">Exp: {new Date(expiryDate).toLocaleDateString()}</div>
+                    ) : (
+                      <div className="text-xs font-semibold text-gray-700">Exp: No expiry</div>
+                    )}
                   </td>
                   <td className="py-3 px-4">
-                    {getStatusBadge(v.status, v.expiry_date)}
+                    {getStatusBadge(v.status, expiryDate)}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex justify-end gap-1">
                       <button 
                         onClick={() => {
-                          const instructions = `Here is your Coupon Code: ${v.voucher_code}\n\nTo redeem, please log in or create an account using the email address you provided during your original booking. You can apply this code during checkout to deduct ₹${Number(v.current_balance).toLocaleString()} from your total.`;
+                          const instructions = `Here is your Coupon Code: ${couponCode}\n\nTo redeem, please log in or create an account using the email address you provided during your original booking. You can apply this code during checkout to deduct ₹${balance} from your total.`;
                           navigator.clipboard.writeText(instructions);
                           alert('Customer Instructions Copied!');
                         }}
@@ -236,7 +249,8 @@ const AdminVouchers = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
             </tbody>
           </table>
         )}

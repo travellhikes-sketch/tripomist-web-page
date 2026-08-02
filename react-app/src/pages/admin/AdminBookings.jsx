@@ -145,13 +145,15 @@ const AdminBookings = () => {
         await handleStatusUpdate(booking.id, 'booking_status', 'confirmed');
         break;
       case 'cancel':
+        // Close any existing drawer and Service Recovery modal before opening Cancel modal
+        setSelectedBooking(null);
+        setServiceRecoveryModal({ isOpen: false, booking: null });
         setCancelModal({ isOpen: true, booking });
         setCancelReason('');
         setCancelNotes('');
         setCancelResolution('Cancel Without Refund');
-        
         // Default coupon amount to paid amount
-        const paid = Number(booking.final_payable_amount || booking.final_amount || booking.total_amount || 0);
+        const paid = Number(booking.final_payable_amount ?? booking.final_amount ?? booking.total_amount ?? 0);
         setVoucherAmount(paid > 0 ? paid.toString() : '');
         setVoucherExpiry('');
         setVoucherNotes('');
@@ -208,15 +210,15 @@ const AdminBookings = () => {
       const b = cancelModal.booking;
       const isVoucher = cancelResolution === 'Convert Paid Amount to Coupon';
       
-      const { data, error } = await supabase.rpc('cancel_booking_with_voucher', {
+      const { data, error } = await supabase.rpc('admin_cancel_booking_with_coupon', {
           p_booking_id: b.id,
           p_cancellation_reason: cancelReason,
-          p_refund_status: cancelResolution,
           p_cancellation_notes: cancelNotes,
-          p_issue_voucher: isVoucher,
-          p_voucher_amount: isVoucher ? parseFloat(voucherAmount) : 0,
-          p_voucher_expiry: isVoucher ? new Date(voucherExpiry).toISOString() : null,
-          p_voucher_notes: isVoucher ? voucherNotes : null
+          p_refund_status: cancelResolution,
+          p_issue_coupon: isVoucher,
+          p_coupon_amount: isVoucher ? parseFloat(voucherAmount) : null,
+          p_coupon_expiry: isVoucher ? new Date(voucherExpiry).toISOString() : null,
+          p_coupon_notes: isVoucher ? voucherNotes : null
       });
 
       if (error) throw error;
@@ -238,6 +240,8 @@ const AdminBookings = () => {
   };
 
   const handleMarkProblem = (booking) => {
+    setCancelModal({ isOpen: false, booking: null });
+    setSelectedBooking(null);
     setServiceRecoveryModal({ isOpen: true, booking });
   };
 
@@ -360,7 +364,7 @@ const AdminBookings = () => {
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in">
+    <div className="flex flex-col h-full animate-fade-in overflow-x-hidden">
       {/* Sticky Header & Toolbar */}
       <div className="sticky top-0 z-10 bg-slate-50 pb-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
@@ -522,7 +526,7 @@ const AdminBookings = () => {
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
             <p className="text-xs text-gray-500 font-semibold uppercase">B2C Sales Value</p>
-            <p className="text-lg font-bold text-emerald-600">₹{summaryStats.b2cValue.toLocaleString()}</p>
+            <div className="font-bold text-emerald-600">{Number(v.remaining_amount ?? v.current_balance ?? 0).toLocaleString()}</div>
           </div>
         </div>
       </div>
@@ -586,7 +590,7 @@ const AdminBookings = () => {
                       </div>
                     </td>
                     <td className="py-2 px-4 text-right">
-                      <div className="font-bold text-gray-900">₹{Number(booking.final_amount || booking.total_amount || 0).toLocaleString()}</div>
+                      <div className="font-medium text-gray-900">₹{Number(booking.final_amount ?? booking.total_amount ?? 0).toLocaleString()}</div>
                     </td>
                     <td className="py-2 px-4">
                       <div className="flex flex-col gap-1.5 items-start">
@@ -705,8 +709,9 @@ const AdminBookings = () => {
                   <span className="text-gray-600">{selectedBooking.phone}</span>
                   <div className="flex gap-2">
                     <a href={`tel:+${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}`} className="text-gray-400 hover:text-blue-600"><Phone size={14} /></a>
-                    <a href={`https://wa.me/${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}?text=${encodeURIComponent(`Hi ${selectedBooking.customer_name}, this is TripoMist. Regarding your booking for ${selectedBooking.package_title}...`)}`} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-green-600"><MessageCircle size={14} /></a>
-                    <button onClick={() => handleQuickAction(selectedBooking, 'copyPhone')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
+                    <a href={`https://wa.me/${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}?text=${encodeURIComponent(`Hi ${selectedBooking.customer_name}, this is TripoMist. Regarding your booking for ${selectedBooking.package_title}...`)}`} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-green-600">
+                      <MessageCircle size={14} />
+                    </a>
                   </div>
                 </div>
                 
