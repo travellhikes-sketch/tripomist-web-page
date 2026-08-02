@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../supabaseClient';
 import { generatePDFVoucher } from '../../utils/pdfGenerator';
-import { 
-  X, Check, XCircle, Copy, Download, Search, 
+import {
+  X, Check, XCircle, Copy, Download, Search,
   Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
   MoreVertical, Phone, MessageCircle, Edit, Tag, Building
 } from 'lucide-react';
@@ -17,7 +17,7 @@ const AdminBookings = () => {
   const [error, setError] = useState(null);
   const [showManualBooking, setShowManualBooking] = useState(false);
   const [editBookingId, setEditBookingId] = useState(null);
-  
+
   // Cancellation Modal State
   const [cancelModal, setCancelModal] = useState({ isOpen: false, booking: null });
   const [cancelReason, setCancelReason] = useState('');
@@ -27,7 +27,7 @@ const AdminBookings = () => {
   const [voucherExpiry, setVoucherExpiry] = useState('');
   const [voucherNotes, setVoucherNotes] = useState('');
   const [confirmVoucherAmount, setConfirmVoucherAmount] = useState(false);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -39,7 +39,7 @@ const AdminBookings = () => {
   const [monthFilter, setMonthFilter] = useState('all'); // all | this | last | custom
   const [customMonth, setCustomMonth] = useState(''); // format YYYY-MM
   const [packageFilter, setPackageFilter] = useState('all');
-  
+
   // Drawer state
   const [selectedBooking, setSelectedBooking] = useState(null);
 
@@ -47,7 +47,7 @@ const AdminBookings = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [bookingsPerPage, setBookingsPerPage] = useState(25);
   const [selectedRowIds, setSelectedRowIds] = useState(new Set());
-  
+
   const [confirmModalConfig, setConfirmModalConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'danger' });
   const [serviceRecoveryModal, setServiceRecoveryModal] = useState({ isOpen: false, booking: null });
 
@@ -100,10 +100,10 @@ const AdminBookings = () => {
         .eq('id', id);
       if (error) throw error;
 
-      setBookings(prev => prev.map(b => 
+      setBookings(prev => prev.map(b =>
         b.id === id ? { ...b, [field]: newValue } : b
       ));
-      
+
       if (selectedBooking?.id === id) {
         setSelectedBooking(prev => ({ ...prev, [field]: newValue }));
       }
@@ -124,12 +124,12 @@ const AdminBookings = () => {
         try {
           setLoading(true);
           const idsArray = Array.from(selectedRowIds);
-          
+
           for (const id of idsArray) {
              await supabase.from('bookings').update({ booking_status: status }).eq('id', id);
           }
-          
-          setBookings(prev => prev.map(b => 
+
+          setBookings(prev => prev.map(b =>
             selectedRowIds.has(b.id) ? { ...b, booking_status: status } : b
           ));
           setSelectedRowIds(new Set());
@@ -217,7 +217,7 @@ const classifyBooking = async (booking, newChannel) => {
       alert("Please provide a cancellation reason.");
       return;
     }
-    
+
     if (cancelResolution === 'Convert Paid Amount to Coupon') {
         if (!voucherAmount || isNaN(voucherAmount) || parseFloat(voucherAmount) <= 0) {
             alert("Please enter a valid positive coupon amount.");
@@ -246,7 +246,7 @@ const classifyBooking = async (booking, newChannel) => {
     try {
       const b = cancelModal.booking;
       const isVoucher = cancelResolution === 'Convert Paid Amount to Coupon';
-      
+
       const { data, error } = await supabase.rpc('admin_cancel_booking_with_coupon', {
           p_booking_id: b.id,
           p_cancellation_reason: cancelReason,
@@ -325,21 +325,21 @@ const classifyBooking = async (booking, newChannel) => {
   const filteredBookings = useMemo(() => {
     return bookings.filter(b => {
       const term = searchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         (b.booking_id?.toLowerCase() || '').includes(term) ||
         (b.customer_name?.toLowerCase() || '').includes(term) ||
         (b.phone || '').includes(term) ||
         (b.package_title?.toLowerCase() || '').includes(term);
-        
+
       const matchesStatus = statusFilter === 'all' || b.booking_status === statusFilter;
       const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter;
       const matchesPackage = packageFilter === 'all' || b.package_title === packageFilter;
       const matchesSales = salesChannelFilter === 'all' || b.sales_channel === salesChannelFilter || (!b.sales_channel && salesChannelFilter === 'unclassified');
-      
+
       return matchesSearch && matchesStatus && matchesPayment && matchesPackage && matchesSales;
     });
   }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter, salesChannelFilter]);
-  
+
   // Summary Stats
   const summaryStats = useMemo(() => {
     let b2bCount = 0, b2cCount = 0, unclassifiedCount = 0, b2bValue = 0, b2cValue = 0;
@@ -361,7 +361,7 @@ const classifyBooking = async (booking, newChannel) => {
   // Pagination Logic
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
   const validCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
-  
+
   const indexOfLastBooking = validCurrentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
   const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
@@ -411,19 +411,19 @@ const classifyBooking = async (booking, newChannel) => {
             <h1 className="text-xl font-bold text-gray-900">Bookings Management</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => setShowManualBooking(true)}
               className="flex items-center gap-1.5 bg-[#136b8a] border border-[#136b8a] text-white px-3 py-1.5 rounded-md hover:bg-[#0f556e] transition-colors shadow-sm text-sm font-semibold"
             >
               New Booking
             </button>
-            <button 
+            <button
               onClick={exportToCSV}
               className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
             >
               <Download size={16} /> Export
             </button>
-            <button 
+            <button
               onClick={fetchBookings}
               className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
             >
@@ -432,14 +432,14 @@ const classifyBooking = async (booking, newChannel) => {
           </div>
         </div>
 
-        <AdminBookingModal 
+        <AdminBookingModal
           isOpen={showManualBooking || !!editBookingId}
           onClose={() => { setShowManualBooking(false); setEditBookingId(null); }}
           onSuccess={() => { fetchBookings(); setEditBookingId(null); setShowManualBooking(false); setSelectedBooking(null); }}
           bookingId={editBookingId}
         />
-        
-        <ConfirmModal 
+
+        <ConfirmModal
           isOpen={confirmModalConfig.isOpen}
           onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
           title={confirmModalConfig.title}
@@ -448,7 +448,7 @@ const classifyBooking = async (booking, newChannel) => {
           type={confirmModalConfig.type}
         />
 
-        <ServiceRecoveryCreationModal 
+        <ServiceRecoveryCreationModal
           isOpen={serviceRecoveryModal.isOpen}
           onClose={() => setServiceRecoveryModal({ isOpen: false, booking: null })}
           booking={serviceRecoveryModal.booking}
@@ -461,7 +461,7 @@ const classifyBooking = async (booking, newChannel) => {
             fetchBookings();
           }}
         />
-        
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center justify-between mb-4 text-sm">
             <span>{error}</span>
@@ -473,16 +473,16 @@ const classifyBooking = async (booking, newChannel) => {
         <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
           <div className="relative lg:col-span-2">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search ID, customer, phone..." 
+            <input
+              type="text"
+              placeholder="Search ID, customer, phone..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] transition-all"
             />
           </div>
-          
-          <select 
+
+          <select
             value={salesChannelFilter}
             onChange={(e) => { setSalesChannelFilter(e.target.value); setCurrentPage(1); }}
             className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
@@ -492,8 +492,8 @@ const classifyBooking = async (booking, newChannel) => {
             <option value="b2c">B2C</option>
             <option value="b2b">B2B</option>
           </select>
-          
-          <select 
+
+          <select
             value={packageFilter}
             onChange={(e) => { setPackageFilter(e.target.value); setCurrentPage(1); }}
             className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
@@ -504,7 +504,7 @@ const classifyBooking = async (booking, newChannel) => {
             ))}
           </select>
 
-          <select 
+          <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
             className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
@@ -515,7 +515,7 @@ const classifyBooking = async (booking, newChannel) => {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          
+
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
@@ -538,7 +538,7 @@ const classifyBooking = async (booking, newChannel) => {
             <option value="last">Last Month</option>
           </select>
         </div>
-        
+
         {selectedRowIds.size > 0 && (
           <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-2 px-4 flex items-center justify-between text-sm animate-fade-in">
             <span className="font-semibold text-blue-800">{selectedRowIds.size} bookings selected</span>
@@ -548,7 +548,7 @@ const classifyBooking = async (booking, newChannel) => {
             </div>
           </div>
         )}
-        
+
         {/* Summary Stats Row */}
         <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
           <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
@@ -588,7 +588,7 @@ const classifyBooking = async (booking, newChannel) => {
               <thead className="bg-slate-50 sticky top-0 z-10 outline outline-1 outline-gray-200">
 <tr>
   <th className="py-2.5 px-4 w-10 text-center">
-    <input type="checkbox" 
+    <input type="checkbox"
       className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
       checked={currentBookings.length > 0 && selectedRowIds.size === currentBookings.length}
       onChange={toggleSelectAll}
@@ -607,7 +607,7 @@ const classifyBooking = async (booking, newChannel) => {
 {currentBookings.map((booking) => (
   <tr key={booking.id} className={`hover:bg-slate-50/70 transition-colors ${selectedRowIds.has(booking.id) ? 'bg-blue-50/30' : ''}`}>
     <td className="py-2 px-4 text-center">
-      <input type="checkbox" 
+      <input type="checkbox"
         className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
         checked={selectedRowIds.has(booking.id)}
         onChange={() => toggleSelectRow(booking.id)}
@@ -648,7 +648,7 @@ const classifyBooking = async (booking, newChannel) => {
       </div>
     </td>
     <td className="py-2 px-4 text-right">
-       <button 
+       <button
            onClick={() => setClassifyModal({ isOpen: true, booking, channel: '' })}
            className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
          >
@@ -661,7 +661,7 @@ const classifyBooking = async (booking, newChannel) => {
             </table>
           )}
         </div>
-        
+
         {/* Compact Pagination */}
         {!loading && filteredBookings.length > 0 && (
           <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex items-center justify-between text-xs">
@@ -669,7 +669,7 @@ const classifyBooking = async (booking, newChannel) => {
               <span>Showing <b>{indexOfFirstBooking + 1}-{Math.min(indexOfLastBooking, filteredBookings.length)}</b> of <b>{filteredBookings.length}</b></span>
               <div className="flex items-center gap-2">
 <span>Rows per page:</span>
-<select 
+<select
   className="bg-white border border-gray-300 rounded px-1.5 py-0.5 outline-none"
   value={bookingsPerPage}
   onChange={(e) => {
@@ -683,10 +683,10 @@ const classifyBooking = async (booking, newChannel) => {
 </select>
               </div>
             </div>
-            
+
             {totalPages > 1 && (
               <div className="flex gap-1">
-<button 
+<button
   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
   disabled={validCurrentPage === 1}
   className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
@@ -694,7 +694,7 @@ const classifyBooking = async (booking, newChannel) => {
   <ChevronLeft size={16} />
 </button>
 <span className="px-3 py-1 font-semibold text-gray-700">Page {validCurrentPage} of {totalPages}</span>
-<button 
+<button
   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
   disabled={validCurrentPage === totalPages}
   className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
@@ -741,20 +741,12 @@ const classifyBooking = async (booking, newChannel) => {
                const { booking, channel } = classifyModal;
                if (!channel) { alert('Select a sales channel'); return; }
                if (channel === 'b2b' && !b2bCompany.trim()) { alert('Partner/Company name required'); return; }
-               // Prepare payload adjustments directly via classifyBooking function
-               const payload = { sales_channel: channel };
-               if (channel === 'b2b') {
- payload.b2b_partner_company = b2bCompany.trim();
- payload.b2b_notes = b2bNotes.trim() || null;
-               } else {
- payload.b2b_partner_company = null;
- payload.b2b_notes = null;
-               }
-               
+                // payload will be constructed later
+
                try {
  const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user?.id) { alert(`Auth error: ${userError?.message || 'Admin session not found'}`); return; }
- 
+
  const payload = {
    sales_channel: channel,
    b2b_partner_company: channel === 'b2b' ? b2bCompany.trim() : null,
@@ -765,7 +757,7 @@ const classifyBooking = async (booking, newChannel) => {
 
  const { error } = await supabase.from('bookings').update(payload).eq('id', booking.id);
  if (error) throw error;
- 
+
  await fetchBookings();
  setClassifyModal({ isOpen: false, booking: null, channel: '' });
  setB2bCompany('');
@@ -795,7 +787,7 @@ const classifyBooking = async (booking, newChannel) => {
             </div>
 
             <div className="p-4 space-y-4">
-              
+
               {/* Quick Actions Header */}
               <div className="grid grid-cols-2 gap-2">
 <button onClick={() => handleQuickAction(selectedBooking, 'confirm')} className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-emerald-200 transition-colors">
@@ -851,14 +843,14 @@ const classifyBooking = async (booking, newChannel) => {
   </button>
 )}
               </div>
-              
+
               {/* Sales Classification */}
               <div className="bg-white border border-gray-200 rounded-lg p-3">
 <h3 className="text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1"><Tag size={12}/> Sales Classification</h3>
 <div className="grid grid-cols-1 gap-3">
   <div>
     <label className="text-xs font-semibold text-gray-700 block mb-1">Sales Type</label>
-    <select 
+    <select
       value={selectedBooking.sales_channel || 'unclassified'}
       onChange={(e) => classifyBooking(selectedBooking, e.target.value)}
        className="w-full text-xs p-2 border border-gray-300 rounded"
@@ -872,8 +864,8 @@ const classifyBooking = async (booking, newChannel) => {
     <>
       <div>
          <label className="text-xs font-semibold text-gray-700 block mb-1 flex items-center gap-1"><Building size={12}/> Partner Company *</label>
-         <input 
-           type="text" 
+         <input
+           type="text"
            value={selectedBooking.b2b_partner_company || ''}
            onChange={(e) => setSelectedBooking(prev => ({ ...prev, b2b_partner_company: e.target.value }))}
            onBlur={(e) => handleStatusUpdate(selectedBooking.id, 'b2b_partner_company', e.target.value)}
@@ -883,8 +875,8 @@ const classifyBooking = async (booking, newChannel) => {
       </div>
       <div>
          <label className="text-xs font-semibold text-gray-700 block mb-1">B2B Notes</label>
-         <input 
-           type="text" 
+         <input
+           type="text"
            value={selectedBooking.b2b_notes || ''}
            onChange={(e) => setSelectedBooking(prev => ({ ...prev, b2b_notes: e.target.value }))}
            onBlur={(e) => handleStatusUpdate(selectedBooking.id, 'b2b_notes', e.target.value)}
@@ -943,20 +935,20 @@ const classifyBooking = async (booking, newChannel) => {
    </div>
  )}
               </div>
-              
+
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
 Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
               </div>
 
               {/* Action Button */}
               <div className="grid grid-cols-2 gap-2 mt-4">
-<button 
+<button
   onClick={() => setEditBookingId(selectedBooking.id)}
   className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
 >
   <Edit size={16} /> Edit Booking
 </button>
-<button 
+<button
   onClick={() => generatePDFVoucher(selectedBooking, 'download')}
   className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
 >
@@ -975,15 +967,15 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
                <h3 className="text-lg font-bold">Cancel Booking</h3>
                <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="text-rose-100 hover:text-white"><X size={20} /></button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
-              
+
               {/* Read Only Summary */}
               <div className="bg-white border border-gray-200 rounded-lg p-4 mb-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm shadow-sm">
  <div><span className="block text-xs text-gray-500 uppercase font-semibold">Reference</span><span className="font-bold text-gray-900">{cancelModal.booking.booking_id}</span></div>
  <div><span className="block text-xs text-gray-500 uppercase font-semibold">Customer</span><span className="font-semibold">{cancelModal.booking.customer_name}</span></div>
  <div className="md:col-span-2"><span className="block text-xs text-gray-500 uppercase font-semibold">Package</span><span className="font-medium truncate block" title={cancelModal.booking.package_title}>{cancelModal.booking.package_title}</span></div>
- 
+
  <div><span className="block text-xs text-gray-500 uppercase font-semibold">Travel Date</span><span>{cancelModal.booking.travel_date ? new Date(cancelModal.booking.travel_date).toLocaleDateString() : '-'}</span></div>
  <div><span className="block text-xs text-gray-500 uppercase font-semibold">Total Cost</span><span className="font-bold">₹{Number(cancelModal.booking.total_amount || 0).toLocaleString()}</span></div>
  <div><span className="block text-xs text-gray-500 uppercase font-semibold">Total Paid</span><span className="font-bold text-emerald-600">₹{Number(cancelModal.booking.final_amount || cancelModal.booking.total_amount || 0).toLocaleString()}</span></div>
@@ -994,21 +986,21 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
  <div className="space-y-4">
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-1">Cancellation Reason *</label>
-      <textarea 
-        value={cancelReason} 
-        onChange={e => setCancelReason(e.target.value)} 
-        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm" 
-        rows="3" 
+      <textarea
+        value={cancelReason}
+        onChange={e => setCancelReason(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm"
+        rows="3"
         required
         placeholder="Why is this booking being cancelled?"
       />
     </div>
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-1">Internal Cancellation Notes</label>
-      <textarea 
-        value={cancelNotes} 
-        onChange={e => setCancelNotes(e.target.value)} 
-        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm" 
+      <textarea
+        value={cancelNotes}
+        onChange={e => setCancelNotes(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm"
         rows="2"
         placeholder="Visible only to admins"
       />
@@ -1018,8 +1010,8 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
  <div className="space-y-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
     <div>
       <label className="block text-sm font-semibold text-gray-900 mb-2">Cancellation Resolution *</label>
-      <select 
-        value={cancelResolution} 
+      <select
+        value={cancelResolution}
         onChange={e => setCancelResolution(e.target.value)}
         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none font-medium text-gray-800"
       >
@@ -1035,8 +1027,8 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
       <div className="mt-4 p-4 border border-emerald-200 bg-emerald-50 rounded-lg space-y-3 animate-fade-in">
         <div>
            <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Amount (₹) *</label>
-           <input 
-             type="number" 
+           <input
+             type="number"
              min="0"
              value={voucherAmount}
              onChange={e => setVoucherAmount(e.target.value)}
@@ -1046,8 +1038,8 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
         </div>
         <div>
            <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Validity / Expiry Date *</label>
-           <input 
-             type="date" 
+           <input
+             type="date"
              value={voucherExpiry}
              onChange={e => setVoucherExpiry(e.target.value)}
              className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
@@ -1056,8 +1048,8 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
         </div>
         <div>
            <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Notes</label>
-           <input 
-             type="text" 
+           <input
+             type="text"
              value={voucherNotes}
              onChange={e => setVoucherNotes(e.target.value)}
              className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
@@ -1065,8 +1057,8 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
            />
         </div>
         <div className="flex items-start gap-2 mt-2 pt-2 border-t border-emerald-200">
-           <input 
-             type="checkbox" 
+           <input
+             type="checkbox"
              id="confirmVoucher"
              checked={confirmVoucherAmount}
              onChange={e => setConfirmVoucherAmount(e.target.checked)}
