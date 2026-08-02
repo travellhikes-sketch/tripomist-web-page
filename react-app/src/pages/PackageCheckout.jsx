@@ -5,6 +5,13 @@ import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
 
+function formatMoney(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? amount.toLocaleString('en-IN')
+    : '0';
+}
+
 function parsePriceString(priceStr) {
   if (typeof priceStr === 'number') return priceStr;
   if (!priceStr) return 0;
@@ -292,15 +299,27 @@ export default function PackageCheckout() {
         setCheckoutBlocked(true);
         options = [];
       } else {
-        options = [
+        const rawOptions = [
           { type: 'Quad Sharing', pricePerPerson: quadBasePrice, label: 'Quad Sharing' },
           { type: 'Triple Sharing', pricePerPerson: quadBasePrice + tripleUpgrade, label: 'Triple Sharing' },
           { type: 'Double Sharing', pricePerPerson: quadBasePrice + doubleUpgrade, label: 'Double Sharing' }
         ];
 
-        // Auto-select Quad Sharing
-        setSelectedSharing('Quad Sharing');
-        setComputedPrice(quadBasePrice * (data.tripDetails.travellers || 1));
+        options = rawOptions
+          .map(option => {
+            const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
+            return { ...option, pricePerPerson };
+          })
+          .filter(option => Number.isFinite(option.pricePerPerson) && option.pricePerPerson > 0);
+
+        if (options.length === 0) {
+          setError('Package configuration error: sharing options are invalid.');
+          setCheckoutBlocked(true);
+        } else {
+          const firstOpt = options.find(o => o.type === 'Quad Sharing') || options[0];
+          setSelectedSharing(firstOpt.type);
+          setComputedPrice(firstOpt.pricePerPerson * (data.tripDetails.travellers || 1));
+        }
       }
 
       setSharingOptions(options);
@@ -325,6 +344,25 @@ export default function PackageCheckout() {
     );
   }
 
+  if (sharingOptions.length === 0 && !loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-surface-container-lowest font-sans">
+        <Navbar />
+        <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-16 mt-20 flex flex-col items-center justify-center text-center">
+          <div className="w-24 h-24 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-6xl">error</span>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Package Configuration Error</h2>
+          <p className="text-gray-600 text-lg mb-8">{error || 'Package occupancy/sharing prices could not be loaded.'}</p>
+          <Link to="/" className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 px-8 rounded-xl shadow-md transition-all">
+            Back to Home
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const handleSharingSelect = (option) => {
     // 4. Disable room occupancy selection after booking initialize
     if (bookingId) return;
@@ -340,7 +378,8 @@ export default function PackageCheckout() {
     });
   };
 
-  const subTotal = computedPrice;
+  const travellerCount = Math.max(1, Number(tripDetails?.travellers) || 1);
+  const subTotal = Number(computedPrice) || 0;
   const gst = Math.round(subTotal * 0.05);
   const totalBeforeVoucher = subTotal + gst;
   
@@ -866,7 +905,7 @@ export default function PackageCheckout() {
                   { icon: 'calendar_month', label: 'Travel Date', value: travelDateDisplay },
                   { icon: 'group', label: 'Travellers', value: tripDetails.travellers + ' Traveller(s)' },
                   { icon: 'hotel', label: 'Room Sharing', value: selectedSharing },
-                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher).toLocaleString('en-IN')}`, highlight: true },
+                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${formatMoney(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher)}`, highlight: true },
                   { icon: 'verified', label: 'Payment Status', value: 'Paid', badge: 'paid' },
                   { icon: 'task_alt', label: 'Booking Status', value: 'Confirmed', badge: 'confirmed' },
                 ].map(({ icon, label, value, mono, highlight, badge }) => (
@@ -1186,6 +1225,8 @@ export default function PackageCheckout() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sharingOptions.map((option) => {
+                  const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
+                  if (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0) return null;
                   const isActive = selectedSharing === option.type;
                   const isOccupancyDisabled = !!bookingId;
                   return (
@@ -1210,7 +1251,7 @@ export default function PackageCheckout() {
                       </div>
                       <h3 className={`font-bold text-lg ${isActive ? 'text-[#136b8a]' : 'text-gray-800'}`}>{option.label}</h3>
                       <div className="mt-auto">
-                        <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{option.pricePerPerson.toLocaleString()}</span>
+                        <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{formatMoney(pricePerPerson)}</span>
                         <span className="text-xs text-gray-500 font-medium ml-1">/ person</span>
                       </div>
                     </div>
@@ -1240,12 +1281,12 @@ export default function PackageCheckout() {
 
               <div className="space-y-3 mb-4 border-b border-gray-100 pb-4">
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
-                  <span>Subtotal ({tripDetails.travellers} × ₹{(computedPrice / (tripDetails.travellers || 1)).toLocaleString()})</span>
-                  <span>₹{subTotal.toLocaleString()}</span>
+                  <span>Subtotal ({tripDetails.travellers} × ₹{formatMoney(computedPrice / travellerCount)})</span>
+                  <span>₹{formatMoney(subTotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
                   <span>Taxes (GST 5%)</span>
-                  <span>₹{gst.toLocaleString()}</span>
+                  <span>₹{formatMoney(gst)}</span>
                 </div>
               </div>
 
@@ -1265,10 +1306,10 @@ export default function PackageCheckout() {
                             </div>
                             <div className={`${isExpired ? 'text-rose-600' : 'text-emerald-600'} text-xs mt-0.5`}>{appliedVoucher.code}</div>
                           </div>
-                          <div className="text-right">
-                            <div className={`${isExpired ? 'text-rose-700' : 'text-emerald-700'} font-bold`}>
-                              -₹{appliedVoucher.remaining_amount.toLocaleString()}
-                            </div>
+                           <div className="text-right">
+                             <div className={`${isExpired ? 'text-rose-700' : 'text-emerald-700'} font-bold`}>
+                               -₹{formatMoney(appliedVoucher.remaining_amount)}
+                             </div>
                             <p className="text-[10px] font-semibold mt-1">
                               {isExpired ? 'Coupon reservation expired. Please start a new checkout.' : 'Coupon locked for 15 minutes'}
                             </p>
@@ -1311,7 +1352,7 @@ export default function PackageCheckout() {
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
                 </div>
-                <span className="font-extrabold text-[#136b8a] text-2xl">₹{(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher).toLocaleString()}</span>
+                <span className="font-extrabold text-[#136b8a] text-2xl">₹{formatMoney(serverFinalPayable !== null ? serverFinalPayable : totalBeforeVoucher)}</span>
               </div>
 
               <button 
