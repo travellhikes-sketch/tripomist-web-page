@@ -225,8 +225,8 @@ function Home() {
       <main className="w-full flex-grow">
         {/* Hero Section */}
         {(!heroSettings || heroSettings.is_active !== false) && (
-        <div className="px-4 md:px-12 lg:px-20 pt-6">
-          <section className="relative w-full min-h-[500px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-12 rounded-[28px] overflow-hidden shadow-lg">
+        <div className="px-2 md:px-6 lg:px-8 pt-6">
+          <section className="relative w-full min-h-[500px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-8 rounded-[28px] overflow-hidden shadow-lg">
             <div className="absolute inset-0 w-full h-full -z-10 bg-black">
               {(!heroSettings?.media_type || heroSettings.media_type === 'video') ? (
                 <video
@@ -292,9 +292,6 @@ function Home() {
           dynamicPackageSections.filter(sec => sec.display_order <= 5).map(sec => (
             <React.Fragment key={sec.id}>
               {renderPackageSection(sec)}
-              {sec.section_key === 'recommended' && (
-                <BenefitsSection />
-              )}
             </React.Fragment>
           ))
         )}
@@ -306,11 +303,28 @@ function Home() {
         <StatsStrip />
 
         {/* Dynamic Package Sections (After Reviews/Banners) */}
-        {!pageLoading && dynamicPackageSections.filter(sec => sec.display_order > 5).map(sec => renderPackageSection(sec))}
+        {!pageLoading && (() => {
+          const afterSections = dynamicPackageSections.filter(sec => sec.display_order > 5);
+          let testimonialsRendered = false;
+          return (
+            <>
+              {afterSections.map(sec => {
+                const isAbroad = sec.title?.toLowerCase().includes('soon you can plan') || sec.section_key === 'abroad';
+                if (isAbroad) testimonialsRendered = true;
+                return (
+                  <React.Fragment key={sec.id}>
+                    {renderPackageSection(sec)}
+                    {isAbroad && <TestimonialsSection />}
+                  </React.Fragment>
+                );
+              })}
+              {!testimonialsRendered && <TestimonialsSection />}
+            </>
+          );
+        })()}
 
       </main>
 
-      <TestimonialsSection />
       <Footer />
     </div>
   )
