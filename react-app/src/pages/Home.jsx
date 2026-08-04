@@ -334,26 +334,16 @@ function Home() {
         {/* Stats Strip */}
         <StatsStrip />
 
-        {/* Dynamic Reviews Section */}
-        <ReviewsSection featuredOnly={true} />
-
-        {/* Dynamic Package Sections (After Reviews/Banners) */}
+        {/* Dynamic Package Sections (After Banners) */}
         {!pageLoading && (() => {
           const afterSections = dynamicPackageSections.filter(sec => sec.display_order > 5);
-          let testimonialsRendered = false;
           return (
             <>
-              {afterSections.map(sec => {
-                const isAbroad = sec.title?.toLowerCase().includes('soon you can plan') || sec.section_key === 'abroad';
-                if (isAbroad) testimonialsRendered = true;
-                return (
-                  <React.Fragment key={sec.id}>
-                    {renderPackageSection(sec)}
-                    {isAbroad && <TestimonialsSection />}
-                  </React.Fragment>
-                );
-              })}
-              {!testimonialsRendered && <TestimonialsSection />}
+              {afterSections.map(sec => (
+                <React.Fragment key={sec.id}>
+                  {renderPackageSection(sec)}
+                </React.Fragment>
+              ))}
             </>
           );
         })()}

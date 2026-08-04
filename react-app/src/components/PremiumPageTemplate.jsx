@@ -71,44 +71,46 @@ const PremiumPageTemplate = ({
   };
 
   return (
-    <div className="bg-slate-50 text-gray-800 antialiased min-h-screen flex flex-col">
+    <div className="bg-surface-container-lowest text-gray-800 antialiased min-h-screen flex flex-col">
       <Navbar />
 
-      {/* TOP WIDE ROUNDED BANNER */}
-      {hero_image_url && (
-        <section className="w-full max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-6 pb-2">
-          <div className="relative w-full h-[200px] md:h-[300px] rounded-[24px] overflow-hidden shadow-md">
-            <picture>
-              {mobile_banner_image ? (
-                <source media="(max-width: 640px)" srcSet={mobile_banner_image} />
-              ) : (
-                <source media="(max-width: 640px)" srcSet={hero_image_url} />
-              )}
-              <img
-                src={hero_image_url}
-                alt={title}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </picture>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
-              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 select-none">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="text-sm md:text-lg max-w-xl opacity-90 select-none">
-                  {subtitle}
-                </p>
-              )}
-            </div>
+      {/* HERO BANNER SECTION (FULL-WIDTH, NO ROUNDING/PADDING) */}
+      {hero_image_url ? (
+        <section className="relative w-full h-[45vh] md:h-[50vh] min-h-[350px] overflow-hidden bg-black flex-shrink-0">
+          <picture>
+            {mobile_banner_image ? (
+              <source media="(max-width: 640px)" srcSet={mobile_banner_image} />
+            ) : (
+              <source media="(max-width: 640px)" srcSet={hero_image_url} />
+            )}
+            <img
+              src={hero_image_url}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+          </picture>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+
+          <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
+            <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight drop-shadow-md select-none">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-white/95 text-xs md:text-sm max-w-xl text-center select-none font-medium mt-1 opacity-90">
+                {subtitle}
+              </p>
+            )}
           </div>
         </section>
+      ) : (
+        /* Fallback section if there is no hero image */
+        <div className="w-full h-12 bg-gray-50 border-b border-gray-100" />
       )}
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-grow max-w-4xl mx-auto w-full px-4 md:px-8 py-8 md:py-12">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-12 lg:px-20 py-12">
         <div className="bg-white rounded-2xl p-6 md:p-12 shadow-sm border border-gray-100">
-          {/* Fallback Title/Subtitle directly below banner if banner is hidden */}
+          {/* Fallback title rendering if no banner exists */}
           {!hero_image_url && (
             <div className="mb-10 border-b border-gray-100 pb-8 text-left">
               <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
@@ -133,7 +135,7 @@ const PremiumPageTemplate = ({
             )
           )}
 
-          {/* Children components */}
+          {/* Children components (e.g. reviews page extra grids) */}
           {children}
         </div>
       </main>

@@ -133,98 +133,8 @@ export default function Review() {
       mobile_banner_image={pageSettings.show_banner ? pageSettings.mobile_banner_url : null}
       seo_title="Reviews | TripoMist"
     >
-      {/* PHOTO + VIDEO GALLERY */}
-      {galleryMedia.length > 0 && (
-        <section className="mt-8 border-t pt-8 text-left">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 tracking-tight">
-            {pageSettings.gallery_heading || 'Travel Memories Gallery'}
-          </h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {galleryMedia.map((media, idx) => (
-              <div
-                key={media.id}
-                className="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer border border-gray-100 shadow-sm bg-white"
-                onClick={() => media.media_type === 'video' ? setActiveVideoUrl(media.media_url) : openLightbox(idx)}
-              >
-                <img
-                  src={media.thumbnail_url || media.media_url}
-                  alt={media.title || 'Gallery Media'}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-
-                {media.media_type === 'video' ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-white/95 flex items-center justify-center text-primary shadow-lg group-hover:scale-110 transition-transform">
-                      <Play className="w-4 h-4 fill-current ml-0.5" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                )}
-
-                {media.title && (
-                  <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/70 to-transparent text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                    {media.title}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* TRUST SUMMARY */}
-      {testimonialsSettings.show_summary !== false && (
-        <section className="mt-8 border-t pt-8 text-left">
-          <div className="bg-slate-50 rounded-2xl p-6 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col items-center md:items-start gap-2">
-              <span className="text-xs font-black uppercase tracking-widest text-[#136b8a]">
-                {testimonialsSettings.rating_label || 'EXCELLENT'}
-              </span>
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-5 h-5 ${
-                      i < filledStars
-                        ? 'text-amber-400 fill-amber-400'
-                        : i === filledStars && hasHalf
-                        ? 'text-amber-400 fill-amber-200'
-                        : 'text-gray-200'
-                    }`}
-                  />
-                ))}
-                <span className="ml-2 font-bold text-gray-900 text-sm">{avgRating.toFixed(1)} / 5.0</span>
-              </div>
-              <p className="text-xs text-gray-500 font-medium">
-                Based on <span className="font-bold text-gray-800">{testimonialsSettings.review_count || '0'}</span> verified customer reviews
-              </p>
-            </div>
-
-            {testimonialsSettings.source_name && (
-              <div className="flex items-center gap-2 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-8">
-                {testimonialsSettings.source_name === 'Google' ? (
-                  <div className="flex items-center">
-                    <GoogleLogo />
-                    <span className="text-sm font-bold text-gray-800">Google Review Partner</span>
-                  </div>
-                ) : (
-                  <span className="text-sm font-bold text-gray-700">{testimonialsSettings.source_name}</span>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {/* REVIEWS GRID LIST */}
-      <section className="mt-8 border-t pt-8 text-left">
-        <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 tracking-tight">
-          What Our Travelers Say
-        </h2>
-
+      <section className="text-left">
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -322,49 +232,6 @@ export default function Review() {
           </div>
         )}
       </section>
-
-      {/* LIGHTBOX FOR PHOTO GALLERY */}
-      {lightboxIndex !== null && (
-        <div className="fixed inset-0 bg-black/95 z-[500] flex items-center justify-center p-4 backdrop-blur-sm" onClick={closeLightbox}>
-          <button className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors" onClick={closeLightbox}>
-            <X className="w-8 h-8" />
-          </button>
-
-          <button className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors" onClick={handlePrevMedia}>
-            <ChevronLeft className="w-10 h-10" />
-          </button>
-
-          <div className="max-w-4xl max-h-[80vh] relative flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
-            <img
-              src={galleryMedia[lightboxIndex]?.media_url}
-              alt={galleryMedia[lightboxIndex]?.title || 'Lightbox'}
-              className="max-w-full max-h-[75vh] object-contain rounded-lg"
-            />
-            {galleryMedia[lightboxIndex]?.title && (
-              <p className="text-white text-sm font-semibold mt-4 text-center">
-                {galleryMedia[lightboxIndex].title}
-              </p>
-            )}
-          </div>
-
-          <button className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors" onClick={handleNextMedia}>
-            <ChevronRight className="w-10 h-10" />
-          </button>
-        </div>
-      )}
-
-      {/* VIDEO PLAYER MODAL */}
-      {activeVideoUrl && (
-        <div className="fixed inset-0 bg-black/95 z-[500] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setActiveVideoUrl(null)}>
-          <button className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors" onClick={() => setActiveVideoUrl(null)}>
-            <X className="w-8 h-8" />
-          </button>
-
-          <div className="w-full max-w-3xl aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10" onClick={e => e.stopPropagation()}>
-            <video src={activeVideoUrl} controls autoPlay className="w-full h-full" />
-          </div>
-        </div>
-      )}
     </PremiumPageTemplate>
   );
 }
