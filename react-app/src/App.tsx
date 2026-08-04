@@ -47,6 +47,7 @@ const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
 const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'))
 const AdminCancelledBookings = React.lazy(() => import('./pages/admin/AdminCancelledBookings'))
 const AdminServiceRecovery = React.lazy(() => import('./pages/admin/AdminServiceRecovery'))
+
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
 
@@ -61,7 +62,6 @@ const AdminManualBookings = React.lazy(() => import('./pages/admin/AdminManualBo
 const AdminWebsitePages = React.lazy(() => import('./pages/admin/AdminWebsitePages'));
 const AdminMenuManager = React.lazy(() => import('./pages/admin/AdminMenuManager'));
 const AdminExploreDepartments = React.lazy(() => import('./pages/admin/AdminExploreDepartments'));
-const AdminPromoStrip = React.lazy(() => import('./pages/admin/AdminPromoStrip'));
 const AdminReviews = React.lazy(() => import('./pages/admin/AdminReviews'));
 const AdminLoginSlider = React.lazy(() => import('./pages/admin/AdminLoginSlider'));
 const DestinationPackages = React.lazy(() => import('./pages/DestinationPackages'));
@@ -124,6 +124,7 @@ function App() {
               <Route path="bookings" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminBookings /></React.Suspense>} />
               <Route path="bookings/cancelled" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminCancelledBookings /></React.Suspense>} />
               <Route path="service-recovery" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceRecovery /></React.Suspense>} />
+
               <Route path="manual-bookings" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
               } />
@@ -161,12 +162,7 @@ function App() {
                 <React.Suspense fallback={<div>Loading...</div>}><AdminExploreDepartments /></React.Suspense>
                 } 
               />
-              <Route 
-                path="promo-strip" 
-                element={
-                <React.Suspense fallback={<div>Loading...</div>}><AdminPromoStrip /></React.Suspense>
-                } 
-              />
+
               <Route path="reviews" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminReviews /></React.Suspense>
               } />
@@ -234,7 +230,8 @@ function App() {
           <Route path="/trips/recommended" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/trips/best-seller" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/international" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/review" element={<Review />} />
+          <Route path="/reviews" element={<Review />} />
+          <Route path="/review" element={<Navigate to="/reviews" replace />} />
           <Route path="/domestic" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/destinations/:destinationSlug" element={
             <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>

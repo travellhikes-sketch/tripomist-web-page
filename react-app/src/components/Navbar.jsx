@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import ExploreNavbar from './ExploreNavbar'
-import PromoStrip from './PromoStrip'
 import LoginSignupModal from './LoginSignupModal'
 
 function Navbar() {
@@ -14,11 +13,12 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const searchRef = useRef(null)
-  
+  const mdSearchRef = useRef(null)
+
   const [settings, setSettings] = useState(null)
   const [packageSuggestions, setPackageSuggestions] = useState([])
   const [navItems, setNavItems] = useState([])
-  
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -69,7 +69,7 @@ function Navbar() {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true })
-      
+
       if (navData) {
         setNavItems(navData)
       }
@@ -77,9 +77,13 @@ function Navbar() {
     fetchNavbarData()
   }, [])
 
+
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      const inLg = searchRef.current && searchRef.current.contains(event.target)
+      const inMd = mdSearchRef.current && mdSearchRef.current.contains(event.target)
+      if (!inLg && !inMd) {
         setShowSuggestions(false)
       }
     }
@@ -96,7 +100,7 @@ function Navbar() {
           .eq('status', 'active')
           .or(`title.ilike.%${searchQuery}%,destination.ilike.%${searchQuery}%`)
           .limit(5)
-        
+
         if (data) {
           const uniqueSuggestions = Array.from(new Set(data.map(p => p.title || p.destination))).filter(Boolean)
           setPackageSuggestions(uniqueSuggestions)
@@ -126,14 +130,6 @@ function Navbar() {
   const isActive = (path) => {
     if (!path) return false;
     return location.pathname === path
-  }
-
-  const filterVisibility = (item) => {
-    if (item.visibility_role === 'everyone') return true;
-    if (item.visibility_role === 'guest' && userRole === 'guest') return true;
-    if (item.visibility_role === 'user' && userRole === 'user') return true;
-    if (item.visibility_role === 'admin' && userRole === 'admin') return true;
-    return false;
   }
 
   const renderBadge = (item) => {
@@ -171,18 +167,28 @@ function Navbar() {
     return <Link to={item.route || '#'} {...linkProps}>{renderLinkContent(item)}</Link>
   }
 
-  const visibleNavItems = navItems.filter(filterVisibility);
+  const isNavbar = (loc) => {
+    if (!loc) return false;
+    const l = loc.toLowerCase();
+    return l === 'navbar' || l === 'both';
+  };
 
-  const mobileItems = visibleNavItems.filter(item => 
-    item.show_on_mobile && 
-    (item.location === 'mobile_menu' || item.location === 'navbar' || item.location === 'both')
+  const isMobileMenu = (loc) => {
+    if (!loc) return false;
+    const l = loc.toLowerCase();
+    return l === 'mobile_menu' || l === 'both';
+  };
+
+  const visibleNavItems = navItems.filter(item => item.is_active);
+
+  const mobileItems = visibleNavItems.filter(item =>
+    item.show_on_mobile && isMobileMenu(item.location)
   );
   const mobileTopLevel = mobileItems.filter(item => !item.parent_id);
   const getMobileChildren = (parentId) => mobileItems.filter(item => item.parent_id === parentId);
 
-  const desktopItems = visibleNavItems.filter(item => 
-    item.show_on_desktop && 
-    (item.location === 'navbar' || item.location === 'both')
+  const desktopItems = visibleNavItems.filter(item =>
+    item.show_on_desktop && isNavbar(item.location)
   );
   const desktopTopLevel = desktopItems.filter(item => !item.parent_id);
   const getDesktopChildren = (parentId) => desktopItems.filter(item => item.parent_id === parentId);
@@ -190,10 +196,10 @@ function Navbar() {
   const MobileDropdown = ({ item }) => {
     const [open, setOpen] = useState(false);
     const children = getMobileChildren(item.id);
-    
+
     return (
       <div className="border-b border-black/10">
-        <button 
+        <button
           className="w-full flex items-center justify-between text-xl md:text-2xl py-4 text-black/80 hover:text-black font-medium transition-colors"
           onClick={() => setOpen(!open)}
         >
@@ -206,7 +212,7 @@ function Navbar() {
         </button>
         <AnimatePresence>
           {open && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -229,7 +235,7 @@ function Navbar() {
   const DesktopDropdown = ({ item }) => {
     const [open, setOpen] = useState(false);
     const children = getDesktopChildren(item.id);
-    
+
     if (item.mega_menu_enabled && children.length > 0) {
       const cols = item.mega_menu_column || 1;
       const gridClsMap = {
@@ -248,8 +254,8 @@ function Navbar() {
           </button>
           <AnimatePresence>
             {open && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} 
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                 className="absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-2 min-w-[400px] z-50"
               >
                 <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6">
@@ -269,7 +275,7 @@ function Navbar() {
     }
 
     return (
-      <div 
+      <div
         className="relative group"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
@@ -280,10 +286,10 @@ function Navbar() {
           {renderBadge(item)}
           <span className="material-symbols-outlined text-[16px] group-hover:rotate-180 transition-transform duration-200">expand_more</span>
         </button>
-        
+
         <AnimatePresence>
           {open && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
@@ -306,103 +312,107 @@ function Navbar() {
   return (
     <header className="sticky top-0 z-[100] w-full flex flex-col bg-white">
       <nav className="relative border-b border-gray-100">
-        <div className="flex justify-between items-center w-full px-4 md:px-12 lg:px-20 py-4 bg-white relative z-50">
-          <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between w-full px-4 md:px-12 lg:px-20 py-4 bg-white relative z-50">
+          {/* LEFT: Logo */}
+          <div className="flex items-center gap-6 flex-shrink-0">
             <Link className="font-headline-md text-headline-md font-bold tracking-tight text-black flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
-              {settings?.logo_image_url ? (
-                <img src={settings.logo_image_url} alt="TripoMist" className="h-8" />
-              ) : (
-                settings?.logo_text || "TripoMist"
+              {settings?.logo_image_url && (
+                <img src={settings.logo_image_url} alt="Logo" className="h-8 rounded-full object-contain w-auto max-w-[120px]" />
               )}
+              <span className="align-middle">{settings?.logo_text || "TripoMist"}</span>
             </Link>
-            
-            <div className="hidden lg:flex items-center gap-6 ml-4">
-              {desktopTopLevel.map(item => {
-                if (item.item_type === 'dropdown') {
-                  return <DesktopDropdown key={item.id} item={item} />
-                }
-                const linkClass = item.item_type === 'button' 
-                  ? "bg-primary/10 text-primary hover:bg-primary/20 px-4 py-1.5 rounded-full font-medium text-sm transition-colors flex items-center"
-                  : `font-medium text-sm transition-colors flex items-center ${isActive(item.route) ? 'text-primary font-bold' : 'text-black/80 hover:text-primary'}`;
-                
-                return (
-                  <div key={item.id}>
-                    {renderLink(item, linkClass)}
-                  </div>
-                );
-              })}
+
+            {/* Desktop menu items removed from main row and placed in Menu drawer */}
+          </div>
+
+          {/* CENTER: Search bar — absolutely centered on large screens only */}
+          <div className="hidden lg:block absolute left-1/2 -translate-x-1/2" style={{ width: 'min(380px, 32vw)' }}>
+            <div ref={searchRef} className="relative w-full">
+              <input
+                type="text"
+                placeholder={settings?.search_placeholder || "Search destinations..."}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setShowSuggestions(true)
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(searchQuery)
+                  }
+                }}
+                className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
+              />
+              <button
+                onClick={() => handleSearch(searchQuery)}
+                className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">search</span>
+              </button>
+
+              <AnimatePresence>
+                {showSuggestions && searchQuery.trim().length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
+                  >
+                    <div className="py-2">
+                      {packageSuggestions.map((suggestion, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => handleSearch(suggestion)}
+                          className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
+                          {suggestion}
+                        </div>
+                      ))}
+                      {packageSuggestions.length === 0 && (
+                        <div
+                          onClick={() => handleSearch(searchQuery)}
+                          className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
+                          Search for "{searchQuery}"
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
-          
-          <div ref={searchRef} className="hidden md:flex flex-1 max-w-sm mx-auto relative">
-            <input 
-              type="text" 
-              placeholder={settings?.search_placeholder || "Search destinations..."}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setShowSuggestions(true)
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch(searchQuery)
-                }
-              }}
-              className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
-            />
-            <button 
-              onClick={() => handleSearch(searchQuery)}
-              className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[16px]">search</span>
-            </button>
-            
-            <AnimatePresence>
-              {showSuggestions && searchQuery.trim().length > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
-                >
-                  <div className="py-2">
-                    {packageSuggestions.map((suggestion, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => handleSearch(suggestion)}
-                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
-                        {suggestion}
-                      </div>
-                    ))}
-                    {packageSuggestions.length === 0 && (
-                      <div 
-                        onClick={() => handleSearch(searchQuery)}
-                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
-                        Search for "{searchQuery}"
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              className={`font-semibold px-4 py-2 rounded-full transition-all text-sm hover:opacity-90 border flex items-center gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200 shadow-sm' : 'bg-white text-black border-gray-200 shadow-sm'}`}
+
+          {/* RIGHT: Instagram badge + Menu + Login */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            {settings?.show_instagram_badge && settings?.instagram_url && (
+              <a
+                href={settings.instagram_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-xs sm:text-sm font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#e1306c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                <span>{settings?.instagram_follower_count || '0'}</span>
+              </a>
+            )}
+            <button
+              className={`font-semibold px-3 sm:px-4 py-2 rounded-full transition-all text-xs sm:text-sm hover:opacity-90 border flex items-center gap-1.5 sm:gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200 shadow-sm' : 'bg-white text-black border-gray-200 shadow-sm'}`}
               onClick={() => setIsOpen(!isOpen)}
             >
-              <span className="material-symbols-outlined text-[20px]">{isOpen ? 'close' : 'menu'}</span>
+              <span className="material-symbols-outlined text-[18px] sm:text-[20px]">{isOpen ? 'close' : 'menu'}</span>
               <span className="hidden sm:inline">{isOpen ? 'Close' : (settings?.menu_button_text || 'Menu')}</span>
             </button>
-            
+
             {user ? (
-              <Link to="/my-account" className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-full transition-transform hover:scale-105 border border-primary/20 shadow-sm overflow-hidden">
+              <Link to="/my-account" className="hidden lg:flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-full transition-transform hover:scale-105 border border-primary/20 shadow-sm overflow-hidden">
                 {user.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -412,16 +422,68 @@ function Navbar() {
                 )}
               </Link>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 flex items-center gap-1 shadow-sm cursor-pointer">
+              <button onClick={() => setShowAuthModal(true)} className="hidden lg:flex bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 items-center gap-1 shadow-sm cursor-pointer">
                 <span className="material-symbols-outlined text-[16px]">login</span> <span className="hidden sm:inline">{settings?.login_button_text || 'Login'}</span>
               </button>
             )}
           </div>
         </div>
 
+        {/* MD-only search row (768–1023px): full-width search below the main nav row */}
+        <div ref={mdSearchRef} className="hidden md:flex lg:hidden items-center px-4 md:px-12 pb-3 relative">
+          <div className="relative w-full max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder={settings?.search_placeholder || "Search destinations..."}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setShowSuggestions(true)
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch(searchQuery)
+              }}
+              className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
+            />
+            <button
+              onClick={() => handleSearch(searchQuery)}
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[16px]">search</span>
+            </button>
+            <AnimatePresence>
+              {showSuggestions && searchQuery.trim().length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
+                >
+                  <div className="py-2">
+                    {packageSuggestions.map((suggestion, idx) => (
+                      <div key={idx} onClick={() => handleSearch(suggestion)} className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium">
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
+                        {suggestion}
+                      </div>
+                    ))}
+                    {packageSuggestions.length === 0 && (
+                      <div onClick={() => handleSearch(searchQuery)} className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium">
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
+                        Search for "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+
         <AnimatePresence>
           {isOpen && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -430,7 +492,7 @@ function Navbar() {
             >
               <div className="bg-white rounded-[24px] shadow-2xl p-6 md:p-10 w-full border border-gray-100 max-h-[80vh] overflow-y-auto">
                 <div className="flex flex-col gap-2">
-                  
+
                   {mobileTopLevel.map(item => {
                     if (item.item_type === 'dropdown') {
                       return <MobileDropdown key={item.id} item={item} />
@@ -443,16 +505,16 @@ function Navbar() {
                   })}
 
                   {mobileItems.length === 0 && settings?.main_links && settings.main_links.map((link, idx) => (
-                    <Link 
+                    <Link
                       key={idx}
-                      className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive(link.route) ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} 
-                      onClick={() => setIsOpen(false)} 
+                      className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive(link.route) ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`}
+                      onClick={() => setIsOpen(false)}
                       to={link.route}
                     >
                       {link.label}
                     </Link>
                   ))}
-                  
+
                   {user && (
                     <>
                       <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-account') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-account">Dashboard</Link>
@@ -460,7 +522,7 @@ function Navbar() {
                       {userRole === 'admin' && (
                         <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/admin') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/admin">Admin Dashboard</Link>
                       )}
-                      <button 
+                      <button
                         onClick={handleLogout}
                         className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-red-600 hover:text-red-800 font-bold w-full"
                       >
@@ -469,7 +531,7 @@ function Navbar() {
                     </>
                   )}
                   {!user && (
-                    <button 
+                    <button
                       onClick={() => { setIsOpen(false); setShowAuthModal(true); }}
                       className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-[#136b8a] font-bold w-full"
                     >
@@ -485,7 +547,7 @@ function Navbar() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -496,7 +558,6 @@ function Navbar() {
       </AnimatePresence>
 
       <ExploreNavbar />
-      <PromoStrip />
 
       <LoginSignupModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </header>

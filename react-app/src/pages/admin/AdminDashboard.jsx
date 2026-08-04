@@ -32,7 +32,12 @@ const AdminDashboard = () => {
     upcomingTrips: 0,
     pendingPayments: 0,
     confirmedBookings: 0,
-    cancelledBookings: 0
+    cancelledBookings: 0,
+    b2bCount: 0,
+    b2cCount: 0,
+    unclassifiedCount: 0,
+    b2bValue: 0,
+    b2cValue: 0
   });
   
   const [recentBookings, setRecentBookings] = useState([]);

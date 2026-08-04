@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Search, ShieldAlert, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, ShieldAlert, CheckCircle, AlertCircle, RefreshCw, X } from 'lucide-react';
 
 const AdminServiceRecovery = () => {
   const [cases, setCases] = useState([]);
@@ -10,6 +10,9 @@ const AdminServiceRecovery = () => {
   
   const [selectedCase, setSelectedCase] = useState(null);
   const [resolutionNotes, setResolutionNotes] = useState('');
+  const [modalError, setModalError] = useState(null);
+  
+
 
   useEffect(() => {
     fetchCases();
@@ -43,10 +46,11 @@ const AdminServiceRecovery = () => {
   };
 
   const handleUpdateStatus = async (id, newStatus, currentNotes) => {
+    setModalError(null);
     try {
       const { error } = await supabase
         .from('service_recovery_cases')
-        .update({ 
+        .update({
           status: newStatus,
           resolution_notes: newStatus === 'resolved' ? (resolutionNotes || currentNotes) : currentNotes,
           resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null
@@ -73,7 +77,8 @@ const AdminServiceRecovery = () => {
         setSelectedCase(null);
       }
     } catch (err) {
-      alert('Failed to update case status.');
+      console.error(err);
+      setModalError('Failed to update case status: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -190,10 +195,19 @@ const AdminServiceRecovery = () => {
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">Logged on {new Date(selectedCase.created_at).toLocaleString()}</p>
               </div>
-              <button onClick={() => setSelectedCase(null)} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full">
-                X
+              <button onClick={() => {
+                setSelectedCase(null);
+                setIssueVoucher(false);
+              }} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full">
+                <X size={16} />
               </button>
             </div>
+            
+            {modalError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center gap-2 mb-4 text-sm">
+                <AlertCircle size={16} /> {modalError}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -235,6 +249,7 @@ const AdminServiceRecovery = () => {
                 placeholder="Enter details on how this issue was resolved..."
               />
             </div>
+
 
             <div className="flex justify-end gap-3 pt-4 border-t">
               {selectedCase.status === 'open' ? (

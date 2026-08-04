@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../supabaseClient';
 import { generatePDFVoucher } from '../../utils/pdfGenerator';
-import { 
-  X, Check, XCircle, Copy, Download, Search, 
+import {
+  X, Check, XCircle, Copy, Download, Search,
   Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
-  MoreVertical, Phone, MessageCircle, Edit
+  MoreVertical, Phone, MessageCircle, Edit, Tag, Building
 } from 'lucide-react';
 
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
+import ConfirmModal from '../../components/admin/ConfirmModal';
+import ServiceRecoveryCreationModal from '../../components/admin/ServiceRecoveryCreationModal';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -15,19 +17,23 @@ const AdminBookings = () => {
   const [error, setError] = useState(null);
   const [showManualBooking, setShowManualBooking] = useState(false);
   const [editBookingId, setEditBookingId] = useState(null);
-  
+
   // Cancellation Modal State
   const [cancelModal, setCancelModal] = useState({ isOpen: false, booking: null });
   const [cancelReason, setCancelReason] = useState('');
-  const [refundStatus, setRefundStatus] = useState('no_refund');
-  
+  const [cancelNotes, setCancelNotes] = useState('');
+  const [cancelResolution, setCancelResolution] = useState('Cancel Without Refund');
+
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [salesChannelFilter, setSalesChannelFilter] = useState('all');
+
   const [monthFilter, setMonthFilter] = useState('all'); // all | this | last | custom
   const [customMonth, setCustomMonth] = useState(''); // format YYYY-MM
   const [packageFilter, setPackageFilter] = useState('all');
-  
+
   // Drawer state
   const [selectedBooking, setSelectedBooking] = useState(null);
 
@@ -35,6 +41,13 @@ const AdminBookings = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [bookingsPerPage, setBookingsPerPage] = useState(25);
   const [selectedRowIds, setSelectedRowIds] = useState(new Set());
+
+  const [confirmModalConfig, setConfirmModalConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'danger' });
+  const [serviceRecoveryModal, setServiceRecoveryModal] = useState({ isOpen: false, booking: null });
+  // Classification UI state
+  const [classificationChannel, setClassificationChannel] = useState('');
+  const [b2bCompany, setB2bCompany] = useState('');
+  const [b2bNotes, setB2bNotes] = useState('');
 
   useEffect(() => {
     fetchBookings();
@@ -85,10 +98,10 @@ const AdminBookings = () => {
         .eq('id', id);
       if (error) throw error;
 
-      setBookings(prev => prev.map(b => 
+      setBookings(prev => prev.map(b =>
         b.id === id ? { ...b, [field]: newValue } : b
       ));
-      
+
       if (selectedBooking?.id === id) {
         setSelectedBooking(prev => ({ ...prev, [field]: newValue }));
       }
@@ -98,28 +111,34 @@ const AdminBookings = () => {
     }
   };
 
-  const handleBulkAction = async (status) => {
+  const handleBulkAction = (status) => {
     if (selectedRowIds.size === 0) return;
-    if (!window.confirm(`Are you sure you want to mark ${selectedRowIds.size} bookings as ${status}?`)) return;
+    setConfirmModalConfig({
+      isOpen: true,
+      title: 'Bulk Action',
+      message: `Are you sure you want to mark ${selectedRowIds.size} bookings as ${status}?`,
+      type: 'amber',
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          const idsArray = Array.from(selectedRowIds);
 
-    try {
-      setLoading(true);
-      const idsArray = Array.from(selectedRowIds);
-      
-      for (const id of idsArray) {
-         await supabase.from('bookings').update({ booking_status: status }).eq('id', id);
+          for (const id of idsArray) {
+             await supabase.from('bookings').update({ booking_status: status }).eq('id', id);
+          }
+
+          setBookings(prev => prev.map(b =>
+            selectedRowIds.has(b.id) ? { ...b, booking_status: status } : b
+          ));
+          setSelectedRowIds(new Set());
+        } catch (err) {
+          console.error('Bulk update error:', err);
+          alert('Failed to perform bulk update.');
+        } finally {
+          setLoading(false);
+        }
       }
-      
-      setBookings(prev => prev.map(b => 
-        selectedRowIds.has(b.id) ? { ...b, booking_status: status } : b
-      ));
-      setSelectedRowIds(new Set());
-    } catch (err) {
-      console.error('Bulk update error:', err);
-      alert('Failed to perform bulk update.');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const handleQuickAction = async (booking, actionType) => {
@@ -128,12 +147,44 @@ const AdminBookings = () => {
         await handleStatusUpdate(booking.id, 'booking_status', 'confirmed');
         break;
       case 'cancel':
+        // Close any existing drawer and Service Recovery modal before opening Cancel modal
+        setSelectedBooking(null);
+        setServiceRecoveryModal({ isOpen: false, booking: null });
         setCancelModal({ isOpen: true, booking });
         setCancelReason('');
-        setRefundStatus('No Refund');
+        setCancelNotes('');
+        setCancelResolution('Cancel Without Refund');
+        // Default coupon amount to paid amount
+        const paid = Number(booking.final_payable_amount ?? booking.final_amount ?? booking.total_amount ?? 0);
+        setVoucherAmount(paid > 0 ? paid.toString() : '');
+        setVoucherExpiry('');
+        setVoucherNotes('');
+        setConfirmVoucherAmount(false);
         break;
       case 'markPaid':
-        await handleStatusUpdate(booking.id, 'payment_status', 'paid');
+        {
+          const existingPaid = Number(booking.cash_paid_amount ?? booking.advance_payment ?? 0);
+          const fullPayable = Number(booking.final_payable_amount ?? booking.final_amount ?? booking.total_amount ?? 0);
+          const amt = existingPaid > 0 ? existingPaid : fullPayable;
+
+          const { error: updateErr } = await supabase
+            .from('bookings')
+            .update({ payment_status: 'paid', cash_paid_amount: amt })
+            .eq('id', booking.id);
+
+          if (updateErr) {
+            alert(`Failed to mark paid: ${updateErr.message}`);
+            break;
+          }
+
+          setBookings(prev => prev.map(b =>
+            b.id === booking.id ? { ...b, payment_status: 'paid', cash_paid_amount: amt } : b
+          ));
+
+          if (selectedBooking?.id === booking.id) {
+            setSelectedBooking(prev => ({ ...prev, payment_status: 'paid', cash_paid_amount: amt }));
+          }
+        }
         break;
       case 'copyPhone':
         navigator.clipboard.writeText(booking.phone);
@@ -148,78 +199,106 @@ const AdminBookings = () => {
     }
   };
 
+const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user?.id) { alert(`Auth error: ${userError?.message || 'Admin session not found'}`); return; }
+    const payload = {
+      sales_channel: newChannel,
+      classified_by: user ? user.id : null,
+      classified_at: new Date().toISOString()
+    };
+    if (newChannel === 'b2b') {
+      const company = (companyArg || '').trim();
+      if (!company) { alert('Partner/Company name required for B2B classification.'); return; }
+      payload.b2b_partner_company = company;
+      payload.b2b_notes = (notesArg || '').trim() || null;
+    } else {
+      payload.b2b_partner_company = null;
+      payload.b2b_notes = null;
+    }
+    if (newChannel === 'unclassified') {
+      payload.classified_by = null;
+      payload.classified_at = null;
+    }
+    const { error } = await supabase.from('bookings').update(payload).eq('id', booking.id);
+    if (error) throw error;
+    await fetchBookings();
+
+    // Update selectedBooking state so drawer displays updated details
+    setSelectedBooking(prev => {
+      if (prev && prev.id === booking.id) {
+        return {
+          ...prev,
+          sales_channel: payload.sales_channel,
+          b2b_partner_company: payload.b2b_partner_company,
+          b2b_notes: payload.b2b_notes,
+          classified_by: payload.classified_by,
+          classified_at: payload.classified_at
+        };
+      }
+      return prev;
+    });
+    alert('Classification saved successfully.');
+  } catch (err) {
+    console.error('Classification update error:', err);
+    alert('Failed to update classification: ' + err.message);
+  }
+};
+
+
+
   const submitCancel = async () => {
     if (!cancelReason.trim()) {
       alert("Please provide a cancellation reason.");
       return;
     }
+
     setLoading(true);
     try {
       const b = cancelModal.booking;
-      
-      // Log activity
-      const session = await supabase.auth.getSession();
-      const userId = session.data?.session?.user?.id || null;
 
-      // Update booking status
-      const { error } = await supabase
-        .from('bookings')
-        .update({ 
-          booking_status: 'cancelled', 
-          refund_status: refundStatus,
-          cancellation_reason: cancelReason,
-          cancelled_at: new Date().toISOString(),
-          cancelled_by: userId
-        })
-        .eq('id', b.id);
+      let mappedRefundStatus = 'Refund Pending';
+      if (cancelResolution === 'Cancel Without Refund') {
+        mappedRefundStatus = 'No Refund';
+      } else if (cancelResolution === 'Refund Pending') {
+        mappedRefundStatus = 'Refund Pending';
+      } else if (cancelResolution === 'Partial Refund') {
+        mappedRefundStatus = 'Partially Refunded';
+      } else if (cancelResolution === 'Fully Refunded') {
+        mappedRefundStatus = 'Fully Refunded';
+      }
+
+      const { error } = await supabase.rpc('admin_cancel_booking', {
+          p_booking_id: b.id,
+          p_cancellation_reason: cancelReason,
+          p_cancellation_notes: cancelNotes,
+          p_refund_status: mappedRefundStatus
+      });
+
       if (error) throw error;
 
-      // Log activity
-      await supabase.from('booking_activity_logs').insert([{
-        booking_id: b.id,
-        action: 'Booking Cancelled',
-        field_name: 'booking_status',
-        old_value: b.booking_status,
-        new_value: `cancelled (Reason: ${cancelReason})`,
-        changed_by: userId
-      }]);
-
-      setBookings(prev => prev.map(bk => 
-        bk.id === b.id ? { ...bk, booking_status: 'cancelled', refund_status: refundStatus, cancellation_reason: cancelReason, cancelled_at: new Date().toISOString() } : bk
-      ));
-      
-      if (selectedBooking?.id === b.id) {
-        setSelectedBooking(prev => ({ ...prev, booking_status: 'cancelled', refund_status: refundStatus, cancellation_reason: cancelReason, cancelled_at: new Date().toISOString() }));
-      }
-      
+      alert('Booking cancelled successfully.');
+      fetchBookings();
       setCancelModal({ isOpen: false, booking: null });
+      setSelectedBooking(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to cancel booking.');
+      alert('Failed to cancel booking: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMarkProblem = async (booking) => {
-    const issue = window.prompt(`Enter issue description for booking ${booking.booking_id}:`);
-    if (!issue) return;
-    try {
-      const { error } = await supabase.from('service_recovery_cases').insert([{
-        booking_id: booking.id,
-        issue_description: issue,
-        status: 'open'
-      }]);
-      if (error) throw error;
-      alert('Service recovery case created.');
-    } catch (err) {
-      alert('Failed to create service recovery case.');
-    }
+  const handleMarkProblem = (booking) => {
+    setCancelModal({ isOpen: false, booking: null });
+    setSelectedBooking(null);
+    setServiceRecoveryModal({ isOpen: true, booking });
   };
 
   const exportToCSV = () => {
     if (filteredBookings.length === 0) return;
-    const headers = ['Booking ID', 'Booking Date', 'Customer', 'Phone', 'Email', 'Package', 'Travel Date', 'Travellers', 'Amount', 'Payment Status', 'Booking Status', 'Razorpay ID'];
+    const headers = ['Booking ID', 'Booking Date', 'Customer', 'Phone', 'Email', 'Package', 'Travel Date', 'Travellers', 'Amount', 'Payment Status', 'Booking Status', 'Sales Channel', 'Partner Company', 'Razorpay ID'];
     const rows = filteredBookings.map(b => [
       b.booking_id,
       new Date(b.created_at).toLocaleDateString(),
@@ -232,6 +311,8 @@ const AdminBookings = () => {
       b.final_amount || b.total_amount || 0,
       b.payment_status,
       b.booking_status,
+      b.sales_channel || 'unclassified',
+      b.b2b_partner_company || '',
       b.razorpay_payment_id || ''
     ]);
 
@@ -258,24 +339,43 @@ const AdminBookings = () => {
   const filteredBookings = useMemo(() => {
     return bookings.filter(b => {
       const term = searchTerm.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         (b.booking_id?.toLowerCase() || '').includes(term) ||
         (b.customer_name?.toLowerCase() || '').includes(term) ||
         (b.phone || '').includes(term) ||
         (b.package_title?.toLowerCase() || '').includes(term);
-        
+
       const matchesStatus = statusFilter === 'all' || b.booking_status === statusFilter;
       const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter;
       const matchesPackage = packageFilter === 'all' || b.package_title === packageFilter;
-      
-      return matchesSearch && matchesStatus && matchesPayment && matchesPackage;
+      const matchesSales = salesChannelFilter === 'all' || b.sales_channel === salesChannelFilter || (!b.sales_channel && salesChannelFilter === 'unclassified');
+
+      return matchesSearch && matchesStatus && matchesPayment && matchesPackage && matchesSales;
     });
-  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter]);
+  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter, salesChannelFilter]);
+
+  // Summary Stats
+  const summaryStats = useMemo(() => {
+    let b2bCount = 0, b2cCount = 0, unclassifiedCount = 0, b2bValue = 0, b2cValue = 0;
+    filteredBookings.forEach(b => {
+      const amt = Number(b.final_amount || b.total_amount || 0);
+      if (b.sales_channel === 'b2b') {
+        b2bCount++;
+        b2bValue += amt;
+      } else if (b.sales_channel === 'b2c') {
+        b2cCount++;
+        b2cValue += amt;
+      } else {
+        unclassifiedCount++;
+      }
+    });
+    return { b2bCount, b2cCount, unclassifiedCount, b2bValue, b2cValue };
+  }, [filteredBookings]);
 
   // Pagination Logic
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
   const validCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
-  
+
   const indexOfLastBooking = validCurrentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
   const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
@@ -317,7 +417,7 @@ const AdminBookings = () => {
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in">
+    <div className="flex flex-col h-full animate-fade-in overflow-x-hidden">
       {/* Sticky Header & Toolbar */}
       <div className="sticky top-0 z-10 bg-slate-50 pb-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
@@ -325,19 +425,19 @@ const AdminBookings = () => {
             <h1 className="text-xl font-bold text-gray-900">Bookings Management</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => setShowManualBooking(true)}
               className="flex items-center gap-1.5 bg-[#136b8a] border border-[#136b8a] text-white px-3 py-1.5 rounded-md hover:bg-[#0f556e] transition-colors shadow-sm text-sm font-semibold"
             >
               New Booking
             </button>
-            <button 
+            <button
               onClick={exportToCSV}
               className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
             >
               <Download size={16} /> Export
             </button>
-            <button 
+            <button
               onClick={fetchBookings}
               className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
             >
@@ -346,11 +446,34 @@ const AdminBookings = () => {
           </div>
         </div>
 
-        <AdminBookingModal 
+        <AdminBookingModal
           isOpen={showManualBooking || !!editBookingId}
           onClose={() => { setShowManualBooking(false); setEditBookingId(null); }}
           onSuccess={() => { fetchBookings(); setEditBookingId(null); setShowManualBooking(false); setSelectedBooking(null); }}
           bookingId={editBookingId}
+        />
+
+        <ConfirmModal
+          isOpen={confirmModalConfig.isOpen}
+          onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
+          title={confirmModalConfig.title}
+          message={confirmModalConfig.message}
+          onConfirm={confirmModalConfig.onConfirm}
+          type={confirmModalConfig.type}
+        />
+
+        <ServiceRecoveryCreationModal
+          isOpen={serviceRecoveryModal.isOpen}
+          onClose={() => setServiceRecoveryModal({ isOpen: false, booking: null })}
+          booking={serviceRecoveryModal.booking}
+          onSuccess={(data) => {
+            if (data?.voucher_code) {
+              window.prompt('Service recovery voucher generated! Copy to clipboard:', data.voucher_code);
+            } else {
+              alert('Service recovery case created successfully.');
+            }
+            fetchBookings();
+          }}
         />
 
         {error && (
@@ -364,16 +487,27 @@ const AdminBookings = () => {
         <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
           <div className="relative lg:col-span-2">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search ID, customer, phone..." 
+            <input
+              type="text"
+              placeholder="Search ID, customer, phone..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] transition-all"
             />
           </div>
-          
-          <select 
+
+          <select
+            value={salesChannelFilter}
+            onChange={(e) => { setSalesChannelFilter(e.target.value); setCurrentPage(1); }}
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+          >
+            <option value="all">All Sales Types</option>
+            <option value="unclassified">Unclassified</option>
+            <option value="b2c">B2C</option>
+            <option value="b2b">B2B</option>
+          </select>
+
+          <select
             value={packageFilter}
             onChange={(e) => { setPackageFilter(e.target.value); setCurrentPage(1); }}
             className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
@@ -384,7 +518,7 @@ const AdminBookings = () => {
             ))}
           </select>
 
-          <select 
+          <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
             className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
@@ -395,7 +529,7 @@ const AdminBookings = () => {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          
+
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
@@ -418,7 +552,7 @@ const AdminBookings = () => {
             <option value="last">Last Month</option>
           </select>
         </div>
-        
+
         {selectedRowIds.size > 0 && (
           <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-2 px-4 flex items-center justify-between text-sm animate-fade-in">
             <span className="font-semibold text-blue-800">{selectedRowIds.size} bookings selected</span>
@@ -428,6 +562,26 @@ const AdminBookings = () => {
             </div>
           </div>
         )}
+
+        {/* Summary Stats Row */}
+        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 px-1">
+          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500 font-semibold uppercase">Total B2B Bookings</p>
+            <p className="text-lg font-bold text-gray-900">{summaryStats.b2bCount}</p>
+          </div>
+          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500 font-semibold uppercase">Total B2C Bookings</p>
+            <p className="text-lg font-bold text-gray-900">{summaryStats.b2cCount}</p>
+          </div>
+          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500 font-semibold uppercase">B2B Sales Value</p>
+             <p className="text-lg font-bold text-[#136b8a]">₹{Number(summaryStats.b2bValue ?? 0).toLocaleString()}</p>
+          </div>
+          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500 font-semibold uppercase">B2C Sales Value</p>
+            <div className="font-bold text-emerald-600">₹{Number(summaryStats.b2cValue ?? 0).toLocaleString()}</div>
+          </div>
+        </div>
       </div>
 
       {/* Table Data */}
@@ -446,116 +600,132 @@ const AdminBookings = () => {
           ) : (
             <table className="w-full text-left border-collapse min-w-[900px] text-sm">
               <thead className="bg-slate-50 sticky top-0 z-10 outline outline-1 outline-gray-200">
-                <tr>
-                  <th className="py-2.5 px-4 w-10 text-center">
-                    <input type="checkbox" 
-                      className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
-                      checked={currentBookings.length > 0 && selectedRowIds.size === currentBookings.length}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th className="py-2.5 px-4 font-semibold text-gray-600">ID & Date</th>
-                  <th className="py-2.5 px-4 font-semibold text-gray-600">Customer</th>
-                  <th className="py-2.5 px-4 font-semibold text-gray-600">Package Details</th>
-                  <th className="py-2.5 px-4 font-semibold text-gray-600 text-right">Amount</th>
-                  <th className="py-2.5 px-4 font-semibold text-gray-600">Status</th>
-                  <th className="py-2.5 px-4 font-semibold text-gray-600 text-right">Action</th>
-                </tr>
+<tr>
+  <th className="py-2.5 px-4 w-10 text-center">
+    <input type="checkbox"
+      className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
+      checked={currentBookings.length > 0 && selectedRowIds.size === currentBookings.length}
+      onChange={toggleSelectAll}
+    />
+  </th>
+  <th className="py-2.5 px-4 font-semibold text-gray-600">ID & Date</th>
+  <th className="py-2.5 px-4 font-semibold text-gray-600">Customer</th>
+  <th className="py-2.5 px-4 font-semibold text-gray-600">Package Details</th>
+  <th className="py-2.5 px-4 font-semibold text-gray-600 text-right">Amount</th>
+  <th className="py-2.5 px-4 font-semibold text-gray-600">Action</th>
+<th className="py-2.5 px-4 font-semibold text-gray-600">Classification</th>
+  <th className="py-2.5 px-4 font-semibold text-gray-600 text-right">Action</th>
+</tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {currentBookings.map((booking) => (
-                  <tr key={booking.id} className={`hover:bg-slate-50/70 transition-colors ${selectedRowIds.has(booking.id) ? 'bg-blue-50/30' : ''}`}>
-                    <td className="py-2 px-4 text-center">
-                      <input type="checkbox" 
-                        className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
-                        checked={selectedRowIds.has(booking.id)}
-                        onChange={() => toggleSelectRow(booking.id)}
-                      />
-                    </td>
-                    <td className="py-2 px-4">
-                      <div className="font-bold text-[#136b8a] text-xs">{booking.booking_id}</div>
-                      <div className="text-[11px] text-gray-500 mt-0.5">
-                        {new Date(booking.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </div>
-                    </td>
-                    <td className="py-2 px-4">
-                      <div className="font-semibold text-gray-900">{booking.customer_name}</div>
-                      <div className="text-xs text-gray-500">{booking.phone}</div>
-                    </td>
-                    <td className="py-2 px-4">
-                      <div className="font-medium text-gray-800 text-xs truncate max-w-[200px]" title={booking.package_title}>{booking.package_title}</div>
-                      <div className="text-[11px] text-gray-500 mt-0.5">
-                        {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString() : 'N/A'} • {booking.travellers} pax
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                      <div className="font-bold text-gray-900">₹{Number(booking.final_amount || booking.total_amount || 0).toLocaleString()}</div>
-                    </td>
-                    <td className="py-2 px-4">
-                      <div className="flex flex-col gap-1.5 items-start">
-                        {getStatusBadge(booking.booking_status)}
-                        {getPaymentBadge(booking.payment_status)}
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                       <button 
-                         onClick={() => setSelectedBooking(booking)}
-                         className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
-                       >
-                         View Details
-                       </button>
-                    </td>
-                  </tr>
-                ))}
+{currentBookings.map((booking) => (
+  <tr key={booking.id} className={`hover:bg-slate-50/70 transition-colors ${selectedRowIds.has(booking.id) ? 'bg-blue-50/30' : ''}`}>
+    <td className="py-2 px-4 text-center">
+      <input type="checkbox"
+        className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
+        checked={selectedRowIds.has(booking.id)}
+        onChange={() => toggleSelectRow(booking.id)}
+      />
+    </td>
+    <td className="py-2 px-4">
+      <div className="font-bold text-[#136b8a] text-xs">{booking.booking_id}</div>
+      <div className="text-[11px] text-gray-500 mt-0.5">
+        {new Date(booking.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+      </div>
+    </td>
+    <td className="py-2 px-4">
+      <div className="font-semibold text-gray-900">{booking.customer_name}</div>
+      <div className="text-xs text-gray-500">{booking.phone}</div>
+    </td>
+    <td className="py-2 px-4">
+      <div className="font-medium text-gray-800 text-xs truncate max-w-[200px]" title={booking.package_title}>{booking.package_title}</div>
+      <div className="text-[11px] text-gray-500 mt-0.5">
+        {booking.travel_date ? new Date(booking.travel_date).toLocaleDateString() : 'N/A'} • {booking.travellers} pax
+      </div>
+    </td>
+    <td className="py-2 px-4 text-right">
+      <div className="font-medium text-gray-900">
+        ₹{Number(booking.final_payable_amount ?? booking.final_amount ?? booking.total_amount ?? 0).toLocaleString()}
+      </div>
+    </td>
+    <td className="py-2 px-4">
+      <div className="flex flex-col gap-1.5 items-start">
+        {getStatusBadge(booking.booking_status)}
+        {getPaymentBadge(booking.payment_status)}
+      </div>
+    </td>
+    <td className="py-2 px-4">
+      <div className="flex flex-col gap-1.5 items-start">
+        {booking.sales_channel === 'b2b' && <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider bg-purple-100 text-purple-800">B2B</span>}
+        {booking.sales_channel === 'b2c' && <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider bg-indigo-100 text-indigo-800">B2C</span>}
+        {!(booking.sales_channel === 'b2b' || booking.sales_channel === 'b2c') && <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-wider bg-gray-100 text-gray-800">Unclassified</span>}
+      </div>
+    </td>
+    <td className="py-2 px-4 text-right">
+      <button
+        onClick={() => {
+          setSelectedBooking(booking);
+          setClassificationChannel(booking.sales_channel || 'unclassified');
+          setB2bCompany(booking.b2b_partner_company || '');
+          setB2bNotes(booking.b2b_notes || '');
+        }}
+        className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
+      >
+        View Details
+      </button>
+    </td>
+  </tr>
+))}
               </tbody>
             </table>
           )}
         </div>
-        
+
         {/* Compact Pagination */}
         {!loading && filteredBookings.length > 0 && (
           <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 flex items-center justify-between text-xs">
             <div className="flex items-center gap-4 text-gray-600">
               <span>Showing <b>{indexOfFirstBooking + 1}-{Math.min(indexOfLastBooking, filteredBookings.length)}</b> of <b>{filteredBookings.length}</b></span>
               <div className="flex items-center gap-2">
-                <span>Rows per page:</span>
-                <select 
-                  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 outline-none"
-                  value={bookingsPerPage}
-                  onChange={(e) => {
-                    setBookingsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
+<span>Rows per page:</span>
+<select
+  className="bg-white border border-gray-300 rounded px-1.5 py-0.5 outline-none"
+  value={bookingsPerPage}
+  onChange={(e) => {
+    setBookingsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  }}
+>
+  <option value={10}>10</option>
+  <option value={25}>25</option>
+  <option value={50}>50</option>
+</select>
               </div>
             </div>
-            
+
             {totalPages > 1 && (
               <div className="flex gap-1">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={validCurrentPage === 1}
-                  className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span className="px-3 py-1 font-semibold text-gray-700">Page {validCurrentPage} of {totalPages}</span>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={validCurrentPage === totalPages}
-                  className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
-                >
-                  <ChevronRight size={16} />
-                </button>
+<button
+  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+  disabled={validCurrentPage === 1}
+  className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+>
+  <ChevronLeft size={16} />
+</button>
+<span className="px-3 py-1 font-semibold text-gray-700">Page {validCurrentPage} of {totalPages}</span>
+<button
+  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+  disabled={validCurrentPage === totalPages}
+  className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+>
+  <ChevronRight size={16} />
+</button>
               </div>
             )}
           </div>
         )}
       </div>
+
 
       {/* Drawer */}
       {selectedBooking && (
@@ -564,136 +734,186 @@ const AdminBookings = () => {
           <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-slate-50 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-200 border-l border-gray-200 text-sm">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
               <div>
-                <h2 className="text-base font-bold text-gray-900">Booking Details</h2>
-                <p className="text-[#136b8a] font-mono text-xs font-bold">{selectedBooking.booking_id}</p>
+<h2 className="text-base font-bold text-gray-900">Booking Details</h2>
+<p className="text-[#136b8a] font-mono text-xs font-bold">{selectedBooking.booking_id}</p>
               </div>
               <button onClick={() => setSelectedBooking(null)} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                <X size={18} />
+<X size={18} />
               </button>
             </div>
 
             <div className="p-4 space-y-4">
-              
+
               {/* Quick Actions Header */}
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => handleQuickAction(selectedBooking, 'confirm')} className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-emerald-200 transition-colors">
-                  <Check size={14} /> Confirm
-                </button>
-                <button onClick={() => handleQuickAction(selectedBooking, 'cancel')} className="bg-rose-50 text-rose-700 hover:bg-rose-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-rose-200 transition-colors">
-                  <XCircle size={14} /> Cancel
-                </button>
-                <button onClick={() => handleQuickAction(selectedBooking, 'markPaid')} className="col-span-2 bg-[#136b8a]/10 text-[#136b8a] hover:bg-[#136b8a]/20 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-[#136b8a]/20 transition-colors">
-                  <CreditCard size={14} /> Mark Paid
-                </button>
-                <button onClick={() => handleMarkProblem(selectedBooking)} className="col-span-2 bg-amber-50 text-amber-700 hover:bg-amber-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-amber-200 transition-colors mt-1">
-                   Problem Faced (Service Recovery)
-                </button>
+<button onClick={() => handleQuickAction(selectedBooking, 'confirm')} className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-emerald-200 transition-colors">
+  <Check size={14} /> Confirm
+</button>
+<button onClick={() => handleQuickAction(selectedBooking, 'cancel')} className="bg-rose-50 text-rose-700 hover:bg-rose-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-rose-200 transition-colors">
+  <XCircle size={14} /> Cancel
+</button>
+<button onClick={() => handleQuickAction(selectedBooking, 'markPaid')} className="col-span-2 bg-[#136b8a]/10 text-[#136b8a] hover:bg-[#136b8a]/20 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-[#136b8a]/20 transition-colors">
+  <CreditCard size={14} /> Mark Paid
+</button>
+<button onClick={() => handleMarkProblem(selectedBooking)} className="col-span-2 bg-amber-50 text-amber-700 hover:bg-amber-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-amber-200 transition-colors mt-1">
+   Problem Faced (Service Recovery)
+</button>
               </div>
 
               {/* Customer */}
               <div className="bg-white border border-gray-200 rounded-lg p-3">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><User size={12}/> Customer</h3>
-                  {selectedBooking.user_id ? (
-                    <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Account Linked</span>
-                  ) : (
-                    <span className="text-[9px] uppercase font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Not Linked</span>
-                  )}
-                </div>
-                <div className="font-semibold text-gray-900">{selectedBooking.customer_name}</div>
-                
-                <div className="mt-2 text-xs flex justify-between items-center">
-                  <span className="text-gray-600">{selectedBooking.phone}</span>
-                  <div className="flex gap-2">
-                    <a href={`tel:+${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}`} className="text-gray-400 hover:text-blue-600"><Phone size={14} /></a>
-                    <a href={`https://wa.me/${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}?text=${encodeURIComponent(`Hi ${selectedBooking.customer_name}, this is TripoMist. Regarding your booking for ${selectedBooking.package_title}...`)}`} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-green-600"><MessageCircle size={14} /></a>
-                    <button onClick={() => handleQuickAction(selectedBooking, 'copyPhone')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
-                  </div>
-                </div>
-                
-                {selectedBooking.email && (
-                  <div className="mt-2 text-xs flex justify-between items-center">
-                    <span className="text-gray-600 truncate">{selectedBooking.email}</span>
-                    <button onClick={() => handleQuickAction(selectedBooking, 'copyEmail')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
-                  </div>
-                )}
-                
-                {!selectedBooking.user_id && (
-                  <button onClick={() => {
-                    const msg = `Hi ${selectedBooking.customer_name}, your TripoMist booking has been added to our system.\n\nYou can view your booking, payment status and trip details by logging in to the TripoMist website using the same phone number or email used during booking.\n\nBooking ID: ${selectedBooking.booking_id || selectedBooking.booking_reference || selectedBooking.id}`;
-                    navigator.clipboard.writeText(msg);
-                    alert('Login instructions copied to clipboard!');
-                  }} className="mt-3 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 rounded-md text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1">
-                    <Copy size={12}/> Copy Login Instructions
-                  </button>
-                )}
+<div className="flex justify-between items-start mb-2">
+  <h3 className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><User size={12}/> Customer</h3>
+  {selectedBooking.user_id ? (
+    <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Account Linked</span>
+  ) : (
+    <span className="text-[9px] uppercase font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Not Linked</span>
+  )}
+</div>
+<div className="font-semibold text-gray-900">{selectedBooking.customer_name}</div>
+
+<div className="mt-2 text-xs flex justify-between items-center">
+  <span className="text-gray-600">{selectedBooking.phone}</span>
+  <div className="flex gap-2">
+    <a href={`tel:+${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}`} className="text-gray-400 hover:text-blue-600"><Phone size={14} /></a>
+    <a href={`https://wa.me/${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}?text=${encodeURIComponent(`Hi ${selectedBooking.customer_name}, this is TripoMist. Regarding your booking for ${selectedBooking.package_title}...`)}`} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-green-600">
+      <MessageCircle size={14} />
+    </a>
+  </div>
+</div>
+
+{selectedBooking.email && (
+  <div className="mt-2 text-xs flex justify-between items-center">
+    <span className="text-gray-600 truncate">{selectedBooking.email}</span>
+    <button onClick={() => handleQuickAction(selectedBooking, 'copyEmail')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
+  </div>
+)}
+
+{!selectedBooking.user_id && (
+  <button onClick={() => {
+    const msg = `Hi ${selectedBooking.customer_name}, your TripoMist booking has been added to our system.\n\nYou can view your booking, payment status and trip details by logging in to the TripoMist website using the same phone number or email used during booking.\n\nBooking ID: ${selectedBooking.booking_id || selectedBooking.booking_reference || selectedBooking.id}`;
+    navigator.clipboard.writeText(msg);
+    alert('Login instructions copied to clipboard!');
+  }} className="mt-3 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 rounded-md text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1">
+    <Copy size={12}/> Copy Login Instructions
+  </button>
+)}
+              </div>
+
+              {/* Sales Classification */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3">
+<h3 className="text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1"><Tag size={12}/> Sales Classification</h3>
+<div className="grid grid-cols-1 gap-3">
+  <div>
+    <label className="text-xs font-semibold text-gray-700 block mb-1">Sales Type</label>
+    <select
+      value={classificationChannel}
+      onChange={(e) => setClassificationChannel(e.target.value)}
+      className="w-full text-xs p-2 border border-gray-300 rounded"
+    >
+      <option value="unclassified">Unclassified</option>
+      <option value="b2c">B2C - Service Provided by TripoMist</option>
+      <option value="b2b">B2B - Transferred/Sold to Partner</option>
+    </select>
+  </div>
+  {classificationChannel === 'b2b' && (
+    <>
+      <div>
+         <label className="text-xs font-semibold text-gray-700 block mb-1 flex items-center gap-1"><Building size={12}/> Partner Company *</label>
+         <input
+           type="text"
+           value={b2bCompany}
+           onChange={(e) => setB2bCompany(e.target.value)}
+           className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
+           placeholder="Enter agency name"
+         />
+      </div>
+      <div>
+         <label className="text-xs font-semibold text-gray-700 block mb-1">B2B Notes</label>
+         <input
+           type="text"
+           value={b2bNotes}
+           onChange={(e) => setB2bNotes(e.target.value)}
+           className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
+           placeholder="Optional notes"
+         />
+      </div>
+    </>
+  )}
+  <button
+    onClick={() => classifyBooking(selectedBooking, classificationChannel, b2bCompany, b2bNotes)}
+    className="w-full bg-[#136b8a] text-white text-xs font-bold py-2 rounded hover:bg-[#0f556e] transition-colors"
+  >
+    Save Classification
+  </button>
+</div>
               </div>
 
               {/* Package Details */}
               <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
-                <h3 className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1"><Package size={12}/> Package Details</h3>
-                <div className="font-semibold text-[#136b8a] text-sm">{selectedBooking.package_title}</div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="text-gray-500 block">Travel Date</span>
-                    <span className="font-medium">{selectedBooking.travel_date ? new Date(selectedBooking.travel_date).toLocaleDateString() : '-'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">Travellers</span>
-                    <span className="font-medium">{selectedBooking.travellers} Pax</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">Sharing</span>
-                    <span className="font-medium capitalize">{selectedBooking.selected_sharing || '-'}</span>
-                  </div>
-                </div>
-                {selectedBooking.special_request && (
-                  <div className="text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 mt-2">
-                    <span className="font-bold">Request:</span> {selectedBooking.special_request}
-                  </div>
-                )}
+<h3 className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1"><Package size={12}/> Package Details</h3>
+<div className="font-semibold text-[#136b8a] text-sm">{selectedBooking.package_title}</div>
+<div className="grid grid-cols-2 gap-2 text-xs">
+  <div>
+    <span className="text-gray-500 block">Travel Date</span>
+    <span className="font-medium">{selectedBooking.travel_date ? new Date(selectedBooking.travel_date).toLocaleDateString() : '-'}</span>
+  </div>
+  <div>
+    <span className="text-gray-500 block">Travellers</span>
+    <span className="font-medium">{selectedBooking.travellers} Pax</span>
+  </div>
+  <div>
+    <span className="text-gray-500 block">Sharing</span>
+    <span className="font-medium capitalize">{selectedBooking.selected_sharing || '-'}</span>
+  </div>
+</div>
+{selectedBooking.special_request && (
+  <div className="text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 mt-2">
+    <span className="font-bold">Request:</span> {selectedBooking.special_request}
+  </div>
+)}
               </div>
 
               {/* Status & Billing */}
               <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 text-xs">
-                 <div className="flex justify-between items-center">
-                   <span className="text-gray-500">Booking Status</span>
-                   {getStatusBadge(selectedBooking.booking_status)}
-                 </div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-gray-500">Payment Status</span>
-                   {getPaymentBadge(selectedBooking.payment_status)}
-                 </div>
-                 <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
-                   <span className="font-semibold text-gray-700">Total Paid</span>
-                   <span className="text-base font-bold text-[#136b8a]">₹{Number(selectedBooking.final_amount || selectedBooking.total_amount || 0).toLocaleString()}</span>
-                 </div>
-                 {selectedBooking.razorpay_payment_id && (
-                   <div className="pt-2 border-t border-gray-100">
-                     <span className="text-gray-500 block mb-1">Razorpay ID</span>
-                     <span className="font-mono text-gray-800 break-all bg-gray-50 p-1 rounded border border-gray-100 block">{selectedBooking.razorpay_payment_id}</span>
-                   </div>
-                 )}
+ <div className="flex justify-between items-center">
+   <span className="text-gray-500">Booking Status</span>
+   {getStatusBadge(selectedBooking.booking_status)}
+ </div>
+ <div className="flex justify-between items-center">
+   <span className="text-gray-500">Payment Status</span>
+   {getPaymentBadge(selectedBooking.payment_status)}
+ </div>
+ <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
+   <span className="font-semibold text-gray-700">Total Paid</span>
+   <span className="text-base font-bold text-[#136b8a]">₹{Number(selectedBooking.final_amount || selectedBooking.total_amount || 0).toLocaleString()}</span>
+ </div>
+ {selectedBooking.razorpay_payment_id && (
+   <div className="pt-2 border-t border-gray-100">
+     <span className="text-gray-500 block mb-1">Razorpay ID</span>
+     <span className="font-mono text-gray-800 break-all bg-gray-50 p-1 rounded border border-gray-100 block">{selectedBooking.razorpay_payment_id}</span>
+   </div>
+ )}
               </div>
-              
+
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
-                Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
+Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
               </div>
 
               {/* Action Button */}
               <div className="grid grid-cols-2 gap-2 mt-4">
-                <button 
-                  onClick={() => setEditBookingId(selectedBooking.id)}
-                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
-                >
-                  <Edit size={16} /> Edit Booking
-                </button>
-                <button 
-                  onClick={() => generatePDFVoucher(selectedBooking, 'download')}
-                  className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
-                >
-                  <Download size={16} /> Voucher
-                </button>
+<button
+  onClick={() => setEditBookingId(selectedBooking.id)}
+  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
+>
+  <Edit size={16} /> Edit Booking
+</button>
+<button
+  onClick={() => generatePDFVoucher(selectedBooking, 'download')}
+  className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
+>
+  <Download size={16} /> Voucher
+</button>
               </div>
             </div>
           </div>
@@ -701,36 +921,75 @@ const AdminBookings = () => {
       )}
       {/* Cancel Modal */}
       {cancelModal.isOpen && cancelModal.booking && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Cancel Booking</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Cancellation *</label>
-              <textarea 
-                value={cancelReason} 
-                onChange={e => setCancelReason(e.target.value)} 
-                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-rose-500 outline-none" 
-                rows="3" 
-                required
-              />
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-rose-600 px-6 py-4 flex justify-between items-center text-white">
+               <h3 className="text-lg font-bold">Cancel Booking</h3>
+               <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="text-rose-100 hover:text-white"><X size={20} /></button>
             </div>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Refund Status</label>
-              <select 
-                value={refundStatus} 
-                onChange={e => setRefundStatus(e.target.value)}
-                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-rose-500 outline-none"
-              >
-                <option value="Not Applicable">Not Applicable</option>
-                <option value="No Refund">No Refund</option>
-                <option value="Refund Pending">Refund Pending</option>
-                <option value="Partially Refunded">Partially Refunded</option>
-                <option value="Fully Refunded">Fully Refunded</option>
-              </select>
+
+            <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
+
+              {/* Read Only Summary */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm shadow-sm">
+ <div><span className="block text-xs text-gray-500 uppercase font-semibold">Reference</span><span className="font-bold text-gray-900">{cancelModal.booking.booking_id}</span></div>
+ <div><span className="block text-xs text-gray-500 uppercase font-semibold">Customer</span><span className="font-semibold">{cancelModal.booking.customer_name}</span></div>
+ <div className="md:col-span-2"><span className="block text-xs text-gray-500 uppercase font-semibold">Package</span><span className="font-medium truncate block" title={cancelModal.booking.package_title}>{cancelModal.booking.package_title}</span></div>
+
+ <div><span className="block text-xs text-gray-500 uppercase font-semibold">Travel Date</span><span>{cancelModal.booking.travel_date ? new Date(cancelModal.booking.travel_date).toLocaleDateString() : '-'}</span></div>
+ <div><span className="block text-xs text-gray-500 uppercase font-semibold">Total Cost</span><span className="font-bold">₹{Number(cancelModal.booking.total_amount || 0).toLocaleString()}</span></div>
+ <div><span className="block text-xs text-gray-500 uppercase font-semibold">Total Paid</span><span className="font-bold text-emerald-600">₹{Number(cancelModal.booking.final_amount || cancelModal.booking.total_amount || 0).toLocaleString()}</span></div>
+ <div><span className="block text-xs text-gray-500 uppercase font-semibold">Status</span>{getPaymentBadge(cancelModal.booking.payment_status)}</div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+ <div className="space-y-4">
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Cancellation Reason *</label>
+      <textarea
+        value={cancelReason}
+        onChange={e => setCancelReason(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm"
+        rows="3"
+        required
+        placeholder="Why is this booking being cancelled?"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1">Internal Cancellation Notes</label>
+      <textarea
+        value={cancelNotes}
+        onChange={e => setCancelNotes(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm"
+        rows="2"
+        placeholder="Visible only to admins"
+      />
+    </div>
+ </div>
+
+ <div className="space-y-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+    <div>
+      <label className="block text-sm font-semibold text-gray-900 mb-2">Cancellation Resolution *</label>
+      <select
+        value={cancelResolution}
+        onChange={e => setCancelResolution(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none font-medium text-gray-800"
+      >
+        <option value="Cancel Without Refund">Cancel Without Refund</option>
+        <option value="Refund Pending">Refund Pending</option>
+        <option value="Partial Refund">Partial Refund</option>
+        <option value="Fully Refunded">Fully Refunded</option>
+      </select>
+    </div>
+ </div>
+              </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
-              <button onClick={submitCancel} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700">Confirm Cancellation</button>
+
+            <div className="bg-gray-100 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Abort</button>
+              <button onClick={submitCancel} className="px-5 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-colors shadow-sm flex items-center gap-2">
+ <XCircle size={16} /> Confirm Cancellation
+              </button>
             </div>
           </div>
         </div>

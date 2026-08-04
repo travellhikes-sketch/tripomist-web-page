@@ -20,7 +20,8 @@ import {
   Globe,
   ChevronDown,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Ticket
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -155,6 +156,8 @@ const AdminLayout = () => {
             <ShieldAlert size={18} className={location.pathname.startsWith('/admin/service-recovery') ? 'text-rose-600' : 'text-gray-400'} />
             Service Recovery
           </Link>
+          
+
 
           <Link
             to="/admin/users"
@@ -197,9 +200,6 @@ const AdminLayout = () => {
                 </Link>
                 <Link to="/admin/explore-departments" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/explore-departments') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   Explore Navigation
-                </Link>
-                <Link to="/admin/promo-strip" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/promo-strip') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
-                  Promo Strip
                 </Link>
                 <Link to="/admin/reviews" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/reviews') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   Reviews

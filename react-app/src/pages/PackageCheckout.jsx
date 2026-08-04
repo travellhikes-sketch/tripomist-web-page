@@ -5,9 +5,13 @@ import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
 
-const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TBICP09xzQRaAw';
+function formatMoney(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? amount.toLocaleString('en-IN')
+    : '0';
+}
 
-// Helper: parse price string like "₹19,999 per person" to number
 function parsePriceString(priceStr) {
   if (typeof priceStr === 'number') return priceStr;
   if (!priceStr) return 0;
@@ -19,6 +23,7 @@ export default function PackageCheckout() {
   const { packageSlug } = useParams();
   const navigate = useNavigate();
 
+  const [step, setStep] = useState('checkout'); // 'checkout' | 'success' | 'failed'
   const [checkoutData, setCheckoutData] = useState(null);
   const [formData, setFormData] = useState(null);
   const [tripDetails, setTripDetails] = useState(null);
@@ -27,26 +32,67 @@ export default function PackageCheckout() {
   const [selectedSharing, setSelectedSharing] = useState('');
   const [computedPrice, setComputedPrice] = useState(0);
   
-  const [step, setStep] = useState('checkout'); // 'checkout' | 'success' | 'failed'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [bookingId, setBookingId] = useState('');
   const [paymentId, setPaymentId] = useState('');
 
-  // Derived options
+  // Coupon states
+  const [voucherCode, setVoucherCode] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState('');
+  const [couponAttempts, setCouponAttempts] = useState(0);
+  const [lastCouponAttempt, setLastCouponAttempt] = useState(0);
+
+
   const [sharingOptions, setSharingOptions] = useState([]);
 
-  // Helper: securely update checkout lead via RPC
+  // Server-authorized amount variable
+  const [serverFinalPayable, setServerFinalPayable] = useState(null);
+
+  // 6. Track whether payment process has started
+  const [paymentStarted, setPaymentStarted] = useState(false);
+
+  // State to block proceed payment button
+  const [checkoutBlocked, setCheckoutBlocked] = useState(false);
+
+  // Lock status of individual profile details
+  const [profileLocked, setProfileLocked] = useState({ name: false, phone: false, email: false });
+
+  // 8. Restore or persist idempotencyKey inside checkoutData/sessionStorage
+  const [idempotencyKey] = useState(() => {
+    try {
+      const storedData = sessionStorage.getItem('checkoutData');
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        if (parsed.idempotencyKey) {
+          return parsed.idempotencyKey;
+        }
+      }
+    } catch (e) {
+      console.error('Error recovering idempotency key:', e);
+    }
+    return crypto.randomUUID();
+  });
+
+  // Helper: securely update checkout lead via Edge action
   const updateLead = async (updates) => {
     try {
       const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
       if (!leadStr) return;
       const lead = JSON.parse(leadStr);
       if (!lead.id || !lead.token) return;
-      await supabase.rpc('update_checkout_lead', {
-        p_lead_id: lead.id,
-        p_lead_token: lead.token,
-        ...updates,
+      await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'update_guest_lead',
+          leadId: lead.id,
+          ...updates,
+        },
+        headers: {
+          'x-checkout-lead-id':    lead.id,
+          'x-checkout-lead-token': lead.token,
+        },
       });
     } catch (e) {
       // Non-critical — don't block user flow
@@ -54,16 +100,167 @@ export default function PackageCheckout() {
   };
 
   useEffect(() => {
+    // 7. Verify RAZORPAY_KEY ID exists; throw config error if missing
+    if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
+      setError('Payment gateway configuration is missing. Please contact support.');
+    }
+
     const dataStr = sessionStorage.getItem('checkoutData');
     if (!dataStr) {
       navigate(packageSlug && packageSlug !== 'custom-package' ? `/itinerary/${packageSlug}` : '/');
       return;
     }
+    // Define an async helper to handle session and state restoration from server status
+    const loadCheckoutStatus = async (currentUser) => {
+      try {
+        const session = (await supabase.auth.getSession()).data?.session;
+        
+        let profile = null;
+        if (currentUser) {
+          // Prefill logged-in customer name, phone and email from profile/auth
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('full_name, phone')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+          profile = prof;
+        }
+
+        if (currentUser) {
+          const prefillName = profile?.full_name || currentUser.user_metadata?.full_name || '';
+          const prefillPhone = profile?.phone || currentUser.phone || '';
+          const prefillEmail = currentUser.email || '';
+
+          setFormData(prev => ({
+            ...prev,
+            fullName: prefillName || prev?.fullName || '',
+            phone: prefillPhone || prev?.phone || '',
+            email: prefillEmail || prev?.email || ''
+          }));
+
+          // Track locked status
+          setProfileLocked({
+            name: !!prefillName,
+            phone: !!prefillPhone,
+            email: !!prefillEmail
+          });
+
+          // If phone/name is missing, show "Complete Profile" once
+          if (!prefillName || !prefillPhone) {
+            setError('Please Complete your Profile: Name and Phone Number are required.');
+          }
+        }
+
+        const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+        const lead = leadStr ? JSON.parse(leadStr) : null;
+        const leadId = lead?.id || '';
+        const leadToken = lead?.token || '';
+
+        const headers = {};
+        if (session) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+        if (leadId) {
+          headers['x-checkout-lead-id'] = leadId;
+        }
+        if (leadToken) {
+          headers['x-checkout-lead-token'] = leadToken;
+        }
+
+        const { data: statusData, error: statusErr } = await supabase.functions.invoke('razorpay-checkout', {
+          body: {
+            action: 'checkout_status',
+            idempotencyKey
+          },
+          headers
+        });
+
+        if (!statusErr && statusData && statusData.success && (statusData.found || statusData.guestDetails)) {
+          setBookingId(statusData.bookingId);
+          setServerFinalPayable(statusData.finalPayableAmount);
+
+          if (statusData.selectedSharing) {
+            setSelectedSharing(statusData.selectedSharing);
+          }
+          if (statusData.activeReservation) {
+            setAppliedVoucher({
+              id: statusData.activeReservation.reservationId,
+              code: statusData.activeReservation.code,
+              remaining_amount: statusData.activeReservation.reservedAmount,
+              reserved_amount: statusData.activeReservation.reservedAmount,
+              reservation_id: statusData.activeReservation.reservationId,
+              expires_at: statusData.activeReservation.expiresAt,
+              finalPayableAmount: statusData.finalPayableAmount,
+              isExpired: statusData.activeReservation.isExpired
+            });
+          }
+          if (statusData.latestPaymentAttempt) {
+            setPaymentStarted(true);
+          }
+
+          // Lock guest parameters verified on Edge response
+          if (!currentUser && statusData.guestDetails) {
+            setFormData(prev => ({
+              ...prev,
+              fullName: statusData.guestDetails.fullName || prev?.fullName || '',
+              phone: statusData.guestDetails.phone || prev?.phone || '',
+              email: statusData.guestDetails.email || prev?.email || ''
+            }));
+            setProfileLocked({
+              name: !!statusData.guestDetails.fullName,
+              phone: !!statusData.guestDetails.phone,
+              email: !!statusData.guestDetails.email
+            });
+          }
+
+          // Handle paid, failed, cancelled and expired statuses
+          const attemptStatus = statusData.latestPaymentAttempt?.status;
+
+          if (statusData.paymentStatus === 'paid') {
+            // Restore paymentId and clean checkout storage for paid bookings
+            setPaymentId(statusData.paymentId || 'PAID_VERIFIED');
+            sessionStorage.removeItem('checkoutData');
+            localStorage.removeItem('cart');
+            window.dispatchEvent(new Event('cartUpdated'));
+            setStep('success');
+          } else if (attemptStatus === 'preparing' || attemptStatus === 'verification_pending') {
+            setCheckoutBlocked(true);
+            setError('Payment verification/reconciliation is in progress. Please check My Trips or contact support.');
+          } else if (attemptStatus === 'failed' || attemptStatus === 'cancelled' || attemptStatus === 'expired') {
+            setCheckoutBlocked(true);
+            setError('Payment attempt closed. Please start a new checkout.');
+          } else if (statusData.activeReservation?.isExpired) {
+            setCheckoutBlocked(true);
+            setError('Coupon reservation expired. Please start a new checkout.');
+          } else if (attemptStatus === 'verified' && statusData.paymentStatus !== 'paid') {
+            setCheckoutBlocked(true);
+            setError('Payment reconciliation required. Please check My Trips or contact support.');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching checkout status:', err);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      if (currentUser) {
+        const pendingCoupon = sessionStorage.getItem('pending_coupon_code');
+        if (pendingCoupon) {
+          setVoucherCode(pendingCoupon);
+          sessionStorage.removeItem('pending_coupon_code');
+        }
+      }
+      loadCheckoutStatus(currentUser);
     });
     try {
       const data = JSON.parse(dataStr);
+      // Preserve idempotency key back into sessionStorage structure for reload persistence
+      if (!data.idempotencyKey) {
+        data.idempotencyKey = idempotencyKey;
+        sessionStorage.setItem('checkoutData', JSON.stringify(data));
+      }
       setCheckoutData(data);
       setFormData(data.formData);
       setTripDetails(data.tripDetails);
@@ -71,37 +268,61 @@ export default function PackageCheckout() {
       // Calculate sharing options
       const { price, travellers, costings } = data.tripDetails;
       let options = [];
-      if (!costings || !Array.isArray(costings) || costings.length === 0) {
-        options = [
-          { type: 'Quad Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1) * 0.85), label: 'Quad Sharing' },
-          { type: 'Triple Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1) * 0.93), label: 'Triple Sharing' },
-          { type: 'Double Sharing', pricePerPerson: Math.round((price || 0) / (travellers || 1)), label: 'Double Sharing' },
-        ];
-      } else {
-        options = costings.map(c => ({
-          type: c.type || c.name || c.title || c.sharing_type || c.sharing || '',
-          pricePerPerson: parsePriceString(c.price),
-          label: c.type || c.name || c.title || c.sharing_type || c.sharing || ''
-        }));
-      }
-      
-      options.sort((a, b) => a.pricePerPerson - b.pricePerPerson);
 
-      const defaultLabels = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
-      options = options.map((opt, index) => {
-        if (!opt.type || !opt.label) {
-          const fallback = defaultLabels[index] || `Sharing Option ${index + 1}`;
-          return { ...opt, type: fallback, label: fallback };
+      // Find Quad base price
+      let quadBasePrice = 0;
+      if (costings && Array.isArray(costings)) {
+        const quadCosting = costings.find(c => (c.type || c.name || c.title || c.sharing_type || c.sharing || '') === 'Quad Sharing');
+        if (quadCosting) {
+          quadBasePrice = parsePriceString(quadCosting.price);
         }
-        return opt;
-      });
+      }
+
+      // Find Upgrade costs
+      let tripleUpgrade = 0;
+      let doubleUpgrade = 0;
+
+      if (costings && Array.isArray(costings)) {
+        const tripleCosting = costings.find(c => (c.type || c.name || c.title || c.sharing_type || c.sharing || '') === 'Triple Sharing Upgrade');
+        if (tripleCosting) {
+          tripleUpgrade = parsePriceString(tripleCosting.price);
+        }
+        const doubleCosting = costings.find(c => (c.type || c.name || c.title || c.sharing_type || c.sharing || '') === 'Double Sharing Upgrade');
+        if (doubleCosting) {
+          doubleUpgrade = parsePriceString(doubleCosting.price);
+        }
+      }
+
+      // Verify Quad Sharing, Triple Sharing Upgrade, and Double Sharing Upgrade are present and valid, otherwise block checkout
+      if (quadBasePrice <= 0 || tripleUpgrade <= 0 || doubleUpgrade <= 0) {
+        setError('Package configuration error: occupancy upgrades are missing.');
+        setCheckoutBlocked(true);
+        options = [];
+      } else {
+        const rawOptions = [
+          { type: 'Quad Sharing', pricePerPerson: quadBasePrice, label: 'Quad Sharing' },
+          { type: 'Triple Sharing', pricePerPerson: quadBasePrice + tripleUpgrade, label: 'Triple Sharing' },
+          { type: 'Double Sharing', pricePerPerson: quadBasePrice + doubleUpgrade, label: 'Double Sharing' }
+        ];
+
+        options = rawOptions
+          .map(option => {
+            const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
+            return { ...option, pricePerPerson };
+          })
+          .filter(option => Number.isFinite(option.pricePerPerson) && option.pricePerPerson > 0);
+
+        if (options.length === 0) {
+          setError('Package configuration error: sharing options are invalid.');
+          setCheckoutBlocked(true);
+        } else {
+          const firstOpt = options.find(o => o.type === 'Quad Sharing') || options[0];
+          setSelectedSharing(firstOpt.type);
+          setComputedPrice(firstOpt.pricePerPerson * (data.tripDetails.travellers || 1));
+        }
+      }
 
       setSharingOptions(options);
-
-      if (options.length > 0) {
-        setSelectedSharing(options[0].type);
-        setComputedPrice(options[0].pricePerPerson * (data.tripDetails.travellers || 1));
-      }
 
       // Track: checkout page opened
       updateLead({ p_current_step: 'checkout_opened' });
@@ -123,7 +344,28 @@ export default function PackageCheckout() {
     );
   }
 
+  if (sharingOptions.length === 0 && !loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-surface-container-lowest font-sans">
+        <Navbar />
+        <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-16 mt-20 flex flex-col items-center justify-center text-center">
+          <div className="w-24 h-24 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-6xl">error</span>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Package Configuration Error</h2>
+          <p className="text-gray-600 text-lg mb-8">{error || 'Package occupancy/sharing prices could not be loaded.'}</p>
+          <Link to="/" className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 px-8 rounded-xl shadow-md transition-all">
+            Back to Home
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const handleSharingSelect = (option) => {
+    // 4. Disable room occupancy selection after booking initialize
+    if (bookingId) return;
     setSelectedSharing(option.type);
     setComputedPrice(option.pricePerPerson * (tripDetails.travellers || 1));
     // Track: sharing selected
@@ -136,159 +378,290 @@ export default function PackageCheckout() {
     });
   };
 
-  const subTotal = computedPrice;
+  const travellerCount = Math.max(1, Number(tripDetails?.travellers) || 1);
+  const subTotal = Number(computedPrice) || 0;
   const gst = Math.round(subTotal * 0.05);
   const finalPayable = subTotal + gst;
 
-  const saveBookingToSupabase = async (razorpayPaymentId) => {
+  const safeFinalPayable = (
+    serverFinalPayable !== null &&
+    serverFinalPayable !== undefined &&
+    Number.isFinite(Number(serverFinalPayable)) &&
+    Number(serverFinalPayable) >= 0
+  ) ? Number(serverFinalPayable) : finalPayable;
+
+
+
+  const verifyPaymentServer = async (razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentAttemptId) => {
     setLoading(true);
     setError(null);
 
-    // Safe date extraction — handles both ISO string and Date object
-    let travelDate = '';
     try {
-      const raw = formData.date;
-      if (typeof raw === 'string') {
-        travelDate = raw.split('T')[0];
-      } else if (raw instanceof Date) {
-        travelDate = raw.toISOString().split('T')[0];
-      } else {
-        travelDate = String(raw).split('T')[0];
+      const session = (await supabase.auth.getSession()).data?.session;
+      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+      const lead = leadStr ? JSON.parse(leadStr) : null;
+      const leadId = lead?.id || '';
+      const leadToken = lead?.token || '';
+
+      const headers = {};
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
       }
-    } catch (e) {
-      console.error('Date parse error:', e);
-      travelDate = '';
-    }
-
-    const parsedPackageId = parseInt(tripDetails.packageId);
-    const sessionUser = (await supabase.auth.getSession()).data?.session?.user;
-    const bookingPayload = {
-      customer_name: formData.fullName,
-      phone: formData.phone,
-      email: formData.email || null,
-      source: formData.source || null,
-      package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
-      package_title: tripDetails.tripTitle,
-      destination: tripDetails.destination || null,
-      travel_date: travelDate,
-      travellers: tripDetails.travellers,
-      total_amount: parsePriceString(tripDetails.price),
-      selected_sharing: selectedSharing,
-      final_amount: finalPayable,
-      razorpay_payment_id: razorpayPaymentId,
-      payment_status: 'paid',
-      booking_status: 'confirmed',
-      special_request: formData.specialRequest || null,
-      user_id: sessionUser?.id || null,
-    };
-
-    const { error: insertError, data: insertedBookings } = await supabase
-      .from('bookings')
-      .insert([bookingPayload])
-      .select();
-
-    if (insertError) {
-      // Only enter failure path if Supabase explicitly returned an error
-      console.error("Booking insert failed:", insertError);
-      let errMsg = insertError.message || insertError.details || 'Unknown error';
-      if (insertError.code === '23505') {
-        errMsg = 'This payment has already been recorded.';
+      if (leadId) {
+        headers['x-checkout-lead-id'] = leadId;
       }
-      setError('Payment was successful but booking save failed. Error: ' + errMsg);
+      if (leadToken) {
+        headers['x-checkout-lead-token'] = leadToken;
+      }
+
+      const { data: verifyData, error: verifyErr } = await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'verify',
+          bookingId,
+          paymentAttemptId,
+          razorpayOrderId,
+          razorpayPaymentId,
+          razorpaySignature
+        },
+        headers
+      });
+
+      if (verifyErr || !verifyData || !verifyData.success) {
+        throw new Error(verifyErr?.message || 'Payment verification failed on the server.');
+      }
+
       setPaymentId(razorpayPaymentId);
+      // 9. Clear saved checkout data only after successful checkout completes
+      sessionStorage.removeItem('checkoutData');
+      localStorage.removeItem('cart');
+      window.dispatchEvent(new Event('cartUpdated'));
+
+      updateLead({
+        p_current_step: 'payment_success',
+        p_lead_status: 'converted',
+        p_payment_status: 'paid',
+        p_razorpay_payment_id: razorpayPaymentId,
+      });
+
+      setLoading(false);
+      setStep('success');
+    } catch (err) {
+      console.error('Verification error:', err);
+      // 4. Save real razorpay payment ID to fail state for webhook confirmation
+      setPaymentId(razorpayPaymentId);
+      setError(err.message || 'Verification failed. Please contact support.');
       setLoading(false);
       setStep('failed');
-      return; // ← stop here, never touch success state
     }
-
-    // INSERT succeeded, create primary traveller
-    if (insertedBookings && insertedBookings.length > 0) {
-      const newBookingId = insertedBookings[0].id;
-      const travellerPayload = {
-        booking_id: newBookingId,
-        full_name: formData.fullName,
-        phone: formData.phone,
-        email: formData.email || null,
-        is_primary: true
-      };
-      // We do not await this strictly for failure, but good practice
-      await supabase.from('booking_travellers').insert([travellerPayload]);
-    }
-
-    setPaymentId(razorpayPaymentId);
-    sessionStorage.removeItem('checkoutData');
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('cartUpdated'));
-
-    // Update lead to converted
-    updateLead({
-      p_current_step: 'payment_success',
-      p_lead_status: 'converted',
-      p_payment_status: 'paid',
-      p_razorpay_payment_id: razorpayPaymentId,
-    });
-
-    setLoading(false);
-    setStep('success');
   };
 
   const handleProceedToPayment = async () => {
-    if (!selectedSharing) return alert('Please select a sharing option');
+    // 12. Replace native alert with normal page error
+    if (!selectedSharing) {
+      setError('Please select a room sharing type before proceeding.');
+      return;
+    }
+
+    // 3. Proceed par live session check
+    const { data: { session } } = await supabase.auth.getSession();
 
     setLoading(true);
     setError(null);
 
-    // Track: Razorpay opening
-    updateLead({
-      p_current_step: 'razorpay_opened',
-      p_lead_status: 'payment_pending',
-      p_payment_status: 'pending',
-      p_selected_sharing: selectedSharing,
-      p_estimated_amount: finalPayable,
-    });
+    try {
+      // Validate customer fields before initialize
+      if (!formData?.fullName || !formData.fullName.trim()) {
+        throw new Error('Full Name is required.');
+      }
+      if (!formData?.phone || !formData.phone.trim()) {
+        throw new Error('Phone Number is required.');
+      }
+      if (!formData?.email || !formData.email.trim()) {
+        throw new Error('Email Address is required.');
+      }
+      if (!formData?.date) {
+        throw new Error('Travel Date is required.');
+      }
+      const travelDateObj = new Date(formData.date);
+      if (isNaN(travelDateObj.getTime()) || travelDateObj <= new Date()) {
+        throw new Error('Travel Date must be a future date.');
+      }
+      if (!tripDetails?.travellers || tripDetails.travellers < 1 || tripDetails.travellers > 50) {
+        throw new Error('Number of travellers must be between 1 and 50.');
+      }
+      if (!selectedSharing || !['Quad Sharing', 'Triple Sharing', 'Double Sharing'].includes(selectedSharing)) {
+        throw new Error('Please select a valid room sharing occupancy.');
+      }
 
-    const amountInPaise = finalPayable * 100;
+      // If user is logged-in, make sure their profile name/phone are updated/saved via upsert
+      if (session?.user) {
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', session.user.id)
+          .maybeSingle();
 
-    const options = {
-      key: RAZORPAY_KEY,
-      amount: amountInPaise,
-      currency: 'INR',
-      name: 'TripoMist',
-      description: `${tripDetails.tripTitle} - ${selectedSharing}`,
-      prefill: {
-        name: formData.fullName,
-        email: formData.email,
-        contact: `+91${formData.phone}`
-      },
-      theme: {
-        color: '#136b8a'
-      },
-      handler: function (response) {
-        saveBookingToSupabase(response.razorpay_payment_id);
-      },
-      modal: {
-        ondismiss: function () {
-          setLoading(false);
+        if (!currentProfile?.full_name || !currentProfile?.phone) {
+          const { error: upsertErr } = await supabase
+            .from('profiles')
+            .upsert({
+              id: session.user.id,
+              full_name: currentProfile?.full_name || formData.fullName.trim(),
+              phone: currentProfile?.phone || formData.phone.trim(),
+              email: formData.email.trim(),
+              updated_at: new Date().toISOString()
+            });
+          if (upsertErr) {
+            throw new Error(`Profile update failed: ${upsertErr.message}`);
+          }
         }
       }
-    };
 
-    try {
+      let currentBookingId = bookingId;
+      let finalAmount = safeFinalPayable;
+
+      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
+      const lead = leadStr ? JSON.parse(leadStr) : null;
+      const leadId = lead?.id || '';
+      const leadToken = lead?.token || '';
+
+      const headers = {};
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      if (leadId) {
+        headers['x-checkout-lead-id'] = leadId;
+      }
+      if (leadToken) {
+        headers['x-checkout-lead-token'] = leadToken;
+      }
+
+      // 3. On checkout call Edge action initialize
+      if (!currentBookingId) {
+        let travelDate = '';
+        try {
+          const raw = formData.date;
+          if (typeof raw === 'string') {
+            travelDate = raw.split('T')[0];
+          } else if (raw instanceof Date) {
+            travelDate = raw.toISOString().split('T')[0];
+          } else {
+            travelDate = String(raw).split('T')[0];
+          }
+        } catch (e) {
+          travelDate = '';
+        }
+
+        // 4. Send no customer details or price to initialize except when guest checkout
+        const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
+          body: {
+            action: 'initialize',
+            packageId: parseInt(tripDetails.packageId),
+            travelDate,
+            travellers: tripDetails.travellers,
+            selectedSharing,
+            idempotencyKey,
+            specialRequest: formData.specialRequest || null,
+            source: formData.source || null,
+            // Include guest identity fields if session is missing
+            guestName: !session ? formData.fullName.trim() : null,
+            guestPhone: !session ? formData.phone.trim() : null,
+            guestEmail: !session ? formData.email.trim() : null
+          },
+          headers
+        });
+
+        if (initErr || !initData || !initData.success) {
+          throw new Error('Failed to initialize booking transaction.');
+        }
+
+        currentBookingId = initData.bookingId;
+        setBookingId(initData.bookingId);
+        setServerFinalPayable(initData.finalPayableAmount);
+        finalAmount = initData.finalPayableAmount;
+      }
+
+
+
+      // 8. Otherwise call prepare and open Razorpay using returned order ID/amount
+      const { data: prepareData, error: prepareErr } = await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'prepare',
+          bookingId: currentBookingId,
+          idempotencyKey
+        },
+        headers
+      });
+
+      if (prepareErr || !prepareData || !prepareData.success) {
+        throw new Error(prepareErr?.message || 'Failed to prepare payment transaction order.');
+      }
+
+      // 6. Set paymentStarted state variable to true upon successful prepare response
+      setPaymentStarted(true);
+
+      updateLead({
+        p_current_step: 'razorpay_opened',
+        p_lead_status: 'payment_pending',
+        p_payment_status: 'pending',
+        p_selected_sharing: selectedSharing,
+        p_estimated_amount: finalAmount,
+      });
+
+      // 7. Retrieve VITE_RAZORPAY_KEY_ID from import.meta.env
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKeyId) {
+        throw new Error('Payment gateway configuration key missing.');
+      }
+
+      const options = {
+        key: razorpayKeyId,
+        // 1. Map expectedAmountPaise instead of amount
+        amount: prepareData.expectedAmountPaise,
+        currency: 'INR',
+        name: 'TripoMist',
+        description: `${tripDetails.tripTitle} - ${selectedSharing}`,
+        order_id: prepareData.razorpayOrderId,
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: `+91${formData.phone}`
+        },
+        theme: {
+          color: '#136b8a'
+        },
+        // 9. Razorpay success handler must call verify
+        handler: function (response) {
+          verifyPaymentServer(
+            response.razorpay_payment_id,
+            response.razorpay_order_id,
+            response.razorpay_signature,
+            prepareData.paymentAttemptId
+          );
+        },
+        modal: {
+          // 12. Razorpay close/failure par reservation release mat karo; retry message dikhao
+          ondismiss: function () {
+            setLoading(false);
+            setError('Payment window closed. If amount was deducted, verification will complete shortly. Otherwise, please try again.');
+          }
+        }
+      };
+
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
         setLoading(false);
-        setError('Payment failed: ' + (response.error?.description || 'Unknown error'));
-        // Track: payment failed
+        // 12. Razorpay close/failure par reservation release mat karo; retry message dikhao
+        setError('Payment failed: ' + (response.error?.description || 'Please try again. If money was debited, it will reflect within 24 hours.'));
         updateLead({
           p_current_step: 'payment_failed',
           p_payment_status: 'failed',
         });
-        setStep('failed');
       });
       rzp.open();
     } catch (err) {
       setLoading(false);
-      setError('Could not open payment gateway. Please try again.');
+      setError(err.message || 'Could not open payment gateway. Please try again.');
     }
   };
 
@@ -345,21 +718,21 @@ export default function PackageCheckout() {
                   { icon: 'calendar_month', label: 'Travel Date', value: travelDateDisplay },
                   { icon: 'group', label: 'Travellers', value: tripDetails.travellers + ' Traveller(s)' },
                   { icon: 'hotel', label: 'Room Sharing', value: selectedSharing },
-                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${finalPayable.toLocaleString('en-IN')}`, highlight: true },
+                  { icon: 'currency_rupee', label: 'Amount Paid', value: `₹${formatMoney(safeFinalPayable)}`, highlight: true },
                   { icon: 'verified', label: 'Payment Status', value: 'Paid', badge: 'paid' },
                   { icon: 'task_alt', label: 'Booking Status', value: 'Confirmed', badge: 'confirmed' },
                 ].map(({ icon, label, value, mono, highlight, badge }) => (
                   <div key={label} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-8 h-8 bg-[#136b8a]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="material-symbols-outlined text-[#136b8a] text-[18px]">{icon}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{label}</p>
-                      {badge === 'paid' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">✓ Paid</span>}
-                      {badge === 'confirmed' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-bold rounded-full border border-teal-200">✓ Confirmed</span>}
-                      {!badge && <p className={`font-semibold ${highlight ? 'text-emerald-700 text-lg' : 'text-gray-900'} ${mono ? 'font-mono text-sm break-all' : ''}`}>{value}</p>}
-                    </div>
-                  </div>
+                     <div className="w-8 h-8 bg-[#136b8a]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                       <span className="material-symbols-outlined text-[#136b8a] text-[18px]">{icon}</span>
+                     </div>
+                     <div className="min-w-0">
+                       <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{label}</p>
+                       {badge === 'paid' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">✓ Paid</span>}
+                       {badge === 'confirmed' && <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-bold rounded-full border border-teal-200">✓ Confirmed</span>}
+                       {!badge && <p className={`font-semibold ${highlight ? 'text-emerald-700 text-lg' : 'text-gray-900'} ${mono ? 'font-mono text-sm break-all' : ''}`}>{value}</p>}
+                     </div>
+                   </div>
                 ))}
               </div>
 
@@ -380,7 +753,7 @@ export default function PackageCheckout() {
                       customer_name: formData.fullName,
                       phone: formData.phone,
                       email: formData.email,
-                      final_amount: finalPayable,
+                      final_amount: safeFinalPayable,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'download')}
                     className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
@@ -399,7 +772,7 @@ export default function PackageCheckout() {
                       customer_name: formData.fullName,
                       phone: formData.phone,
                       email: formData.email,
-                      final_amount: finalPayable,
+                      final_amount: safeFinalPayable,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'open')}
                     className="bg-white text-gray-700 border border-gray-200 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
@@ -505,14 +878,13 @@ export default function PackageCheckout() {
           
           <div className="flex flex-col gap-4 w-full max-w-md">
             {paymentId && (
-              <button 
-                onClick={() => saveBookingToSupabase(paymentId)} 
-                disabled={loading}
-                className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+              <Link
+                to="/my-trips"
+                className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
-                {loading ? 'Retrying...' : 'Retry Saving Booking'}
-                {!loading && <span className="material-symbols-outlined text-lg">refresh</span>}
-              </button>
+                Check My Trips
+                <span className="material-symbols-outlined text-lg">luggage</span>
+              </Link>
             )}
             {!paymentId && (
               <button onClick={() => { setStep('checkout'); setError(null); }} className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all">
@@ -565,8 +937,10 @@ export default function PackageCheckout() {
                   <input 
                     type="text" 
                     value={formData.fullName} 
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.name}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.name ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -574,12 +948,13 @@ export default function PackageCheckout() {
                   <input 
                     type="date" 
                     value={formData.date ? formData.date.split('T')[0] : ''} 
+                    disabled={!!bookingId}
                     onChange={(e) => {
                       if (e.target.value) {
                         setFormData({...formData, date: e.target.value});
                       }
                     }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -587,8 +962,10 @@ export default function PackageCheckout() {
                   <input 
                     type="tel" 
                     value={formData.phone} 
-                    readOnly
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -596,8 +973,10 @@ export default function PackageCheckout() {
                   <input 
                     type="email" 
                     value={formData.email} 
-                    readOnly
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -606,6 +985,7 @@ export default function PackageCheckout() {
                     type="number" 
                     min="1"
                     value={tripDetails.travellers} 
+                    disabled={!!bookingId}
                     onChange={(e) => {
                       const val = parseInt(e.target.value) || 1;
                       setTripDetails({...tripDetails, travellers: val});
@@ -613,15 +993,16 @@ export default function PackageCheckout() {
                       const opt = sharingOptions.find(o => o.type === selectedSharing);
                       if (opt) setComputedPrice(opt.pricePerPerson * val);
                     }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Source</label>
                   <select 
                     value={formData.source} 
+                    disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, source: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   >
                     <option value="">Select source</option>
                     <option value="Facebook">Facebook</option>
@@ -637,8 +1018,9 @@ export default function PackageCheckout() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Special Request (Optional)</label>
                   <textarea 
                     value={formData.specialRequest || ''} 
+                    disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, specialRequest: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     rows="3"
                     placeholder="Any dietary requirements or special requests..."
                   ></textarea>
@@ -656,12 +1038,19 @@ export default function PackageCheckout() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sharingOptions.map((option) => {
+                  const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
+                  if (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0) return null;
                   const isActive = selectedSharing === option.type;
+                  const isOccupancyDisabled = !!bookingId;
                   return (
                     <div 
                       key={option.type}
-                      onClick={() => handleSharingSelect(option)}
-                      className={`cursor-pointer rounded-2xl p-5 border-2 transition-all flex flex-col gap-2 ${
+                      onClick={() => !isOccupancyDisabled && handleSharingSelect(option)}
+                      className={`rounded-2xl p-5 border-2 transition-all flex flex-col gap-2 ${
+                        isOccupancyDisabled
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer'
+                      } ${
                         isActive 
                           ? 'border-[#136b8a] bg-[#eff6f9] shadow-md scale-[1.02]' 
                           : 'border-gray-200 bg-white hover:border-[#136b8a]/50 hover:bg-gray-50'
@@ -675,7 +1064,7 @@ export default function PackageCheckout() {
                       </div>
                       <h3 className={`font-bold text-lg ${isActive ? 'text-[#136b8a]' : 'text-gray-800'}`}>{option.label}</h3>
                       <div className="mt-auto">
-                        <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{option.pricePerPerson.toLocaleString()}</span>
+                        <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{formatMoney(pricePerPerson)}</span>
                         <span className="text-xs text-gray-500 font-medium ml-1">/ person</span>
                       </div>
                     </div>
@@ -703,27 +1092,29 @@ export default function PackageCheckout() {
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6 border-b border-gray-100 pb-6">
+              <div className="space-y-3 mb-4 border-b border-gray-100 pb-4">
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
-                  <span>Subtotal ({tripDetails.travellers} × ₹{(computedPrice / (tripDetails.travellers || 1)).toLocaleString()})</span>
-                  <span>₹{subTotal.toLocaleString()}</span>
+                  <span>Subtotal ({tripDetails.travellers} × ₹{formatMoney(computedPrice / travellerCount)})</span>
+                  <span>₹{formatMoney(subTotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
                   <span>Taxes (GST 5%)</span>
-                  <span>₹{gst.toLocaleString()}</span>
+                  <span>₹{formatMoney(gst)}</span>
                 </div>
               </div>
+
+
 
               <div className="flex justify-between items-end mb-8 bg-[#eff6f9] p-4 rounded-xl border border-[#cde5ef]">
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
                 </div>
-                <span className="font-extrabold text-[#136b8a] text-2xl">₹{finalPayable.toLocaleString()}</span>
+                <span className="font-extrabold text-[#136b8a] text-2xl">₹{formatMoney(safeFinalPayable)}</span>
               </div>
 
               <button 
                 onClick={handleProceedToPayment}
-                disabled={loading || !selectedSharing}
+                disabled={loading || !selectedSharing || checkoutBlocked}
                 className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-[#136b8a]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
               >
                 {loading ? (

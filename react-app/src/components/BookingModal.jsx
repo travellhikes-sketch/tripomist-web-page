@@ -38,51 +38,82 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
 
   // Save or create checkout lead via secure RPC (no direct table access needed)
   const saveCheckoutLead = async (formattedDate) => {
-    const parsedPackageId = parseInt(packageId);
-
     // Check for existing lead in this session — try to update it first
     const existingLeadStr = sessionStorage.getItem('tripomist_checkout_lead');
     if (existingLeadStr) {
       try {
         const existingLead = JSON.parse(existingLeadStr);
         if (existingLead.id && existingLead.token) {
-          const { error: rpcError } = await supabase.rpc('update_checkout_lead', {
-            p_lead_id: existingLead.id,
-            p_lead_token: existingLead.token,
-            p_current_step: 'popup_submitted',
+          const { error: rpcError } = await supabase.functions.invoke('razorpay-checkout', {
+            body: {
+              action: 'update_guest_lead',
+              leadId: existingLead.id,
+              p_current_step: 'popup_submitted',
+            },
+            headers: {
+              'x-checkout-lead-id':    existingLead.id,
+              'x-checkout-lead-token': existingLead.token,
+            },
           });
-          if (!rpcError) {
-            // Reuse existing lead — update succeeded
-            return existingLead;
+          if (rpcError) {
+            const isRateLimit = rpcError.status === 429 || 
+                                (rpcError.message && rpcError.message.includes('429')) || 
+                                (rpcError.context && rpcError.context.status === 429);
+            if (isRateLimit) {
+              throw new Error("Too many booking attempts. Please wait 10 minutes and try again.");
+            }
+            throw new Error("Failed to save your enquiry. Please try again.");
           }
-          // Fall through to create a new one if update failed
+          // Reuse existing lead — update succeeded
+          return {
+            ...existingLead,
+            packageId: Number(existingLead.packageId || packageId)
+          };
         }
       } catch (e) {
-        // Corrupted sessionStorage — fall through
+        if (e.message.includes('attempts') || e.message.includes('Failed to save')) {
+          throw e;
+        }
+        // Otherwise corrupted sessionStorage — fall through to create
       }
     }
 
     // Create new lead via secure RPC (callable by anon + authenticated)
-    const { data, error: rpcError } = await supabase.rpc('create_checkout_lead', {
-      p_customer_name: formData.fullName,
-      p_phone: formData.phone,
-      p_email: formData.email || null,
-      p_package_id: isNaN(parsedPackageId) ? null : parsedPackageId,
-      p_package_title: tripTitle || null,
-      p_destination: destination || tripTitle || null,
-      p_travel_date: formattedDate,
-      p_travellers: travellers || 1,
-      p_estimated_amount: price || 0,
-      p_source: formData.source || null,
-      p_special_request: null,
+    const { data, error: rpcError } = await supabase.functions.invoke('razorpay-checkout', {
+      body: {
+        action: 'create_guest_lead',
+        p_customer_name: formData.fullName,
+        p_phone: formData.phone,
+        p_email: formData.email || null,
+        p_package_id: packageId,
+        p_package_title: tripTitle || null,
+        p_destination: destination || null,
+        p_travel_date: formattedDate,
+        p_travellers: travellers || 1,
+        p_selected_sharing: null,
+        p_estimated_amount: price || 0,
+        p_source: formData.source || null,
+        p_special_request: null
+      }
     });
 
     if (rpcError) {
-      throw new Error(rpcError.message || 'Failed to save your enquiry. Please try again.');
+      const isRateLimit = rpcError.status === 429 || 
+                          (rpcError.message && rpcError.message.includes('429')) || 
+                          (rpcError.context && rpcError.context.status === 429);
+      if (isRateLimit) {
+        throw new Error("Too many booking attempts. Please wait 10 minutes and try again.");
+      }
+      throw new Error("Failed to save your enquiry. Please try again.");
     }
 
-    const lead = Array.isArray(data) ? data[0] : data;
-    return { id: lead.id, token: lead.lead_token, leadNumber: lead.lead_number };
+    // Store the response using: id, token, leadNumber, packageId
+    return {
+      id: data.leadId,
+      token: data.leadToken,
+      leadNumber: data.leadNumber,
+      packageId: Number(data.packageId)
+    };
   };
 
   // Step 1: Validate and go to checkout
@@ -116,6 +147,10 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       // Save checkout lead to Supabase
       const leadRef = await saveCheckoutLead(yyyymmdd);
       
+      if (!leadRef || !leadRef.packageId || !Number.isInteger(leadRef.packageId) || leadRef.packageId <= 0) {
+        throw new Error('Package configuration could not be resolved');
+      }
+
       // Store lead reference in sessionStorage (id + token for later RPC updates)
       sessionStorage.setItem('tripomist_checkout_lead', JSON.stringify(leadRef));
 
@@ -130,7 +165,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           price,
           travellers,
           destination,
-          packageId,
+          packageId: leadRef.packageId,
           costings,
         }
       };
