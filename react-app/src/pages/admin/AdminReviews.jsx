@@ -460,16 +460,22 @@ const AdminReviews = () => {
             <List size={18} /> Customer Reviews
           </button>
           <button
-            onClick={() => setActiveTab('page_settings')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'page_settings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-          >
-            <ImageIcon size={18} /> Reviews Page Settings
-          </button>
-          <button
             onClick={() => setActiveTab('homepage_settings')}
             className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'homepage_settings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
-            <Settings size={18} /> Testimonials Settings
+            <Settings size={18} /> Homepage Testimonials Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('page_settings')}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'page_settings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          >
+            <ImageIcon size={18} /> Reviews Page Banner
+          </button>
+          <button
+            onClick={() => setActiveTab('gallery')}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'gallery' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          >
+            <Play size={18} /> Photos & Videos Gallery
           </button>
         </nav>
       </div>
@@ -603,168 +609,168 @@ const AdminReviews = () => {
 
       {/* TAB 2: REVIEWS PAGE SETTINGS (BANNER & GALLERY) */}
       {activeTab === 'page_settings' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left panel: Banner Settings */}
-          <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
-            <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Banner Settings</h2>
+        <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
+          <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Banner Settings</h2>
 
-            <form onSubmit={handleSavePageSettings} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Page Main Heading</label>
-                <input
-                  type="text"
-                  value={pageSettings.heading}
-                  onChange={e => setPageSettings({...pageSettings, heading: e.target.value})}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                />
-              </div>
+          <form onSubmit={handleSavePageSettings} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Page Main Heading</label>
+              <input
+                type="text"
+                value={pageSettings.heading}
+                onChange={e => setPageSettings({...pageSettings, heading: e.target.value})}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Page Subheading</label>
-                <input
-                  type="text"
-                  value={pageSettings.subheading}
-                  onChange={e => setPageSettings({...pageSettings, subheading: e.target.value})}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Page Subheading</label>
+              <input
+                type="text"
+                value={pageSettings.subheading}
+                onChange={e => setPageSettings({...pageSettings, subheading: e.target.value})}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gallery Heading</label>
-                <input
-                  type="text"
-                  value={pageSettings.gallery_heading}
-                  onChange={e => setPageSettings({...pageSettings, gallery_heading: e.target.value})}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gallery Heading</label>
+              <input
+                type="text"
+                value={pageSettings.gallery_heading}
+                onChange={e => setPageSettings({...pageSettings, gallery_heading: e.target.value})}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="show_banner"
-                  checked={pageSettings.show_banner}
-                  onChange={e => setPageSettings({...pageSettings, show_banner: e.target.checked})}
-                  className="h-4 w-4 text-blue-600 rounded"
-                />
-                <label htmlFor="show_banner" className="ml-2 text-sm font-medium text-gray-900">Show Header Banner</label>
-              </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="show_banner"
+                checked={pageSettings.show_banner}
+                onChange={e => setPageSettings({...pageSettings, show_banner: e.target.checked})}
+                className="h-4 w-4 text-blue-600 rounded"
+              />
+              <label htmlFor="show_banner" className="ml-2 text-sm font-medium text-gray-900">Show Header Banner</label>
+            </div>
 
-              <div className="border-t pt-4">
-                <MediaUploader
-                  url={pageSettings.banner_url}
-                  onUrlChange={url => setPageSettings({...pageSettings, banner_url: url})}
-                  label="Desktop Banner Image"
-                  folder="reviews"
-                />
-              </div>
+            <div className="border-t pt-4">
+              <MediaUploader
+                url={pageSettings.banner_url}
+                onUrlChange={url => setPageSettings({...pageSettings, banner_url: url})}
+                label="Desktop Banner Image"
+                folder="reviews"
+              />
+            </div>
 
-              <div className="border-t pt-4">
-                <MediaUploader
-                  url={pageSettings.mobile_banner_url}
-                  onUrlChange={url => setPageSettings({...pageSettings, mobile_banner_url: url})}
-                  label="Mobile Banner Image (Optional)"
-                  folder="reviews"
-                />
-              </div>
+            <div className="border-t pt-4">
+              <MediaUploader
+                url={pageSettings.mobile_banner_url}
+                onUrlChange={url => setPageSettings({...pageSettings, mobile_banner_url: url})}
+                label="Mobile Banner Image (Optional)"
+                folder="reviews"
+              />
+            </div>
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
-              >
-                <Save size={16} /> {saving ? 'Saving...' : 'Save Banner Settings'}
-              </button>
-            </form>
-          </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
+            >
+              <Save size={16} /> {saving ? 'Saving...' : 'Save Banner Settings'}
+            </button>
+          </form>
+        </div>
+      )}
 
-          {/* Right panel: Gallery Media Management */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
-            <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Manage Travel Media Gallery</h2>
+      {activeTab === 'gallery' && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
+          <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Manage Travel Media Gallery</h2>
 
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Add New Media Form */}
-            <form onSubmit={handleAddMedia} className="bg-gray-50 p-4 rounded-xl border space-y-4">
-              <h3 className="text-sm font-bold text-gray-800">Add Image/Video to Gallery</h3>
+            <div className="lg:col-span-1">
+              <form onSubmit={handleAddMedia} className="bg-gray-50 p-4 rounded-xl border space-y-4">
+                <h3 className="text-sm font-bold text-gray-800">Add Image/Video to Gallery</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Media Type</label>
-                  <select
-                    value={newMedia.media_type}
-                    onChange={e => setNewMedia({...newMedia, media_type: e.target.value})}
-                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                  >
-                    <option value="image">Image</option>
-                    <option value="video">Video</option>
-                  </select>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Media Type</label>
+                    <select
+                      value={newMedia.media_type}
+                      onChange={e => setNewMedia({...newMedia, media_type: e.target.value})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Caption / Title</label>
+                    <input
+                      type="text"
+                      value={newMedia.title}
+                      onChange={e => setNewMedia({...newMedia, title: e.target.value})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                      placeholder="e.g. Paragliding in Manali"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                    <input
+                      type="number"
+                      value={newMedia.display_order}
+                      onChange={e => setNewMedia({...newMedia, display_order: Number(e.target.value)})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="new_media_active"
+                      checked={newMedia.is_active}
+                      onChange={e => setNewMedia({...newMedia, is_active: e.target.checked})}
+                      className="h-4 w-4 text-blue-600 rounded"
+                    />
+                    <label htmlFor="new_media_active" className="ml-2 text-sm font-medium text-gray-900">Active (Visible)</label>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Caption / Title</label>
-                  <input
-                    type="text"
-                    value={newMedia.title}
-                    onChange={e => setNewMedia({...newMedia, title: e.target.value})}
-                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                    placeholder="e.g. Paragliding in Manali"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
-                  <input
-                    type="number"
-                    value={newMedia.display_order}
-                    onChange={e => setNewMedia({...newMedia, display_order: Number(e.target.value)})}
-                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                  />
-                </div>
-
-                <div className="flex items-center pt-6">
-                  <input
-                    type="checkbox"
-                    id="new_media_active"
-                    checked={newMedia.is_active}
-                    onChange={e => setNewMedia({...newMedia, is_active: e.target.checked})}
-                    className="h-4 w-4 text-blue-600 rounded"
-                  />
-                  <label htmlFor="new_media_active" className="ml-2 text-sm font-medium text-gray-900">Active (Visible)</label>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <MediaUploader
-                  url={newMedia.media_url}
-                  onUrlChange={url => setNewMedia({...newMedia, media_url: url})}
-                  label="Upload Media File"
-                  folder="gallery"
-                />
-              </div>
-
-              {newMedia.media_type === 'video' && (
                 <div className="border-t pt-4">
                   <MediaUploader
-                    url={newMedia.thumbnail_url}
-                    onUrlChange={url => setNewMedia({...newMedia, thumbnail_url: url})}
-                    label="Video Thumbnail Image"
-                    folder="gallery_thumbs"
+                    url={newMedia.media_url}
+                    onUrlChange={url => setNewMedia({...newMedia, media_url: url})}
+                    label="Upload Media File"
+                    folder="gallery"
                   />
                 </div>
-              )}
 
-              <button
-                type="submit"
-                disabled={mediaSaving}
-                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
-              >
-                <Plus size={16} /> {mediaSaving ? 'Adding...' : 'Add to Media Gallery'}
-              </button>
-            </form>
+                {newMedia.media_type === 'video' && (
+                  <div className="border-t pt-4">
+                    <MediaUploader
+                      url={newMedia.thumbnail_url}
+                      onUrlChange={url => setNewMedia({...newMedia, thumbnail_url: url})}
+                      label="Video Thumbnail Image"
+                      folder="gallery_thumbs"
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={mediaSaving}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
+                >
+                  <Plus size={16} /> {mediaSaving ? 'Adding...' : 'Add to Media Gallery'}
+                </button>
+              </form>
+            </div>
 
             {/* Existing Media List */}
-            <div className="space-y-4">
+            <div className="lg:col-span-2 space-y-4">
               <h3 className="text-sm font-bold text-gray-800">Uploaded Gallery Media ({galleryList.length})</h3>
 
               {galleryLoading ? (

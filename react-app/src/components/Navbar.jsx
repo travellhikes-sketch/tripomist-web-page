@@ -317,7 +317,7 @@ function Navbar() {
           <div className="flex items-center gap-6 flex-shrink-0">
             <Link className="font-headline-md text-headline-md font-bold tracking-tight text-black flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
               {settings?.logo_image_url && (
-                <img src={settings.logo_image_url} alt="Logo" className="h-8 object-contain w-auto max-w-[120px]" />
+                <img src={settings.logo_image_url} alt="Logo" className="h-8 rounded-full object-contain w-auto max-w-[120px]" />
               )}
               <span className="align-middle">{settings?.logo_text || "TripoMist"}</span>
             </Link>

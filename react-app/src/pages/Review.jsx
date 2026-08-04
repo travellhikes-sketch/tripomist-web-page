@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { Star, CheckCircle, Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import PremiumPageTemplate from '../components/PremiumPageTemplate';
 
 const GoogleLogo = () => (
   <svg viewBox="0 0 48 48" className="w-5 h-5 inline-block align-middle mr-1" xmlns="http://www.w3.org/2000/svg">
@@ -127,41 +126,16 @@ export default function Review() {
   const hasHalf = avgRating - filledStars >= 0.5;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50/50">
-      <Navbar />
-
-      {/* TOP BANNER */}
-      {pageSettings.show_banner && (
-        <section className="relative w-full h-[35vh] md:h-[45vh] min-h-[260px] overflow-hidden px-4 md:px-12 lg:px-20 pt-4">
-          <div className="w-full h-full rounded-[24px] overflow-hidden relative shadow-md">
-            <picture>
-              {pageSettings.mobile_banner_url && (
-                <source media="(max-width: 640px)" srcSet={pageSettings.mobile_banner_url} />
-              )}
-              <img
-                src={pageSettings.banner_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80"}
-                alt={pageSettings.heading}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </picture>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white">
-              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 select-none">
-                {pageSettings.heading || 'Customer Reviews'}
-              </h1>
-              {pageSettings.subheading && (
-                <p className="text-sm md:text-lg max-w-xl opacity-90 select-none">
-                  {pageSettings.subheading}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
+    <PremiumPageTemplate
+      title={pageSettings.heading || 'Reviews'}
+      subtitle={pageSettings.subheading}
+      hero_image_url={pageSettings.show_banner ? pageSettings.banner_url : null}
+      mobile_banner_image={pageSettings.show_banner ? pageSettings.mobile_banner_url : null}
+      seo_title="Reviews | TripoMist"
+    >
       {/* PHOTO + VIDEO GALLERY */}
       {galleryMedia.length > 0 && (
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-12 lg:px-20 pt-12 pb-6">
+        <section className="mt-8 border-t pt-8 text-left">
           <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 tracking-tight">
             {pageSettings.gallery_heading || 'Travel Memories Gallery'}
           </h2>
@@ -182,8 +156,8 @@ export default function Review() {
 
                 {media.media_type === 'video' ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                    <div className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center text-primary shadow-lg group-hover:scale-110 transition-transform">
-                      <Play className="w-5 h-5 fill-current ml-1" />
+                    <div className="w-10 h-10 rounded-full bg-white/95 flex items-center justify-center text-primary shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-4 h-4 fill-current ml-0.5" />
                     </div>
                   </div>
                 ) : (
@@ -203,17 +177,17 @@ export default function Review() {
 
       {/* TRUST SUMMARY */}
       {testimonialsSettings.show_summary !== false && (
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-12 lg:px-20 py-8">
-          <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <section className="mt-8 border-t pt-8 text-left">
+          <div className="bg-slate-50 rounded-2xl p-6 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex flex-col items-center md:items-start gap-2">
-              <span className="text-sm font-black uppercase tracking-widest text-[#136b8a]">
+              <span className="text-xs font-black uppercase tracking-widest text-[#136b8a]">
                 {testimonialsSettings.rating_label || 'EXCELLENT'}
               </span>
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-6 h-6 ${
+                    className={`w-5 h-5 ${
                       i < filledStars
                         ? 'text-amber-400 fill-amber-400'
                         : i === filledStars && hasHalf
@@ -222,22 +196,22 @@ export default function Review() {
                     }`}
                   />
                 ))}
-                <span className="ml-2 font-bold text-gray-900">{avgRating.toFixed(1)} / 5.0</span>
+                <span className="ml-2 font-bold text-gray-900 text-sm">{avgRating.toFixed(1)} / 5.0</span>
               </div>
-              <p className="text-sm text-gray-500 font-medium">
+              <p className="text-xs text-gray-500 font-medium">
                 Based on <span className="font-bold text-gray-800">{testimonialsSettings.review_count || '0'}</span> verified customer reviews
               </p>
             </div>
 
             {testimonialsSettings.source_name && (
-              <div className="flex items-center gap-2 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
+              <div className="flex items-center gap-2 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-8">
                 {testimonialsSettings.source_name === 'Google' ? (
                   <div className="flex items-center">
                     <GoogleLogo />
-                    <span className="text-lg font-bold text-gray-800">Google Review Partner</span>
+                    <span className="text-sm font-bold text-gray-800">Google Review Partner</span>
                   </div>
                 ) : (
-                  <span className="text-base font-bold text-gray-700">{testimonialsSettings.source_name}</span>
+                  <span className="text-sm font-bold text-gray-700">{testimonialsSettings.source_name}</span>
                 )}
               </div>
             )}
@@ -246,51 +220,50 @@ export default function Review() {
       )}
 
       {/* REVIEWS GRID LIST */}
-      <main className="w-full max-w-7xl mx-auto px-4 md:px-12 lg:px-20 pb-36">
+      <section className="mt-8 border-t pt-8 text-left">
         <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 tracking-tight">
           What Our Travelers Say
         </h2>
 
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex justify-center items-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : reviews.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm text-gray-500">
+          <div className="bg-slate-50 rounded-2xl p-8 text-center border border-gray-100 text-gray-500 italic text-sm">
             No reviews published yet.
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {reviews.slice(0, visibleCount).map((review) => {
                 const name = review.customer_name || 'Customer';
                 const text = review.review_text || '';
                 const rating = review.rating || 5;
                 const imageUrl = review.customer_image_url || '';
                 const reviewDate = review.review_date || '';
-                const source = review.source || '';
                 const verified = review.verified !== false;
                 const readMoreLink = review.read_more_link || '';
 
                 return (
-                  <div key={review.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                  <div key={review.id} className="bg-white p-5 rounded-2xl border border-gray-150 shadow-sm flex flex-col justify-between hover:border-gray-300 transition-colors">
                     <div>
                       {/* Customer Row */}
-                      <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-3 mb-3">
                         {imageUrl ? (
-                          <img src={imageUrl} alt={name} className="w-11 h-11 rounded-full object-cover border border-gray-100" />
+                          <img src={imageUrl} alt={name} className="w-10 h-10 rounded-full object-cover border border-gray-100" />
                         ) : (
-                          <div className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs">
                             {name.charAt(0).toUpperCase()}
                           </div>
                         )}
                         <div>
-                          <h3 className="font-bold text-gray-900 text-sm md:text-base leading-tight">{name}</h3>
+                          <h3 className="font-bold text-gray-900 text-xs md:text-sm leading-tight">{name}</h3>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-xs text-gray-400">{reviewDate || 'Recent'}</span>
+                            <span className="text-[10px] text-gray-400">{reviewDate || 'Recent'}</span>
                             {verified && (
-                              <div className="flex items-center gap-0.5 text-blue-500 text-[10px] font-bold bg-blue-50 px-1.5 py-0.5 rounded-full">
-                                <CheckCircle className="w-2.5 h-2.5 fill-current" />
+                              <div className="flex items-center gap-0.5 text-blue-500 text-[9px] font-bold bg-blue-50 px-1.5 py-0.5 rounded-full">
+                                <CheckCircle className="w-2 h-2 fill-current" />
                                 <span>Verified</span>
                               </div>
                             )}
@@ -299,22 +272,22 @@ export default function Review() {
                       </div>
 
                       {/* Stars */}
-                      <div className="flex gap-0.5 mb-3 text-amber-400">
+                      <div className="flex gap-0.5 mb-2.5 text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={14} fill={i < rating ? "currentColor" : "none"} className={i < rating ? "" : "text-gray-200"} />
+                          <Star key={i} size={12} fill={i < rating ? "currentColor" : "none"} className={i < rating ? "" : "text-gray-200"} />
                         ))}
                       </div>
 
                       {/* Review Text */}
-                      <p className="text-sm text-gray-600 leading-relaxed italic mb-4">
+                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed italic mb-3">
                         "{text}"
                       </p>
                     </div>
 
                     {/* Footer Row */}
-                    <div className="flex items-center justify-between border-t border-gray-50 pt-3 mt-auto">
+                    <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-auto">
                       {review.destination && (
-                        <span className="text-xs font-semibold text-[#136b8a] bg-blue-50/50 px-2.5 py-1 rounded-lg">
+                        <span className="text-[10px] font-semibold text-[#136b8a] bg-blue-50/50 px-2 py-0.5 rounded">
                           📍 {review.destination}
                         </span>
                       )}
@@ -324,7 +297,7 @@ export default function Review() {
                           href={readMoreLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-bold text-primary hover:underline"
+                          className="text-[10px] font-bold text-primary hover:underline"
                         >
                           Read More →
                         </a>
@@ -337,10 +310,10 @@ export default function Review() {
 
             {/* Load More Button */}
             {visibleCount < reviews.length && (
-              <div className="flex justify-center pt-4">
+              <div className="flex justify-center pt-2">
                 <button
                   onClick={handleLoadMore}
-                  className="bg-white border border-gray-200 text-gray-700 font-bold px-8 py-3 rounded-full hover:bg-gray-50 shadow-sm transition-all text-sm cursor-pointer"
+                  className="bg-white border border-gray-200 text-gray-700 font-bold px-6 py-2.5 rounded-full hover:bg-gray-50 shadow-sm transition-all text-xs cursor-pointer"
                 >
                   Load More Reviews
                 </button>
@@ -348,7 +321,7 @@ export default function Review() {
             )}
           </div>
         )}
-      </main>
+      </section>
 
       {/* LIGHTBOX FOR PHOTO GALLERY */}
       {lightboxIndex !== null && (
@@ -392,8 +365,6 @@ export default function Review() {
           </div>
         </div>
       )}
-
-      <Footer />
-    </div>
+    </PremiumPageTemplate>
   );
 }
