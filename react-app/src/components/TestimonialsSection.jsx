@@ -34,17 +34,16 @@ export default function TestimonialsSection() {
         .from('reviews')
         .select('*')
         .eq('is_approved', true)
+        .eq('is_featured', true)
         .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false })
+        .order('review_date', { ascending: false })
         .limit(20);
       if (rData) setReviews(rData);
     }
     fetchData();
   }, []);
 
-  const reviewsToRender = (settings?.cards && settings.cards.length > 0)
-    ? settings.cards
-    : reviews;
+  const reviewsToRender = reviews;
 
   const scrollBy = useCallback((direction) => {
     if (!containerRef.current) return;

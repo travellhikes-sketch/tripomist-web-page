@@ -8,7 +8,7 @@ const publicNavItems = [
   { icon: Home,         label: 'Home',          path: '/' },
   { icon: Map,          label: 'Domestic',      path: '/domestic' },
   { icon: Plane,        label: 'International', path: '/international' },
-  { icon: Star,         label: 'Review',        path: '/review' },
+  { icon: Star,         label: 'Review',        path: '/reviews' },
   { icon: ShoppingCart, label: 'Cart',          path: '/cart' },
 ]
 

@@ -230,7 +230,8 @@ function App() {
           <Route path="/trips/recommended" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/trips/best-seller" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/international" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/review" element={<Review />} />
+          <Route path="/reviews" element={<Review />} />
+          <Route path="/review" element={<Navigate to="/reviews" replace />} />
           <Route path="/domestic" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/destinations/:destinationSlug" element={
             <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
