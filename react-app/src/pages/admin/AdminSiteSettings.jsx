@@ -750,6 +750,17 @@ const AdminSiteSettings = () => {
                     <option value="false">No</option>
                   </select>
                 </div>
+                <div>
+                  <label className={labelClass}>Autoplay Speed (ms)</label>
+                  <input type="number" min="1000" step="500" value={settings.testimonials_section.autoplay_speed || 4000} onChange={e => handleChange('testimonials_section', 'autoplay_speed', Number(e.target.value))} className={inputClass} placeholder="4000" />
+                </div>
+                <div>
+                  <label className={labelClass}>Background Color</label>
+                  <div className="flex gap-2">
+                    <input type="color" value={settings.testimonials_section.bg_color || '#ffffff'} onChange={e => handleChange('testimonials_section', 'bg_color', e.target.value)} className="w-10 h-10 border rounded-lg cursor-pointer" />
+                    <input type="text" value={settings.testimonials_section.bg_color || '#ffffff'} onChange={e => handleChange('testimonials_section', 'bg_color', e.target.value)} className={inputClass} />
+                  </div>
+                </div>
                 <div className="md:col-span-2">
                   <label className={labelClass}>Section Heading</label>
                   <input type="text" value={settings.testimonials_section.heading || 'Client testimonials'} onChange={e => handleChange('testimonials_section', 'heading', e.target.value)} className={inputClass} />
@@ -758,7 +769,7 @@ const AdminSiteSettings = () => {
                   <label className={labelClass}>Section Subtext</label>
                   <input type="text" value={settings.testimonials_section.subtext || ''} onChange={e => handleChange('testimonials_section', 'subtext', e.target.value)} className={inputClass} />
                 </div>
-                 <div>
+                <div>
                   <label className={labelClass}>"See All" Button Route</label>
                   <input type="text" value={settings.testimonials_section.see_all_link || '/reviews'} onChange={e => handleChange('testimonials_section', 'see_all_link', e.target.value)} className={inputClass} />
                 </div>
@@ -766,11 +777,27 @@ const AdminSiteSettings = () => {
                   <label className={labelClass}>"See All" Button Label</label>
                   <input type="text" value={settings.testimonials_section.button_text || 'See all testimonials'} onChange={e => handleChange('testimonials_section', 'button_text', e.target.value)} className={inputClass} />
                 </div>
-                <div>
-                  <label className={labelClass}>Background Color</label>
-                  <div className="flex gap-2">
-                    <input type="color" value={settings.testimonials_section.bg_color || '#ffffff'} onChange={e => handleChange('testimonials_section', 'bg_color', e.target.value)} className="w-10 h-10 border rounded-lg cursor-pointer" />
-                    <input type="text" value={settings.testimonials_section.bg_color || '#ffffff'} onChange={e => handleChange('testimonials_section', 'bg_color', e.target.value)} className={inputClass} />
+              </div>
+
+              {/* Trust Summary */}
+              <div className="border-t pt-4">
+                <h3 className="text-md font-bold text-gray-800 mb-4">Trust Summary (Left Panel)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Rating Label (e.g. EXCELLENT)</label>
+                    <input type="text" value={settings.testimonials_section.rating_label || 'EXCELLENT'} onChange={e => handleChange('testimonials_section', 'rating_label', e.target.value)} className={inputClass} placeholder="EXCELLENT" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Average Rating (e.g. 4.5)</label>
+                    <input type="number" min="0" max="5" step="0.1" value={settings.testimonials_section.avg_rating || '4.5'} onChange={e => handleChange('testimonials_section', 'avg_rating', e.target.value)} className={inputClass} placeholder="4.5" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Total Review Count (e.g. 2,154)</label>
+                    <input type="text" value={settings.testimonials_section.review_count || ''} onChange={e => handleChange('testimonials_section', 'review_count', e.target.value)} className={inputClass} placeholder="2,154" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Source Name (e.g. Google)</label>
+                    <input type="text" value={settings.testimonials_section.source_name || 'Google'} onChange={e => handleChange('testimonials_section', 'source_name', e.target.value)} className={inputClass} placeholder="Google" />
                   </div>
                 </div>
               </div>
@@ -782,7 +809,7 @@ const AdminSiteSettings = () => {
                     <h3 className="text-md font-bold text-gray-800">Testimonials Cards Override</h3>
                     <p className="text-xs text-gray-500">Adding cards below overrides database reviews and lets you manage testimonials manually.</p>
                   </div>
-                  <button onClick={() => addCard('testimonials_section', { rating: 5, review_text: 'Testimonial review text...', customer_name: 'Customer Name', destination: 'Travelled Destination', customer_image_url: '' })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                  <button onClick={() => addCard('testimonials_section', { rating: 5, review_text: 'Testimonial review text...', customer_name: 'Customer Name', destination: 'Travelled Destination', customer_image_url: '', review_age: '1 year ago', source: 'Google', verified: true, read_more_link: '' })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
                     <Plus size={14} /> Add Testimonial Card
                   </button>
                 </div>
@@ -800,23 +827,42 @@ const AdminSiteSettings = () => {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                           <label className={labelClass}>Customer Name</label>
-                          <input type="text" value={card.customer_name} onChange={e => updateCard('testimonials_section', card.id, 'customer_name', e.target.value)} className={inputClass} />
+                          <input type="text" value={card.customer_name || ''} onChange={e => updateCard('testimonials_section', card.id, 'customer_name', e.target.value)} className={inputClass} />
                         </div>
                         <div>
-                          <label className={labelClass}>Destination</label>
-                          <input type="text" value={card.destination} onChange={e => updateCard('testimonials_section', card.id, 'destination', e.target.value)} className={inputClass} />
+                          <label className={labelClass}>Review Age / Date</label>
+                          <input type="text" value={card.review_age || ''} onChange={e => updateCard('testimonials_section', card.id, 'review_age', e.target.value)} className={inputClass} placeholder="1 year ago" />
                         </div>
                         <div>
                           <label className={labelClass}>Rating (1-5)</label>
-                          <input type="number" min="1" max="5" value={card.rating} onChange={e => updateCard('testimonials_section', card.id, 'rating', Number(e.target.value))} className={inputClass} />
+                          <input type="number" min="1" max="5" value={card.rating || 5} onChange={e => updateCard('testimonials_section', card.id, 'rating', Number(e.target.value))} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Source (e.g. Google)</label>
+                          <input type="text" value={card.source || 'Google'} onChange={e => updateCard('testimonials_section', card.id, 'source', e.target.value)} className={inputClass} placeholder="Google" />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Verified Indicator</label>
+                          <select value={card.verified !== false ? 'true' : 'false'} onChange={e => updateCard('testimonials_section', card.id, 'verified', e.target.value === 'true')} className={inputClass}>
+                            <option value="true">Show verified badge</option>
+                            <option value="false">Hide</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className={labelClass}>Destination</label>
+                          <input type="text" value={card.destination || ''} onChange={e => updateCard('testimonials_section', card.id, 'destination', e.target.value)} className={inputClass} />
                         </div>
                         <div className="md:col-span-3">
-                          <label className={labelClass}>Customer Image URL</label>
-                          <input type="url" value={card.customer_image_url} onChange={e => updateCard('testimonials_section', card.id, 'customer_image_url', e.target.value)} className={inputClass} placeholder="https://..." />
+                          <label className={labelClass}>Customer Avatar URL</label>
+                          <input type="url" value={card.customer_image_url || ''} onChange={e => updateCard('testimonials_section', card.id, 'customer_image_url', e.target.value)} className={inputClass} placeholder="https://..." />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className={labelClass}>Read More Link (optional)</label>
+                          <input type="url" value={card.read_more_link || ''} onChange={e => updateCard('testimonials_section', card.id, 'read_more_link', e.target.value)} className={inputClass} placeholder="https://..." />
                         </div>
                         <div className="md:col-span-3">
                           <label className={labelClass}>Review Text</label>
-                          <textarea value={card.review_text} onChange={e => updateCard('testimonials_section', card.id, 'review_text', e.target.value)} className={inputClass} rows={2} />
+                          <textarea value={card.review_text || ''} onChange={e => updateCard('testimonials_section', card.id, 'review_text', e.target.value)} className={inputClass} rows={2} />
                         </div>
                       </div>
                     </div>

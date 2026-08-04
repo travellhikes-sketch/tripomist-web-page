@@ -13,6 +13,7 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const searchRef = useRef(null)
+  const mdSearchRef = useRef(null)
 
   const [settings, setSettings] = useState(null)
   const [packageSuggestions, setPackageSuggestions] = useState([])
@@ -80,7 +81,9 @@ function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      const inLg = searchRef.current && searchRef.current.contains(event.target)
+      const inMd = mdSearchRef.current && mdSearchRef.current.contains(event.target)
+      if (!inLg && !inMd) {
         setShowSuggestions(false)
       }
     }
@@ -307,8 +310,9 @@ function Navbar() {
   return (
     <header className="sticky top-0 z-[100] w-full flex flex-col bg-white">
       <nav className="relative border-b border-gray-100">
-        <div className="flex justify-between items-center w-full px-4 md:px-12 lg:px-20 py-4 bg-white relative z-50">
-          <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between w-full px-4 md:px-12 lg:px-20 py-4 bg-white relative z-50">
+          {/* LEFT: Logo */}
+          <div className="flex items-center gap-6 flex-shrink-0">
             <Link className="font-headline-md text-headline-md font-bold tracking-tight text-black flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
               {settings?.logo_image_url ? (
                 <img src={settings.logo_image_url} alt="TripoMist" className="h-8" />
@@ -320,7 +324,7 @@ function Navbar() {
             <div className="hidden lg:flex items-center gap-6 ml-4">
               {desktopTopLevel.map(item => {
                 if (item.item_type === 'dropdown') {
-                  return <DesktopDropdown key={item.id} item={item} />
+                  return <DesktopDropdown key={item.id} item={item} />;
                 }
                 const linkClass = item.item_type === 'button'
                   ? "bg-primary/10 text-primary hover:bg-primary/20 px-4 py-1.5 rounded-full font-medium text-sm transition-colors flex items-center"
@@ -335,71 +339,75 @@ function Navbar() {
             </div>
           </div>
 
-          <div ref={searchRef} className="hidden md:flex flex-1 max-w-sm mx-auto relative">
-            <input
-              type="text"
-              placeholder={settings?.search_placeholder || "Search destinations..."}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setShowSuggestions(true)
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch(searchQuery)
-                }
-              }}
-              className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
-            />
-            <button
-              onClick={() => handleSearch(searchQuery)}
-              className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[16px]">search</span>
-            </button>
+          {/* CENTER: Search bar — absolutely centered on large screens only */}
+          <div className="hidden lg:block absolute left-1/2 -translate-x-1/2" style={{ width: 'min(380px, 32vw)' }}>
+            <div ref={searchRef} className="relative w-full">
+              <input
+                type="text"
+                placeholder={settings?.search_placeholder || "Search destinations..."}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setShowSuggestions(true)
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(searchQuery)
+                  }
+                }}
+                className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
+              />
+              <button
+                onClick={() => handleSearch(searchQuery)}
+                className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">search</span>
+              </button>
 
-            <AnimatePresence>
-              {showSuggestions && searchQuery.trim().length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
-                >
-                  <div className="py-2">
-                    {packageSuggestions.map((suggestion, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => handleSearch(suggestion)}
-                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
-                        {suggestion}
-                      </div>
-                    ))}
-                    {packageSuggestions.length === 0 && (
-                      <div
-                        onClick={() => handleSearch(searchQuery)}
-                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
-                        Search for "{searchQuery}"
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              <AnimatePresence>
+                {showSuggestions && searchQuery.trim().length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
+                  >
+                    <div className="py-2">
+                      {packageSuggestions.map((suggestion, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => handleSearch(suggestion)}
+                          className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
+                          {suggestion}
+                        </div>
+                      ))}
+                      {packageSuggestions.length === 0 && (
+                        <div
+                          onClick={() => handleSearch(searchQuery)}
+                          className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
+                          Search for "{searchQuery}"
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* RIGHT: Instagram badge + Menu + Login */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             {settings?.show_instagram_badge && settings?.instagram_url && (
               <a
                 href={settings.instagram_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-5 h-5 text-[#e1306c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -434,6 +442,58 @@ function Navbar() {
             )}
           </div>
         </div>
+
+        {/* MD-only search row (768–1023px): full-width search below the main nav row */}
+        <div ref={mdSearchRef} className="hidden md:flex lg:hidden items-center px-4 md:px-12 pb-3 relative">
+          <div className="relative w-full max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder={settings?.search_placeholder || "Search destinations..."}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setShowSuggestions(true)
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch(searchQuery)
+              }}
+              className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
+            />
+            <button
+              onClick={() => handleSearch(searchQuery)}
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[16px]">search</span>
+            </button>
+            <AnimatePresence>
+              {showSuggestions && searchQuery.trim().length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60]"
+                >
+                  <div className="py-2">
+                    {packageSuggestions.map((suggestion, idx) => (
+                      <div key={idx} onClick={() => handleSearch(suggestion)} className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium">
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">location_on</span>
+                        {suggestion}
+                      </div>
+                    ))}
+                    {packageSuggestions.length === 0 && (
+                      <div onClick={() => handleSearch(searchQuery)} className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium">
+                        <span className="material-symbols-outlined text-[16px] text-primary/70">search</span>
+                        Search for "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
 
         <AnimatePresence>
           {isOpen && (

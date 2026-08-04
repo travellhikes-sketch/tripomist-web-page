@@ -261,7 +261,19 @@ function Home() {
               <div className="relative z-10 max-w-3xl mb-8">
                 <h1
                   className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight"
-                  dangerouslySetInnerHTML={{ __html: heroSettings?.heading || 'Find Yourself&nbsp; <br /><span class="text-primary-container">With TripoMist</span>' }}
+                  dangerouslySetInnerHTML={{
+                    __html: (() => {
+                      // Strip any stored forced line-breaks from the DB value so heading
+                      // always renders as one continuous line; natural responsive wrapping only.
+                      const raw = heroSettings?.heading
+                        || 'Find Yourself <span class="text-primary-container">With TripoMist</span>';
+                      return raw
+                        .replace(/<br\s*\/?>/gi, ' ')   // remove <br> / <br/> / <br />
+                        .replace(/&nbsp;/gi, ' ')        // replace &nbsp; with normal space
+                        .replace(/[ \t]{2,}/g, ' ')     // collapse multiple spaces
+                        .trim();
+                    })()
+                  }}
                 />
                 <p
                   className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8"
@@ -296,11 +308,14 @@ function Home() {
           ))
         )}
 
+        {/* Benefits/Trust Cards Section */}
+        <BenefitsSection />
+
+        {/* Stats Strip */}
+        <StatsStrip />
+
         {/* Dynamic Reviews Section */}
         <ReviewsSection featuredOnly={true} />
-
-        {/* Stats Strip in place of banner slider */}
-        <StatsStrip />
 
         {/* Dynamic Package Sections (After Reviews/Banners) */}
         {!pageLoading && (() => {

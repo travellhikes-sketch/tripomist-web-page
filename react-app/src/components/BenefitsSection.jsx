@@ -43,11 +43,7 @@ export default function BenefitsSection() {
       className="w-full py-16 px-4 md:px-12 lg:px-20 border-t border-black/5"
     >
       <div className="max-w-7xl mx-auto">
-        {settings.title && (
-          <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-12 uppercase tracking-wider">
-            {settings.title}
-          </h2>
-        )}
+        {/* Section heading intentionally hidden per design requirements */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           {settings.cards.map((card) => {
             const IconComponent = ICON_MAP[card.icon] || Heart;
