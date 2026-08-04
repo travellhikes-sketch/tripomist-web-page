@@ -62,7 +62,6 @@ const AdminManualBookings = React.lazy(() => import('./pages/admin/AdminManualBo
 const AdminWebsitePages = React.lazy(() => import('./pages/admin/AdminWebsitePages'));
 const AdminMenuManager = React.lazy(() => import('./pages/admin/AdminMenuManager'));
 const AdminExploreDepartments = React.lazy(() => import('./pages/admin/AdminExploreDepartments'));
-const AdminPromoStrip = React.lazy(() => import('./pages/admin/AdminPromoStrip'));
 const AdminReviews = React.lazy(() => import('./pages/admin/AdminReviews'));
 const AdminLoginSlider = React.lazy(() => import('./pages/admin/AdminLoginSlider'));
 const DestinationPackages = React.lazy(() => import('./pages/DestinationPackages'));
@@ -163,12 +162,7 @@ function App() {
                 <React.Suspense fallback={<div>Loading...</div>}><AdminExploreDepartments /></React.Suspense>
                 } 
               />
-              <Route 
-                path="promo-strip" 
-                element={
-                <React.Suspense fallback={<div>Loading...</div>}><AdminPromoStrip /></React.Suspense>
-                } 
-              />
+
               <Route path="reviews" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminReviews /></React.Suspense>
               } />

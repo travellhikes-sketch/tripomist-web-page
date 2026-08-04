@@ -12,10 +12,13 @@ import PackageCard from '../components/PackageCard'
 import { supabase } from '../supabaseClient'
 import FeaturedTripCard from '../components/FeaturedTripCard'
 import ReviewsSection from '../components/ReviewsSection'
+import BenefitsSection from '../components/BenefitsSection'
+import StatsStrip from '../components/StatsStrip'
+import TestimonialsSection from '../components/TestimonialsSection'
 
 function Home() {
   const [dynamicPackageSections, setDynamicPackageSections] = useState([]);
-  
+
   const [banners, setBanners] = useState([]);
   const [destinations, setDestinations] = useState([]);
   const [interests, setInterests] = useState([]);
@@ -52,9 +55,9 @@ function Home() {
                 .eq('placement_type', 'homepage_section')
                 .eq('placement_id', sec.id)
                 .eq('Pakage.status', 'active');
-              
+
               if (error) throw error;
-              
+
               // Filter out duplicates in case the unique constraint failed or data has dupes
               const uniquePkgs = [];
               const seen = new Set();
@@ -66,7 +69,7 @@ function Home() {
                   }
                 });
               }
-              
+
               return { ...sec, packagesData: uniquePkgs, fetchError: null };
             } catch (err) {
               console.error(`Error fetching packages for section ${sec.id}:`, err);
@@ -94,7 +97,7 @@ function Home() {
   }, []);
 
   const navigate = useNavigate()
-  
+
   const renderSpecialSection = (sec) => {
     if (sec.section_key === 'destinations') {
       return (
@@ -104,7 +107,7 @@ function Home() {
               {sec.title || 'Destinations'}
             </h2>
           </div>
-          
+
           <div className="flex gap-8 overflow-x-auto hide-scrollbar py-4 px-2 -mx-2">
             {destinations.slice(0, sec.max_cards || 20).map((dest) => (
               <Link key={dest.id} to={`/destinations/${dest.slug}`} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
@@ -120,7 +123,7 @@ function Home() {
         </section>
       );
     }
-    
+
     if (sec.section_key === 'interests') {
       return (
         <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest">
@@ -129,7 +132,7 @@ function Home() {
               {sec.title || 'Destination According To Interest'}
             </h2>
           </div>
-          
+
           <div className="flex gap-8 overflow-x-auto hide-scrollbar py-4 px-2 -mx-2">
             {interests.slice(0, sec.max_cards || 20).map((interest) => (
               <Link key={interest.id} to={interest.route} className="flex flex-col items-center gap-3 cursor-pointer group min-w-[100px] destination-circle no-underline">
@@ -191,16 +194,16 @@ function Home() {
         ) : (
           <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
             {sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => (
-              <PackageCard destination={pkg.destination} state={pkg.state}  
+              <PackageCard destination={pkg.destination} state={pkg.state}
                 key={pkg.id}
                 bestSeller={isBestSellerFlag || pkg.best_seller}
-                className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0" 
-                tripTitle={pkg.title} 
-                price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request'} 
-                duration={pkg.duration || 'Flexible'} 
+                className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0"
+                tripTitle={pkg.title}
+                price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request'}
+                duration={pkg.duration || 'Flexible'}
                 description={pkg.short_description || pkg.destination || ''}
                 bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"}
-                link={isInternational && !pkg.price ? '#' : `/itinerary/${pkg.slug}`} 
+                link={isInternational && !pkg.price ? '#' : `/itinerary/${pkg.slug}`}
                 badge={isInternational && !pkg.price ? 'Coming Soon' : ''}
                 primaryBadgeText={pkg.primary_badge_text}
                 secondaryBadgeText={pkg.secondary_badge_text}
@@ -222,59 +225,61 @@ function Home() {
       <main className="w-full flex-grow">
         {/* Hero Section */}
         {(!heroSettings || heroSettings.is_active !== false) && (
-        <section className="relative w-full min-h-[921px] flex flex-col justify-end pt-32 pb-48 md:pb-margin-desktop">
-          <div className="absolute inset-0 w-full h-full -z-10 bg-black">
-            {(!heroSettings?.media_type || heroSettings.media_type === 'video') ? (
-              <video 
-                autoPlay 
-                loop 
-                muted 
-                playsInline 
-                preload="auto"
-                className="w-full h-full object-cover"
-                style={{ objectPosition: 'center center' }}
-              >
-                <source src={heroSettings?.desktop_media_url || "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260629_032424_3c9c2a9d-807b-4482-80e6-dd6d9dfd4545.mp4"} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <img 
-                src={heroSettings?.desktop_media_url || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"} 
-                alt="Hero Background" 
-                className="w-full h-full object-cover"
-                style={{ objectPosition: 'center center' }}
-              />
-            )}
-            {/* Subtle dark overlay for text readability */}
-            <div 
-              className="absolute inset-0 bg-black" 
-              style={{ opacity: heroSettings?.overlay_opacity !== undefined ? Number(heroSettings.overlay_opacity) / 100 : 0.3 }}
-            ></div>
-          </div>
-          
-          {/* Content Wrapper */}
-          <div className="w-full px-4 md:px-12 lg:px-20">
-            <div className="relative z-10 max-w-3xl mb-stack-lg">
-              <h1 
-                className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight"
-                dangerouslySetInnerHTML={{ __html: heroSettings?.heading || 'Find Yourself&nbsp; <br /><span class="text-primary-container">With TripoMist</span>' }}
-              />
-              <p 
-                className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8"
-                dangerouslySetInnerHTML={{ __html: heroSettings?.subtitle || 'Your Safe Travel Our Responsibility<span class="text-primary-container">.</span>' }}
-              />
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center mb-8">
-              <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.primary_button_route || "/all-departures"}>
-                {heroSettings?.primary_button_text || "Explore All Departures"}
-                <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
-              </Link>
-              <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.secondary_button_route || "/trips/upcoming_trips"}>
-                {heroSettings?.secondary_button_text || "See Upcoming Trips"}
-              </Link>
+        <div className="px-4 md:px-12 lg:px-20 pt-6">
+          <section className="relative w-full min-h-[500px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-32 rounded-[28px] overflow-hidden shadow-lg">
+            <div className="absolute inset-0 w-full h-full -z-10 bg-black">
+              {(!heroSettings?.media_type || heroSettings.media_type === 'video') ? (
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: 'center center' }}
+                >
+                  <source src={heroSettings?.desktop_media_url || "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260629_032424_3c9c2a9d-807b-4482-80e6-dd6d9dfd4545.mp4"} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={heroSettings?.desktop_media_url || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"}
+                  alt="Hero Background"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: 'center center' }}
+                />
+              )}
+              {/* Subtle dark overlay for text readability */}
+              <div
+                className="absolute inset-0 bg-black"
+                style={{ opacity: heroSettings?.overlay_opacity !== undefined ? Number(heroSettings.overlay_opacity) / 100 : 0.3 }}
+              ></div>
             </div>
-          </div>
+
+            {/* Content Wrapper */}
+            <div className="w-full px-6 md:px-12 lg:px-16">
+              <div className="relative z-10 max-w-3xl mb-8">
+                <h1
+                  className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight"
+                  dangerouslySetInnerHTML={{ __html: heroSettings?.heading || 'Find Yourself&nbsp; <br /><span class="text-primary-container">With TripoMist</span>' }}
+                />
+                <p
+                  className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8"
+                  dangerouslySetInnerHTML={{ __html: heroSettings?.subtitle || 'Your Safe Travel Our Responsibility<span class="text-primary-container">.</span>' }}
+                />
+                <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                  <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.primary_button_route || "/all-departures"}>
+                    {heroSettings?.primary_button_text || "Explore All Departures"}
+                    <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+                  </Link>
+                  <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.secondary_button_route || "/trips/upcoming_trips"}>
+                    {heroSettings?.secondary_button_text || "See Upcoming Trips"}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        </section>
         )}
 
         {/* Dynamic Sections (Before Reviews) */}
@@ -284,7 +289,17 @@ function Home() {
             <span className="text-sm font-medium ml-3">Loading sections...</span>
           </div>
         ) : (
-          dynamicPackageSections.filter(sec => sec.display_order <= 5).map(sec => renderPackageSection(sec))
+          dynamicPackageSections.filter(sec => sec.display_order <= 5).map(sec => (
+            <React.Fragment key={sec.id}>
+              {renderPackageSection(sec)}
+              {sec.section_key === 'recommended' && (
+                <>
+                  <BenefitsSection />
+                  <StatsStrip />
+                </>
+              )}
+            </React.Fragment>
+          ))
         )}
 
         {/* Dynamic Reviews Section */}
@@ -320,9 +335,9 @@ function Home() {
                 return (
                   <SwiperSlide key={banner.id} className="overflow-visible">
                     <BannerWrapper {...wrapperProps} className={`block relative w-full h-[220px] md:h-[280px] bg-slate-900 rounded-3xl overflow-hidden shadow-lg transition-transform ${isBannerClickable ? 'active:scale-[0.99] cursor-pointer' : 'cursor-default opacity-95'}`}>
-                      <img 
-                        src={banner.desktop_image} 
-                        alt={banner.title} 
+                      <img
+                        src={banner.desktop_image}
+                        alt={banner.title}
                         className="absolute inset-0 w-full h-full object-cover opacity-60"
                       />
                       <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent"></div>
@@ -354,6 +369,7 @@ function Home() {
 
       </main>
 
+      <TestimonialsSection />
       <Footer />
     </div>
   )

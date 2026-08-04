@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import ExploreNavbar from './ExploreNavbar'
-import PromoStrip from './PromoStrip'
 import LoginSignupModal from './LoginSignupModal'
 
 function Navbar() {
@@ -14,11 +13,11 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const searchRef = useRef(null)
-  
+
   const [settings, setSettings] = useState(null)
   const [packageSuggestions, setPackageSuggestions] = useState([])
   const [navItems, setNavItems] = useState([])
-  
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -69,7 +68,7 @@ function Navbar() {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true })
-      
+
       if (navData) {
         setNavItems(navData)
       }
@@ -96,7 +95,7 @@ function Navbar() {
           .eq('status', 'active')
           .or(`title.ilike.%${searchQuery}%,destination.ilike.%${searchQuery}%`)
           .limit(5)
-        
+
         if (data) {
           const uniqueSuggestions = Array.from(new Set(data.map(p => p.title || p.destination))).filter(Boolean)
           setPackageSuggestions(uniqueSuggestions)
@@ -173,15 +172,15 @@ function Navbar() {
 
   const visibleNavItems = navItems.filter(filterVisibility);
 
-  const mobileItems = visibleNavItems.filter(item => 
-    item.show_on_mobile && 
+  const mobileItems = visibleNavItems.filter(item =>
+    item.show_on_mobile &&
     (item.location === 'mobile_menu' || item.location === 'navbar' || item.location === 'both')
   );
   const mobileTopLevel = mobileItems.filter(item => !item.parent_id);
   const getMobileChildren = (parentId) => mobileItems.filter(item => item.parent_id === parentId);
 
-  const desktopItems = visibleNavItems.filter(item => 
-    item.show_on_desktop && 
+  const desktopItems = visibleNavItems.filter(item =>
+    item.show_on_desktop &&
     (item.location === 'navbar' || item.location === 'both')
   );
   const desktopTopLevel = desktopItems.filter(item => !item.parent_id);
@@ -190,10 +189,10 @@ function Navbar() {
   const MobileDropdown = ({ item }) => {
     const [open, setOpen] = useState(false);
     const children = getMobileChildren(item.id);
-    
+
     return (
       <div className="border-b border-black/10">
-        <button 
+        <button
           className="w-full flex items-center justify-between text-xl md:text-2xl py-4 text-black/80 hover:text-black font-medium transition-colors"
           onClick={() => setOpen(!open)}
         >
@@ -206,7 +205,7 @@ function Navbar() {
         </button>
         <AnimatePresence>
           {open && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -229,7 +228,7 @@ function Navbar() {
   const DesktopDropdown = ({ item }) => {
     const [open, setOpen] = useState(false);
     const children = getDesktopChildren(item.id);
-    
+
     if (item.mega_menu_enabled && children.length > 0) {
       const cols = item.mega_menu_column || 1;
       const gridClsMap = {
@@ -248,8 +247,8 @@ function Navbar() {
           </button>
           <AnimatePresence>
             {open && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} 
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                 className="absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-2 min-w-[400px] z-50"
               >
                 <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6">
@@ -269,7 +268,7 @@ function Navbar() {
     }
 
     return (
-      <div 
+      <div
         className="relative group"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
@@ -280,10 +279,10 @@ function Navbar() {
           {renderBadge(item)}
           <span className="material-symbols-outlined text-[16px] group-hover:rotate-180 transition-transform duration-200">expand_more</span>
         </button>
-        
+
         <AnimatePresence>
           {open && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
@@ -315,16 +314,16 @@ function Navbar() {
                 settings?.logo_text || "TripoMist"
               )}
             </Link>
-            
+
             <div className="hidden lg:flex items-center gap-6 ml-4">
               {desktopTopLevel.map(item => {
                 if (item.item_type === 'dropdown') {
                   return <DesktopDropdown key={item.id} item={item} />
                 }
-                const linkClass = item.item_type === 'button' 
+                const linkClass = item.item_type === 'button'
                   ? "bg-primary/10 text-primary hover:bg-primary/20 px-4 py-1.5 rounded-full font-medium text-sm transition-colors flex items-center"
                   : `font-medium text-sm transition-colors flex items-center ${isActive(item.route) ? 'text-primary font-bold' : 'text-black/80 hover:text-primary'}`;
-                
+
                 return (
                   <div key={item.id}>
                     {renderLink(item, linkClass)}
@@ -333,10 +332,10 @@ function Navbar() {
               })}
             </div>
           </div>
-          
+
           <div ref={searchRef} className="hidden md:flex flex-1 max-w-sm mx-auto relative">
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder={settings?.search_placeholder || "Search destinations..."}
               value={searchQuery}
               onChange={(e) => {
@@ -351,16 +350,16 @@ function Navbar() {
               }}
               className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
             />
-            <button 
+            <button
               onClick={() => handleSearch(searchQuery)}
               className="absolute right-1 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shadow-sm"
             >
               <span className="material-symbols-outlined text-[16px]">search</span>
             </button>
-            
+
             <AnimatePresence>
               {showSuggestions && searchQuery.trim().length > 0 && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
@@ -368,7 +367,7 @@ function Navbar() {
                 >
                   <div className="py-2">
                     {packageSuggestions.map((suggestion, idx) => (
-                      <div 
+                      <div
                         key={idx}
                         onClick={() => handleSearch(suggestion)}
                         className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
@@ -378,7 +377,7 @@ function Navbar() {
                       </div>
                     ))}
                     {packageSuggestions.length === 0 && (
-                      <div 
+                      <div
                         onClick={() => handleSearch(searchQuery)}
                         className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors text-sm text-black/80 font-medium"
                       >
@@ -391,16 +390,31 @@ function Navbar() {
               )}
             </AnimatePresence>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <button 
+            {settings?.show_instagram_badge && settings?.instagram_url && (
+              <a
+                href={settings.instagram_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-xs font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
+              >
+                <svg className="w-4 h-4 text-[#e1306c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                <span>{settings.instagram_follower_count || '248k'}</span>
+              </a>
+            )}
+            <button
               className={`font-semibold px-4 py-2 rounded-full transition-all text-sm hover:opacity-90 border flex items-center gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200 shadow-sm' : 'bg-white text-black border-gray-200 shadow-sm'}`}
               onClick={() => setIsOpen(!isOpen)}
             >
               <span className="material-symbols-outlined text-[20px]">{isOpen ? 'close' : 'menu'}</span>
               <span className="hidden sm:inline">{isOpen ? 'Close' : (settings?.menu_button_text || 'Menu')}</span>
             </button>
-            
+
             {user ? (
               <Link to="/my-account" className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-full transition-transform hover:scale-105 border border-primary/20 shadow-sm overflow-hidden">
                 {user.user_metadata?.avatar_url ? (
@@ -421,7 +435,7 @@ function Navbar() {
 
         <AnimatePresence>
           {isOpen && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -430,7 +444,7 @@ function Navbar() {
             >
               <div className="bg-white rounded-[24px] shadow-2xl p-6 md:p-10 w-full border border-gray-100 max-h-[80vh] overflow-y-auto">
                 <div className="flex flex-col gap-2">
-                  
+
                   {mobileTopLevel.map(item => {
                     if (item.item_type === 'dropdown') {
                       return <MobileDropdown key={item.id} item={item} />
@@ -443,16 +457,16 @@ function Navbar() {
                   })}
 
                   {mobileItems.length === 0 && settings?.main_links && settings.main_links.map((link, idx) => (
-                    <Link 
+                    <Link
                       key={idx}
-                      className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive(link.route) ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`} 
-                      onClick={() => setIsOpen(false)} 
+                      className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive(link.route) ? 'font-bold text-black' : 'text-black/80 hover:text-black'}`}
+                      onClick={() => setIsOpen(false)}
                       to={link.route}
                     >
                       {link.label}
                     </Link>
                   ))}
-                  
+
                   {user && (
                     <>
                       <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-account') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-account">Dashboard</Link>
@@ -460,7 +474,7 @@ function Navbar() {
                       {userRole === 'admin' && (
                         <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/admin') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/admin">Admin Dashboard</Link>
                       )}
-                      <button 
+                      <button
                         onClick={handleLogout}
                         className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-red-600 hover:text-red-800 font-bold w-full"
                       >
@@ -469,7 +483,7 @@ function Navbar() {
                     </>
                   )}
                   {!user && (
-                    <button 
+                    <button
                       onClick={() => { setIsOpen(false); setShowAuthModal(true); }}
                       className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-[#136b8a] font-bold w-full"
                     >
@@ -485,7 +499,7 @@ function Navbar() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -496,7 +510,6 @@ function Navbar() {
       </AnimatePresence>
 
       <ExploreNavbar />
-      <PromoStrip />
 
       <LoginSignupModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </header>
