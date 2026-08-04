@@ -78,7 +78,7 @@ const PremiumPageTemplate = ({
       {hero_image_url ? (
         <section className="relative w-full h-[45vh] md:h-[50vh] min-h-[350px] overflow-hidden bg-black flex-shrink-0">
           <picture>
-            {mobile_banner_image ? (
+            {mobile_banner_image && mobile_banner_image.trim() !== '' ? (
               <source media="(max-width: 640px)" srcSet={mobile_banner_image} />
             ) : (
               <source media="(max-width: 640px)" srcSet={hero_image_url} />

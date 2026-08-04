@@ -348,6 +348,8 @@ function Home() {
           );
         })()}
 
+        {/* Homepage Testimonials */}
+        <TestimonialsSection />
       </main>
 
       <Footer />

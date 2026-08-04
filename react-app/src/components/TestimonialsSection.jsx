@@ -17,28 +17,37 @@ const GoogleLogo = () => (
 export default function TestimonialsSection() {
   const [settings, setSettings] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const containerRef = useRef(null);
   const autoScrollRef = useRef(null);
   const isPausedRef = useRef(false);
 
   useEffect(() => {
     async function fetchData() {
-      const { data: sData } = await supabase
-        .from('site_settings')
-        .select('setting_value')
-        .eq('setting_key', 'testimonials_section')
-        .single();
-      if (sData) setSettings(sData.setting_value);
+      setLoading(true);
+      try {
+        const { data: sData } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'testimonials_section')
+          .single();
+        if (sData?.setting_value) setSettings(sData.setting_value);
+        else setSettings({ is_active: true });
 
-      const { data: rData } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('is_approved', true)
-        .eq('is_featured', true)
-        .order('display_order', { ascending: true })
-        .order('review_date', { ascending: false })
-        .limit(20);
-      if (rData) setReviews(rData);
+        const { data: rData } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('is_approved', true)
+          .eq('is_featured', true)
+          .order('display_order', { ascending: true })
+          .order('review_date', { ascending: false })
+          .limit(20);
+        if (rData) setReviews(rData);
+      } catch (err) {
+        console.error('Error fetching testimonials:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchData();
   }, []);
@@ -71,7 +80,8 @@ export default function TestimonialsSection() {
     return () => { if (autoScrollRef.current) clearInterval(autoScrollRef.current); };
   }, [settings, reviewsToRender, startAutoScroll]);
 
-  if (!settings || !settings.is_active || reviewsToRender.length === 0) return null;
+  if (loading) return null;
+  if (settings?.is_active === false || reviewsToRender.length === 0) return null;
 
   const bgColor = settings.bg_color || '#ffffff';
   const textColor = settings.text_color || '#1f2937';
@@ -94,21 +104,22 @@ export default function TestimonialsSection() {
       <div className="max-w-7xl mx-auto">
 
         {/* Header row: left heading/subtext, right "See all" link */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-10">
-          <div className="text-left">
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2" style={{ color: textColor }}>
-              {settings.heading || 'Client testimonials'}
+        {/* Header row: left heading/subtext, right "See all" link */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-10 text-left">
+          <div>
+            <div className="inline-flex items-center gap-2 mb-2 text-[#136b8a]">
+              <span className="font-label-caps tracking-widest uppercase font-bold text-xs">Customer Stories</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: textColor }}>
+              What Travelers Say
             </h2>
-            <p className="text-sm max-w-xl leading-relaxed" style={{ color: textColor, opacity: 0.7 }}>
-              {settings.subtext || 'Real travelers. Real stories. Real opinions to help you make the right choice.'}
-            </p>
           </div>
 
           <Link
-            to={settings.see_all_link || '/reviews'}
+            to="/reviews"
             className="text-sm font-bold text-[#136b8a] hover:underline whitespace-nowrap self-start sm:self-center mt-1"
           >
-            {settings.button_text || 'See all testimonials'} →
+            See All Testimonials →
           </Link>
         </div>
 
