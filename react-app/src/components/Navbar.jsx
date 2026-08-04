@@ -15,7 +15,6 @@ function Navbar() {
   const searchRef = useRef(null)
 
   const [settings, setSettings] = useState(null)
-  const [followerCount, setFollowerCount] = useState('')
   const [packageSuggestions, setPackageSuggestions] = useState([])
   const [navItems, setNavItems] = useState([])
 
@@ -77,60 +76,7 @@ function Navbar() {
     fetchNavbarData()
   }, [])
 
-  useEffect(() => {
-    if (!settings?.show_instagram_badge) return
-    const cacheKey = 'ig_followers_data_cache'
-    const cached = sessionStorage.getItem(cacheKey)
-    const now = Date.now()
-    const cacheExpiration = 15 * 60 * 1000 // 15 minutes
 
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached)
-        if (parsed.source === 'instagram' && parsed.formattedFollowerCount && parsed.fetchedAt && (now - parsed.fetchedAt < cacheExpiration)) {
-          setFollowerCount(parsed.formattedFollowerCount)
-          return
-        }
-      } catch (e) {}
-    }
-
-    if (settings?.instagram_follower_count) {
-      setFollowerCount(settings.instagram_follower_count)
-    }
-
-    if (window.igFetchInProgress) return
-    window.igFetchInProgress = true
-
-    const fetchRealTimeFollowers = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://smumwkvkcfnrajamtscq.supabase.co'}/functions/v1/instagram-follower-count`)
-        window.igFetchInProgress = false
-        if (res.ok) {
-          const data = await res.json()
-          if (data.source === 'instagram' && data.formattedFollowerCount) {
-            data.fetchedAt = Date.now()
-            sessionStorage.setItem(cacheKey, JSON.stringify(data))
-            setFollowerCount(data.formattedFollowerCount)
-          } else {
-            if (settings?.instagram_follower_count) {
-              setFollowerCount(settings.instagram_follower_count)
-            }
-          }
-        } else {
-          if (settings?.instagram_follower_count) {
-            setFollowerCount(settings.instagram_follower_count)
-          }
-        }
-      } catch (err) {
-        window.igFetchInProgress = false
-        console.warn("Failed to retrieve real-time followers count:", err)
-        if (settings?.instagram_follower_count) {
-          setFollowerCount(settings.instagram_follower_count)
-        }
-      }
-    }
-    fetchRealTimeFollowers()
-  }, [settings])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -460,7 +406,7 @@ function Navbar() {
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                 </svg>
-                <span>{followerCount || '248k'}</span>
+                <span>{settings?.instagram_follower_count || '0'}</span>
               </a>
             )}
             <button

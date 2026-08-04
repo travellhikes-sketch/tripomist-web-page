@@ -216,27 +216,10 @@ function Footer() {
       </div>
 
       <div className="border-t border-black/10 py-6">
-        <div className="container mx-auto max-w-7xl px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs opacity-80 font-medium">
-          <p className="m-0">
+        <div className="flex items-center justify-center border-t border-white/10 pt-6 text-xs font-semibold opacity-70 w-full">
+          <p className="m-0 text-center">
             {copyrightText}
           </p>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 items-center justify-center">
-            {(footerSettings?.bottom_links || [
-              { label: 'Cancellation Policy', href: '/refund-policy' },
-              { label: 'Privacy Policy', href: '/privacy-policy' },
-              { label: 'Payment Policy', href: '/payment-policy' },
-              { label: 'Terms of Service', href: '/terms-conditions' },
-              { label: 'Sitemap', href: '/sitemap' },
-              { label: 'Employment policy', href: '/employment-policy' }
-            ]).map((link, idx) => (
-              <React.Fragment key={idx}>
-                {idx > 0 && <span className="opacity-40">|</span>}
-                <Link to={link.href} className="hover:underline transition-all" style={{ color: textColor }}>
-                  {link.label}
-                </Link>
-              </React.Fragment>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

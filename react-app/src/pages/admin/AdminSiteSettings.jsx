@@ -190,36 +190,6 @@ const AdminSiteSettings = () => {
     handleChange('footer', 'columns', newCols);
   };
 
-  // Footer bottom links helpers
-  const addFooterBottomLink = () => {
-    const list = settings.footer?.bottom_links || [];
-    const newList = [...list, { label: 'New Policy Link', href: '/' }];
-    handleChange('footer', 'bottom_links', newList);
-  };
-
-  const deleteFooterBottomLink = (idx) => {
-    const list = settings.footer?.bottom_links || [];
-    const newList = list.filter((_, i) => i !== idx);
-    handleChange('footer', 'bottom_links', newList);
-  };
-
-  const updateFooterBottomLink = (idx, field, value) => {
-    const list = settings.footer?.bottom_links || [];
-    const newList = list.map((link, i) => i === idx ? { ...link, [field]: value } : link);
-    handleChange('footer', 'bottom_links', newList);
-  };
-
-  const moveFooterBottomLink = (idx, direction) => {
-    const list = settings.footer?.bottom_links || [];
-    if (direction === 'up' && idx === 0) return;
-    if (direction === 'down' && idx === list.length - 1) return;
-    const newList = [...list];
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    const temp = newList[idx];
-    newList[idx] = newList[targetIdx];
-    newList[targetIdx] = temp;
-    handleChange('footer', 'bottom_links', newList);
-  };
 
   const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
@@ -455,30 +425,6 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
 
-              {/* Footer Bottom policy links CRUD */}
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-md font-bold text-gray-800">Footer Bottom Policy Links</h3>
-                  <button onClick={addFooterBottomLink} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
-                    <Plus size={14} /> Add Policy Link
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {(settings.footer?.bottom_links || []).map((link, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center bg-gray-50 p-3 rounded-lg border">
-                      <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="text" value={link.label} onChange={e => updateFooterBottomLink(idx, 'label', e.target.value)} className={inputClass} placeholder="Policy Label (e.g. Terms of Service)" />
-                        <input type="text" value={link.href} onChange={e => updateFooterBottomLink(idx, 'href', e.target.value)} className={inputClass} placeholder="Link URL" />
-                      </div>
-                      <div className="flex justify-end gap-1.5">
-                        <button onClick={() => moveFooterBottomLink(idx, 'up')} disabled={idx === 0} className="p-1.5 bg-white border rounded text-gray-600 disabled:opacity-50"><ArrowUp size={14} /></button>
-                        <button onClick={() => moveFooterBottomLink(idx, 'down')} disabled={idx === (settings.footer.bottom_links.length - 1)} className="p-1.5 bg-white border rounded text-gray-600 disabled:opacity-50"><ArrowDown size={14} /></button>
-                        <button onClick={() => deleteFooterBottomLink(idx)} className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100"><Trash2 size={14} /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
               {/* Sync check */}
               <div className="border-t pt-4">
