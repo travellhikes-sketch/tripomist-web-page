@@ -322,22 +322,7 @@ function Navbar() {
               <span className="align-middle">{settings?.logo_text || "TripoMist"}</span>
             </Link>
 
-            <div className="hidden lg:flex items-center gap-6 ml-4">
-              {desktopTopLevel.map(item => {
-                if (item.item_type === 'dropdown') {
-                  return <DesktopDropdown key={item.id} item={item} />;
-                }
-                const linkClass = item.item_type === 'button'
-                  ? "bg-primary/10 text-primary hover:bg-primary/20 px-4 py-1.5 rounded-full font-medium text-sm transition-colors flex items-center"
-                  : `font-medium text-sm transition-colors flex items-center ${isActive(item.route) ? 'text-primary font-bold' : 'text-black/80 hover:text-primary'}`;
-
-                return (
-                  <div key={item.id}>
-                    {renderLink(item, linkClass)}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Desktop menu items removed from main row and placed in Menu drawer */}
           </div>
 
           {/* CENTER: Search bar — absolutely centered on large screens only */}
