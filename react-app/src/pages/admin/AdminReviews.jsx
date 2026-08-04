@@ -116,7 +116,7 @@ const AdminReviews = () => {
 
   const handlePackageChange = (e) => {
     const pkgId = e.target.value;
-    const selectedPkg = packages.find(p => p.id === pkgId);
+    const selectedPkg = packages.find(p => String(p.id) === String(pkgId));
     setFormData(prev => ({
       ...prev,
       package_id: pkgId,
@@ -134,7 +134,7 @@ const AdminReviews = () => {
 
       const payload = {
         ...formData,
-        package_id: formData.package_id || null, // Ensure empty string becomes null
+        package_id: formData.package_id ? Number(formData.package_id) : null,
       };
 
       if (editingReview) {
@@ -153,7 +153,8 @@ const AdminReviews = () => {
       setIsModalOpen(false);
       fetchReviews();
     } catch (err) {
-      alert(err.message);
+      console.error(err);
+      alert(err.message || err.details || err.hint || JSON.stringify(err));
     } finally {
       setSaving(false);
     }
