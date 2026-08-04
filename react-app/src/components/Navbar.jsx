@@ -132,14 +132,6 @@ function Navbar() {
     return location.pathname === path
   }
 
-  const filterVisibility = (item) => {
-    if (item.visibility_role === 'everyone') return true;
-    if (item.visibility_role === 'guest' && userRole === 'guest') return true;
-    if (item.visibility_role === 'user' && userRole === 'user') return true;
-    if (item.visibility_role === 'admin' && userRole === 'admin') return true;
-    return false;
-  }
-
   const renderBadge = (item) => {
     if (!item.badge_is_active || !item.badge_text) return null;
     const colors = {
@@ -175,18 +167,28 @@ function Navbar() {
     return <Link to={item.route || '#'} {...linkProps}>{renderLinkContent(item)}</Link>
   }
 
-  const visibleNavItems = navItems.filter(filterVisibility);
+  const isNavbar = (loc) => {
+    if (!loc) return false;
+    const l = loc.toLowerCase();
+    return l === 'navbar' || l === 'both';
+  };
+
+  const isMobileMenu = (loc) => {
+    if (!loc) return false;
+    const l = loc.toLowerCase();
+    return l === 'mobile_menu' || l === 'both';
+  };
+
+  const visibleNavItems = navItems.filter(item => item.is_active);
 
   const mobileItems = visibleNavItems.filter(item =>
-    item.show_on_mobile &&
-    (item.location === 'mobile_menu' || item.location === 'navbar' || item.location === 'both')
+    item.show_on_mobile && isMobileMenu(item.location)
   );
   const mobileTopLevel = mobileItems.filter(item => !item.parent_id);
   const getMobileChildren = (parentId) => mobileItems.filter(item => item.parent_id === parentId);
 
   const desktopItems = visibleNavItems.filter(item =>
-    item.show_on_desktop &&
-    (item.location === 'navbar' || item.location === 'both')
+    item.show_on_desktop && isNavbar(item.location)
   );
   const desktopTopLevel = desktopItems.filter(item => !item.parent_id);
   const getDesktopChildren = (parentId) => desktopItems.filter(item => item.parent_id === parentId);
@@ -314,11 +316,10 @@ function Navbar() {
           {/* LEFT: Logo */}
           <div className="flex items-center gap-6 flex-shrink-0">
             <Link className="font-headline-md text-headline-md font-bold tracking-tight text-black flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
-              {settings?.logo_image_url ? (
-                <img src={settings.logo_image_url} alt="TripoMist" className="h-8" />
-              ) : (
-                settings?.logo_text || "TripoMist"
+              {settings?.logo_image_url && (
+                <img src={settings.logo_image_url} alt="Logo" className="h-8 object-contain w-auto max-w-[120px]" />
               )}
+              <span className="align-middle">{settings?.logo_text || "TripoMist"}</span>
             </Link>
 
             <div className="hidden lg:flex items-center gap-6 ml-4">
@@ -401,15 +402,15 @@ function Navbar() {
           </div>
 
           {/* RIGHT: Instagram badge + Menu + Login */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {settings?.show_instagram_badge && settings?.instagram_url && (
               <a
                 href={settings.instagram_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-xs sm:text-sm font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
               >
-                <svg className="w-5 h-5 text-[#e1306c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#e1306c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
@@ -418,15 +419,15 @@ function Navbar() {
               </a>
             )}
             <button
-              className={`font-semibold px-4 py-2 rounded-full transition-all text-sm hover:opacity-90 border flex items-center gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200 shadow-sm' : 'bg-white text-black border-gray-200 shadow-sm'}`}
+              className={`font-semibold px-3 sm:px-4 py-2 rounded-full transition-all text-xs sm:text-sm hover:opacity-90 border flex items-center gap-1.5 sm:gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200 shadow-sm' : 'bg-white text-black border-gray-200 shadow-sm'}`}
               onClick={() => setIsOpen(!isOpen)}
             >
-              <span className="material-symbols-outlined text-[20px]">{isOpen ? 'close' : 'menu'}</span>
+              <span className="material-symbols-outlined text-[18px] sm:text-[20px]">{isOpen ? 'close' : 'menu'}</span>
               <span className="hidden sm:inline">{isOpen ? 'Close' : (settings?.menu_button_text || 'Menu')}</span>
             </button>
 
             {user ? (
-              <Link to="/my-account" className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-full transition-transform hover:scale-105 border border-primary/20 shadow-sm overflow-hidden">
+              <Link to="/my-account" className="hidden lg:flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-full transition-transform hover:scale-105 border border-primary/20 shadow-sm overflow-hidden">
                 {user.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -436,7 +437,7 @@ function Navbar() {
                 )}
               </Link>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 flex items-center gap-1 shadow-sm cursor-pointer">
+              <button onClick={() => setShowAuthModal(true)} className="hidden lg:flex bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 items-center gap-1 shadow-sm cursor-pointer">
                 <span className="material-symbols-outlined text-[16px]">login</span> <span className="hidden sm:inline">{settings?.login_button_text || 'Login'}</span>
               </button>
             )}
