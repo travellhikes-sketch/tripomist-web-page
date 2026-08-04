@@ -13,31 +13,13 @@ const ServiceRecoveryCreationModal = ({ isOpen, onClose, onSuccess, booking }) =
     internal_notes: '',
   });
 
-  const [issueVoucher, setIssueVoucher] = useState(false);
-  const [voucherAmount, setVoucherAmount] = useState('');
-  const [voucherExpiry, setVoucherExpiry] = useState('');
-  const [voucherNotes, setVoucherNotes] = useState('');
+
 
   if (!isOpen || !booking) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (issueVoucher) {
-      if (!voucherAmount || isNaN(voucherAmount) || parseFloat(voucherAmount) <= 0) {
-        setError("Please enter a valid positive voucher amount.");
-        return;
-      }
-      if (!voucherExpiry) {
-        setError("Please select a voucher expiry date.");
-        return;
-      }
-      if (new Date(voucherExpiry) <= new Date()) {
-        setError("Voucher expiry date must be in the future.");
-        return;
-      }
-    }
 
     setLoading(true);
     try {
@@ -47,14 +29,10 @@ const ServiceRecoveryCreationModal = ({ isOpen, onClose, onSuccess, booking }) =
         p_issue_description: formData.issue_description,
         p_priority: formData.priority,
         p_incident_date: formData.incident_date,
-        p_internal_notes: formData.internal_notes,
-        p_issue_voucher: issueVoucher,
-        p_voucher_amount: issueVoucher ? parseFloat(voucherAmount) : 0,
-        p_voucher_expiry: issueVoucher ? new Date(voucherExpiry).toISOString() : null,
-        p_voucher_notes: issueVoucher ? voucherNotes : null
+        p_internal_notes: formData.internal_notes
       };
 
-      const { data, error } = await supabase.rpc('create_service_recovery_case_with_voucher', payload);
+      const { data, error } = await supabase.rpc('admin_create_service_recovery', payload);
       if (error) throw error;
 
       onSuccess(data);
@@ -124,31 +102,7 @@ const ServiceRecoveryCreationModal = ({ isOpen, onClose, onSuccess, booking }) =
               <input type="text" value={formData.internal_notes} onChange={e => setFormData({...formData, internal_notes: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#136b8a] outline-none text-sm" placeholder="For admin view only" />
             </div>
 
-            <div className="mt-6 bg-emerald-50 border border-emerald-100 p-4 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <input type="checkbox" id="issueVoucherSR" checked={issueVoucher} onChange={e => setIssueVoucher(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-                <label htmlFor="issueVoucherSR" className="text-sm font-bold text-emerald-800 cursor-pointer">Issue Compensation Coupon Now</label>
-              </div>
-              
-              {issueVoucher && (
-                <div className="mt-4 space-y-4 border-l-2 border-emerald-200 pl-4 animate-fade-in">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Amount (₹) *</label>
-                      <input type="number" min="0" value={voucherAmount} onChange={e => setVoucherAmount(e.target.value)} className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none" placeholder="e.g. 500" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Validity / Expiry Date *</label>
-                      <input type="date" value={voucherExpiry} onChange={e => setVoucherExpiry(e.target.value)} className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none" min={new Date().toISOString().split('T')[0]} />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Notes / Reason</label>
-                    <input type="text" value={voucherNotes} onChange={e => setVoucherNotes(e.target.value)} className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none" placeholder="e.g. For incident inconvenience" />
-                  </div>
-                </div>
-              )}
-            </div>
+
           </form>
         </div>
 

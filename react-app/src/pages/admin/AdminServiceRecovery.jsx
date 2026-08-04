@@ -12,11 +12,7 @@ const AdminServiceRecovery = () => {
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [modalError, setModalError] = useState(null);
   
-  // Voucher state
-  const [issueVoucher, setIssueVoucher] = useState(false);
-  const [voucherAmount, setVoucherAmount] = useState('');
-  const [voucherExpiry, setVoucherExpiry] = useState('');
-  const [voucherNotes, setVoucherNotes] = useState('');
+
 
   useEffect(() => {
     fetchCases();
@@ -52,41 +48,16 @@ const AdminServiceRecovery = () => {
   const handleUpdateStatus = async (id, newStatus, currentNotes) => {
     setModalError(null);
     try {
-      if (newStatus === 'resolved' && issueVoucher) {
-        if (!voucherAmount || isNaN(voucherAmount) || parseFloat(voucherAmount) <= 0) {
-          setModalError("Please enter a valid positive voucher amount.");
-          return;
-        }
-        if (!voucherExpiry) {
-          setModalError("Please select a voucher expiry date.");
-          return;
-        }
-        if (new Date(voucherExpiry) <= new Date()) {
-          setModalError("Voucher expiry date must be in the future.");
-          return;
-        }
-        
-        const { error } = await supabase.rpc('resolve_service_recovery_with_voucher', {
-          p_case_id: id,
-          p_resolution_notes: resolutionNotes || currentNotes,
-          p_voucher_amount: parseFloat(voucherAmount),
-          p_voucher_expiry: new Date(voucherExpiry).toISOString(),
-          p_voucher_notes: voucherNotes
-        });
-        
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('service_recovery_cases')
-          .update({ 
-            status: newStatus,
-            resolution_notes: newStatus === 'resolved' ? (resolutionNotes || currentNotes) : currentNotes,
-            resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null
-          })
-          .eq('id', id);
+      const { error } = await supabase
+        .from('service_recovery_cases')
+        .update({
+          status: newStatus,
+          resolution_notes: newStatus === 'resolved' ? (resolutionNotes || currentNotes) : currentNotes,
+          resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null
+        })
+        .eq('id', id);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
       
       setCases(prev => prev.map(c => 
         c.id === id ? { ...c, status: newStatus, resolution_notes: (newStatus === 'resolved' ? (resolutionNotes || currentNotes) : currentNotes), resolved_at: (newStatus === 'resolved' ? new Date().toISOString() : null) } : c
@@ -103,10 +74,6 @@ const AdminServiceRecovery = () => {
       
       if (newStatus === 'resolved') {
         setResolutionNotes('');
-        setIssueVoucher(false);
-        setVoucherAmount('');
-        setVoucherExpiry('');
-        setVoucherNotes('');
         setSelectedCase(null);
       }
     } catch (err) {
@@ -282,61 +249,7 @@ const AdminServiceRecovery = () => {
                 placeholder="Enter details on how this issue was resolved..."
               />
             </div>
-            
-            {selectedCase.status === 'open' && (
-              <div className="mb-6 bg-emerald-50 border border-emerald-100 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <input 
-                    type="checkbox" 
-                    id="issueVoucherCheck"
-                    checked={issueVoucher}
-                    onChange={e => setIssueVoucher(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 rounded"
-                  />
-                  <label htmlFor="issueVoucherCheck" className="text-sm font-bold text-emerald-800 cursor-pointer">
-                    Issue Apology / Compensation Voucher to Customer
-                  </label>
-                </div>
-                
-                {issueVoucher && (
-                  <div className="mt-4 space-y-4 animate-fade-in pl-6 border-l-2 border-emerald-200">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                         <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Voucher Amount (₹) *</label>
-                         <input 
-                           type="number" 
-                           min="0"
-                           value={voucherAmount}
-                           onChange={e => setVoucherAmount(e.target.value)}
-                           className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-                           placeholder="e.g. 500"
-                         />
-                      </div>
-                      <div>
-                         <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Validity / Expiry Date *</label>
-                         <input 
-                           type="date" 
-                           value={voucherExpiry}
-                           onChange={e => setVoucherExpiry(e.target.value)}
-                           className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-                           min={new Date().toISOString().split('T')[0]}
-                         />
-                      </div>
-                    </div>
-                    <div>
-                       <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Voucher Notes / Reason</label>
-                       <input 
-                         type="text" 
-                         value={voucherNotes}
-                         onChange={e => setVoucherNotes(e.target.value)}
-                         className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-                         placeholder="e.g. Compensation for hotel delay"
-                       />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+
 
             <div className="flex justify-end gap-3 pt-4 border-t">
               {selectedCase.status === 'open' ? (

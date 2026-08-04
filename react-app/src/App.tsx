@@ -47,7 +47,7 @@ const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
 const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'))
 const AdminCancelledBookings = React.lazy(() => import('./pages/admin/AdminCancelledBookings'))
 const AdminServiceRecovery = React.lazy(() => import('./pages/admin/AdminServiceRecovery'))
-const AdminVouchers = React.lazy(() => import('./pages/admin/AdminVouchers'))
+
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
 
@@ -125,7 +125,7 @@ function App() {
               <Route path="bookings" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminBookings /></React.Suspense>} />
               <Route path="bookings/cancelled" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminCancelledBookings /></React.Suspense>} />
               <Route path="service-recovery" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceRecovery /></React.Suspense>} />
-              <Route path="vouchers" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminVouchers /></React.Suspense>} />
+
               <Route path="manual-bookings" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
               } />

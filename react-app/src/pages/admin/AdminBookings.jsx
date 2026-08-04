@@ -23,10 +23,7 @@ const AdminBookings = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelNotes, setCancelNotes] = useState('');
   const [cancelResolution, setCancelResolution] = useState('Cancel Without Refund');
-  const [voucherAmount, setVoucherAmount] = useState('');
-  const [voucherExpiry, setVoucherExpiry] = useState('');
-  const [voucherNotes, setVoucherNotes] = useState('');
-  const [confirmVoucherAmount, setConfirmVoucherAmount] = useState(false);
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -257,39 +254,12 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       return;
     }
 
-    if (cancelResolution === 'Convert Paid Amount to Coupon') {
-        if (!voucherAmount || isNaN(voucherAmount) || parseFloat(voucherAmount) <= 0) {
-            alert("Please enter a valid positive coupon amount.");
-            return;
-        }
-        const maxCoupon = parseFloat(cancelModal.booking.final_payable_amount || cancelModal.booking.final_amount || cancelModal.booking.total_amount || 0);
-        if (parseFloat(voucherAmount) > maxCoupon) {
-            alert(`Coupon amount cannot be greater than the actual paid amount (₹${maxCoupon}).`);
-            return;
-        }
-        if (!voucherExpiry) {
-            alert("Please select a coupon expiry date.");
-            return;
-        }
-        if (new Date(voucherExpiry) <= new Date()) {
-            alert("Coupon expiry date must be in the future.");
-            return;
-        }
-        if (!confirmVoucherAmount) {
-            alert("Please confirm the coupon amount.");
-            return;
-        }
-    }
-
     setLoading(true);
     try {
       const b = cancelModal.booking;
-      const isVoucher = cancelResolution === 'Convert Paid Amount to Coupon';
 
       let mappedRefundStatus = 'Refund Pending';
       if (cancelResolution === 'Cancel Without Refund') {
-        mappedRefundStatus = 'No Refund';
-      } else if (cancelResolution === 'Convert Paid Amount to Coupon') {
         mappedRefundStatus = 'No Refund';
       } else if (cancelResolution === 'Refund Pending') {
         mappedRefundStatus = 'Refund Pending';
@@ -299,24 +269,16 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
         mappedRefundStatus = 'Fully Refunded';
       }
 
-      const { data, error } = await supabase.rpc('admin_cancel_booking_with_coupon', {
+      const { error } = await supabase.rpc('admin_cancel_booking', {
           p_booking_id: b.id,
           p_cancellation_reason: cancelReason,
           p_cancellation_notes: cancelNotes,
-          p_refund_status: mappedRefundStatus,
-          p_issue_coupon: isVoucher,
-          p_coupon_amount: isVoucher ? parseFloat(voucherAmount) : null,
-          p_coupon_expiry: isVoucher ? new Date(voucherExpiry).toISOString() : null,
-          p_coupon_notes: isVoucher ? voucherNotes : null
+          p_refund_status: mappedRefundStatus
       });
 
       if (error) throw error;
 
-      if (isVoucher && data?.voucher_code) {
-        window.prompt('Voucher code generated! Copy to clipboard:', data.voucher_code);
-      } else {
-        alert('Booking cancelled successfully.');
-      }
+      alert('Booking cancelled successfully.');
       fetchBookings();
       setCancelModal({ isOpen: false, booking: null });
       setSelectedBooking(null);
@@ -1014,60 +976,11 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
         className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none font-medium text-gray-800"
       >
         <option value="Cancel Without Refund">Cancel Without Refund</option>
-        <option value="Convert Paid Amount to Coupon">Convert Paid Amount to Coupon</option>
         <option value="Refund Pending">Refund Pending</option>
         <option value="Partial Refund">Partial Refund</option>
         <option value="Fully Refunded">Fully Refunded</option>
       </select>
     </div>
-
-    {cancelResolution === 'Convert Paid Amount to Coupon' && (
-      <div className="mt-4 p-4 border border-emerald-200 bg-emerald-50 rounded-lg space-y-3 animate-fade-in">
-        <div>
-           <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Amount (₹) *</label>
-           <input
-             type="number"
-             min="0"
-             value={voucherAmount}
-             onChange={e => setVoucherAmount(e.target.value)}
-             className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-             placeholder="e.g. 5000"
-           />
-        </div>
-        <div>
-           <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Validity / Expiry Date *</label>
-           <input
-             type="date"
-             value={voucherExpiry}
-             onChange={e => setVoucherExpiry(e.target.value)}
-             className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-             min={new Date().toISOString().split('T')[0]}
-           />
-        </div>
-        <div>
-           <label className="block text-xs font-bold text-emerald-800 uppercase mb-1">Coupon Notes</label>
-           <input
-             type="text"
-             value={voucherNotes}
-             onChange={e => setVoucherNotes(e.target.value)}
-             className="w-full border border-emerald-300 rounded-md p-2 text-sm focus:border-emerald-500 outline-none"
-             placeholder="Optional"
-           />
-        </div>
-        <div className="flex items-start gap-2 mt-2 pt-2 border-t border-emerald-200">
-           <input
-             type="checkbox"
-             id="confirmVoucher"
-             checked={confirmVoucherAmount}
-             onChange={e => setConfirmVoucherAmount(e.target.checked)}
-             className="mt-1"
-           />
-           <label htmlFor="confirmVoucher" className="text-xs text-emerald-900 font-medium cursor-pointer">
-             I confirm that the coupon amount is exactly equal to the amount paid by the customer, and should be issued.
-           </label>
-        </div>
-      </div>
-    )}
  </div>
               </div>
             </div>

@@ -45,7 +45,7 @@ export default function PackageCheckout() {
   const [couponAttempts, setCouponAttempts] = useState(0);
   const [lastCouponAttempt, setLastCouponAttempt] = useState(0);
 
-  // Derived options
+
   const [sharingOptions, setSharingOptions] = useState([]);
 
   // Server-authorized amount variable
@@ -381,199 +381,16 @@ export default function PackageCheckout() {
   const travellerCount = Math.max(1, Number(tripDetails?.travellers) || 1);
   const subTotal = Number(computedPrice) || 0;
   const gst = Math.round(subTotal * 0.05);
-  const totalBeforeVoucher = subTotal + gst;
-  
-  let voucherDiscount = 0;
-  if (appliedVoucher) {
-    voucherDiscount = Math.min(totalBeforeVoucher, appliedVoucher.remaining_amount);
-  }
-  
-  const finalPayable = totalBeforeVoucher - voucherDiscount;
+  const finalPayable = subTotal + gst;
 
-  const isFullVoucherReservation = !!(appliedVoucher && 
-    !(appliedVoucher.expires_at && new Date(appliedVoucher.expires_at) <= new Date()) && 
-    Number(appliedVoucher.remaining_amount) >= totalBeforeVoucher
-  );
-  
   const safeFinalPayable = (
     serverFinalPayable !== null &&
     serverFinalPayable !== undefined &&
     Number.isFinite(Number(serverFinalPayable)) &&
-    Number(serverFinalPayable) >= 0 &&
-    (Number(serverFinalPayable) > 0 || isFullVoucherReservation)
-  ) ? Number(serverFinalPayable) : totalBeforeVoucher;
+    Number(serverFinalPayable) >= 0
+  ) ? Number(serverFinalPayable) : finalPayable;
 
-  const handleApplyVoucher = async () => {
-    if (!voucherCode.trim()) {
-      setVoucherError('Please enter a coupon code.');
-      return;
-    }
-    
-    // Rate limit check
-    const now = Date.now();
-    if (now - lastCouponAttempt > 60000) {
-      setCouponAttempts(1);
-    } else {
-      if (couponAttempts >= 5) {
-        setVoucherError('Too many attempts. Please try again later.');
-        return;
-      }
-      setCouponAttempts(prev => prev + 1);
-    }
-    setLastCouponAttempt(now);
-    
-    setVoucherLoading(true);
-    setVoucherError('');
-    try {
-      // Validate customer fields before initialize
-      if (!formData?.fullName || !formData.fullName.trim()) {
-        throw new Error('Full Name is required.');
-      }
-      if (!formData?.phone || !formData.phone.trim()) {
-        throw new Error('Phone Number is required.');
-      }
-      if (!formData?.email || !formData.email.trim()) {
-        throw new Error('Email Address is required.');
-      }
-      if (!formData?.date) {
-        throw new Error('Travel Date is required.');
-      }
-      const travelDateObj = new Date(formData.date);
-      if (isNaN(travelDateObj.getTime()) || travelDateObj <= new Date()) {
-        throw new Error('Travel Date must be a future date.');
-      }
-      if (!tripDetails?.travellers || tripDetails.travellers < 1 || tripDetails.travellers > 50) {
-        throw new Error('Number of travellers must be between 1 and 50.');
-      }
-      if (!selectedSharing || !['Quad Sharing', 'Triple Sharing', 'Double Sharing'].includes(selectedSharing)) {
-        throw new Error('Please select a valid room sharing occupancy.');
-      }
 
-      const session = (await supabase.auth.getSession()).data?.session;
-      const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
-      const lead = leadStr ? JSON.parse(leadStr) : null;
-      const leadId = lead?.id || '';
-      const leadToken = lead?.token || '';
-
-      const headers = {};
-      if (session) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-      if (leadId) {
-        headers['x-checkout-lead-id'] = leadId;
-      }
-      if (leadToken) {
-        headers['x-checkout-lead-token'] = leadToken;
-      }
-
-      // If user is logged-in, make sure their profile name/phone are updated/saved via upsert
-      if (session?.user) {
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('full_name, phone')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        if (!currentProfile?.full_name || !currentProfile?.phone) {
-          const { error: upsertErr } = await supabase
-            .from('profiles')
-            .upsert({
-              id: session.user.id,
-              full_name: currentProfile?.full_name || formData.fullName.trim(),
-              phone: currentProfile?.phone || formData.phone.trim(),
-              email: formData.email.trim(),
-              updated_at: new Date().toISOString()
-            });
-          if (upsertErr) {
-            throw new Error(`Profile update failed: ${upsertErr.message}`);
-          }
-        }
-      }
-
-      // On checkout, we must have initialized a booking first.
-      // If no booking exists, initialize it now on coupon application.
-      let currentBookingId = bookingId;
-      if (!currentBookingId) {
-        let travelDate = '';
-        try {
-          const raw = formData.date;
-          if (typeof raw === 'string') {
-            travelDate = raw.split('T')[0];
-          } else if (raw instanceof Date) {
-            travelDate = raw.toISOString().split('T')[0];
-          } else {
-            travelDate = String(raw).split('T')[0];
-          }
-        } catch (e) {
-          travelDate = '';
-        }
-
-        const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
-          body: {
-            action: 'initialize',
-            packageId: parseInt(tripDetails.packageId),
-            travelDate,
-            travellers: tripDetails.travellers,
-            selectedSharing,
-            idempotencyKey,
-            specialRequest: formData.specialRequest || null,
-            source: formData.source || null
-          },
-          headers
-        });
-
-        if (initErr || !initData || !initData.success) {
-          throw new Error('Failed to initialize booking transaction before applying coupon.');
-        }
-
-        currentBookingId = initData.bookingId;
-        setBookingId(initData.bookingId);
-        setServerFinalPayable(initData.finalPayableAmount);
-      }
-
-      // Coupon Apply par call reserve_coupon
-      const { data: resData, error: resErr } = await supabase.functions.invoke('razorpay-checkout', {
-        body: {
-          action: 'reserve_coupon',
-          bookingId: currentBookingId,
-          couponCode: voucherCode.trim()
-        },
-        headers
-      });
-
-      if (resErr) {
-        let errMsg = 'Invalid coupon code.';
-        try {
-          const bodyText = await resErr.context?.response?.text();
-          if (bodyText) {
-            const parsed = JSON.parse(bodyText);
-            if (parsed.error) errMsg = parsed.error;
-          }
-        } catch (_) {}
-        throw new Error(errMsg);
-      }
-
-      if (!resData || !resData.success) {
-        throw new Error('Failed to reserve coupon balance.');
-      }
-      
-      setAppliedVoucher({
-        id: resData.reservationId,
-        code: voucherCode.trim(),
-        remaining_amount: resData.reservedAmount,
-        reserved_amount: resData.reservedAmount,
-        reservation_id: resData.reservationId,
-        expires_at: resData.expiresAt,
-        finalPayableAmount: resData.finalPayableAmount
-      });
-      setServerFinalPayable(resData.finalPayableAmount);
-      setVoucherCode('');
-    } catch (err) {
-      setVoucherError(err.message || 'Invalid coupon code.');
-    } finally {
-      setVoucherLoading(false);
-    }
-  };
 
   const verifyPaymentServer = async (razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentAttemptId) => {
     setLoading(true);
@@ -764,30 +581,7 @@ export default function PackageCheckout() {
         finalAmount = initData.finalPayableAmount;
       }
 
-      // 7. If final amount = 0, call full_coupon
-      if (finalAmount === 0 && appliedVoucher?.reservation_id) {
-        const { data: fullCouponData, error: fullCouponErr } = await supabase.functions.invoke('razorpay-checkout', {
-          body: {
-            action: 'full_coupon',
-            bookingId: currentBookingId,
-            reservationId: appliedVoucher.reservation_id
-          },
-          headers
-        });
 
-        if (fullCouponErr || !fullCouponData || !fullCouponData.success) {
-          throw new Error(fullCouponErr?.message || 'Failed to complete zero amount coupon checkout.');
-        }
-
-        setPaymentId('PAID_BY_VOUCHER');
-        sessionStorage.removeItem('checkoutData');
-        localStorage.removeItem('cart');
-        window.dispatchEvent(new Event('cartUpdated'));
-
-        setLoading(false);
-        setStep('success');
-        return;
-      }
 
       // 8. Otherwise call prepare and open Razorpay using returned order ID/amount
       const { data: prepareData, error: prepareErr } = await supabase.functions.invoke('razorpay-checkout', {
@@ -1309,58 +1103,7 @@ export default function PackageCheckout() {
                 </div>
               </div>
 
-              {/* 10. Coupon field Proceed to Payment button ke just above rakho */}
-              {/* 7. Hide/Disable coupon application block after payment has started or checkout is blocked */}
-              {!paymentStarted && !checkoutBlocked && (
-                <div className="mb-6 pb-6 border-b border-gray-100">
-                  {appliedVoucher ? (
-                    (() => {
-                      const isExpired = appliedVoucher.expires_at && new Date(appliedVoucher.expires_at) <= new Date();
-                      return (
-                        <div className={`${isExpired ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'} border rounded-xl p-3 flex justify-between items-center`}>
-                          <div>
-                            <div className={`${isExpired ? 'text-rose-800' : 'text-emerald-800'} font-bold text-sm flex items-center gap-1`}>
-                              <span className="material-symbols-outlined text-[16px]">{isExpired ? 'error' : 'local_activity'}</span>
-                              {isExpired ? 'Coupon Reservation Expired' : 'Coupon Applied'}
-                            </div>
-                            <div className={`${isExpired ? 'text-rose-600' : 'text-emerald-600'} text-xs mt-0.5`}>{appliedVoucher.code}</div>
-                          </div>
-                           <div className="text-right">
-                             <div className={`${isExpired ? 'text-rose-700' : 'text-emerald-700'} font-bold`}>
-                               -₹{formatMoney(appliedVoucher.remaining_amount)}
-                             </div>
-                            <p className="text-[10px] font-semibold mt-1">
-                              {isExpired ? 'Coupon reservation expired. Please start a new checkout.' : 'Coupon locked for 15 minutes'}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Have a Coupon Code?</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={voucherCode}
-                          onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                          placeholder="Enter code"
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#136b8a] outline-none bg-gray-50 uppercase"
-                          disabled={voucherLoading}
-                        />
-                        <button
-                          onClick={handleApplyVoucher}
-                          disabled={voucherLoading || !voucherCode.trim()}
-                          className="bg-gray-900 hover:bg-black disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                        >
-                          {voucherLoading ? 'Applying...' : 'Apply'}
-                        </button>
-                      </div>
-                      {voucherError && <p className="text-rose-600 text-xs mt-2 font-medium">{voucherError}</p>}
-                    </div>
-                  )}
-                </div>
-              )}
+
 
               <div className="flex justify-between items-end mb-8 bg-[#eff6f9] p-4 rounded-xl border border-[#cde5ef]">
                 <div>
