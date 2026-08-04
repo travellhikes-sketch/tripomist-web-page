@@ -259,22 +259,39 @@ function Home() {
             {/* Content Wrapper */}
             <div className="w-full px-6 md:px-12 lg:px-16">
               <div className="relative z-10 max-w-3xl mb-8">
-                <h1
-                  className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-6 font-bold leading-tight"
-                  dangerouslySetInnerHTML={{
-                    __html: (() => {
-                      // Strip any stored forced line-breaks from the DB value so heading
-                      // always renders as one continuous line; natural responsive wrapping only.
-                      const raw = heroSettings?.heading
-                        || 'Find Yourself <span class="text-primary-container">With TripoMist</span>';
-                      return raw
-                        .replace(/<br\s*\/?>/gi, ' ')   // remove <br> / <br/> / <br />
-                        .replace(/&nbsp;/gi, ' ')        // replace &nbsp; with normal space
-                        .replace(/[ \t]{2,}/g, ' ')     // collapse multiple spaces
-                        .trim();
-                    })()
-                  }}
-                />
+                <div className="mb-6 font-bold leading-tight">
+                  {(() => {
+                    const raw = heroSettings?.heading || 'Find Yourself <br/> <span class="text-primary-container">With TripoMist</span>';
+                    let parts = raw.split(/<br\s*\/?>/i);
+                    if (parts.length < 2) {
+                      const match = raw.match(/(.*?)<span[^>]*>(.*?)<\/span>(.*)/i);
+                      if (match) {
+                        parts = [match[1], match[2] + (match[3] || '')];
+                      } else {
+                        // Fallback split if there's no br or span but it's a long string
+                        const textOnly = raw.replace(/<[^>]+>/g, '').trim();
+                        const words = textOnly.split(' ');
+                        const mid = Math.floor(words.length / 2) || 1;
+                        parts = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+                      }
+                    }
+
+                    const cleanHtml = (str) => (str || '').replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').trim();
+                    const line1 = cleanHtml(parts[0]) || 'Find Yourself';
+                    const line2 = cleanHtml(parts.slice(1).join(' ')) || 'With TripoMist';
+
+                    return (
+                      <>
+                        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white block">
+                          {line1}
+                        </h1>
+                        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary-container block">
+                          {line2}
+                        </h1>
+                      </>
+                    );
+                  })()}
+                </div>
                 <p
                   className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8"
                   dangerouslySetInnerHTML={{ __html: heroSettings?.subtitle || 'Your Safe Travel Our Responsibility<span class="text-primary-container">.</span>' }}
@@ -300,16 +317,19 @@ function Home() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a] mb-3"></div>
             <span className="text-sm font-medium ml-3">Loading sections...</span>
           </div>
-        ) : (
-          dynamicPackageSections.filter(sec => sec.display_order <= 5).map(sec => (
-            <React.Fragment key={sec.id}>
-              {renderPackageSection(sec)}
-            </React.Fragment>
-          ))
-        )}
-
-        {/* Benefits/Trust Cards Section */}
-        <BenefitsSection />
+        ) : (() => {
+          let benefitsRendered = false;
+          return dynamicPackageSections.filter(sec => sec.display_order <= 5).map(sec => {
+            const isRecommended = sec.section_key === 'recommended';
+            if (isRecommended) benefitsRendered = true;
+            return (
+              <React.Fragment key={sec.id}>
+                {renderPackageSection(sec)}
+                {isRecommended && <BenefitsSection />}
+              </React.Fragment>
+            );
+          }).concat(!benefitsRendered && dynamicPackageSections.length > 0 ? [<BenefitsSection key="fallback-benefits" />] : []);
+        })()}
 
         {/* Stats Strip */}
         <StatsStrip />

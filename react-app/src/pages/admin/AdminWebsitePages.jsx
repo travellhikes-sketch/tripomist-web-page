@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { Save, AlertCircle, CheckCircle, RefreshCw, Plus, Trash2 } from 'lucide-react';
+import MediaUploader from '../../components/admin/MediaUploader';
 
 const AdminWebsitePages = () => {
   const { pageKey } = useParams();
@@ -21,6 +22,7 @@ const AdminWebsitePages = () => {
     title: '',
     subtitle: '',
     hero_image_url: '',
+    mobile_banner_image: '',
     seo_title: '',
     seo_description: '',
     is_active: true,
@@ -36,7 +38,7 @@ const AdminWebsitePages = () => {
         .select('*')
         .eq('page_key', pageKey)
         .single();
-      
+
       if (error && error.code !== 'PGRST116') throw error; // PGRST116 is not found
 
       if (data) {
@@ -44,6 +46,7 @@ const AdminWebsitePages = () => {
           title: data.title || '',
           subtitle: data.subtitle || '',
           hero_image_url: data.hero_image_url || '',
+          mobile_banner_image: data.mobile_banner_image || '',
           seo_title: data.seo_title || '',
           seo_description: data.seo_description || '',
           is_active: data.is_active ?? true,
@@ -52,7 +55,7 @@ const AdminWebsitePages = () => {
       } else {
         // Reset if not found
         setFormData({
-          title: '', subtitle: '', hero_image_url: '', seo_title: '', seo_description: '',
+          title: '', subtitle: '', hero_image_url: '', mobile_banner_image: '', seo_title: '', seo_description: '',
           is_active: true, content: defaultContent
         });
       }
@@ -88,6 +91,7 @@ const AdminWebsitePages = () => {
           title: formData.title,
           subtitle: formData.subtitle,
           hero_image_url: formData.hero_image_url,
+          mobile_banner_image: formData.mobile_banner_image,
           seo_title: formData.seo_title,
           seo_description: formData.seo_description,
           is_active: formData.is_active,
@@ -122,11 +126,11 @@ const AdminWebsitePages = () => {
   };
 
   const addSection = () => {
-    setFormData(prev => ({ 
-      ...prev, 
-      content: { 
-        ...prev.content, 
-        sections: [...(prev.content.sections || []), { heading: '', text: '', bullets: [] }] 
+    setFormData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        sections: [...(prev.content.sections || []), { heading: '', text: '', bullets: [] }]
       }
     }));
   };
@@ -184,17 +188,38 @@ const AdminWebsitePages = () => {
           <h2 className="font-bold text-lg text-gray-800 border-b pb-2">Header Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Page Title / Main Heading</label>
               <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle (Optional)</label>
               <input type="text" value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hero Image URL</label>
-              <input type="text" value={formData.hero_image_url} onChange={e => setFormData({...formData, hero_image_url: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" placeholder="https://..." />
+
+            <div className="md:col-span-2 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Desktop Banner Image (hero_image_url)</label>
+                <MediaUploader
+                  currentImage={formData.hero_image_url}
+                  onImageUploaded={(url) => setFormData(prev => ({...prev, hero_image_url: url}))}
+                  onImageRemoved={() => setFormData(prev => ({...prev, hero_image_url: ''}))}
+                  folder="website_pages"
+                  bucket="public_assets"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Banner Image (Optional fallback)</label>
+                <MediaUploader
+                  currentImage={formData.mobile_banner_image}
+                  onImageUploaded={(url) => setFormData(prev => ({...prev, mobile_banner_image: url}))}
+                  onImageRemoved={() => setFormData(prev => ({...prev, mobile_banner_image: ''}))}
+                  folder="website_pages"
+                  bucket="public_assets"
+                />
+              </div>
             </div>
+
             <div className="md:col-span-2 flex items-center mt-2">
               <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="w-4 h-4 mr-2" />
               <label className="text-sm font-medium text-gray-700">Page is Active (Visible to public)</label>
@@ -218,7 +243,7 @@ const AdminWebsitePages = () => {
         {/* Content Builder */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
           <h2 className="font-bold text-lg text-gray-800 border-b pb-2">Page Content</h2>
-          
+
           {/* Main Paragraphs */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-700 flex justify-between items-center">
