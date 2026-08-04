@@ -48,7 +48,7 @@ function Footer() {
           if (item.setting_key === 'social_links') setSocialSettings(item.setting_value);
         });
       }
-      
+
       const { data: dests } = await supabase
         .from('destinations')
         .select('*')
@@ -68,7 +68,7 @@ function Footer() {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
-        
+
       if (navData) {
         setNavItems(navData.filter(item => item.location === 'footer' || item.location === 'both'));
       }
@@ -78,7 +78,7 @@ function Footer() {
 
   const companyDescription = footerSettings?.company_description || "Creating extraordinary adventures, from mountain trails to dream destinations, designed for explorers who seek more than just a trip.";
   const copyrightText = footerSettings?.copyright_text?.replace('{year}', new Date().getFullYear().toString()) || `TripoMist © ${new Date().getFullYear()} All Rights Reserved.`;
-  
+
   const columns = footerSettings?.columns || [
     {
       title: 'Company',
@@ -109,21 +109,21 @@ function Footer() {
   return (
     <footer style={{ backgroundColor: bgColor, color: textColor }} className="w-full mt-auto border-t border-black/10 transition-colors">
       <div className="container mx-auto grid grid-cols-1 gap-8 px-4 py-16 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 max-w-7xl">
-        
+
         {/* Column A: Contact Info */}
         <div className="flex flex-col items-start gap-4">
           <Link className="flex items-center gap-3 no-underline" style={{ color: textColor }} to="/">
-            <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY" 
-              alt="TripoMist Logo" 
-              className="h-10 w-10 object-contain rounded-full shadow-sm" 
+            <img
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY"
+              alt="TripoMist Logo"
+              className="h-10 w-10 object-contain rounded-full shadow-sm"
             />
             <span className="text-xl font-bold tracking-tight">TripoMist</span>
           </Link>
           <p className="text-sm opacity-80 leading-relaxed max-w-sm">
             {companyDescription}
           </p>
-          
+
           <ul className="space-y-3 p-0 m-0 list-none text-sm font-medium opacity-90">
             <li className="flex items-start gap-2">
               <span className="material-symbols-outlined text-[18px] shrink-0">location_on</span>
@@ -228,10 +228,27 @@ function Footer() {
       </div>
 
       <div className="border-t border-black/10 py-6">
-        <div className="container mx-auto max-w-7xl px-4 text-center">
-          <p className="text-xs opacity-70 m-0">
+        <div className="container mx-auto max-w-7xl px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-xs opacity-80 font-medium">
+          <p className="m-0">
             {copyrightText}
           </p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 items-center justify-center">
+            {(footerSettings?.bottom_links || [
+              { label: 'Cancellation Policy', href: '/refund-policy' },
+              { label: 'Privacy Policy', href: '/privacy-policy' },
+              { label: 'Payment Policy', href: '/payment-policy' },
+              { label: 'Terms of Service', href: '/terms-conditions' },
+              { label: 'Sitemap', href: '/sitemap' },
+              { label: 'Employment policy', href: '/employment-policy' }
+            ]).map((link, idx) => (
+              <React.Fragment key={idx}>
+                {idx > 0 && <span className="opacity-40">|</span>}
+                <Link to={link.href} className="hover:underline transition-all" style={{ color: textColor }}>
+                  {link.label}
+                </Link>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

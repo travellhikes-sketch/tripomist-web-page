@@ -35,9 +35,11 @@ export default function TestimonialsSection() {
     fetchData();
   }, []);
 
+  const reviewsToRender = (settings?.cards && settings.cards.length > 0) ? settings.cards : reviews;
+
   // Autoscroll effect
   useEffect(() => {
-    if (!settings?.enable_autoscroll || reviews.length === 0) return;
+    if (!settings?.enable_autoscroll || reviewsToRender.length === 0) return;
     const interval = setInterval(() => {
       if (containerRef.current) {
         const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
@@ -50,9 +52,9 @@ export default function TestimonialsSection() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [settings, reviews]);
+  }, [settings, reviewsToRender]);
 
-  if (!settings || !settings.is_active || reviews.length === 0) return null;
+  if (!settings || !settings.is_active || reviewsToRender.length === 0) return null;
 
   const bgColor = settings.bg_color || '#ffffff';
   const textColor = settings.text_color || '#1f2937';
@@ -77,7 +79,7 @@ export default function TestimonialsSection() {
             to={settings.see_all_link || '/reviews'}
             className="text-sm font-bold text-[#136b8a] hover:underline whitespace-nowrap self-end mb-1"
           >
-            See all testimonials &rarr;
+            {settings.button_text || 'See all testimonials'} &rarr;
           </Link>
         </div>
 
@@ -85,7 +87,7 @@ export default function TestimonialsSection() {
           ref={containerRef}
           className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 scroll-smooth snap-x snap-mandatory"
         >
-          {reviews.map((review) => (
+          {reviewsToRender.map((review) => (
             <div
               key={review.id}
               className="w-[280px] md:w-[350px] shrink-0 bg-gray-50 border border-gray-100 p-6 rounded-2xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow snap-start"

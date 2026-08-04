@@ -190,6 +190,37 @@ const AdminSiteSettings = () => {
     handleChange('footer', 'columns', newCols);
   };
 
+  // Footer bottom links helpers
+  const addFooterBottomLink = () => {
+    const list = settings.footer?.bottom_links || [];
+    const newList = [...list, { label: 'New Policy Link', href: '/' }];
+    handleChange('footer', 'bottom_links', newList);
+  };
+
+  const deleteFooterBottomLink = (idx) => {
+    const list = settings.footer?.bottom_links || [];
+    const newList = list.filter((_, i) => i !== idx);
+    handleChange('footer', 'bottom_links', newList);
+  };
+
+  const updateFooterBottomLink = (idx, field, value) => {
+    const list = settings.footer?.bottom_links || [];
+    const newList = list.map((link, i) => i === idx ? { ...link, [field]: value } : link);
+    handleChange('footer', 'bottom_links', newList);
+  };
+
+  const moveFooterBottomLink = (idx, direction) => {
+    const list = settings.footer?.bottom_links || [];
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === list.length - 1) return;
+    const newList = [...list];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const temp = newList[idx];
+    newList[idx] = newList[targetIdx];
+    newList[targetIdx] = temp;
+    handleChange('footer', 'bottom_links', newList);
+  };
+
   const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 
@@ -418,6 +449,31 @@ const AdminSiteSettings = () => {
                         <button onClick={() => moveFooterLink(idx, 'up')} disabled={idx === 0} className="p-1.5 bg-white border rounded text-gray-600 disabled:opacity-50"><ArrowUp size={14} /></button>
                         <button onClick={() => moveFooterLink(idx, 'down')} disabled={idx === (settings.footer.columns[0].links.length - 1)} className="p-1.5 bg-white border rounded text-gray-600 disabled:opacity-50"><ArrowDown size={14} /></button>
                         <button onClick={() => deleteFooterLink(idx)} className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer Bottom policy links CRUD */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-md font-bold text-gray-800">Footer Bottom Policy Links</h3>
+                  <button onClick={addFooterBottomLink} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                    <Plus size={14} /> Add Policy Link
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {(settings.footer?.bottom_links || []).map((link, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center bg-gray-50 p-3 rounded-lg border">
+                      <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="text" value={link.label} onChange={e => updateFooterBottomLink(idx, 'label', e.target.value)} className={inputClass} placeholder="Policy Label (e.g. Terms of Service)" />
+                        <input type="text" value={link.href} onChange={e => updateFooterBottomLink(idx, 'href', e.target.value)} className={inputClass} placeholder="Link URL" />
+                      </div>
+                      <div className="flex justify-end gap-1.5">
+                        <button onClick={() => moveFooterBottomLink(idx, 'up')} disabled={idx === 0} className="p-1.5 bg-white border rounded text-gray-600 disabled:opacity-50"><ArrowUp size={14} /></button>
+                        <button onClick={() => moveFooterBottomLink(idx, 'down')} disabled={idx === (settings.footer.bottom_links.length - 1)} className="p-1.5 bg-white border rounded text-gray-600 disabled:opacity-50"><ArrowDown size={14} /></button>
+                        <button onClick={() => deleteFooterBottomLink(idx)} className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100"><Trash2 size={14} /></button>
                       </div>
                     </div>
                   ))}
@@ -756,9 +812,13 @@ const AdminSiteSettings = () => {
                   <label className={labelClass}>Section Subtext</label>
                   <input type="text" value={settings.testimonials_section.subtext || ''} onChange={e => handleChange('testimonials_section', 'subtext', e.target.value)} className={inputClass} />
                 </div>
-                <div>
+                 <div>
                   <label className={labelClass}>"See All" Button Route</label>
                   <input type="text" value={settings.testimonials_section.see_all_link || '/reviews'} onChange={e => handleChange('testimonials_section', 'see_all_link', e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>"See All" Button Label</label>
+                  <input type="text" value={settings.testimonials_section.button_text || 'See all testimonials'} onChange={e => handleChange('testimonials_section', 'button_text', e.target.value)} className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Background Color</label>
@@ -769,12 +829,53 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
 
-              {/* Sync check */}
+              {/* Testimonials Cards Builder */}
               <div className="border-t pt-4">
-                <h3 className="text-md font-bold text-gray-800 mb-2">Testimonials Management</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  * Note: Review items displaying in this section are dynamically loaded directly from the database's <strong>Reviews Panel</strong> (under Website Mgmt &rarr; Reviews). You can add, edit, or toggle reviews from there to automatically reflect in this carousel.
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col">
+                    <h3 className="text-md font-bold text-gray-800">Testimonials Cards Override</h3>
+                    <p className="text-xs text-gray-500">Adding cards below overrides database reviews and lets you manage testimonials manually.</p>
+                  </div>
+                  <button onClick={() => addCard('testimonials_section', { rating: 5, review_text: 'Testimonial review text...', customer_name: 'Customer Name', destination: 'Travelled Destination', customer_image_url: '' })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                    <Plus size={14} /> Add Testimonial Card
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(settings.testimonials_section.cards || []).map((card, idx) => (
+                    <div key={card.id} className="bg-gray-50 border p-4 rounded-xl space-y-3 relative">
+                      <div className="flex justify-between items-center border-b pb-2">
+                        <span className="text-xs font-semibold text-gray-500">Card #{idx + 1}</span>
+                        <div className="flex gap-1">
+                          <button onClick={() => moveCard('testimonials_section', idx, 'up')} disabled={idx === 0} className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"><ArrowUp size={12} /></button>
+                          <button onClick={() => moveCard('testimonials_section', idx, 'down')} disabled={idx === (settings.testimonials_section.cards.length - 1)} className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"><ArrowDown size={12} /></button>
+                          <button onClick={() => deleteCard('testimonials_section', card.id)} className="p-1 bg-red-50 text-red-500 rounded hover:bg-red-100"><Trash2 size={12} /></button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className={labelClass}>Customer Name</label>
+                          <input type="text" value={card.customer_name} onChange={e => updateCard('testimonials_section', card.id, 'customer_name', e.target.value)} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Destination</label>
+                          <input type="text" value={card.destination} onChange={e => updateCard('testimonials_section', card.id, 'destination', e.target.value)} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Rating (1-5)</label>
+                          <input type="number" min="1" max="5" value={card.rating} onChange={e => updateCard('testimonials_section', card.id, 'rating', Number(e.target.value))} className={inputClass} />
+                        </div>
+                        <div className="md:col-span-3">
+                          <label className={labelClass}>Customer Image URL</label>
+                          <input type="url" value={card.customer_image_url} onChange={e => updateCard('testimonials_section', card.id, 'customer_image_url', e.target.value)} className={inputClass} placeholder="https://..." />
+                        </div>
+                        <div className="md:col-span-3">
+                          <label className={labelClass}>Review Text</label>
+                          <textarea value={card.review_text} onChange={e => updateCard('testimonials_section', card.id, 'review_text', e.target.value)} className={inputClass} rows={2} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="pt-4 flex justify-end">
