@@ -124,6 +124,44 @@ export default function PackageDetail() {
   const [galleryImages, setGalleryImages] = useState([]);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const galleryContainerRef = useRef(null);
+
+  const checkScrollState = () => {
+    if (galleryContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = galleryContainerRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    const el = galleryContainerRef.current;
+    if (el) {
+      checkScrollState();
+      el.addEventListener('scroll', checkScrollState, { passive: true });
+      window.addEventListener('resize', checkScrollState, { passive: true });
+      return () => {
+        el.removeEventListener('scroll', checkScrollState);
+        window.removeEventListener('resize', checkScrollState);
+      };
+    }
+  }, [galleryImages]);
+
+  const scrollGalleryLeft = () => {
+    if (galleryContainerRef.current) {
+      const cardWidth = galleryContainerRef.current.firstElementChild?.getBoundingClientRect().width || 300;
+      galleryContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    }
+  };
+
+  const scrollGalleryRight = () => {
+    if (galleryContainerRef.current) {
+      const cardWidth = galleryContainerRef.current.firstElementChild?.getBoundingClientRect().width || 300;
+      galleryContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    }
+  };
 
   // Section Navigation & Scroll Spy
   const [activeSection, setActiveSection] = useState('overview');
@@ -352,7 +390,15 @@ export default function PackageDetail() {
     }
   }, [slug, location.pathname]);
 
-  const visibleSections = (trip?.sectionSettings || DEFAULT_SECTIONS).filter(sec => sec.visible !== false);
+  let rawSections = trip?.sectionSettings && trip.sectionSettings.length > 0
+    ? trip.sectionSettings
+    : DEFAULT_SECTIONS;
+
+  if (!rawSections.some(s => s.id === 'faqs')) {
+    rawSections = [...rawSections, { id: 'faqs', label: "FAQ's", visible: true, order: 7 }];
+  }
+
+  const visibleSections = rawSections.filter(sec => sec.visible !== false);
 
   // Sentinel scroll listener using IntersectionObserver for 100% accurate sticky detection
   useEffect(() => {
@@ -586,23 +632,52 @@ export default function PackageDetail() {
 
       <main className="w-full flex-grow">
         {/* ==================================================
-            D. TOP PHOTO GALLERY GRID (HORIZONTAL REFERENCE STYLE)
+            D. TOP PHOTO GALLERY GRID (4 EQUAL IMAGES, NO ROUNDING, ALWAYS-VISIBLE DESKTOP ARROWS)
         ================================================== */}
         <section className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-4">
-          <div className="relative w-full">
-            <div className="flex gap-3 md:gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory py-1">
+          <div className="relative w-full overflow-hidden rounded-none shadow-sm border border-slate-200">
+            {/* Gallery Left/Right Arrows (Always Visible on Desktop when navigation is possible) */}
+            {galleryImages.length > 4 && (
+              <>
+                {canScrollLeft && (
+                  <button
+                    type="button"
+                    onClick={scrollGalleryLeft}
+                    className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
+                    title="Previous Images"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                )}
+                {canScrollRight && (
+                  <button
+                    type="button"
+                    onClick={scrollGalleryRight}
+                    className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
+                    title="Next Images"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                )}
+              </>
+            )}
+
+            <div
+              ref={galleryContainerRef}
+              className="flex gap-0 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-smooth"
+            >
               {galleryImages.map((img, idx) => (
                 <div
                   key={idx}
                   onClick={() => openLightbox(idx)}
-                  className="w-[85vw] sm:w-[calc(50%-8px)] md:w-[calc(33.333%-11px)] h-[240px] sm:h-[280px] md:h-[320px] shrink-0 snap-start rounded-2xl overflow-hidden cursor-pointer group relative bg-gray-100 shadow-sm border border-slate-100"
+                  className="w-full sm:w-1/2 md:w-1/4 h-[240px] sm:h-[280px] md:h-[320px] shrink-0 snap-start cursor-pointer group/img relative bg-slate-900 overflow-hidden"
                 >
                   <img
                     src={img}
                     alt={`${trip.title} ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover rounded-none transition-transform duration-500 group-hover/img:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                  <div className="absolute inset-0 bg-black/10 group-hover/img:bg-black/0 transition-colors" />
                 </div>
               ))}
             </div>
@@ -709,7 +784,7 @@ export default function PackageDetail() {
                 title={isAddedToCart ? "Remove from Cart" : "Add to Cart"}
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer ${
                   isAddedToCart
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    ? 'bg-white border-2 border-[#136b8a] text-[#136b8a]'
                     : 'bg-[#136b8a] hover:bg-[#0f556e] text-white'
                 }`}
               >
@@ -806,7 +881,7 @@ export default function PackageDetail() {
                       <div className="bg-[#eff6f9] border border-[#d2e6ef] rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
                         {trip.costings && trip.costings.length > 0 ? (
                           trip.costings.map((c, i) => {
-                            const labelStr = (c.type || c.sharing || 'Per Person').trim();
+                            const labelStr = (c.type || c.sharing || 'Per Person').replace(/\bupgrade\b/ig, '').trim();
                             let priceVal = c.price != null ? String(c.price).trim() : `₹${trip.numericPrice.toLocaleString()}`;
                             if (!priceVal.startsWith('₹') && !priceVal.startsWith('+')) {
                               if (/^\d+$/.test(priceVal)) {
@@ -897,24 +972,27 @@ export default function PackageDetail() {
 
                       {/* 7. DOWNLOAD ITINERARY BLOCK AFTER ITINERARY */}
                       {trip.itineraryPdfUrl && (
-                        <div className="mt-8 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-14 bg-rose-50 border border-rose-200 rounded-lg flex flex-col items-center justify-center shrink-0">
-                              <span className="text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded-xs uppercase">PDF</span>
+                        <div className="mt-10 pt-6 border-t border-gray-100">
+                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Download Itinerary</h2>
+                          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-14 bg-rose-50 border border-rose-200 rounded-lg flex flex-col items-center justify-center shrink-0">
+                                <span className="text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded-xs uppercase">PDF</span>
+                              </div>
+                              <div>
+                                <h4 className="text-base font-bold text-slate-900">{trip.downloadBlock?.heading || "Want to read it later ?"}</h4>
+                                <p className="text-xs md:text-sm text-slate-500 mt-0.5">{trip.downloadBlock?.subtext || "Download this tour's PDF brochure and start your planning offline."}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="text-base font-bold text-slate-900">{trip.downloadBlock?.heading || "Want to read it later ?"}</h4>
-                              <p className="text-xs md:text-sm text-slate-500 mt-0.5">{trip.downloadBlock?.subtext || "Download this tour's PDF brochure and start your planning offline."}</p>
-                            </div>
+                            <a
+                              href={trip.itineraryPdfUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-[#800040] hover:bg-[#600030] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
+                            >
+                              {trip.downloadBlock?.button_label || "Download PDF"}
+                            </a>
                           </div>
-                          <a
-                            href={trip.itineraryPdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
-                          >
-                            {trip.downloadBlock?.button_label || "Download PDF"}
-                          </a>
                         </div>
                       )}
                     </section>
