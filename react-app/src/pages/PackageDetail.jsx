@@ -18,7 +18,19 @@ import {
   XCircle,
   Info,
   Luggage,
-  Check
+  Check,
+  Bus,
+  Users,
+  Mountain,
+  Bed,
+  Sun,
+  UserCheck,
+  Compass,
+  Utensils,
+  FileCheck,
+  MessageCircle,
+  ShieldCheck,
+  Heart
 } from 'lucide-react';
 
 const cleanHeroTitle = (title) => {
@@ -39,6 +51,24 @@ const DEFAULT_SECTIONS = [
   { id: 'note', label: 'Note', visible: true, order: 6 }
 ];
 
+const DEFAULT_TRIP_INFO = [
+  { icon: 'Bus', label: 'Transportation', value: 'Tempo Traveller / Volvo Bus' },
+  { icon: 'Users', label: 'Group Size', value: '12 - 15' },
+  { icon: 'Mountain', label: 'Maximum Altitude', value: '12,073 ft' },
+  { icon: 'Bed', label: 'Accommodation', value: 'Hotel / Homestay / Campstay' },
+  { icon: 'Sun', label: 'Best Season', value: 'May & Sept - Oct' },
+  { icon: 'UserCheck', label: 'Guiding Method', value: 'Experienced Tour Captain' },
+  { icon: 'Compass', label: 'Tour Type', value: 'Group Tour' },
+  { icon: 'Utensils', label: 'Meals', value: 'Breakfast & Dinner' },
+  { icon: 'FileCheck', label: 'Permits', value: 'All necessary forest permits' }
+];
+
+const DEFAULT_TRUST_BENEFITS = [
+  'Best for Solo Travelers',
+  'Safe for Girls',
+  'Highly Enthusiastic Trip Leaders'
+];
+
 export default function PackageDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -49,7 +79,6 @@ export default function PackageDetail() {
   const [travellers, setTravellers] = useState(1);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isReadMore, setIsReadMore] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [siteSettings, setSiteSettings] = useState(null);
 
@@ -105,10 +134,12 @@ export default function PackageDetail() {
           description: "Prepare to embark on a journey of breathtaking landscapes, cultural immersion, and thrilling experiences as you explore the destination. Offering a perfect blend of tranquility, adventure, and natural beauty.",
           inclusions: ["Accommodation in premium hotels & homestays", "Daily Breakfast & Dinner", "Sightseeing transfers in AC Vehicle", "Experienced Trip Captain"],
           exclusions: ["Flight / Train Tickets", "Personal Expenses", "Entry fees to monuments", "Travel Insurance"],
-          thingsToCarry: ["Warm clothes & jacket", "Sturdy trekking shoes", "Personal water bottle", "Valid Government ID Proof", "Personal Medical Kit & Power Bank"],
-          notes: "Please carry valid ID proof. Itinerary subject to weather conditions. Book your seat early for best availability.",
+          thingsToCarry: ["Warm Clothes & Layering", "Trekking / Comfortable Shoes", "Water Bottle & Reusable Flask", "Government ID Proof", "Personal Medicine Kit & Sunscreen"],
+          notes: "Carrying valid ID proof is mandatory. Travel itinerary schedule is subject to local weather and road conditions.",
           itineraryPdfUrl: "",
           sectionSettings: DEFAULT_SECTIONS,
+          tripInfo: DEFAULT_TRIP_INFO,
+          trustBenefits: DEFAULT_TRUST_BENEFITS,
           days: [
             { num: "Day 01", title: "Arrival & Transfer", desc: "Arrive at pickup location, meet your trip leader, check into hotel and enjoy an evening orientation." },
             { num: "Day 02", title: "Sightseeing & Exploration", desc: "Full day excursion visiting key scenic attractions, local markets, and cultural landmarks." },
@@ -172,6 +203,32 @@ export default function PackageDetail() {
           parsedThings = ["Warm Clothes & Layering", "Trekking / Comfortable Shoes", "Water Bottle & Reusable Flask", "Government ID Proof", "Personal Medicine Kit & Sunscreen"];
         }
 
+        // Parse trip_info
+        let parsedTripInfo = [];
+        if (data.trip_info) {
+          if (Array.isArray(data.trip_info)) {
+            parsedTripInfo = data.trip_info;
+          } else if (typeof data.trip_info === 'string') {
+            try { parsedTripInfo = JSON.parse(data.trip_info); } catch (e) { parsedTripInfo = []; }
+          }
+        }
+        if (parsedTripInfo.length === 0) {
+          parsedTripInfo = DEFAULT_TRIP_INFO;
+        }
+
+        // Parse trust_benefits
+        let parsedTrustBenefits = [];
+        if (data.trust_benefits) {
+          if (Array.isArray(data.trust_benefits)) {
+            parsedTrustBenefits = data.trust_benefits;
+          } else if (typeof data.trust_benefits === 'string') {
+            try { parsedTrustBenefits = JSON.parse(data.trust_benefits); } catch (e) { parsedTrustBenefits = data.trust_benefits.split('\n').filter(Boolean); }
+          }
+        }
+        if (parsedTrustBenefits.length === 0) {
+          parsedTrustBenefits = DEFAULT_TRUST_BENEFITS;
+        }
+
         // Parse section settings
         let parsedSectionSettings = DEFAULT_SECTIONS;
         if (data.section_settings) {
@@ -206,6 +263,8 @@ export default function PackageDetail() {
           notes: data.notes || "Carrying valid ID proof is mandatory. Travel itinerary schedule is subject to local weather and road conditions.",
           itineraryPdfUrl: data.itinerary_pdf_url || '',
           sectionSettings: parsedSectionSettings,
+          tripInfo: parsedTripInfo,
+          trustBenefits: parsedTrustBenefits,
           days: parsedDays,
           costings: data.costings || []
         });
@@ -240,12 +299,16 @@ export default function PackageDetail() {
         const isStickyNow = rect.top <= stickyThreshold;
         setIsNavSticky(isStickyNow);
 
-        window.dispatchEvent(new CustomEvent('packageNavStickyChange', { detail: { isSticky: isStickyNow } }));
+        // Notify ExploreNavbar to hide/show seasonal strip
+        window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+          detail: { isSticky: isStickyNow }
+        }));
       }
 
-      const activeSecList = visibleSections.map(s => s.id);
-      const scrollPos = window.scrollY + 200;
-      for (const secId of activeSecList) {
+      // Scroll Spy Active Section
+      const scrollPos = window.scrollY + 140;
+      for (const sec of visibleSections) {
+        const secId = sec.id;
         const el = document.getElementById(secId);
         if (el) {
           const top = el.offsetTop;
@@ -392,6 +455,21 @@ export default function PackageDetail() {
     window.open(whatsappUrl, '_blank');
   };
 
+  const renderIcon = (iconName) => {
+    switch (iconName?.toLowerCase()) {
+      case 'bus': return <Bus size={20} />;
+      case 'users': return <Users size={20} />;
+      case 'mountain': return <Mountain size={20} />;
+      case 'bed': return <Bed size={20} />;
+      case 'sun': return <Sun size={20} />;
+      case 'usercheck': return <UserCheck size={20} />;
+      case 'compass': return <Compass size={20} />;
+      case 'utensils': return <Utensils size={20} />;
+      case 'filecheck': return <FileCheck size={20} />;
+      default: return <Compass size={20} />;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest">
@@ -428,7 +506,7 @@ export default function PackageDetail() {
 
       <main className="w-full flex-grow">
         {/* ==================================================
-            D. TOP PHOTO GALLERY GRID
+            D. TOP PHOTO GALLERY GRID (UNIFORM CROP & EQUAL SIZE)
         ================================================== */}
         <section className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-4">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 h-[320px] md:h-[450px] rounded-2xl overflow-hidden relative shadow-sm">
@@ -549,14 +627,14 @@ export default function PackageDetail() {
           {/* LEFT COLUMN: Title, Actions, Section Nav & Vertical Sections */}
           <div className="lg:col-span-8 flex flex-col">
 
-            {/* E & F. PROMINENT TITLE & OUTLINED DURATION PILLS */}
-            <div className="mb-6">
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-3 font-sans">
+            {/* 2.2 PROMINENT TITLE & ALIGNED DAYS/NIGHTS PILLS */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight font-sans uppercase">
                 {trip.title}
               </h1>
 
-              {/* F. OUTLINED ROUNDED DURATION PILLS */}
-              <div className="flex items-center gap-2 mb-4">
+              {/* OUTLINED ROUNDED DURATION PILLS */}
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="inline-flex items-center px-3.5 py-1 rounded-full border border-[#136b8a]/40 bg-[#eff6f9] text-[#136b8a] text-xs font-bold tracking-wider uppercase shadow-xs">
                   {daysVal}
                 </span>
@@ -566,16 +644,18 @@ export default function PackageDetail() {
               </div>
             </div>
 
-            {/* G. ACTION ROW DIRECTLY BELOW TITLE AREA */}
+            {/* 2.4 ACTION ROW DIRECTLY BELOW TITLE AREA */}
             <div className="flex items-center gap-3 mb-8 overflow-x-auto hide-scrollbar pb-2 border-b border-gray-100">
               {/* 1. Download Itinerary */}
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
-              >
-                <Download size={16} />
-                <span>Download Itinerary</span>
-              </button>
+              {trip.itineraryPdfUrl ? (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-2 bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
+                >
+                  <Download size={16} />
+                  <span>Download Itinerary</span>
+                </button>
+              ) : null}
 
               {/* 2. Add to Cart */}
               <button
@@ -601,7 +681,7 @@ export default function PackageDetail() {
             </div>
 
             {/* ==================================================
-                H, I, P. PACKAGE SECTION NAVIGATION (STICKY ROW)
+                3. PACKAGE SECTION NAVIGATION (STICKY ROW)
             ================================================== */}
             <div
               ref={sectionNavRef}
@@ -632,7 +712,7 @@ export default function PackageDetail() {
             {isNavSticky && <div className="h-12 w-full" />}
 
             {/* ==================================================
-                J. VERTICAL SECTIONS CONTENT (DYNAMIC ORDER & VISIBILITY)
+                VERTICAL SECTIONS CONTENT (DYNAMIC ORDER & VISIBILITY)
             ================================================== */}
             <div className="space-y-12">
               {visibleSections.map((sec) => {
@@ -640,21 +720,26 @@ export default function PackageDetail() {
                   return (
                     <section key="overview" id="overview" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Overview</h2>
-                      <div className="prose max-w-none text-gray-700 text-sm md:text-base leading-relaxed space-y-4">
-                        <p>
-                          {isReadMore
-                            ? (trip.overview || trip.description)
-                            : `${(trip.overview || trip.description)?.slice(0, 260) || ''}...`
-                          }
-                        </p>
-                        {(trip.overview || trip.description)?.length > 260 && (
-                          <button
-                            onClick={() => setIsReadMore(!isReadMore)}
-                            className="text-[#136b8a] font-bold hover:underline text-sm inline-block cursor-pointer"
-                          >
-                            {isReadMore ? 'Show Less' : 'Read More'}
-                          </button>
-                        )}
+                      <div className="prose max-w-none text-gray-700 text-sm md:text-base leading-relaxed">
+                        <p>{trip.overview || trip.description}</p>
+                      </div>
+
+                      {/* 4. TRIP INFO GRID BLOCK */}
+                      <div className="mt-8 pt-8 border-t border-slate-100">
+                        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6 tracking-tight">Trip Info</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                          {(trip.tripInfo || DEFAULT_TRIP_INFO).map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[#eff6f9] text-[#136b8a] flex items-center justify-center shrink-0">
+                                {renderIcon(item.icon)}
+                              </div>
+                              <div>
+                                <span className="text-xs font-medium text-slate-500 block">{item.label}</span>
+                                <span className="text-sm font-bold text-slate-900 block leading-snug">{item.value}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </section>
                   );
@@ -666,27 +751,42 @@ export default function PackageDetail() {
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Trip Cost</h2>
                       {trip.costings && trip.costings.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {trip.costings.map((c, i) => (
-                            <div key={i} className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs text-center flex flex-col justify-between">
-                              <div>
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                                  {c.type || c.sharing || 'Sharing Option'}
-                                </span>
-                                <span className="text-lg md:text-xl font-extrabold text-[#136b8a] block">
-                                  {c.price || `₹${trip.numericPrice.toLocaleString()}`}
-                                </span>
+                          {trip.costings.map((c, i) => {
+                            const typeStr = (c.type || c.sharing || 'Sharing Option').toUpperCase();
+                            let priceVal = c.price != null ? String(c.price).trim() : `₹${trip.numericPrice.toLocaleString()}`;
+                            // Format Quad as base and Triple/Double with '+' prefix if numeric add-on
+                            if (!priceVal.startsWith('₹') && !priceVal.startsWith('+')) {
+                              if (/^\d+$/.test(priceVal)) {
+                                const num = Number(priceVal);
+                                if (typeStr.includes('QUAD')) {
+                                  priceVal = `₹${num.toLocaleString('en-IN')}`;
+                                } else {
+                                  priceVal = `+ ₹${num.toLocaleString('en-IN')}`;
+                                }
+                              }
+                            } else if (priceVal.startsWith('+') && !priceVal.includes('₹')) {
+                              priceVal = `+ ₹${priceVal.replace(/^\+\s*/, '')}`;
+                            }
+
+                            return (
+                              <div key={i} className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs flex flex-col justify-between hover:border-[#136b8a] transition-all">
+                                <div>
+                                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 block mb-2">
+                                    {typeStr}
+                                  </span>
+                                  <span className="text-2xl font-extrabold text-[#136b8a] block">
+                                    {priceVal}
+                                  </span>
+                                </div>
+                                {c.details && <p className="text-xs text-slate-500 mt-2 font-medium">{c.details}</p>}
                               </div>
-                              {c.details && <p className="text-xs text-slate-500 mt-2">{c.details}</p>}
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
-                        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 flex items-center justify-between">
-                          <div>
-                            <span className="text-sm font-bold text-gray-900 block">Starting Price Per Person</span>
-                            <span className="text-xs text-gray-500">{siteSettings?.gst_label || '+ 5% GST applicable'}</span>
-                          </div>
-                          <span className="text-2xl font-extrabold text-[#136b8a]">{trip.price}</span>
+                        <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-6 flex items-center justify-between shadow-2xs">
+                          <span className="text-sm font-bold text-gray-900 block">Per Person</span>
+                          <span className="text-xl md:text-2xl font-extrabold text-[#136b8a]">{trip.price} + 5% GST</span>
                         </div>
                       )}
                     </section>
@@ -696,14 +796,25 @@ export default function PackageDetail() {
                 if (sec.id === 'itinerary') {
                   return (
                     <section key="itinerary" id="itinerary" className="scroll-mt-32 border-b border-gray-100 pb-10">
+                      {/* 6. EXPAND ALL TOGGLE SWITCH */}
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Itinerary</h2>
-                        <button
-                          onClick={toggleExpandAll}
-                          className="text-xs md:text-sm font-bold text-[#136b8a] hover:text-[#0f556e] underline cursor-pointer"
-                        >
-                          {allExpanded ? 'Collapse All' : 'Expand All'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs md:text-sm font-bold text-slate-700">Expand all</span>
+                          <button
+                            type="button"
+                            onClick={toggleExpandAll}
+                            className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
+                              allExpanded ? 'bg-[#136b8a]' : 'bg-slate-300'
+                            }`}
+                          >
+                            <div
+                              className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 left-0.5 shadow-sm ${
+                                allExpanded ? 'translate-x-6' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-4">
@@ -737,6 +848,29 @@ export default function PackageDetail() {
                           );
                         })}
                       </div>
+
+                      {/* 7. DOWNLOAD ITINERARY BLOCK AFTER ITINERARY */}
+                      {trip.itineraryPdfUrl && (
+                        <div className="mt-8 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-14 bg-rose-50 border border-rose-200 rounded-lg flex flex-col items-center justify-center shrink-0">
+                              <span className="text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded-xs uppercase">PDF</span>
+                            </div>
+                            <div>
+                              <h4 className="text-base font-bold text-slate-900">Want to read it later ?</h4>
+                              <p className="text-xs md:text-sm text-slate-500 mt-0.5">Download this tour's PDF brochure and start your planning offline.</p>
+                            </div>
+                          </div>
+                          <a
+                            href={trip.itineraryPdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
+                          >
+                            Download PDF
+                          </a>
+                        </div>
+                      )}
                     </section>
                   );
                 }
@@ -744,35 +878,35 @@ export default function PackageDetail() {
                 if (sec.id === 'inclusions-exclusions') {
                   return (
                     <section key="inclusions-exclusions" id="inclusions-exclusions" className="scroll-mt-32 border-b border-gray-100 pb-10">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Inclusion & Exclusion</h2>
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Includes/Excludes</h2>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Included */}
+                        {/* Cost Includes */}
                         <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-6">
                           <h3 className="text-base font-bold text-emerald-800 mb-4 flex items-center gap-2">
                             <CheckCircle size={20} className="text-emerald-600" />
-                            Inclusions
+                            Cost Includes
                           </h3>
                           <ul className="space-y-3 text-xs md:text-sm text-gray-700 font-medium">
                             {trip.inclusions && trip.inclusions.map((inc, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                              <li key={i} className="flex items-start gap-2.5">
+                                <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
                                 <span>{inc}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
 
-                        {/* Excluded */}
+                        {/* Cost Excludes */}
                         <div className="bg-rose-50/50 border border-rose-200/80 rounded-2xl p-6">
                           <h3 className="text-base font-bold text-rose-800 mb-4 flex items-center gap-2">
                             <XCircle size={20} className="text-rose-600" />
-                            Exclusions
+                            Cost Excludes
                           </h3>
                           <ul className="space-y-3 text-xs md:text-sm text-gray-700 font-medium">
                             {trip.exclusions && trip.exclusions.map((exc, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="text-rose-600 font-bold mt-0.5">•</span>
+                              <li key={i} className="flex items-start gap-2.5">
+                                <XCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
                                 <span>{exc}</span>
                               </li>
                             ))}
@@ -789,28 +923,39 @@ export default function PackageDetail() {
                     <section key="things-to-carry" id="things-to-carry" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Things to Carry</h2>
 
-                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {trip.thingsToCarry.map((item, i) => (
-                            <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 text-xs md:text-sm text-slate-700 font-medium shadow-2xs">
-                              <Luggage size={16} className="text-[#136b8a] shrink-0" />
-                              <span>{item}</span>
-                            </div>
-                          ))}
-                        </div>
+                      <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-6">
+                        <ul className="space-y-3 text-xs md:text-sm text-slate-800 font-semibold">
+                          {trip.thingsToCarry.map((item, i) => {
+                            const text = typeof item === 'string' ? item : (item.text || item.title || '');
+                            if (!text) return null;
+                            return (
+                              <li key={i} className="flex items-start gap-3">
+                                <span className="w-2 h-2 rounded-full bg-[#136b8a] mt-1.5 shrink-0" />
+                                <span>{text}</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       </div>
                     </section>
                   );
                 }
 
                 if (sec.id === 'note') {
-                  if (!trip.notes || !trip.notes.trim()) return null;
+                  if (!trip.notes || (Array.isArray(trip.notes) && trip.notes.length === 0)) return null;
+                  const noteList = Array.isArray(trip.notes) ? trip.notes : (typeof trip.notes === 'string' ? trip.notes.split('\n').filter(Boolean) : []);
                   return (
                     <section key="note" id="note" className="scroll-mt-32 pb-6">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Note</h2>
-                      <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-6 text-xs md:text-sm text-amber-900 leading-relaxed flex items-start gap-3">
-                        <Info size={20} className="text-amber-700 shrink-0 mt-0.5" />
-                        <p>{trip.notes}</p>
+                      <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-6 text-xs md:text-sm text-amber-950 leading-relaxed">
+                        <ul className="space-y-2.5">
+                          {noteList.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2.5 font-medium">
+                              <Info size={18} className="text-amber-700 shrink-0 mt-0.5" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </section>
                   );
@@ -821,93 +966,117 @@ export default function PackageDetail() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: STICKY BOOKING CARD (DESKTOP) */}
-          <div className="w-full lg:col-span-4 relative mt-8 lg:mt-0">
-            <div className="sticky top-[100px] bg-white rounded-3xl border border-gray-200 p-6 shadow-lg shadow-gray-100">
+          {/* RIGHT COLUMN: STICKY BOOKING CARD */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-28 bg-white border border-gray-200 rounded-3xl p-6 shadow-xl space-y-6">
               
-              {/* Price Details */}
-              <div className="mb-6 border-b border-gray-100 pb-5">
-                <span className="font-semibold text-gray-900 text-sm block mb-1">Starting Price</span>
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-[#136b8a] text-3xl font-bold">{trip.price} <span className="text-sm text-gray-500 font-medium">{siteSettings?.gst_label || '+ 5% GST'}</span></span>
-                  <div className="flex items-center gap-1 text-xs font-semibold">
-                    {trip.originalPrice && trip.originalPrice !== trip.price && trip.originalPrice !== '₹0' && (
-                      <span className="line-through text-gray-500 font-normal">{trip.originalPrice}</span>
-                    )}
-                    {trip.discountText && (
-                      <span className="text-red-500 font-bold">{trip.discountText}</span>
-                    )}
-                  </div>
+              {/* Starting Price & GST */}
+              <div className="space-y-1 pb-4 border-b border-gray-100">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Starting Price</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl md:text-4xl font-extrabold text-[#136b8a] tracking-tight">
+                    {trip.price}
+                  </span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    {siteSettings?.gst_label || '+ 5% GST'}
+                  </span>
+                  {trip.originalPrice && (
+                    <span className="text-xs text-gray-400 line-through ml-auto">
+                      {trip.originalPrice}
+                    </span>
+                  )}
+                  {trip.discountText && (
+                    <span className="text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+                      {trip.discountText}
+                    </span>
+                  )}
                 </div>
-                <p className="text-gray-500 text-sm font-medium">Per Person</p>
+                <span className="text-xs text-gray-400 block font-medium">Per Person</span>
               </div>
 
-              {/* No of Travellers */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 font-semibold text-gray-800 text-sm">
-                  <span className="material-symbols-outlined text-purple-600 text-[20px]">group</span>
-                  No. of Travellers
+              {/* Sidebar Trust Benefits */}
+              {(trip.trustBenefits || DEFAULT_TRUST_BENEFITS).length > 0 && (
+                <div className="space-y-2 py-2">
+                  {(trip.trustBenefits || DEFAULT_TRUST_BENEFITS).map((benefit, bIdx) => (
+                    <div key={bIdx} className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <ShieldCheck size={16} className="text-[#136b8a] shrink-0" />
+                      <span>{benefit}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-full px-2 py-1 shadow-sm">
-                  <button onClick={() => setTravellers(Math.max(1, travellers - 1))} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-full font-bold transition-colors text-lg cursor-pointer">-</button>
-                  <span className="font-bold text-gray-900 text-base w-4 text-center">{travellers}</span>
-                  <button onClick={() => setTravellers(travellers + 1)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-full font-bold transition-colors text-lg cursor-pointer">+</button>
+              )}
+
+              {/* Travellers Counter */}
+              <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-gray-500 text-xl">group</span>
+                  <span className="text-sm font-bold text-gray-700">No. of Travellers</span>
+                </div>
+                <div className="flex items-center border border-gray-200 rounded-full p-1 bg-gray-50">
+                  <button
+                    onClick={() => setTravellers(Math.max(1, travellers - 1))}
+                    className="w-8 h-8 rounded-full bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-base shadow-2xs transition-colors cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="w-8 text-center font-extrabold text-sm text-gray-900">{travellers}</span>
+                  <button
+                    onClick={() => setTravellers(travellers + 1)}
+                    className="w-8 h-8 rounded-full bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-base shadow-2xs transition-colors cursor-pointer"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
               {/* Total Amount */}
-              <div className="flex items-center justify-between mb-8 bg-[#eff6f9] px-4 py-3 rounded-xl border border-[#cde5ef]">
-                <span className="font-bold text-gray-800 text-sm">Total Amount</span>
-                <span className="font-extrabold text-[#136b8a] text-xl">₹{totalAmount.toLocaleString()}</span>
+              <div className="bg-[#eff6f9] border border-[#b9dae6] rounded-2xl p-4 flex items-center justify-between">
+                <span className="text-xs md:text-sm font-bold text-gray-700">Total Amount</span>
+                <span className="text-xl md:text-2xl font-extrabold text-[#136b8a]">
+                  ₹{totalAmount.toLocaleString('en-IN')}
+                </span>
               </div>
-              
-              {/* Action Buttons */}
-              <button
-                onClick={handleBookNow}
-                className="btn-shiny w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mb-4 text-lg cursor-pointer"
-              >
-                <span className="relative z-10">Book Now</span>
-              </button>
-              <button
-                onClick={handleSendEnquiry}
-                className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-base cursor-pointer"
-              >
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg" alt="WhatsApp" className="w-5 h-5 filter invert" />
-                {siteSettings?.default_enquiry_text || 'Send Enquiry to trip experts'}
-              </button>
-              <p className="text-center text-gray-500 text-[11px] font-medium mt-2 mb-2">
-                fill the blanks to send enquiry to expert
-              </p>
-              
+
+              {/* Buttons: Book Now & Send Enquiry */}
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={handleBookNow}
+                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-extrabold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98"
+                >
+                  Book Now
+                </button>
+                <button
+                  onClick={handleSendEnquiry}
+                  className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all text-sm tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={18} />
+                  <span>Send Enquiry</span>
+                </button>
+                <p className="text-[11px] text-slate-400 text-center font-medium">fill the blanks to send enquiry to expert</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Reviews Section */}
-        {trip.id && (
-          <ReviewsSection packageId={trip.id} />
-        )}
+        </div>
       </main>
 
+      <Footer />
+
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        packageData={trip}
+        initialTravellers={travellers}
+      />
+
+      {/* Download Itinerary Modal */}
       <DownloadItineraryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         tripTitle={trip.title}
         pdfUrl={trip.itineraryPdfUrl}
       />
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-        tripTitle={trip.title}
-        price={totalAmount}
-        travellers={travellers}
-        navigate={navigate}
-        packageId={slug}
-        destination={formatSlugToTitle(trip.destination) || trip.title}
-        costings={trip.costings}
-      />
-
-      <Footer />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, FileText, Star, ArrowUp, ArrowDown, Trash2, Eye, EyeOff } from 'lucide-react';
+import { X, UploadCloud, FileText, Star, ArrowUp, ArrowDown, Trash2, Eye, EyeOff, Plus } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 
 const DEFAULT_SECTION_SETTINGS = [
@@ -28,8 +28,10 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
   const [itineraryPdfUrl, setItineraryPdfUrl] = useState('');
-  const [thingsToCarry, setThingsToCarry] = useState('');
+  const [thingsToCarryList, setThingsToCarryList] = useState([]);
   const [notes, setNotes] = useState('');
+  const [tripInfoList, setTripInfoList] = useState([]);
+  const [trustBenefitsList, setTrustBenefitsList] = useState([]);
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -108,8 +110,50 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setBannerImage(initialData.banner_image || '');
       setGalleryImages(initialData.gallery_images ? (Array.isArray(initialData.gallery_images) ? initialData.gallery_images : (typeof initialData.gallery_images === 'string' ? JSON.parse(initialData.gallery_images) : [])) : []);
       setItineraryPdfUrl(initialData.itinerary_pdf_url || '');
-      setThingsToCarry(initialData.things_to_carry ? (typeof initialData.things_to_carry === 'string' ? initialData.things_to_carry : JSON.stringify(initialData.things_to_carry, null, 2)) : '');
       setNotes(initialData.notes || '');
+
+      // Parse things_to_carry
+      let parsedThings = [];
+      if (initialData.things_to_carry) {
+        if (Array.isArray(initialData.things_to_carry)) {
+          parsedThings = initialData.things_to_carry.map(item => typeof item === 'string' ? item : (item.text || item.title || ''));
+        } else if (typeof initialData.things_to_carry === 'string') {
+          try {
+            const json = JSON.parse(initialData.things_to_carry);
+            parsedThings = Array.isArray(json) ? json.map(item => typeof item === 'string' ? item : (item.text || item.title || '')) : [];
+          } catch {
+            parsedThings = initialData.things_to_carry.split('\n').filter(Boolean);
+          }
+        }
+      }
+      setThingsToCarryList(parsedThings);
+
+      // Parse trip_info
+      let parsedInfo = [];
+      if (initialData.trip_info) {
+        if (Array.isArray(initialData.trip_info)) {
+          parsedInfo = initialData.trip_info;
+        } else if (typeof initialData.trip_info === 'string') {
+          try { parsedInfo = JSON.parse(initialData.trip_info); } catch (e) { parsedInfo = []; }
+        }
+      }
+      setTripInfoList(parsedInfo);
+
+      // Parse trust_benefits
+      let parsedBenefits = [];
+      if (initialData.trust_benefits) {
+        if (Array.isArray(initialData.trust_benefits)) {
+          parsedBenefits = initialData.trust_benefits.map(item => typeof item === 'string' ? item : (item.text || ''));
+        } else if (typeof initialData.trust_benefits === 'string') {
+          try {
+            const json = JSON.parse(initialData.trust_benefits);
+            parsedBenefits = Array.isArray(json) ? json.map(item => typeof item === 'string' ? item : (item.text || '')) : [];
+          } catch {
+            parsedBenefits = initialData.trust_benefits.split('\n').filter(Boolean);
+          }
+        }
+      }
+      setTrustBenefitsList(parsedBenefits);
       setShortDescription(initialData.short_description || '');
       setFullDescription(initialData.full_description || '');
       setCategory(initialData.category || '');
@@ -292,6 +336,84 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     setSectionSettings(DEFAULT_SECTION_SETTINGS);
   };
 
+  // Structured List Handlers: Things to Carry
+  const handleAddThingToCarry = () => {
+    setThingsToCarryList(prev => [...prev, '']);
+  };
+  const handleUpdateThingToCarry = (idx, val) => {
+    setThingsToCarryList(prev => {
+      const copy = [...prev];
+      copy[idx] = val;
+      return copy;
+    });
+  };
+  const handleRemoveThingToCarry = (idx) => {
+    setThingsToCarryList(prev => prev.filter((_, i) => i !== idx));
+  };
+  const handleMoveThingToCarry = (idx, direction) => {
+    setThingsToCarryList(prev => {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[targetIdx];
+      copy[targetIdx] = temp;
+      return copy;
+    });
+  };
+
+  // Structured List Handlers: Trip Info
+  const handleAddTripInfo = () => {
+    setTripInfoList(prev => [...prev, { icon: 'Bus', label: '', value: '' }]);
+  };
+  const handleUpdateTripInfo = (idx, field, val) => {
+    setTripInfoList(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], [field]: val };
+      return copy;
+    });
+  };
+  const handleRemoveTripInfo = (idx) => {
+    setTripInfoList(prev => prev.filter((_, i) => i !== idx));
+  };
+  const handleMoveTripInfo = (idx, direction) => {
+    setTripInfoList(prev => {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[targetIdx];
+      copy[targetIdx] = temp;
+      return copy;
+    });
+  };
+
+  // Structured List Handlers: Trust Benefits
+  const handleAddTrustBenefit = () => {
+    setTrustBenefitsList(prev => [...prev, '']);
+  };
+  const handleUpdateTrustBenefit = (idx, val) => {
+    setTrustBenefitsList(prev => {
+      const copy = [...prev];
+      copy[idx] = val;
+      return copy;
+    });
+  };
+  const handleRemoveTrustBenefit = (idx) => {
+    setTrustBenefitsList(prev => prev.filter((_, i) => i !== idx));
+  };
+  const handleMoveTrustBenefit = (idx, direction) => {
+    setTrustBenefitsList(prev => {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[targetIdx];
+      copy[targetIdx] = temp;
+      return copy;
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setJsonError('');
@@ -304,25 +426,21 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     let parsedItinerary = null,
       parsedInclusions = null,
       parsedExclusions = null,
-      parsedCostings = null,
-      parsedThingsToCarry = null;
+      parsedCostings = null;
 
     try {
       if (itinerary.trim()) parsedItinerary = JSON.parse(itinerary);
       if (inclusions.trim()) parsedInclusions = JSON.parse(inclusions);
       if (exclusions.trim()) parsedExclusions = JSON.parse(exclusions);
       if (costings.trim()) parsedCostings = JSON.parse(costings);
-      if (thingsToCarry.trim()) {
-        try {
-          parsedThingsToCarry = JSON.parse(thingsToCarry);
-        } catch {
-          parsedThingsToCarry = thingsToCarry.split('\n').filter(Boolean);
-        }
-      }
     } catch (err) {
       setJsonError('Invalid JSON in one of the fields: ' + err.message);
       return;
     }
+
+    const cleanThingsToCarry = thingsToCarryList.map(t => t.trim()).filter(Boolean);
+    const cleanTripInfo = tripInfoList.filter(item => item.label && item.label.trim());
+    const cleanTrustBenefits = trustBenefitsList.map(b => b.trim()).filter(Boolean);
 
     const pkg = {
       title: title.trim(),
@@ -340,8 +458,10 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       gallery_images: galleryImages,
       itinerary_pdf_url: itineraryPdfUrl.trim() || null,
       section_settings: sectionSettings,
-      things_to_carry: parsedThingsToCarry,
+      things_to_carry: cleanThingsToCarry,
       notes: notes.trim() || null,
+      trip_info: cleanTripInfo,
+      trust_benefits: cleanTrustBenefits,
       short_description: shortDescription.trim() || null,
       full_description: fullDescription.trim() || null,
       category: category.trim() ? category.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null,
@@ -891,13 +1011,202 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <label className={labelClass}>Costings (JSON array)</label>
               <textarea value={costings} onChange={e => setCostings(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'[\n  { "type": "Double Sharing", "price": "₹19,999 per person" }\n]'} />
             </div>
-            <div>
-              <label className={labelClass}>Things to Carry (JSON array or one item per line)</label>
-              <textarea value={thingsToCarry} onChange={e => setThingsToCarry(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'["Warm Jacket", "Trekking Shoes", "Water Bottle", "Valid ID"]'} />
+            {/* Structured Repeatable Control: Things to Carry */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-gray-800">Things to Carry List</label>
+                <button
+                  type="button"
+                  onClick={handleAddThingToCarry}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus size={14} /> Add Item
+                </button>
+              </div>
+              {thingsToCarryList.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No items added yet. Click "+ Add Item" above.</p>
+              ) : (
+                <div className="space-y-2">
+                  {thingsToCarryList.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-white p-2 border border-gray-200 rounded-lg shadow-2xs">
+                      <span className="text-xs font-bold text-gray-400 w-5 text-center">{idx + 1}.</span>
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={e => handleUpdateThingToCarry(idx, e.target.value)}
+                        className="flex-grow border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        placeholder="e.g. Warm Clothes & Layering"
+                      />
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveThingToCarry(idx, -1)}
+                          disabled={idx === 0}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveThingToCarry(idx, 1)}
+                          disabled={idx === thingsToCarryList.length - 1}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveThingToCarry(idx)}
+                          className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {/* Note / Advisory Information */}
             <div>
               <label className={labelClass}>Note / Advisory Information</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} className={inputClass} rows={3} placeholder="Important note, age guidelines, or cancellation policy highlights..." />
+            </div>
+
+            {/* Structured Repeatable Control: Trip Info Grid */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-gray-800">Trip Info Grid Items</label>
+                <button
+                  type="button"
+                  onClick={handleAddTripInfo}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus size={14} /> Add Info Item
+                </button>
+              </div>
+              {tripInfoList.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No trip info items. Click "+ Add Info Item" above.</p>
+              ) : (
+                <div className="space-y-2">
+                  {tripInfoList.map((item, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white p-2.5 border border-gray-200 rounded-lg shadow-2xs">
+                      <select
+                        value={item.icon || 'Bus'}
+                        onChange={e => handleUpdateTripInfo(idx, 'icon', e.target.value)}
+                        className="border border-gray-200 rounded-md px-2 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-blue-500 outline-none"
+                      >
+                        <option value="Bus">Bus / Transport</option>
+                        <option value="Users">Users / Group</option>
+                        <option value="Mountain">Mountain / Altitude</option>
+                        <option value="Bed">Bed / Hotel</option>
+                        <option value="Sun">Sun / Season</option>
+                        <option value="UserCheck">UserCheck / Guide</option>
+                        <option value="Compass">Compass / Tour</option>
+                        <option value="Utensils">Utensils / Meals</option>
+                        <option value="FileCheck">FileCheck / Permits</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={item.label || ''}
+                        onChange={e => handleUpdateTripInfo(idx, 'label', e.target.value)}
+                        className="w-full sm:w-1/3 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        placeholder="Label (e.g. Group Size)"
+                      />
+                      <input
+                        type="text"
+                        value={item.value || ''}
+                        onChange={e => handleUpdateTripInfo(idx, 'value', e.target.value)}
+                        className="w-full sm:w-1/2 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        placeholder="Value (e.g. 12 - 15)"
+                      />
+                      <div className="flex items-center justify-end gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveTripInfo(idx, -1)}
+                          disabled={idx === 0}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveTripInfo(idx, 1)}
+                          disabled={idx === tripInfoList.length - 1}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTripInfo(idx)}
+                          className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Structured Repeatable Control: Sidebar Trust Benefits */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-gray-800">Sidebar Trust Benefits (Below Price)</label>
+                <button
+                  type="button"
+                  onClick={handleAddTrustBenefit}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus size={14} /> Add Benefit
+                </button>
+              </div>
+              {trustBenefitsList.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No trust benefits added. Click "+ Add Benefit" above.</p>
+              ) : (
+                <div className="space-y-2">
+                  {trustBenefitsList.map((benefit, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-white p-2 border border-gray-200 rounded-lg shadow-2xs">
+                      <span className="text-xs font-bold text-gray-400 w-5 text-center">{idx + 1}.</span>
+                      <input
+                        type="text"
+                        value={benefit}
+                        onChange={e => handleUpdateTrustBenefit(idx, e.target.value)}
+                        className="flex-grow border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        placeholder="e.g. Best for Solo Travelers"
+                      />
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveTrustBenefit(idx, -1)}
+                          disabled={idx === 0}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveTrustBenefit(idx, 1)}
+                          disabled={idx === trustBenefitsList.length - 1}
+                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTrustBenefit(idx)}
+                          className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
