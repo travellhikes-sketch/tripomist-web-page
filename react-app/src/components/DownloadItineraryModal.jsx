@@ -12,7 +12,16 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl }) {
     e.preventDefault()
     console.log(`Itinerary download requested: Name=${name}, Phone=${phone}, Trip=${tripTitle}, Callback=${callback}`)
     if (pdfUrl) {
+      // 1. Open in new tab
       window.open(pdfUrl, '_blank')
+
+      // 2. Trigger automatic download
+      const link = document.createElement('a')
+      link.href = pdfUrl
+      link.setAttribute('download', `${tripTitle.replace(/\s+/g, '_')}_itinerary.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
     setSubmitted(true)
   }
@@ -99,13 +108,14 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl }) {
           </>
         ) : (
           /* Success Content */
-          <div className="py-6 text-center flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2">
-              <span className="material-symbols-outlined text-4xl text-green-500 font-bold">check</span>
+          <div className="py-6 text-center flex flex-col items-center gap-4 w-full">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 text-xs font-bold mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Success</span>
             </div>
-            <h3 className="font-bold text-gray-900 text-2xl">Download Started!</h3>
-            <p className="text-gray-500 text-sm mb-6 leading-relaxed">We have sent the PDF itinerary for <strong className="text-gray-800">{tripTitle}</strong> to your WhatsApp number. Our Kaptain will contact you shortly.</p>
-            <button className="bg-[#136b8a] text-white font-semibold px-8 py-3 rounded-xl hover:bg-[#0f556e] transition-colors cursor-pointer w-full" onClick={handleClose}>Done</button>
+            <h3 className="font-bold text-gray-900 text-2xl">PDF Itinerary Download</h3>
+            <p className="text-gray-500 text-sm mb-6 leading-relaxed">Your PDF itinerary for <strong className="text-gray-800">{tripTitle}</strong> is ready. The PDF has been opened and downloaded to your device.</p>
+            <button className="bg-[#136b8a] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#0f556e] transition-colors cursor-pointer w-full text-base font-bold shadow-md" onClick={handleClose}>Done</button>
           </div>
         )}
       </div>

@@ -1050,14 +1050,12 @@ export default function PackageDetail() {
                                 <p className="text-xs md:text-sm text-slate-500 mt-0.5">Download this tour's PDF brochure and start your planning offline.</p>
                               </div>
                             </div>
-                            <a
-                              href={trip.itineraryPdfUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
+                            <button
+                              onClick={() => setIsModalOpen(true)}
+                              className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
                             >
                               Download PDF
-                            </a>
+                            </button>
                           </div>
                         </div>
                       )}
