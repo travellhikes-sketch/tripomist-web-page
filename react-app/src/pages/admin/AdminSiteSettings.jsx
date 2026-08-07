@@ -51,6 +51,32 @@ const AdminSiteSettings = () => {
         data.forEach(item => {
           newSettings[item.setting_key] = item.setting_value;
         });
+
+        // Prefill default structures if missing
+        if (!newSettings.trust_benefits || !newSettings.trust_benefits.cards) {
+          newSettings.trust_benefits = {
+            is_active: true,
+            title: 'The TripoMist Experience',
+            subtitle: "We don't just organize trips; we curate experiences. Here's why 50,000+ travellers choose us",
+            cards: [
+              { id: '1', heading: 'Handpicked Stays', description: 'We personally verify every hotel, homestay, and camp to ensure premium comfort and safety.', icon: 'Home', is_active: true },
+              { id: '2', heading: 'Certified Guides', description: 'Travel with experienced trip captains who know the mountains like the back of their hand.', icon: 'Shield', is_active: true },
+              { id: '3', heading: 'Small Groups', description: 'Intimate group sizes (12-16 pax) ensure personal attention and stronger bonds among travellers.', icon: 'Users', is_active: true },
+              { id: '4', heading: 'Local Community', description: 'Start your journey from Delhi with like-minded locals. Pre-trip meetups to break the ice.', icon: 'Sparkles', is_active: true }
+            ]
+          };
+        }
+        if (!newSettings.stats_strip || !newSettings.stats_strip.cards) {
+          newSettings.stats_strip = {
+            is_active: true,
+            cards: [
+              { id: '1', value: '4.9 ★', label: 'GOOGLE REVIEWS', icon: 'Star', is_active: true },
+              { id: '2', value: '10K+', label: 'HAPPY TRAVELLERS', icon: 'Users', is_active: true },
+              { id: '3', value: '100+', label: 'COMPLETED TRIPS', icon: 'Map', is_active: true }
+            ]
+          };
+        }
+
         setSettings(newSettings);
       }
     } catch (err) {
@@ -540,79 +566,81 @@ const AdminSiteSettings = () => {
           {/* TRUST & BENEFITS TAB */}
           {activeTab === 'trust_benefits' && (
             <div className="space-y-6 animate-in">
-              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Trust / Benefits Section</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">TripoMist Experience Section</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>Show Benefits Section</label>
+                  <label className={labelClass}>Section Visibility</label>
                   <select
                     value={settings.trust_benefits.is_active !== false ? 'true' : 'false'}
                     onChange={e => handleChange('trust_benefits', 'is_active', e.target.value === 'true')}
                     className={inputClass}
                   >
-                    <option value="true">Show</option>
-                    <option value="false">Hide</option>
+                    <option value="true">Show Section</option>
+                    <option value="false">Hide Section</option>
                   </select>
                 </div>
+                <div>
+                  <label className={labelClass}>Section Title</label>
+                  <input type="text" value={settings.trust_benefits.title || ''} onChange={e => handleChange('trust_benefits', 'title', e.target.value)} className={inputClass} placeholder="The TripoMist Experience" />
+                </div>
                 <div className="md:col-span-2">
-                  <label className={labelClass}>Section Main Title</label>
-                  <input type="text" value={settings.trust_benefits.title || ''} onChange={e => handleChange('trust_benefits', 'title', e.target.value)} className={inputClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Background Color</label>
-                  <div className="flex gap-2">
-                    <input type="color" value={settings.trust_benefits.bg_color || '#CAEBE8'} onChange={e => handleChange('trust_benefits', 'bg_color', e.target.value)} className="w-10 h-10 border rounded-lg cursor-pointer" />
-                    <input type="text" value={settings.trust_benefits.bg_color || '#CAEBE8'} onChange={e => handleChange('trust_benefits', 'bg_color', e.target.value)} className={inputClass} />
-                  </div>
-                </div>
-                <div>
-                  <label className={labelClass}>Text Color</label>
-                  <div className="flex gap-2">
-                    <input type="color" value={settings.trust_benefits.text_color || '#0f3a46'} onChange={e => handleChange('trust_benefits', 'text_color', e.target.value)} className="w-10 h-10 border rounded-lg cursor-pointer" />
-                    <input type="text" value={settings.trust_benefits.text_color || '#0f3a46'} onChange={e => handleChange('trust_benefits', 'text_color', e.target.value)} className={inputClass} />
-                  </div>
+                  <label className={labelClass}>Section Subtitle</label>
+                  <input type="text" value={settings.trust_benefits.subtitle || ''} onChange={e => handleChange('trust_benefits', 'subtitle', e.target.value)} className={inputClass} placeholder="We don't just organize trips; we curate experiences..." />
                 </div>
               </div>
 
               {/* Cards List */}
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-md font-bold text-gray-800">Benefit Cards</h3>
-                  <button onClick={() => addCard('trust_benefits', { icon: 'Heart', heading: 'Feature Title', description: 'Brief description' })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
-                    <Plus size={14} /> Add Card
+                  <h3 className="text-md font-bold text-gray-800">Feature Cards</h3>
+                  <button onClick={() => addCard('trust_benefits', { icon: 'Sparkles', heading: 'New Feature', description: 'Feature description', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                    <Plus size={14} /> Add Feature Card
                   </button>
                 </div>
                 <div className="space-y-4">
                   {(settings.trust_benefits.cards || []).map((card, idx) => (
                     <div key={card.id} className="bg-gray-50 border p-4 rounded-xl space-y-3 relative">
                       <div className="flex justify-between items-center border-b pb-2">
-                        <span className="text-xs font-semibold text-gray-500">Card #{idx + 1}</span>
+                        <span className="text-xs font-semibold text-gray-500">Feature #{idx + 1}</span>
                         <div className="flex gap-1">
                           <button onClick={() => moveCard('trust_benefits', idx, 'up')} disabled={idx === 0} className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"><ArrowUp size={12} /></button>
                           <button onClick={() => moveCard('trust_benefits', idx, 'down')} disabled={idx === (settings.trust_benefits.cards.length - 1)} className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"><ArrowDown size={12} /></button>
                           <button onClick={() => deleteCard('trust_benefits', card.id)} className="p-1 bg-red-50 text-red-500 rounded hover:bg-red-100"><Trash2 size={12} /></button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                          <label className={labelClass}>Icon Type</label>
-                          <select value={card.icon} onChange={e => updateCard('trust_benefits', card.id, 'icon', e.target.value)} className={inputClass}>
+                          <label className={labelClass}>Icon</label>
+                          <select value={card.icon || 'Home'} onChange={e => updateCard('trust_benefits', card.id, 'icon', e.target.value)} className={inputClass}>
+                            <option value="Home">Home / House</option>
+                            <option value="Building">Building / Hotel</option>
+                            <option value="Shield">Shield / Certified</option>
+                            <option value="ShieldCheck">Shield Check</option>
+                            <option value="Users">Users / Small Groups</option>
+                            <option value="Sparkles">Sparkles / Community</option>
                             <option value="Heart">Heart</option>
-                            <option value="User">User</option>
-                            <option value="Shield">Shield</option>
                             <option value="Compass">Compass</option>
                             <option value="Star">Star</option>
                             <option value="Smile">Smile</option>
-                            <option value="Sparkles">Sparkles</option>
                             <option value="Award">Award</option>
+                            <option value="ThumbsUp">Thumbs Up</option>
+                            <option value="MapPin">Map Pin</option>
                           </select>
                         </div>
                         <div className="md:col-span-2">
-                          <label className={labelClass}>Heading</label>
-                          <input type="text" value={card.heading} onChange={e => updateCard('trust_benefits', card.id, 'heading', e.target.value)} className={inputClass} />
+                          <label className={labelClass}>Feature Title</label>
+                          <input type="text" value={card.heading || card.title || ''} onChange={e => updateCard('trust_benefits', card.id, 'heading', e.target.value)} className={inputClass} />
                         </div>
-                        <div className="md:col-span-3">
+                        <div>
+                          <label className={labelClass}>Status</label>
+                          <select value={card.is_active !== false ? 'true' : 'false'} onChange={e => updateCard('trust_benefits', card.id, 'is_active', e.target.value === 'true')} className={inputClass}>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                          </select>
+                        </div>
+                        <div className="md:col-span-4">
                           <label className={labelClass}>Description</label>
-                          <textarea value={card.description} onChange={e => updateCard('trust_benefits', card.id, 'description', e.target.value)} className={inputClass} rows={2} />
+                          <textarea value={card.description || ''} onChange={e => updateCard('trust_benefits', card.id, 'description', e.target.value)} className={inputClass} rows={2} />
                         </div>
                       </div>
                     </div>
@@ -622,7 +650,7 @@ const AdminSiteSettings = () => {
 
               <div className="pt-4 flex justify-end">
                 <button onClick={() => handleSave('trust_benefits')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
-                  <Save size={16} /> Save Benefits
+                  <Save size={16} /> Save Experience Section Settings
                 </button>
               </div>
             </div>
@@ -631,48 +659,34 @@ const AdminSiteSettings = () => {
           {/* STATS STRIP TAB */}
           {activeTab === 'stats_strip' && (
             <div className="space-y-6 animate-in">
-              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Stats Strip Settings</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Homepage Stats Bar Settings</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>Show Stats Strip</label>
+                  <label className={labelClass}>Section Visibility</label>
                   <select
                     value={settings.stats_strip.is_active !== false ? 'true' : 'false'}
                     onChange={e => handleChange('stats_strip', 'is_active', e.target.value === 'true')}
                     className={inputClass}
                   >
-                    <option value="true">Show</option>
-                    <option value="false">Hide</option>
+                    <option value="true">Show Section</option>
+                    <option value="false">Hide Section</option>
                   </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Background Color</label>
-                  <div className="flex gap-2">
-                    <input type="color" value={settings.stats_strip.bg_color || '#CAEBE8'} onChange={e => handleChange('stats_strip', 'bg_color', e.target.value)} className="w-10 h-10 border rounded-lg cursor-pointer" />
-                    <input type="text" value={settings.stats_strip.bg_color || '#CAEBE8'} onChange={e => handleChange('stats_strip', 'bg_color', e.target.value)} className={inputClass} />
-                  </div>
-                </div>
-                <div>
-                  <label className={labelClass}>Text Color</label>
-                  <div className="flex gap-2">
-                    <input type="color" value={settings.stats_strip.text_color || '#0f3a46'} onChange={e => handleChange('stats_strip', 'text_color', e.target.value)} className="w-10 h-10 border rounded-lg cursor-pointer" />
-                    <input type="text" value={settings.stats_strip.text_color || '#0f3a46'} onChange={e => handleChange('stats_strip', 'text_color', e.target.value)} className={inputClass} />
-                  </div>
                 </div>
               </div>
 
               {/* Stats Cards CRUD */}
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-md font-bold text-gray-800">Counter Statistics Cards</h3>
-                  <button onClick={() => addCard('stats_strip', { number: 100, label: 'Stats Label', icon: 'Map', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
-                    <Plus size={14} /> Add Stat Card
+                  <h3 className="text-md font-bold text-gray-800">Stats Items</h3>
+                  <button onClick={() => addCard('stats_strip', { value: '100+', label: 'COMPLETED TRIPS', icon: 'Map', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                    <Plus size={14} /> Add Stat Item
                   </button>
                 </div>
                 <div className="space-y-4">
                   {(settings.stats_strip.cards || []).map((card, idx) => (
                     <div key={card.id} className="bg-gray-50 border p-4 rounded-xl space-y-3 relative">
                       <div className="flex justify-between items-center border-b pb-2">
-                        <span className="text-xs font-semibold text-gray-500">Stat Card #{idx + 1}</span>
+                        <span className="text-xs font-semibold text-gray-500">Stat Item #{idx + 1}</span>
                         <div className="flex gap-1">
                           <button onClick={() => moveCard('stats_strip', idx, 'up')} disabled={idx === 0} className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"><ArrowUp size={12} /></button>
                           <button onClick={() => moveCard('stats_strip', idx, 'down')} disabled={idx === (settings.stats_strip.cards.length - 1)} className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"><ArrowDown size={12} /></button>
@@ -681,28 +695,30 @@ const AdminSiteSettings = () => {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                         <div>
-                          <label className={labelClass}>Icon</label>
-                          <select value={card.icon} onChange={e => updateCard('stats_strip', card.id, 'icon', e.target.value)} className={inputClass}>
+                          <label className={labelClass}>Value</label>
+                          <input type="text" value={card.value !== undefined ? card.value : (card.number ? `${card.number}+` : '')} onChange={e => updateCard('stats_strip', card.id, 'value', e.target.value)} className={inputClass} placeholder="e.g. 4.9 ★ or 10K+" />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Stat Label</label>
+                          <input type="text" value={card.label || ''} onChange={e => updateCard('stats_strip', card.id, 'label', e.target.value)} className={inputClass} placeholder="e.g. GOOGLE REVIEWS" />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Optional Icon</label>
+                          <select value={card.icon || 'Star'} onChange={e => updateCard('stats_strip', card.id, 'icon', e.target.value)} className={inputClass}>
+                            <option value="Star">Star</option>
+                            <option value="Users">Users</option>
                             <option value="Map">Map</option>
                             <option value="Compass">Compass</option>
                             <option value="Calendar">Calendar</option>
-                            <option value="Users">Users</option>
                             <option value="Award">Award</option>
                             <option value="Briefcase">Briefcase</option>
                             <option value="Heart">Heart</option>
                             <option value="Smile">Smile</option>
+                            <option value="ThumbsUp">Thumbs Up</option>
                           </select>
                         </div>
                         <div>
-                          <label className={labelClass}>Target Number</label>
-                          <input type="number" value={card.number} onChange={e => updateCard('stats_strip', card.id, 'number', e.target.value)} className={inputClass} />
-                        </div>
-                        <div>
-                          <label className={labelClass}>Stat Label</label>
-                          <input type="text" value={card.label} onChange={e => updateCard('stats_strip', card.id, 'label', e.target.value)} className={inputClass} />
-                        </div>
-                        <div>
-                          <label className={labelClass}>Active State</label>
+                          <label className={labelClass}>Status</label>
                           <select value={card.is_active !== false ? 'true' : 'false'} onChange={e => updateCard('stats_strip', card.id, 'is_active', e.target.value === 'true')} className={inputClass}>
                             <option value="true">Active</option>
                             <option value="false">Inactive</option>

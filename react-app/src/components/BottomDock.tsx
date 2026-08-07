@@ -67,56 +67,58 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
     badge: nav.label === 'Cart' ? cartCount : undefined,
   }))
 
-  if (location.pathname === '/login') return null
+  const isExcludedRoute =
+    location.pathname.startsWith('/admin') ||
+    ['/login', '/forgot-password', '/reset-password'].includes(location.pathname);
+
+  if (isExcludedRoute) return null;
 
   return (
     <div className="fixed bottom-6 left-0 right-0 z-[80] w-full px-4 sm:px-6 pointer-events-none flex justify-center items-end">
 
       {/* Center Group: Pill and Dock */}
-      {location.pathname === '/' && (
-        <div className="flex flex-col items-center gap-1.5 pointer-events-auto">
+      <div className="flex flex-col items-center gap-1.5 pointer-events-auto">
 
-          {/* "How can I help you today?" or "Close Chat" pill */}
-          <motion.button
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.4 }}
-            onClick={() => isChatOpen ? onCloseChat?.() : onOpenChat?.()}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full select-none transition-all duration-300"
-            style={{
-              background: 'rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.40)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-            }}
+        {/* "How can I help you today?" or "Close Chat" pill */}
+        <motion.button
+          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.4 }}
+          onClick={() => isChatOpen ? onCloseChat?.() : onOpenChat?.()}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full select-none transition-all duration-300"
+          style={{
+            background: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.40)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+          }}
+        >
+          {isChatOpen && (
+            <span className="material-symbols-outlined text-white text-[16px]">close</span>
+          )}
+          <span
+            className="text-[13px] font-semibold tracking-wide text-center"
+            style={{ color: isChatOpen ? 'black' : 'rgba(0,0,0,0.85)', textShadow: 'none' }}
           >
-            {isChatOpen && (
-              <span className="material-symbols-outlined text-white text-[16px]">close</span>
-            )}
-            <span
-              className="text-[13px] font-semibold tracking-wide text-center"
-              style={{ color: isChatOpen ? 'black' : 'rgba(0,0,0,0.85)', textShadow: 'none' }}
-            >
-              {isChatOpen ? 'Close Chat' : 'How can I help you today?'}
-            </span>
-          </motion.button>
+            {isChatOpen ? 'Close Chat' : 'How can I help you today?'}
+          </span>
+        </motion.button>
 
-          {/* GooeyDock — smaller icons */}
-          <div
-            className="flex items-center px-1 py-1 rounded-[2rem] shadow-2xl"
-            style={{
-              background: 'rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.35)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-            }}
-          >
-            <GooeyDock items={items} className="py-0" />
-          </div>
+        {/* GooeyDock — smaller icons */}
+        <div
+          className="flex items-center px-1 py-1 rounded-[2rem] shadow-2xl"
+          style={{
+            background: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.35)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          }}
+        >
+          <GooeyDock items={items} className="py-0" />
         </div>
-      )}
+      </div>
 
       {/* Right Corner Group: Contact FAB */}
       <div className="absolute right-4 sm:right-6 bottom-4 sm:bottom-5 flex flex-col items-center justify-end pointer-events-auto">
