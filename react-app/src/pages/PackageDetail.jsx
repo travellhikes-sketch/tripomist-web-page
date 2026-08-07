@@ -30,8 +30,35 @@ import {
   FileCheck,
   MessageCircle,
   ShieldCheck,
-  Heart
+  Heart,
+  Search,
+  Tag,
+  MapPin,
+  CheckSquare,
+  Package,
+  HelpCircle
 } from 'lucide-react';
+
+const getSectionIcon = (id) => {
+  switch (id) {
+    case 'overview':
+      return <Search size={15} className="shrink-0" />;
+    case 'trip-cost':
+      return <Tag size={15} className="shrink-0" />;
+    case 'itinerary':
+      return <MapPin size={15} className="shrink-0" />;
+    case 'inclusions-exclusions':
+      return <CheckSquare size={15} className="shrink-0" />;
+    case 'things-to-carry':
+      return <Package size={15} className="shrink-0" />;
+    case 'note':
+      return <Info size={15} className="shrink-0" />;
+    case 'faqs':
+      return <HelpCircle size={15} className="shrink-0" />;
+    default:
+      return null;
+  }
+};
 
 const cleanHeroTitle = (title) => {
   if (!title) return '';
@@ -327,25 +354,38 @@ export default function PackageDetail() {
 
   const visibleSections = (trip?.sectionSettings || DEFAULT_SECTIONS).filter(sec => sec.visible !== false);
 
-  // Scroll listener for sticky package section nav & active section tracking
+  // Sentinel scroll listener using IntersectionObserver for 100% accurate sticky detection
+  useEffect(() => {
+    if (!navSentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const isStickyNow = !entry.isIntersecting && entry.boundingClientRect.top < 64;
+        setIsNavSticky(isStickyNow);
+
+        window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+          detail: { isSticky: isStickyNow }
+        }));
+      },
+      {
+        threshold: [0, 1],
+        rootMargin: '-64px 0px 0px 0px'
+      }
+    );
+
+    observer.observe(navSentinelRef.current);
+
+    return () => {
+      observer.disconnect();
+      window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+        detail: { isSticky: false }
+      }));
+    };
+  }, []);
+
+  // Scroll Spy Active Section
   useEffect(() => {
     const handleScroll = () => {
-      if (navSentinelRef.current) {
-        const sentinelRect = navSentinelRef.current.getBoundingClientRect();
-        const stickyThreshold = 70;
-        const shouldBeSticky = sentinelRect.top <= stickyThreshold;
-
-        setIsNavSticky(prev => {
-          if (prev !== shouldBeSticky) {
-            window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
-              detail: { isSticky: shouldBeSticky }
-            }));
-          }
-          return shouldBeSticky;
-        });
-      }
-
-      // Scroll Spy Active Section
       const scrollPos = window.scrollY + 140;
       for (const sec of visibleSections) {
         const secId = sec.id;
@@ -364,9 +404,6 @@ export default function PackageDetail() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
-        detail: { isSticky: false }
-      }));
     };
   }, [visibleSections]);
 
@@ -549,60 +586,26 @@ export default function PackageDetail() {
 
       <main className="w-full flex-grow">
         {/* ==================================================
-            D. TOP PHOTO GALLERY GRID (UNIFORM CROP & EQUAL SIZE)
+            D. TOP PHOTO GALLERY GRID (HORIZONTAL REFERENCE STYLE)
         ================================================== */}
         <section className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-4">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 h-[320px] md:h-[450px] rounded-2xl overflow-hidden relative shadow-sm">
-            {/* Main Primary Cover Image (Left side) */}
-            <div
-              onClick={() => openLightbox(0)}
-              className="md:col-span-8 h-full relative cursor-pointer group overflow-hidden bg-gray-100"
-            >
-              <img
-                src={galleryImages[0]}
-                alt={trip.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-            </div>
-
-            {/* Side Images Grid (Right side) */}
-            <div className="hidden md:grid md:col-span-4 grid-cols-1 grid-rows-2 gap-3 h-full">
-              {galleryImages.slice(1, 3).map((img, idx) => (
+          <div className="relative w-full">
+            <div className="flex gap-3 md:gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory py-1">
+              {galleryImages.map((img, idx) => (
                 <div
-                  key={idx + 1}
-                  onClick={() => openLightbox(idx + 1)}
-                  className="relative cursor-pointer group overflow-hidden bg-gray-100 h-full rounded-xl"
+                  key={idx}
+                  onClick={() => openLightbox(idx)}
+                  className="w-[85vw] sm:w-[calc(50%-8px)] md:w-[calc(33.333%-11px)] h-[240px] sm:h-[280px] md:h-[320px] shrink-0 snap-start rounded-2xl overflow-hidden cursor-pointer group relative bg-gray-100 shadow-sm border border-slate-100"
                 >
                   <img
                     src={img}
-                    alt={`${trip.title} ${idx + 2}`}
+                    alt={`${trip.title} ${idx + 1}`}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-                  {/* Badge overlay if more images exist */}
-                  {idx === 1 && galleryImages.length > 3 && (
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center text-white font-bold text-lg">
-                      +{galleryImages.length - 3} Photos
-                    </div>
-                  )}
                 </div>
               ))}
-              {galleryImages.length < 2 && (
-                <div className="bg-slate-100 flex items-center justify-center text-slate-400 text-sm font-medium rounded-xl h-full">
-                  TripoMist Experience
-                </div>
-              )}
             </div>
-
-            {/* Mobile View Photos Badge */}
-            <button
-              onClick={() => openLightbox(0)}
-              className="md:hidden absolute bottom-4 right-4 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
-            >
-              <span className="material-symbols-outlined text-[16px]">photo_library</span>
-              {galleryImages.length} Photos
-            </button>
           </div>
         </section>
 
@@ -688,8 +691,8 @@ export default function PackageDetail() {
             </div>
 
             {/* 2.4 ACTION ROW DIRECTLY BELOW TITLE AREA */}
-            <div className="flex items-center gap-3 mb-8 overflow-x-auto hide-scrollbar pb-2 border-b border-gray-100">
-              {/* 1. Download Itinerary */}
+            <div className="flex items-center gap-3 mb-8">
+              {/* 1. Download Itinerary (Left) */}
               {trip.itineraryPdfUrl ? (
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -700,20 +703,20 @@ export default function PackageDetail() {
                 </button>
               ) : null}
 
-              {/* 2. Add to Cart */}
+              {/* 2. Circular Cart Icon Button (Center) */}
               <button
                 onClick={handleAddToCart}
-                className={`inline-flex items-center gap-2 text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all border shadow-sm active:scale-95 whitespace-nowrap cursor-pointer ${
+                title={isAddedToCart ? "Remove from Cart" : "Add to Cart"}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer ${
                   isAddedToCart
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                    : 'bg-white text-gray-800 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-[#136b8a] hover:bg-[#0f556e] text-white'
                 }`}
               >
-                {isAddedToCart ? <Check size={16} /> : <ShoppingCart size={16} />}
-                <span>{isAddedToCart ? 'Added to Cart' : 'Add to Cart'}</span>
+                {isAddedToCart ? <Check size={18} /> : <ShoppingCart size={18} />}
               </button>
 
-              {/* 3. Share (ONLY Share Icon, NO text) */}
+              {/* 3. Circular Share Icon Button (Right) */}
               <button
                 onClick={handleShare}
                 title="Share Package"
@@ -733,24 +736,25 @@ export default function PackageDetail() {
               ref={sectionNavRef}
               className={`w-full bg-white transition-all ${
                 isNavSticky
-                  ? 'fixed top-[70px] left-0 right-0 z-[90] shadow-md border-b border-gray-200 py-3 px-4 md:px-12 lg:px-20'
-                  : 'relative mb-8 border-b border-gray-200 py-2'
+                  ? 'fixed top-[64px] left-0 right-0 z-[90] shadow-md border-b border-gray-200 py-3 px-4 md:px-12 lg:px-20'
+                  : 'relative mb-8 border-b border-gray-200'
               }`}
             >
-              <div className="max-w-7xl mx-auto flex items-center gap-2.5 overflow-x-auto hide-scrollbar py-1">
+              <div className="max-w-7xl mx-auto flex items-center gap-6 md:gap-8 overflow-x-auto hide-scrollbar">
                 {NAV_ITEMS.map((item) => {
                   const isActive = activeSection === item.id;
                   return (
                     <button
                       key={item.id}
                       onClick={() => scrollToSection(item.id)}
-                      className={`px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-bold transition-all whitespace-nowrap border cursor-pointer ${
+                      className={`py-3 text-xs md:text-sm font-semibold transition-all whitespace-nowrap border-b-2 flex items-center gap-2 cursor-pointer ${
                         isActive
-                          ? 'bg-[#eff6f9] border-[#136b8a] text-[#136b8a] shadow-xs'
-                          : 'bg-white border-slate-200 text-slate-700 hover:border-[#136b8a] hover:text-[#136b8a]'
+                          ? 'border-[#136b8a] text-[#136b8a] font-bold'
+                          : 'border-transparent text-slate-600 hover:text-[#136b8a]'
                       }`}
                     >
-                      {item.label}
+                      {getSectionIcon(item.id)}
+                      <span>{item.label}</span>
                     </button>
                   );
                 })}
@@ -798,17 +802,16 @@ export default function PackageDetail() {
                 if (sec.id === 'trip-cost') {
                   return (
                     <section key="trip-cost" id="trip-cost" className="scroll-mt-32 border-b border-gray-100 pb-10">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Trip Cost</h2>
-                      {trip.costings && trip.costings.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {trip.costings.map((c, i) => {
-                            const typeStr = (c.type || c.sharing || 'Sharing Option').toUpperCase();
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Costing Details</h2>
+                      <div className="bg-[#eff6f9] border border-[#d2e6ef] rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
+                        {trip.costings && trip.costings.length > 0 ? (
+                          trip.costings.map((c, i) => {
+                            const labelStr = (c.type || c.sharing || 'Per Person').trim();
                             let priceVal = c.price != null ? String(c.price).trim() : `₹${trip.numericPrice.toLocaleString()}`;
-                            // Format Quad as base and Triple/Double with '+' prefix if numeric add-on
                             if (!priceVal.startsWith('₹') && !priceVal.startsWith('+')) {
                               if (/^\d+$/.test(priceVal)) {
                                 const num = Number(priceVal);
-                                if (typeStr.includes('QUAD')) {
+                                if (labelStr.toLowerCase().includes('quad') || i === 0) {
                                   priceVal = `₹${num.toLocaleString('en-IN')}`;
                                 } else {
                                   priceVal = `+ ₹${num.toLocaleString('en-IN')}`;
@@ -819,26 +822,19 @@ export default function PackageDetail() {
                             }
 
                             return (
-                              <div key={i} className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-6 text-center shadow-2xs flex flex-col justify-between hover:border-[#136b8a] transition-all">
-                                <div>
-                                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 block mb-2">
-                                    {typeStr}
-                                  </span>
-                                  <span className="text-2xl font-extrabold text-[#136b8a] block">
-                                    {priceVal}
-                                  </span>
-                                </div>
-                                {c.details && <p className="text-xs text-slate-500 mt-2 font-medium">{c.details}</p>}
+                              <div key={i} className="bg-white/90 border border-[#d2e6ef]/80 rounded-xl px-4 py-3.5 flex items-center justify-between gap-4">
+                                <span className="text-xs md:text-sm font-bold text-slate-800">{labelStr}</span>
+                                <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{priceVal}</span>
                               </div>
                             );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-6 flex items-center justify-between shadow-2xs">
-                          <span className="text-sm font-bold text-gray-900 block">Per Person</span>
-                          <span className="text-xl md:text-2xl font-extrabold text-[#136b8a]">{trip.price} + 5% GST</span>
-                        </div>
-                      )}
+                          })
+                        ) : (
+                          <div className="bg-white/90 border border-[#d2e6ef]/80 rounded-xl px-4 py-3.5 flex items-center justify-between gap-4">
+                            <span className="text-xs md:text-sm font-bold text-slate-800">Per Person</span>
+                            <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{trip.price} + 5% GST</span>
+                          </div>
+                        )}
+                      </div>
                     </section>
                   );
                 }
