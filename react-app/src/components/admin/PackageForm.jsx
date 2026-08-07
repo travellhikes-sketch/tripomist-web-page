@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, UploadCloud, FileText, Star, ArrowUp, ArrowDown, Trash2, Eye, EyeOff, Plus } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
+import RichTextEditor from './RichTextEditor';
 
 const DEFAULT_SECTION_SETTINGS = [
   { id: 'overview', label: 'Overview', visible: true, order: 1 },
@@ -8,7 +9,8 @@ const DEFAULT_SECTION_SETTINGS = [
   { id: 'itinerary', label: 'Itinerary', visible: true, order: 3 },
   { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 4 },
   { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 5 },
-  { id: 'note', label: 'Note', visible: true, order: 6 }
+  { id: 'note', label: 'Note', visible: true, order: 6 },
+  { id: 'faqs', label: "FAQ's", visible: true, order: 7 }
 ];
 
 const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
@@ -28,10 +30,14 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [newGalleryUrl, setNewGalleryUrl] = useState('');
   const [itineraryPdfUrl, setItineraryPdfUrl] = useState('');
+  const [downloadHeading, setDownloadHeading] = useState('Want to read it later ?');
+  const [downloadSubtext, setDownloadSubtext] = useState("Download this tour's PDF brochure and start your planning offline.");
+  const [downloadButtonLabel, setDownloadButtonLabel] = useState('Download PDF');
   const [thingsToCarryList, setThingsToCarryList] = useState([]);
   const [notes, setNotes] = useState('');
   const [tripInfoList, setTripInfoList] = useState([]);
   const [trustBenefitsList, setTrustBenefitsList] = useState([]);
+  const [faqsList, setFaqsList] = useState([]);
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -154,6 +160,29 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
         }
       }
       setTrustBenefitsList(parsedBenefits);
+
+      // Parse faqs
+      let parsedFaqs = [];
+      if (initialData.faqs) {
+        if (Array.isArray(initialData.faqs)) {
+          parsedFaqs = initialData.faqs;
+        } else if (typeof initialData.faqs === 'string') {
+          try { parsedFaqs = JSON.parse(initialData.faqs); } catch (e) { parsedFaqs = []; }
+        }
+      }
+      setFaqsList(parsedFaqs);
+
+      // Parse download_block
+      if (initialData.download_block) {
+        let db = initialData.download_block;
+        if (typeof db === 'string') {
+          try { db = JSON.parse(db); } catch (e) { db = {}; }
+        }
+        if (db.heading) setDownloadHeading(db.heading);
+        if (db.subtext) setDownloadSubtext(db.subtext);
+        if (db.button_label) setDownloadButtonLabel(db.button_label);
+      }
+
       setShortDescription(initialData.short_description || '');
       setFullDescription(initialData.full_description || '');
       setCategory(initialData.category || '');
@@ -414,6 +443,32 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     });
   };
 
+  // Structured List Handlers: FAQ's
+  const handleAddFaq = () => {
+    setFaqsList(prev => [...prev, { question: '', answer: '' }]);
+  };
+  const handleUpdateFaq = (idx, field, val) => {
+    setFaqsList(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], [field]: val };
+      return copy;
+    });
+  };
+  const handleRemoveFaq = (idx) => {
+    setFaqsList(prev => prev.filter((_, i) => i !== idx));
+  };
+  const handleMoveFaq = (idx, direction) => {
+    setFaqsList(prev => {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[targetIdx];
+      copy[targetIdx] = temp;
+      return copy;
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setJsonError('');
@@ -441,6 +496,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     const cleanThingsToCarry = thingsToCarryList.map(t => t.trim()).filter(Boolean);
     const cleanTripInfo = tripInfoList.filter(item => item.label && item.label.trim());
     const cleanTrustBenefits = trustBenefitsList.map(b => b.trim()).filter(Boolean);
+    const cleanFaqs = faqsList.filter(item => item.question && item.question.trim());
 
     const pkg = {
       title: title.trim(),
@@ -457,11 +513,17 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       banner_image: bannerImage.trim() || null,
       gallery_images: galleryImages,
       itinerary_pdf_url: itineraryPdfUrl.trim() || null,
+      download_block: {
+        heading: downloadHeading.trim(),
+        subtext: downloadSubtext.trim(),
+        button_label: downloadButtonLabel.trim()
+      },
       section_settings: sectionSettings,
       things_to_carry: cleanThingsToCarry,
       notes: notes.trim() || null,
       trip_info: cleanTripInfo,
       trust_benefits: cleanTrustBenefits,
+      faqs: cleanFaqs,
       short_description: shortDescription.trim() || null,
       full_description: fullDescription.trim() || null,
       category: category.trim() ? category.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null,
@@ -810,10 +872,10 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             <textarea value={shortDescription} onChange={e => setShortDescription(e.target.value)} className={inputClass} rows={2} placeholder="Brief overview shown in cards and top section..." />
           </div>
 
-          {/* Full Description */}
+          {/* Full Description (Rich Text Overview) */}
           <div>
-            <label className={labelClass}>Full Description</label>
-            <textarea value={fullDescription} onChange={e => setFullDescription(e.target.value)} className={inputClass} rows={4} placeholder="Detailed description for the package..." />
+            <label className={labelClass}>Full Description (Overview Rich Text)</label>
+            <RichTextEditor value={fullDescription} onChange={setFullDescription} placeholder="Detailed overview for the package..." />
           </div>
 
           {/* Status and Clickable */}
@@ -1068,10 +1130,10 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               )}
             </div>
 
-            {/* Note / Advisory Information */}
+            {/* Note / Advisory Information (Rich Text) */}
             <div>
-              <label className={labelClass}>Note / Advisory Information</label>
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} className={inputClass} rows={3} placeholder="Important note, age guidelines, or cancellation policy highlights..." />
+              <label className={labelClass}>Note / Advisory Information (Rich Text)</label>
+              <RichTextEditor value={notes} onChange={setNotes} placeholder="Important note, age guidelines, or cancellation policy highlights..." />
             </div>
 
             {/* Structured Repeatable Control: Trip Info Grid */}
@@ -1207,6 +1269,107 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Structured Repeatable Control: FAQ's */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-gray-800">Package FAQ's</label>
+                <button
+                  type="button"
+                  onClick={handleAddFaq}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus size={14} /> Add FAQ
+                </button>
+              </div>
+              {faqsList.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No FAQ items. Click "+ Add FAQ" above.</p>
+              ) : (
+                <div className="space-y-3">
+                  {faqsList.map((faq, idx) => (
+                    <div key={idx} className="bg-white p-3 border border-gray-200 rounded-lg shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-gray-500">FAQ #{idx + 1}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFaq(idx, -1)}
+                            disabled={idx === 0}
+                            className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFaq(idx, 1)}
+                            disabled={idx === faqsList.length - 1}
+                            className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFaq(idx)}
+                            className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={faq.question || ''}
+                        onChange={e => handleUpdateFaq(idx, 'question', e.target.value)}
+                        className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-blue-500 outline-none"
+                        placeholder="Question (e.g. Is this trip suitable for beginners?)"
+                      />
+                      <RichTextEditor
+                        value={faq.answer || ''}
+                        onChange={val => handleUpdateFaq(idx, 'answer', val)}
+                        placeholder="Answer details..."
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Download Itinerary Card Customization */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <label className="text-sm font-bold text-gray-800">Download Itinerary Brochure Card Customization</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 block mb-1">Card Heading</label>
+                  <input
+                    type="text"
+                    value={downloadHeading}
+                    onChange={e => setDownloadHeading(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800"
+                    placeholder="Want to read it later ?"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600 block mb-1">Button Text</label>
+                  <input
+                    type="text"
+                    value={downloadButtonLabel}
+                    onChange={e => setDownloadButtonLabel(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800"
+                    placeholder="Download PDF"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-1">Card Supporting Text</label>
+                <input
+                  type="text"
+                  value={downloadSubtext}
+                  onChange={e => setDownloadSubtext(e.target.value)}
+                  className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800"
+                  placeholder="Download this tour's PDF brochure and start your planning offline."
+                />
+              </div>
             </div>
           </div>
 

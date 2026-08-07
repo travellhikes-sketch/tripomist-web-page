@@ -10,7 +10,9 @@ ALTER TABLE public."Pakage"
   ADD COLUMN IF NOT EXISTS itinerary_pdf_url text,
   ADD COLUMN IF NOT EXISTS section_settings jsonb DEFAULT '[]'::jsonb,
   ADD COLUMN IF NOT EXISTS trip_info jsonb DEFAULT '[]'::jsonb,
-  ADD COLUMN IF NOT EXISTS trust_benefits jsonb DEFAULT '[]'::jsonb;
+  ADD COLUMN IF NOT EXISTS trust_benefits jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS faqs jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS download_block jsonb DEFAULT '{}'::jsonb;
 
 COMMENT ON COLUMN public."Pakage".gallery_images IS 'JSON array of additional gallery image URLs for multi-photo Lightbox';
 COMMENT ON COLUMN public."Pakage".things_to_carry IS 'JSON array or string list of items to carry for the package';
@@ -19,5 +21,7 @@ COMMENT ON COLUMN public."Pakage".itinerary_pdf_url IS 'Direct URL to downloadab
 COMMENT ON COLUMN public."Pakage".section_settings IS 'JSON array of section ordering and visibility controls';
 COMMENT ON COLUMN public."Pakage".trip_info IS 'JSON array of trip info items (icon, label, value)';
 COMMENT ON COLUMN public."Pakage".trust_benefits IS 'JSON array of package trust benefit points (e.g., Best for Solo Travelers)';
+COMMENT ON COLUMN public."Pakage".faqs IS 'JSON array of FAQ items (question, answer)';
+COMMENT ON COLUMN public."Pakage".download_block IS 'JSON object of custom download block titles and subtext';
 
 COMMIT;

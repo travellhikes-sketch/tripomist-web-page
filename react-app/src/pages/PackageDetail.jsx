@@ -48,7 +48,18 @@ const DEFAULT_SECTIONS = [
   { id: 'itinerary', label: 'Itinerary', visible: true, order: 3 },
   { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 4 },
   { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 5 },
-  { id: 'note', label: 'Note', visible: true, order: 6 }
+  { id: 'note', label: 'Note', visible: true, order: 6 },
+  { id: 'faqs', label: "FAQ's", visible: true, order: 7 }
+];
+
+const NAV_ITEMS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'trip-cost', label: 'Trip Cost' },
+  { id: 'itinerary', label: 'Itinerary' },
+  { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion' },
+  { id: 'things-to-carry', label: 'Things to Carry' },
+  { id: 'note', label: 'Note' },
+  { id: 'faqs', label: "FAQ's" }
 ];
 
 const DEFAULT_TRIP_INFO = [
@@ -91,6 +102,10 @@ export default function PackageDetail() {
   const [activeSection, setActiveSection] = useState('overview');
   const [isNavSticky, setIsNavSticky] = useState(false);
   const sectionNavRef = useRef(null);
+  const navSentinelRef = useRef(null);
+
+  // FAQ Accordion State
+  const [openFaqIndex, setOpenFaqIndex] = useState(0);
 
   // Itinerary Accordion Expand All
   const [expandedDays, setExpandedDays] = useState(new Set([0]));
@@ -229,6 +244,26 @@ export default function PackageDetail() {
           parsedTrustBenefits = DEFAULT_TRUST_BENEFITS;
         }
 
+        // Parse faqs
+        let parsedFaqs = [];
+        if (data.faqs) {
+          if (Array.isArray(data.faqs)) {
+            parsedFaqs = data.faqs;
+          } else if (typeof data.faqs === 'string') {
+            try { parsedFaqs = JSON.parse(data.faqs); } catch (e) { parsedFaqs = []; }
+          }
+        }
+
+        // Parse download_block
+        let parsedDownloadBlock = {};
+        if (data.download_block) {
+          if (typeof data.download_block === 'object') {
+            parsedDownloadBlock = data.download_block;
+          } else if (typeof data.download_block === 'string') {
+            try { parsedDownloadBlock = JSON.parse(data.download_block); } catch (e) { parsedDownloadBlock = {}; }
+          }
+        }
+
         // Parse section settings
         let parsedSectionSettings = DEFAULT_SECTIONS;
         if (data.section_settings) {
@@ -262,9 +297,11 @@ export default function PackageDetail() {
           thingsToCarry: parsedThings,
           notes: data.notes || "Carrying valid ID proof is mandatory. Travel itinerary schedule is subject to local weather and road conditions.",
           itineraryPdfUrl: data.itinerary_pdf_url || '',
+          downloadBlock: parsedDownloadBlock,
           sectionSettings: parsedSectionSettings,
           tripInfo: parsedTripInfo,
           trustBenefits: parsedTrustBenefits,
+          faqs: parsedFaqs,
           days: parsedDays,
           costings: data.costings || []
         });
@@ -293,16 +330,19 @@ export default function PackageDetail() {
   // Scroll listener for sticky package section nav & active section tracking
   useEffect(() => {
     const handleScroll = () => {
-      if (sectionNavRef.current) {
-        const rect = sectionNavRef.current.getBoundingClientRect();
-        const stickyThreshold = 80;
-        const isStickyNow = rect.top <= stickyThreshold;
-        setIsNavSticky(isStickyNow);
+      if (navSentinelRef.current) {
+        const sentinelRect = navSentinelRef.current.getBoundingClientRect();
+        const stickyThreshold = 70;
+        const shouldBeSticky = sentinelRect.top <= stickyThreshold;
 
-        // Notify ExploreNavbar to hide/show seasonal strip
-        window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
-          detail: { isSticky: isStickyNow }
-        }));
+        setIsNavSticky(prev => {
+          if (prev !== shouldBeSticky) {
+            window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+              detail: { isSticky: shouldBeSticky }
+            }));
+          }
+          return shouldBeSticky;
+        });
       }
 
       // Scroll Spy Active Section
@@ -324,6 +364,9 @@ export default function PackageDetail() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+        detail: { isSticky: false }
+      }));
     };
   }, [visibleSections]);
 
@@ -680,6 +723,9 @@ export default function PackageDetail() {
               </button>
             </div>
 
+            {/* Sentinel div for accurate sticky scroll detection */}
+            <div ref={navSentinelRef} className="w-full h-px" />
+
             {/* ==================================================
                 3. PACKAGE SECTION NAVIGATION (STICKY ROW)
             ================================================== */}
@@ -688,23 +734,26 @@ export default function PackageDetail() {
               className={`w-full bg-white transition-all ${
                 isNavSticky
                   ? 'fixed top-[70px] left-0 right-0 z-[90] shadow-md border-b border-gray-200 py-3 px-4 md:px-12 lg:px-20'
-                  : 'relative mb-8 border-b border-gray-200 pb-1'
+                  : 'relative mb-8 border-b border-gray-200 py-2'
               }`}
             >
-              <div className="max-w-7xl mx-auto flex items-center gap-4 md:gap-8 overflow-x-auto hide-scrollbar">
-                {NAV_ITEMS.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    className={`pb-3 text-sm font-bold transition-all whitespace-nowrap border-b-2 cursor-pointer ${
-                      activeSection === item.id
-                        ? 'border-[#136b8a] text-[#136b8a]'
-                        : 'border-transparent text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+              <div className="max-w-7xl mx-auto flex items-center gap-2.5 overflow-x-auto hide-scrollbar py-1">
+                {NAV_ITEMS.map((item) => {
+                  const isActive = activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`px-4 md:px-5 py-2 rounded-full text-xs md:text-sm font-bold transition-all whitespace-nowrap border cursor-pointer ${
+                        isActive
+                          ? 'bg-[#eff6f9] border-[#136b8a] text-[#136b8a] shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-[#136b8a] hover:text-[#136b8a]'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -720,9 +769,10 @@ export default function PackageDetail() {
                   return (
                     <section key="overview" id="overview" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Overview</h2>
-                      <div className="prose max-w-none text-gray-700 text-sm md:text-base leading-relaxed">
-                        <p>{trip.overview || trip.description}</p>
-                      </div>
+                      <div
+                        className="prose max-w-none text-gray-700 text-sm md:text-base leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: trip.overview || trip.description }}
+                      />
 
                       {/* 4. TRIP INFO GRID BLOCK */}
                       <div className="mt-8 pt-8 border-t border-slate-100">
@@ -857,8 +907,8 @@ export default function PackageDetail() {
                               <span className="text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded-xs uppercase">PDF</span>
                             </div>
                             <div>
-                              <h4 className="text-base font-bold text-slate-900">Want to read it later ?</h4>
-                              <p className="text-xs md:text-sm text-slate-500 mt-0.5">Download this tour's PDF brochure and start your planning offline.</p>
+                              <h4 className="text-base font-bold text-slate-900">{trip.downloadBlock?.heading || "Want to read it later ?"}</h4>
+                              <p className="text-xs md:text-sm text-slate-500 mt-0.5">{trip.downloadBlock?.subtext || "Download this tour's PDF brochure and start your planning offline."}</p>
                             </div>
                           </div>
                           <a
@@ -867,7 +917,7 @@ export default function PackageDetail() {
                             rel="noopener noreferrer"
                             className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
                           >
-                            Download PDF
+                            {trip.downloadBlock?.button_label || "Download PDF"}
                           </a>
                         </div>
                       )}
@@ -878,35 +928,33 @@ export default function PackageDetail() {
                 if (sec.id === 'inclusions-exclusions') {
                   return (
                     <section key="inclusions-exclusions" id="inclusions-exclusions" className="scroll-mt-32 border-b border-gray-100 pb-10">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Includes/Excludes</h2>
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Inclusion & Exclusion</h2>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Cost Includes */}
-                        <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-6">
-                          <h3 className="text-base font-bold text-emerald-800 mb-4 flex items-center gap-2">
-                            <CheckCircle size={20} className="text-emerald-600" />
-                            Cost Includes
-                          </h3>
-                          <ul className="space-y-3 text-xs md:text-sm text-gray-700 font-medium">
+                      <div className="space-y-8">
+                        {/* Cost Includes FIRST */}
+                        <div>
+                          <h3 className="text-base font-bold text-gray-900 mb-4">Cost Includes</h3>
+                          <ul className="space-y-3">
                             {trip.inclusions && trip.inclusions.map((inc, i) => (
-                              <li key={i} className="flex items-start gap-2.5">
-                                <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                              <li key={i} className="flex items-start gap-3 text-xs md:text-sm text-slate-700 font-medium">
+                                <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                                  ✓
+                                </span>
                                 <span>{inc}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
 
-                        {/* Cost Excludes */}
-                        <div className="bg-rose-50/50 border border-rose-200/80 rounded-2xl p-6">
-                          <h3 className="text-base font-bold text-rose-800 mb-4 flex items-center gap-2">
-                            <XCircle size={20} className="text-rose-600" />
-                            Cost Excludes
-                          </h3>
-                          <ul className="space-y-3 text-xs md:text-sm text-gray-700 font-medium">
+                        {/* Cost Excludes BELOW */}
+                        <div>
+                          <h3 className="text-base font-bold text-gray-900 mb-4">Cost Excludes</h3>
+                          <ul className="space-y-3">
                             {trip.exclusions && trip.exclusions.map((exc, i) => (
-                              <li key={i} className="flex items-start gap-2.5">
-                                <XCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                              <li key={i} className="flex items-start gap-3 text-xs md:text-sm text-slate-700 font-medium">
+                                <span className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                                  ✕
+                                </span>
                                 <span>{exc}</span>
                               </li>
                             ))}
@@ -943,19 +991,63 @@ export default function PackageDetail() {
 
                 if (sec.id === 'note') {
                   if (!trip.notes || (Array.isArray(trip.notes) && trip.notes.length === 0)) return null;
+                  const isNoteHtml = typeof trip.notes === 'string' && (trip.notes.includes('<') || trip.notes.includes('>'));
                   const noteList = Array.isArray(trip.notes) ? trip.notes : (typeof trip.notes === 'string' ? trip.notes.split('\n').filter(Boolean) : []);
                   return (
-                    <section key="note" id="note" className="scroll-mt-32 pb-6">
+                    <section key="note" id="note" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Note</h2>
                       <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-6 text-xs md:text-sm text-amber-950 leading-relaxed">
-                        <ul className="space-y-2.5">
-                          {noteList.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2.5 font-medium">
-                              <Info size={18} className="text-amber-700 shrink-0 mt-0.5" />
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        {isNoteHtml ? (
+                          <div dangerouslySetInnerHTML={{ __html: trip.notes }} className="prose max-w-none text-xs md:text-sm text-amber-950" />
+                        ) : (
+                          <ul className="space-y-2.5">
+                            {noteList.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2.5 font-medium">
+                                <Info size={18} className="text-amber-700 shrink-0 mt-0.5" />
+                                <span dangerouslySetInnerHTML={{ __html: item }} />
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </section>
+                  );
+                }
+
+                if (sec.id === 'faqs') {
+                  const faqsList = trip.faqs || [];
+                  if (faqsList.length === 0) return null;
+                  return (
+                    <section key="faqs" id="faqs" className="scroll-mt-32 pb-6">
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">FAQ's</h2>
+                      <div className="space-y-3">
+                        {faqsList.map((faq, idx) => {
+                          const isFaqOpen = openFaqIndex === idx;
+                          const qText = typeof faq === 'string' ? faq : (faq.question || faq.q || '');
+                          const aText = typeof faq === 'string' ? '' : (faq.answer || faq.a || '');
+                          if (!qText) return null;
+
+                          return (
+                            <div key={idx} className="border border-slate-200/90 rounded-2xl bg-white overflow-hidden shadow-2xs transition-all">
+                              <button
+                                type="button"
+                                onClick={() => setOpenFaqIndex(isFaqOpen ? null : idx)}
+                                className="w-full text-left p-5 font-bold text-slate-900 text-sm md:text-base flex items-center justify-between gap-4 cursor-pointer hover:text-[#136b8a]"
+                              >
+                                <span>{qText}</span>
+                                <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 font-extrabold text-sm">
+                                  {isFaqOpen ? '−' : '+'}
+                                </span>
+                              </button>
+                              {isFaqOpen && aText && (
+                                <div
+                                  className="px-5 pb-5 pt-1 text-slate-600 text-xs md:text-sm leading-relaxed border-t border-slate-100 prose max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: aText }}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </section>
                   );
