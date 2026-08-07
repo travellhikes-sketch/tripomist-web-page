@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-
+import { X, UploadCloud, FileText, Star, ArrowUp, ArrowDown, Trash2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
+
+const DEFAULT_SECTION_SETTINGS = [
+  { id: 'overview', label: 'Overview', visible: true, order: 1 },
+  { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 2 },
+  { id: 'itinerary', label: 'Itinerary', visible: true, order: 3 },
+  { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 4 },
+  { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 5 },
+  { id: 'note', label: 'Note', visible: true, order: 6 }
+];
+
 const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [title, setTitle] = useState('');
   const [listingCategories, setListingCategories] = useState([]);
@@ -16,6 +25,11 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [departureFrom, setDepartureFrom] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [bannerImage, setBannerImage] = useState('');
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [newGalleryUrl, setNewGalleryUrl] = useState('');
+  const [itineraryPdfUrl, setItineraryPdfUrl] = useState('');
+  const [thingsToCarry, setThingsToCarry] = useState('');
+  const [notes, setNotes] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -34,13 +48,20 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [cardCtaAction, setCardCtaAction] = useState('open_package');
   const [cardCtaUrl, setCardCtaUrl] = useState('');
 
+  // Section Visibility & Order Controls
+  const [sectionSettings, setSectionSettings] = useState(DEFAULT_SECTION_SETTINGS);
+
+  // Upload States
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+
   const [dynamicSections, setDynamicSections] = useState([]);
   const [dynamicInterests, setDynamicInterests] = useState([]);
   const [dynamicDestinations, setDynamicDestinations] = useState([]);
   const [exploreDepartments, setExploreDepartments] = useState([]);
   const [promoStrips, setPromoStrips] = useState([]);
 
-  // Fetch all placement options
+  // Fetch placement options
   useEffect(() => {
     const fetchPlacements = async () => {
       try {
@@ -85,6 +106,10 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setDepartureFrom(initialData.departure_from || '');
       setImageUrl(initialData.image_url || '');
       setBannerImage(initialData.banner_image || '');
+      setGalleryImages(initialData.gallery_images ? (Array.isArray(initialData.gallery_images) ? initialData.gallery_images : (typeof initialData.gallery_images === 'string' ? JSON.parse(initialData.gallery_images) : [])) : []);
+      setItineraryPdfUrl(initialData.itinerary_pdf_url || '');
+      setThingsToCarry(initialData.things_to_carry ? (typeof initialData.things_to_carry === 'string' ? initialData.things_to_carry : JSON.stringify(initialData.things_to_carry, null, 2)) : '');
+      setNotes(initialData.notes || '');
       setShortDescription(initialData.short_description || '');
       setFullDescription(initialData.full_description || '');
       setCategory(initialData.category || '');
@@ -102,6 +127,21 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setCardCtaText(initialData.card_cta_text || 'Click');
       setCardCtaAction(initialData.card_cta_action || 'open_package');
       setCardCtaUrl(initialData.card_cta_url || '');
+
+      // Parse section_settings
+      if (initialData.section_settings) {
+        let raw = initialData.section_settings;
+        if (typeof raw === 'string') {
+          try { raw = JSON.parse(raw); } catch (e) { raw = null; }
+        }
+        if (Array.isArray(raw) && raw.length > 0) {
+          setSectionSettings(raw);
+        } else {
+          setSectionSettings(DEFAULT_SECTION_SETTINGS);
+        }
+      } else {
+        setSectionSettings(DEFAULT_SECTION_SETTINGS);
+      }
 
       const fetchExistingPlacements = async () => {
         try {
@@ -132,6 +172,126 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     });
   };
 
+  // Gallery Storage File Upload
+  const handleGalleryFileUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    setUploadingGallery(true);
+    try {
+      const uploadedUrls = [];
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `packages/gallery/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('website-assets')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('website-assets')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl);
+      }
+      setGalleryImages(prev => [...prev, ...uploadedUrls]);
+      if (!imageUrl && uploadedUrls.length > 0) {
+        setImageUrl(uploadedUrls[0]);
+      }
+    } catch (err) {
+      alert('Error uploading gallery image(s): ' + err.message);
+      console.error('Gallery Upload Error:', err);
+    } finally {
+      setUploadingGallery(false);
+      event.target.value = '';
+    }
+  };
+
+  // Itinerary PDF Storage Upload
+  const handlePdfFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPdf(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `itinerary_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `packages/itineraries/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('website-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('website-assets')
+        .getPublicUrl(filePath);
+
+      setItineraryPdfUrl(publicUrl);
+    } catch (err) {
+      alert('Error uploading itinerary PDF: ' + err.message);
+      console.error('PDF Upload Error:', err);
+    } finally {
+      setUploadingPdf(false);
+      event.target.value = '';
+    }
+  };
+
+  const addGalleryImageByUrl = () => {
+    if (!newGalleryUrl.trim()) return;
+    setGalleryImages(prev => [...prev, newGalleryUrl.trim()]);
+    setNewGalleryUrl('');
+  };
+
+  const removeGalleryImage = (index) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const setAsCoverImage = (index) => {
+    const selectedUrl = galleryImages[index];
+    if (!selectedUrl) return;
+    const newList = galleryImages.filter((_, i) => i !== index);
+    newList.unshift(selectedUrl);
+    setGalleryImages(newList);
+    setImageUrl(selectedUrl);
+  };
+
+  const moveGalleryImage = (index, dir) => {
+    if (dir === 'up' && index === 0) return;
+    if (dir === 'down' && index === galleryImages.length - 1) return;
+    const newList = [...galleryImages];
+    const targetIdx = dir === 'up' ? index - 1 : index + 1;
+    const temp = newList[index];
+    newList[index] = newList[targetIdx];
+    newList[targetIdx] = temp;
+    setGalleryImages(newList);
+  };
+
+  // Section Order & Visibility handlers
+  const toggleSectionVisibility = (secId) => {
+    setSectionSettings(prev => prev.map(s => s.id === secId ? { ...s, visible: !s.visible } : s));
+  };
+
+  const moveSection = (index, dir) => {
+    if (dir === 'up' && index === 0) return;
+    if (dir === 'down' && index === sectionSettings.length - 1) return;
+    const list = [...sectionSettings];
+    const targetIdx = dir === 'up' ? index - 1 : index + 1;
+    const temp = list[index];
+    list[index] = list[targetIdx];
+    list[targetIdx] = temp;
+    const reordered = list.map((item, idx) => ({ ...item, order: idx + 1 }));
+    setSectionSettings(reordered);
+  };
+
+  const resetSectionSettings = () => {
+    setSectionSettings(DEFAULT_SECTION_SETTINGS);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setJsonError('');
@@ -144,13 +304,21 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     let parsedItinerary = null,
       parsedInclusions = null,
       parsedExclusions = null,
-      parsedCostings = null;
+      parsedCostings = null,
+      parsedThingsToCarry = null;
 
     try {
       if (itinerary.trim()) parsedItinerary = JSON.parse(itinerary);
       if (inclusions.trim()) parsedInclusions = JSON.parse(inclusions);
       if (exclusions.trim()) parsedExclusions = JSON.parse(exclusions);
       if (costings.trim()) parsedCostings = JSON.parse(costings);
+      if (thingsToCarry.trim()) {
+        try {
+          parsedThingsToCarry = JSON.parse(thingsToCarry);
+        } catch {
+          parsedThingsToCarry = thingsToCarry.split('\n').filter(Boolean);
+        }
+      }
     } catch (err) {
       setJsonError('Invalid JSON in one of the fields: ' + err.message);
       return;
@@ -169,6 +337,11 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       departure_from: departureFrom.trim() || null,
       image_url: imageUrl.trim() || null,
       banner_image: bannerImage.trim() || null,
+      gallery_images: galleryImages,
+      itinerary_pdf_url: itineraryPdfUrl.trim() || null,
+      section_settings: sectionSettings,
+      things_to_carry: parsedThingsToCarry,
+      notes: notes.trim() || null,
       short_description: shortDescription.trim() || null,
       full_description: fullDescription.trim() || null,
       category: category.trim() ? category.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : null,
@@ -210,7 +383,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {jsonError && (
             <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200">
               {jsonError}
@@ -269,15 +442,239 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             </div>
           </div>
 
-          {/* Image URLs */}
+          {/* Main Cover & Banner URLs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Image URL</label>
+              <label className={labelClass}>Main Image URL (Cover)</label>
               <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className={inputClass} placeholder="https://..." />
             </div>
             <div>
               <label className={labelClass}>Banner Image URL</label>
               <input type="text" value={bannerImage} onChange={e => setBannerImage(e.target.value)} className={inputClass} placeholder="https://..." />
+            </div>
+          </div>
+
+          {/* ==================================================
+              1. PACKAGE GALLERY (UPLOAD + MANAGE + REORDER + COVER)
+          ================================================== */}
+          <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <label className={`${labelClass} text-slate-900 font-bold mb-0`}>
+                Package Photo Gallery ({galleryImages.length})
+              </label>
+              <label className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-colors">
+                {uploadingGallery ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <UploadCloud size={15} />
+                )}
+                Upload Image(s)
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryFileUpload}
+                  disabled={uploadingGallery}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* URL Fallback */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newGalleryUrl}
+                onChange={e => setNewGalleryUrl(e.target.value)}
+                className={inputClass}
+                placeholder="Or paste image URL (https://...)"
+              />
+              <button
+                type="button"
+                onClick={addGalleryImageByUrl}
+                className="px-3.5 py-2 bg-slate-200 text-slate-800 rounded-lg text-xs font-bold hover:bg-slate-300 whitespace-nowrap"
+              >
+                + Add URL
+              </button>
+            </div>
+
+            {/* Gallery Image Cards Grid */}
+            {galleryImages.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
+                {galleryImages.map((img, idx) => (
+                  <div key={idx} className="relative group bg-white border border-slate-200 rounded-xl p-2 flex flex-col items-center shadow-2xs">
+                    <img src={img} alt={`Gallery ${idx}`} className="w-full h-24 object-cover rounded-lg mb-2" />
+                    {idx === 0 && (
+                      <span className="absolute top-3 left-3 bg-[#136b8a] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
+                        Cover
+                      </span>
+                    )}
+
+                    <div className="flex items-center justify-between w-full gap-1 pt-1 border-t border-slate-100">
+                      {idx !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAsCoverImage(idx)}
+                          title="Set as cover image"
+                          className="p-1 text-amber-600 hover:bg-amber-50 rounded"
+                        >
+                          <Star size={14} />
+                        </button>
+                      )}
+                      <div className="flex items-center gap-1 ml-auto">
+                        <button
+                          type="button"
+                          onClick={() => moveGalleryImage(idx, 'up')}
+                          disabled={idx === 0}
+                          title="Move left"
+                          className="p-1 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+                        >
+                          <ArrowUp size={14} className="-rotate-90" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveGalleryImage(idx, 'down')}
+                          disabled={idx === galleryImages.length - 1}
+                          title="Move right"
+                          className="p-1 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+                        >
+                          <ArrowDown size={14} className="-rotate-90" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(idx)}
+                          title="Remove image"
+                          className="p-1 text-rose-600 hover:bg-rose-50 rounded font-bold"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 italic">No gallery photos added yet. Upload files or paste image URLs above.</p>
+            )}
+          </div>
+
+          {/* ==================================================
+              2. ITINERARY PDF UPLOAD & FILE MANAGEMENT
+          ================================================== */}
+          <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <label className={`${labelClass} text-slate-900 font-bold mb-0 flex items-center gap-2`}>
+                <FileText size={18} className="text-[#136b8a]" />
+                <span>Downloadable Itinerary PDF</span>
+              </label>
+
+              <label className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-colors">
+                {uploadingPdf ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <UploadCloud size={15} />
+                )}
+                {itineraryPdfUrl ? 'Replace PDF' : 'Upload PDF'}
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handlePdfFileUpload}
+                  disabled={uploadingPdf}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {itineraryPdfUrl ? (
+              <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs">
+                <div className="flex items-center gap-2 truncate pr-2">
+                  <FileText size={16} className="text-rose-600 shrink-0" />
+                  <a href={itineraryPdfUrl} target="_blank" rel="noopener noreferrer" className="text-[#136b8a] font-bold hover:underline truncate">
+                    {itineraryPdfUrl.split('/').pop()}
+                  </a>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setItineraryPdfUrl('')}
+                  className="text-rose-600 hover:text-rose-800 font-bold shrink-0 ml-2"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null}
+
+            {/* URL Fallback */}
+            <input
+              type="text"
+              value={itineraryPdfUrl}
+              onChange={e => setItineraryPdfUrl(e.target.value)}
+              className={inputClass}
+              placeholder="Or paste direct PDF URL (https://...)"
+            />
+          </div>
+
+          {/* ==================================================
+              3. PACKAGE SECTION CONTROLS (SHOW/HIDE + DISPLAY ORDER)
+          ================================================== */}
+          <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <label className={`${labelClass} text-slate-900 font-bold mb-0`}>
+                Package Section Display & Visibility
+              </label>
+              <button
+                type="button"
+                onClick={resetSectionSettings}
+                className="text-xs text-[#136b8a] hover:underline font-semibold"
+              >
+                Reset Default Order
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {sectionSettings.map((sec, idx) => (
+                <div
+                  key={sec.id}
+                  className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleSectionVisibility(sec.id)}
+                      className={`p-1 rounded cursor-pointer transition-colors ${
+                        sec.visible !== false ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'
+                      }`}
+                      title={sec.visible !== false ? 'Hide section' : 'Show section'}
+                    >
+                      {sec.visible !== false ? <Eye size={18} /> : <EyeOff size={18} />}
+                    </button>
+
+                    <span className={`text-sm font-bold ${sec.visible !== false ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
+                      {sec.label}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveSection(idx, 'up')}
+                      disabled={idx === 0}
+                      className="p-1 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-20"
+                      title="Move up"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveSection(idx, 'down')}
+                      disabled={idx === sectionSettings.length - 1}
+                      className="p-1 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-20"
+                      title="Move down"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -289,18 +686,18 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
 
           {/* Short Description */}
           <div>
-            <label className={labelClass}>Short Description</label>
-            <textarea value={shortDescription} onChange={e => setShortDescription(e.target.value)} className={inputClass} rows={2} placeholder="Brief overview shown in cards..." />
+            <label className={labelClass}>Short Description (Overview text)</label>
+            <textarea value={shortDescription} onChange={e => setShortDescription(e.target.value)} className={inputClass} rows={2} placeholder="Brief overview shown in cards and top section..." />
           </div>
 
           {/* Full Description */}
           <div>
             <label className={labelClass}>Full Description</label>
-            <textarea value={fullDescription} onChange={e => setFullDescription(e.target.value)} className={inputClass} rows={4} placeholder="Detailed description for the package page..." />
+            <textarea value={fullDescription} onChange={e => setFullDescription(e.target.value)} className={inputClass} rows={4} placeholder="Detailed description for the package..." />
           </div>
 
           {/* Status and Clickable */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <div>
               <label className={labelClass}>Status</label>
               <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass}>
@@ -475,9 +872,9 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             </div>
           </div>
 
-          {/* JSON Fields */}
+          {/* Section Data Content Fields */}
           <div className="border-t border-gray-200 pt-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">JSON Data Fields</h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Package Content Data</h3>
             <div>
               <label className={labelClass}>Itinerary (JSON array)</label>
               <textarea value={itinerary} onChange={e => setItinerary(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={5} placeholder={'[\n  { "title": "Day 1 - Arrival", "description": "Arrive and check in..." },\n  { "title": "Day 2 - Sightseeing", "description": "Visit local spots..." }\n]'} />
@@ -493,6 +890,14 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             <div>
               <label className={labelClass}>Costings (JSON array)</label>
               <textarea value={costings} onChange={e => setCostings(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'[\n  { "type": "Double Sharing", "price": "₹19,999 per person" }\n]'} />
+            </div>
+            <div>
+              <label className={labelClass}>Things to Carry (JSON array or one item per line)</label>
+              <textarea value={thingsToCarry} onChange={e => setThingsToCarry(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'["Warm Jacket", "Trekking Shoes", "Water Bottle", "Valid ID"]'} />
+            </div>
+            <div>
+              <label className={labelClass}>Note / Advisory Information</label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} className={inputClass} rows={3} placeholder="Important note, age guidelines, or cancellation policy highlights..." />
             </div>
           </div>
 

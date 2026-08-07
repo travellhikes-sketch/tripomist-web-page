@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-function DownloadItineraryModal({ isOpen, onClose, tripTitle }) {
+function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl }) {
   const [submitted, setSubmitted] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -11,6 +11,9 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log(`Itinerary download requested: Name=${name}, Phone=${phone}, Trip=${tripTitle}, Callback=${callback}`)
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank')
+    }
     setSubmitted(true)
   }
 
