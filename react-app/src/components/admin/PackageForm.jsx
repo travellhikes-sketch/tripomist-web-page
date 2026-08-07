@@ -1139,7 +1139,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             {/* Structured Repeatable Control: Trip Info Grid */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-gray-800">Trip Info Grid Items</label>
+                <label className="text-sm font-bold text-gray-800">Trip Info</label>
                 <button
                   type="button"
                   onClick={handleAddTripInfo}

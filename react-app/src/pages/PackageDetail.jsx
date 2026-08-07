@@ -1054,7 +1054,7 @@ export default function PackageDetail() {
                               href={trip.itineraryPdfUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="bg-[#800040] hover:bg-[#600030] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
+                              className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
                             >
                               Download PDF
                             </a>
@@ -1216,28 +1216,6 @@ export default function PackageDetail() {
                 </div>
                 <span className="text-xs text-gray-400 block font-medium">Per Person / Quad Sharing</span>
 
-                {/* Triple & Double summary lines inside Right Pricing Card */}
-                {trip.costings && trip.costings.length > 1 && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5 text-xs font-semibold text-slate-600">
-                    {trip.costings.slice(1, 3).map((c, cIdx) => {
-                      const cLabel = (c.type || c.sharing || '').replace(/\bupgrade\b/ig, '').trim();
-                      let cPrice = c.price != null ? String(c.price).trim() : '';
-                      if (!cPrice.startsWith('₹') && !cPrice.startsWith('+')) {
-                        if (/^\d+$/.test(cPrice)) {
-                          cPrice = `+ ₹${Number(cPrice).toLocaleString('en-IN')}`;
-                        }
-                      } else if (cPrice.startsWith('+') && !cPrice.includes('₹')) {
-                        cPrice = `+ ₹${cPrice.replace(/^\+\s*/, '')}`;
-                      }
-                      return (
-                        <div key={cIdx} className="flex items-center justify-between">
-                          <span>{cLabel}</span>
-                          <span className="font-bold text-[#136b8a]">{cPrice}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
 
               {/* Sidebar Trust Benefits */}
