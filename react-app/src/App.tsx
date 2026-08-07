@@ -17,12 +17,6 @@ import Cart from './pages/Cart'
 import Payment from './pages/Payment'
 import FeaturedGroupTrip from './pages/FeaturedGroupTrip'
 import MostPopularPackages from './pages/MostPopularPackages'
-import ItineraryManaliKasol from './pages/ItineraryManaliKasol'
-import ItineraryJibhi from './pages/ItineraryJibhi'
-import ItineraryChopta from './pages/ItineraryChopta'
-import ItineraryKedarnath from './pages/ItineraryKedarnath'
-import ItineraryMadhyameshwar from './pages/ItineraryMadhyameshwar'
-import ItineraryUdaipurKumbhalgarh from './pages/ItineraryUdaipurKumbhalgarh'
 import Search from './pages/Search'
 import ShippingPolicy from './pages/ShippingPolicy'
 import Login from './pages/Login'
@@ -252,12 +246,6 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/featured-group-trips" element={<FeaturedGroupTrip />} />
           <Route path="/most-popular-packages" element={<MostPopularPackages />} />
-          <Route path="/itinerary/manali-kasol" element={<ItineraryManaliKasol />} />
-          <Route path="/itinerary/jibhi" element={<ItineraryJibhi />} />
-          <Route path="/itinerary/chopta" element={<ItineraryChopta />} />
-          <Route path="/itinerary/kedarnath" element={<ItineraryKedarnath />} />
-          <Route path="/itinerary/madhyameshwar" element={<ItineraryMadhyameshwar />} />
-          <Route path="/itinerary/udaipur-and-kumbhalgarh" element={<ItineraryUdaipurKumbhalgarh />} />
           <Route path="/explore/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ExploreDepartment /></React.Suspense>} />
           <Route path="/promo/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
           <Route path="/offers/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
