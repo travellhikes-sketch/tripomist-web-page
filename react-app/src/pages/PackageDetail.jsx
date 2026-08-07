@@ -151,15 +151,25 @@ export default function PackageDetail() {
 
   const scrollGalleryLeft = () => {
     if (galleryContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = galleryContainerRef.current;
       const cardWidth = galleryContainerRef.current.firstElementChild?.getBoundingClientRect().width || 300;
-      galleryContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      if (scrollLeft <= 10) {
+        galleryContainerRef.current.scrollTo({ left: scrollWidth - clientWidth, behavior: 'smooth' });
+      } else {
+        galleryContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+      }
     }
   };
 
   const scrollGalleryRight = () => {
     if (galleryContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = galleryContainerRef.current;
       const cardWidth = galleryContainerRef.current.firstElementChild?.getBoundingClientRect().width || 300;
-      galleryContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      if (scrollLeft >= scrollWidth - clientWidth - 10) {
+        galleryContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        galleryContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
     }
   };
 
@@ -406,7 +416,7 @@ export default function PackageDetail() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const isStickyNow = !entry.isIntersecting && entry.boundingClientRect.top < 64;
+        const isStickyNow = !entry.isIntersecting && entry.boundingClientRect.top < 104;
         setIsNavSticky(isStickyNow);
 
         window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
@@ -415,7 +425,7 @@ export default function PackageDetail() {
       },
       {
         threshold: [0, 1],
-        rootMargin: '-64px 0px 0px 0px'
+        rootMargin: '-104px 0px 0px 0px'
       }
     );
 
@@ -621,10 +631,20 @@ export default function PackageDetail() {
   const daysVal = dMatch ? `${dMatch[1]} DAYS` : (durationStr.includes('Day') ? durationStr.toUpperCase() : 'DAYS');
   const nightsVal = nMatch ? `${nMatch[1]} NIGHTS` : 'NIGHTS';
 
-  const NAV_ITEMS = visibleSections.map(sec => ({
-    id: sec.id,
-    label: sec.label || sec.id
-  }));
+  const NAV_ITEMS = visibleSections.map(sec => {
+    let label = sec.label || sec.id;
+    if (sec.id === 'overview') label = 'Overview';
+    else if (sec.id === 'trip-cost') label = 'Trip Cost';
+    else if (sec.id === 'itinerary') label = 'Itinerary';
+    else if (sec.id === 'inclusions-exclusions') label = 'Inclusion & Exclusion';
+    else if (sec.id === 'things-to-carry') label = 'Things to Carry';
+    else if (sec.id === 'note') label = 'Note';
+    else if (sec.id === 'faqs') label = "FAQ's";
+    return {
+      id: sec.id,
+      label: label
+    };
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -636,29 +656,25 @@ export default function PackageDetail() {
         ================================================== */}
         <section className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-4">
           <div className="relative w-full overflow-hidden rounded-none shadow-sm border border-slate-200">
-            {/* Gallery Left/Right Arrows (Always Visible on Desktop when navigation is possible) */}
-            {galleryImages.length > 4 && (
+            {/* Gallery Left/Right Arrows (Always Visible on Desktop) */}
+            {galleryImages.length > 0 && (
               <>
-                {canScrollLeft && (
-                  <button
-                    type="button"
-                    onClick={scrollGalleryLeft}
-                    className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
-                    title="Previous Images"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                )}
-                {canScrollRight && (
-                  <button
-                    type="button"
-                    onClick={scrollGalleryRight}
-                    className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
-                    title="Next Images"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={scrollGalleryLeft}
+                  className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-none bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
+                  title="Previous Images"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  type="button"
+                  onClick={scrollGalleryRight}
+                  className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-none bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
+                  title="Next Images"
+                >
+                  <ChevronRight size={24} />
+                </button>
               </>
             )}
 
@@ -694,7 +710,7 @@ export default function PackageDetail() {
               </span>
               <button
                 onClick={() => setIsLightboxOpen(false)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
+                className="w-10 h-10 rounded-none bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -704,7 +720,7 @@ export default function PackageDetail() {
             <div className="relative flex-grow flex items-center justify-center px-4 sm:px-12 select-none">
               <button
                 onClick={prevImage}
-                className="absolute left-4 sm:left-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-10"
+                className="absolute left-4 sm:left-8 w-12 h-12 rounded-none bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-10"
               >
                 <ChevronLeft size={28} />
               </button>
@@ -712,12 +728,12 @@ export default function PackageDetail() {
               <img
                 src={galleryImages[activeImageIndex]}
                 alt={`Photo ${activeImageIndex + 1}`}
-                className="max-h-[75vh] max-w-full object-contain rounded-lg shadow-2xl transition-all duration-300"
+                className="max-h-[75vh] max-w-full object-contain rounded-none shadow-2xl transition-all duration-300"
               />
 
               <button
                 onClick={nextImage}
-                className="absolute right-4 sm:right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-10"
+                className="absolute right-4 sm:right-8 w-12 h-12 rounded-none bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-10"
               >
                 <ChevronRight size={28} />
               </button>
@@ -729,7 +745,7 @@ export default function PackageDetail() {
                 <button
                   key={idx}
                   onClick={() => setActiveImageIndex(idx)}
-                  className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                  className={`w-14 h-14 rounded-none overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
                     activeImageIndex === idx ? 'border-[#136b8a] scale-105' : 'border-transparent opacity-50 hover:opacity-100'
                   }`}
                 >
@@ -788,7 +804,7 @@ export default function PackageDetail() {
                     : 'bg-[#136b8a] hover:bg-[#0f556e] text-white'
                 }`}
               >
-                {isAddedToCart ? <Check size={18} /> : <ShoppingCart size={18} />}
+                <ShoppingCart size={18} />
               </button>
 
               {/* 3. Circular Share Icon Button (Right) */}
@@ -837,7 +853,7 @@ export default function PackageDetail() {
             </div>
 
             {/* SPACER when sticky is active so page content doesn't jump */}
-            {isNavSticky && <div className="h-12 w-full" />}
+            {isNavSticky && <div style={{ height: '88px' }} className="w-full" />}
 
             {/* ==================================================
                 VERTICAL SECTIONS CONTENT (DYNAMIC ORDER & VISIBILITY)
@@ -875,40 +891,61 @@ export default function PackageDetail() {
                 }
 
                 if (sec.id === 'trip-cost') {
+                  const gstText = siteSettings?.gst_label ? siteSettings.gst_label : '+ 5% GST';
+                  const basePriceText = `${trip.price} ${gstText}`;
+
+                  const formatUpgradePrice = (priceVal, baseNumericPrice) => {
+                    if (!priceVal) return '';
+                    let str = String(priceVal).trim();
+                    let numeric = Number(str.replace(/[^\d]/g, ''));
+                    if (numeric > baseNumericPrice && baseNumericPrice > 0) {
+                      const diff = numeric - baseNumericPrice;
+                      return `+ ₹${diff.toLocaleString('en-IN')}`;
+                    }
+                    let cleanNum = str.replace(/[+₹\s]/g, '').replace(/per person/ig, '').replace(/upgrade/ig, '').trim();
+                    if (/^\d+$/.test(cleanNum)) {
+                      return `+ ₹${Number(cleanNum).toLocaleString('en-IN')}`;
+                    }
+                    if (!str.startsWith('+')) {
+                      return `+ ${str}`;
+                    }
+                    return str;
+                  };
+
+                  let triplePrice = '+ ₹1,500';
+                  if (trip.costings && trip.costings.length > 0) {
+                    const tripleItem = trip.costings.find(c => (c.type || c.sharing || '').toLowerCase().includes('triple'));
+                    if (tripleItem) {
+                      triplePrice = formatUpgradePrice(tripleItem.price, trip.numericPrice);
+                    }
+                  }
+                  if (!triplePrice) triplePrice = '+ ₹1,500';
+
+                  let doublePrice = '+ ₹2,500';
+                  if (trip.costings && trip.costings.length > 0) {
+                    const doubleItem = trip.costings.find(c => (c.type || c.sharing || '').toLowerCase().includes('double'));
+                    if (doubleItem) {
+                      doublePrice = formatUpgradePrice(doubleItem.price, trip.numericPrice);
+                    }
+                  }
+                  if (!doublePrice) doublePrice = '+ ₹2,500';
+
                   return (
                     <section key="trip-cost" id="trip-cost" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Costing Details</h2>
-                      <div className="bg-[#eff6f9] border border-[#d2e6ef] rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
-                        {trip.costings && trip.costings.length > 0 ? (
-                          trip.costings.map((c, i) => {
-                            const labelStr = (c.type || c.sharing || 'Per Person').replace(/\bupgrade\b/ig, '').trim();
-                            let priceVal = c.price != null ? String(c.price).trim() : `₹${trip.numericPrice.toLocaleString()}`;
-                            if (!priceVal.startsWith('₹') && !priceVal.startsWith('+')) {
-                              if (/^\d+$/.test(priceVal)) {
-                                const num = Number(priceVal);
-                                if (labelStr.toLowerCase().includes('quad') || i === 0) {
-                                  priceVal = `₹${num.toLocaleString('en-IN')}`;
-                                } else {
-                                  priceVal = `+ ₹${num.toLocaleString('en-IN')}`;
-                                }
-                              }
-                            } else if (priceVal.startsWith('+') && !priceVal.includes('₹')) {
-                              priceVal = `+ ₹${priceVal.replace(/^\+\s*/, '')}`;
-                            }
-
-                            return (
-                              <div key={i} className="bg-white/90 border border-[#d2e6ef]/80 rounded-xl px-4 py-3.5 flex items-center justify-between gap-4">
-                                <span className="text-xs md:text-sm font-bold text-slate-800">{labelStr}</span>
-                                <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{priceVal}</span>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="bg-white/90 border border-[#d2e6ef]/80 rounded-xl px-4 py-3.5 flex items-center justify-between gap-4">
-                            <span className="text-xs md:text-sm font-bold text-slate-800">Per Person</span>
-                            <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{trip.price} + 5% GST</span>
-                          </div>
-                        )}
+                      <div className="bg-[#eff6f9] border border-[#d2e6ef] rounded-none p-4 md:p-5 space-y-1 shadow-2xs">
+                        <div className="flex items-center justify-between py-3 border-b border-[#d2e6ef]/50">
+                          <span className="text-xs md:text-sm font-bold text-slate-800">Per Person / Quad Sharing</span>
+                          <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{basePriceText}</span>
+                        </div>
+                        <div className="flex items-center justify-between py-3 border-b border-[#d2e6ef]/50">
+                          <span className="text-xs md:text-sm font-bold text-slate-800">Triple Sharing</span>
+                          <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{triplePrice}</span>
+                        </div>
+                        <div className="flex items-center justify-between py-3">
+                          <span className="text-xs md:text-sm font-bold text-slate-800">Double Sharing</span>
+                          <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{doublePrice}</span>
+                        </div>
                       </div>
                     </section>
                   );
@@ -974,14 +1011,17 @@ export default function PackageDetail() {
                       {trip.itineraryPdfUrl && (
                         <div className="mt-10 pt-6 border-t border-gray-100">
                           <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Download Itinerary</h2>
-                          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-14 bg-rose-50 border border-rose-200 rounded-lg flex flex-col items-center justify-center shrink-0">
-                                <span className="text-[10px] font-extrabold bg-rose-600 text-white px-1.5 py-0.5 rounded-xs uppercase">PDF</span>
-                              </div>
+                              <svg className="w-10 h-12 text-gray-400 shrink-0" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1.5 3C1.5 1.34315 2.84315 0 4.5 0H14.25L22.5 8.25V27C22.5 28.6569 21.1569 30 19.5 30H4.5C2.84315 30 1.5 28.6569 1.5 27V3Z" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
+                                <path d="M14.25 0V8.25H22.5" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
+                                <rect x="0.5" y="15" width="16" height="9" rx="1.5" fill="#EF4444"/>
+                                <text x="2.5" y="21.5" fill="white" fontSize="6.5" fontWeight="bold" fontFamily="sans-serif">PDF</text>
+                              </svg>
                               <div>
-                                <h4 className="text-base font-bold text-slate-900">{trip.downloadBlock?.heading || "Want to read it later ?"}</h4>
-                                <p className="text-xs md:text-sm text-slate-500 mt-0.5">{trip.downloadBlock?.subtext || "Download this tour's PDF brochure and start your planning offline."}</p>
+                                <h4 className="text-base font-bold text-slate-900">Want to read it later ?</h4>
+                                <p className="text-xs md:text-sm text-slate-500 mt-0.5">Download this tour's PDF brochure and start your planning offline.</p>
                               </div>
                             </div>
                             <a
@@ -990,7 +1030,7 @@ export default function PackageDetail() {
                               rel="noopener noreferrer"
                               className="bg-[#800040] hover:bg-[#600030] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap"
                             >
-                              {trip.downloadBlock?.button_label || "Download PDF"}
+                              Download PDF
                             </a>
                           </div>
                         </div>
@@ -1011,9 +1051,7 @@ export default function PackageDetail() {
                           <ul className="space-y-3">
                             {trip.inclusions && trip.inclusions.map((inc, i) => (
                               <li key={i} className="flex items-start gap-3 text-xs md:text-sm text-slate-700 font-medium">
-                                <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                                  ✓
-                                </span>
+                                <Check size={18} className="text-emerald-600 shrink-0 mt-0.5" />
                                 <span>{inc}</span>
                               </li>
                             ))}
@@ -1026,9 +1064,7 @@ export default function PackageDetail() {
                           <ul className="space-y-3">
                             {trip.exclusions && trip.exclusions.map((exc, i) => (
                               <li key={i} className="flex items-start gap-3 text-xs md:text-sm text-slate-700 font-medium">
-                                <span className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                                  ✕
-                                </span>
+                                <X size={18} className="text-rose-600 shrink-0 mt-0.5" />
                                 <span>{exc}</span>
                               </li>
                             ))}
@@ -1044,21 +1080,18 @@ export default function PackageDetail() {
                   return (
                     <section key="things-to-carry" id="things-to-carry" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Things to Carry</h2>
-
-                      <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-6">
-                        <ul className="space-y-3 text-xs md:text-sm text-slate-800 font-semibold">
-                          {trip.thingsToCarry.map((item, i) => {
-                            const text = typeof item === 'string' ? item : (item.text || item.title || '');
-                            if (!text) return null;
-                            return (
-                              <li key={i} className="flex items-start gap-3">
-                                <span className="w-2 h-2 rounded-full bg-[#136b8a] mt-1.5 shrink-0" />
-                                <span>{text}</span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
+                      <ul className="space-y-3.5 text-xs md:text-sm text-slate-800 font-semibold">
+                        {trip.thingsToCarry.map((item, i) => {
+                          const text = typeof item === 'string' ? item : (item.text || item.title || '');
+                          if (!text) return null;
+                          return (
+                            <li key={i} className="flex items-start gap-2.5">
+                              <Check size={16} className="text-[#136b8a] shrink-0 mt-0.5" />
+                              <span>{text}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
                     </section>
                   );
                 }
@@ -1070,20 +1103,18 @@ export default function PackageDetail() {
                   return (
                     <section key="note" id="note" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Note</h2>
-                      <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-6 text-xs md:text-sm text-amber-950 leading-relaxed">
-                        {isNoteHtml ? (
-                          <div dangerouslySetInnerHTML={{ __html: trip.notes }} className="prose max-w-none text-xs md:text-sm text-amber-950" />
-                        ) : (
-                          <ul className="space-y-2.5">
-                            {noteList.map((item, i) => (
-                              <li key={i} className="flex items-start gap-2.5 font-medium">
-                                <Info size={18} className="text-amber-700 shrink-0 mt-0.5" />
-                                <span dangerouslySetInnerHTML={{ __html: item }} />
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
+                      {isNoteHtml ? (
+                        <div dangerouslySetInnerHTML={{ __html: trip.notes }} className="prose max-w-none text-xs md:text-sm text-slate-700 leading-relaxed" />
+                      ) : (
+                        <ul className="space-y-3 text-xs md:text-sm text-slate-700 leading-relaxed">
+                          {noteList.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2.5 font-medium">
+                              <Info size={16} className="text-[#136b8a] shrink-0 mt-0.5" />
+                              <span dangerouslySetInnerHTML={{ __html: item }} />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </section>
                   );
                 }
@@ -1094,7 +1125,7 @@ export default function PackageDetail() {
                   return (
                     <section key="faqs" id="faqs" className="scroll-mt-32 pb-6">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">FAQ's</h2>
-                      <div className="space-y-3">
+                      <div className="divide-y divide-slate-200 border-t border-b border-slate-200">
                         {faqsList.map((faq, idx) => {
                           const isFaqOpen = openFaqIndex === idx;
                           const qText = typeof faq === 'string' ? faq : (faq.question || faq.q || '');
@@ -1102,20 +1133,20 @@ export default function PackageDetail() {
                           if (!qText) return null;
 
                           return (
-                            <div key={idx} className="border border-slate-200/90 rounded-2xl bg-white overflow-hidden shadow-2xs transition-all">
+                            <div key={idx} className="bg-white transition-all">
                               <button
                                 type="button"
                                 onClick={() => setOpenFaqIndex(isFaqOpen ? null : idx)}
-                                className="w-full text-left p-5 font-bold text-slate-900 text-sm md:text-base flex items-center justify-between gap-4 cursor-pointer hover:text-[#136b8a]"
+                                className="w-full text-left py-4.5 font-bold text-slate-900 text-sm md:text-base flex items-center justify-between gap-4 cursor-pointer hover:text-[#136b8a]"
                               >
                                 <span>{qText}</span>
-                                <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 font-extrabold text-sm">
+                                <span className="text-slate-500 shrink-0 font-bold text-lg select-none">
                                   {isFaqOpen ? '−' : '+'}
                                 </span>
                               </button>
                               {isFaqOpen && aText && (
                                 <div
-                                  className="px-5 pb-5 pt-1 text-slate-600 text-xs md:text-sm leading-relaxed border-t border-slate-100 prose max-w-none"
+                                  className="pb-5 pt-1 text-slate-600 text-xs md:text-sm leading-relaxed prose max-w-none"
                                   dangerouslySetInnerHTML={{ __html: aText }}
                                 />
                               )}
@@ -1157,7 +1188,30 @@ export default function PackageDetail() {
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-gray-400 block font-medium">Per Person</span>
+                <span className="text-xs text-gray-400 block font-medium">Per Person / Quad Sharing</span>
+
+                {/* Triple & Double summary lines inside Right Pricing Card */}
+                {trip.costings && trip.costings.length > 1 && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5 text-xs font-semibold text-slate-600">
+                    {trip.costings.slice(1, 3).map((c, cIdx) => {
+                      const cLabel = (c.type || c.sharing || '').replace(/\bupgrade\b/ig, '').trim();
+                      let cPrice = c.price != null ? String(c.price).trim() : '';
+                      if (!cPrice.startsWith('₹') && !cPrice.startsWith('+')) {
+                        if (/^\d+$/.test(cPrice)) {
+                          cPrice = `+ ₹${Number(cPrice).toLocaleString('en-IN')}`;
+                        }
+                      } else if (cPrice.startsWith('+') && !cPrice.includes('₹')) {
+                        cPrice = `+ ₹${cPrice.replace(/^\+\s*/, '')}`;
+                      }
+                      return (
+                        <div key={cIdx} className="flex items-center justify-between">
+                          <span>{cLabel}</span>
+                          <span className="font-bold text-[#136b8a]">{cPrice}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Sidebar Trust Benefits */}
