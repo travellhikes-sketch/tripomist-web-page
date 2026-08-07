@@ -311,7 +311,7 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-[100] w-full flex flex-col bg-white">
-      <nav className="relative border-b border-gray-100">
+      <nav id="main-navbar" className="relative border-b border-gray-100">
         <div className="flex items-center justify-between w-full px-4 md:px-12 lg:px-20 py-4 bg-white relative z-50">
           {/* LEFT: Logo */}
           <div className="flex items-center gap-6 flex-shrink-0">

@@ -176,6 +176,30 @@ export default function PackageDetail() {
   // Section Navigation & Scroll Spy
   const [activeSection, setActiveSection] = useState('overview');
   const [isNavSticky, setIsNavSticky] = useState(false);
+  const [mainNavHeight, setMainNavHeight] = useState(64);
+  const [exploreNavHeight, setExploreNavHeight] = useState(40);
+  const [sectionNavHeight, setSectionNavHeight] = useState(48);
+
+  useEffect(() => {
+    const measure = () => {
+      const mainNav = document.getElementById('main-navbar');
+      const exploreNav = document.getElementById('explore-navbar');
+      const secNav = sectionNavRef.current;
+      if (mainNav) setMainNavHeight(mainNav.getBoundingClientRect().height);
+      if (exploreNav && !exploreNav.classList.contains('hidden')) {
+        setExploreNavHeight(exploreNav.getBoundingClientRect().height);
+      }
+      if (secNav) setSectionNavHeight(secNav.getBoundingClientRect().height);
+    };
+
+    measure();
+    const timer = setTimeout(measure, 150);
+    window.addEventListener('resize', measure);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
   const sectionNavRef = useRef(null);
   const navSentinelRef = useRef(null);
 
@@ -414,9 +438,11 @@ export default function PackageDetail() {
   useEffect(() => {
     if (!navSentinelRef.current) return;
 
+    const triggerOffset = mainNavHeight + exploreNavHeight;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const isStickyNow = !entry.isIntersecting && entry.boundingClientRect.top < 104;
+        const isStickyNow = !entry.isIntersecting && entry.boundingClientRect.top < triggerOffset;
         setIsNavSticky(isStickyNow);
 
         window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
@@ -425,7 +451,7 @@ export default function PackageDetail() {
       },
       {
         threshold: [0, 1],
-        rootMargin: '-104px 0px 0px 0px'
+        rootMargin: `-${triggerOffset}px 0px 0px 0px`
       }
     );
 
@@ -433,11 +459,8 @@ export default function PackageDetail() {
 
     return () => {
       observer.disconnect();
-      window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
-        detail: { isSticky: false }
-      }));
     };
-  }, []);
+  }, [mainNavHeight, exploreNavHeight]);
 
   // Scroll Spy Active Section
   useEffect(() => {
@@ -827,9 +850,12 @@ export default function PackageDetail() {
               ref={sectionNavRef}
               className={`w-full bg-white transition-all ${
                 isNavSticky
-                  ? 'fixed top-[64px] left-0 right-0 z-[90] shadow-md border-b border-gray-200 py-3 px-4 md:px-12 lg:px-20'
+                  ? 'fixed left-0 right-0 z-[90] shadow-md border-b border-gray-200 py-3 px-4 md:px-12 lg:px-20'
                   : 'relative mb-8 border-b border-gray-200'
               }`}
+              style={{
+                top: isNavSticky ? `${mainNavHeight}px` : undefined
+              }}
             >
               <div className="max-w-7xl mx-auto flex items-center gap-6 md:gap-8 overflow-x-auto hide-scrollbar">
                 {NAV_ITEMS.map((item) => {
@@ -853,7 +879,7 @@ export default function PackageDetail() {
             </div>
 
             {/* SPACER when sticky is active so page content doesn't jump */}
-            {isNavSticky && <div style={{ height: '88px' }} className="w-full" />}
+            {isNavSticky && <div style={{ height: `${sectionNavHeight + exploreNavHeight}px` }} className="w-full" />}
 
             {/* ==================================================
                 VERTICAL SECTIONS CONTENT (DYNAMIC ORDER & VISIBILITY)

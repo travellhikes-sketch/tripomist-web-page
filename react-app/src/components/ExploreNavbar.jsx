@@ -37,7 +37,7 @@ function ExploreNavbar() {
     setIsHidden(false);
   }, [location.pathname]);
 
-  if (departments.length === 0 || isHidden) return null;
+  if (departments.length === 0) return null;
 
   const topLevel = departments.filter(d => !d.parent_id);
   
@@ -47,7 +47,10 @@ function ExploreNavbar() {
   };
 
   return (
-    <div className="bg-[#f8f9fa] border-b border-gray-100 overflow-x-auto scrollbar-hide py-2 transition-all duration-200">
+    <div
+      id="explore-navbar"
+      className={`bg-[#f8f9fa] border-b border-gray-100 overflow-x-auto scrollbar-hide py-2 transition-all duration-200 ${isHidden ? 'hidden' : ''}`}
+    >
       <div className="flex items-center md:justify-center gap-6 md:gap-8 lg:gap-12 px-4 md:px-12 lg:px-20 min-w-max w-full">
         {topLevel.map(dept => {
           const children = departments.filter(d => d.parent_id === dept.id);
