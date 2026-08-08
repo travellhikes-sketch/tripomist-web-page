@@ -43,10 +43,14 @@ const getSectionIcon = (id) => {
   switch (id) {
     case 'overview':
       return <Search size={15} className="shrink-0" />;
+    case 'trip-info':
+      return <Users size={15} className="shrink-0" />;
     case 'trip-cost':
       return <Tag size={15} className="shrink-0" />;
     case 'itinerary':
       return <MapPin size={15} className="shrink-0" />;
+    case 'download-itinerary':
+      return <Download size={15} className="shrink-0" />;
     case 'inclusions-exclusions':
       return <CheckSquare size={15} className="shrink-0" />;
     case 'things-to-carry':
@@ -71,21 +75,25 @@ const cleanHeroTitle = (title) => {
 
 const DEFAULT_SECTIONS = [
   { id: 'overview', label: 'Overview', visible: true, order: 1 },
-  { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 2 },
-  { id: 'itinerary', label: 'Itinerary', visible: true, order: 3 },
-  { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 4 },
-  { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 5 },
-  { id: 'note', label: 'Note', visible: true, order: 6 },
-  { id: 'faqs', label: "FAQ's", visible: true, order: 7 }
+  { id: 'trip-info', label: 'Trip Info', visible: true, order: 2 },
+  { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 3 },
+  { id: 'itinerary', label: 'Itinerary', visible: true, order: 4 },
+  { id: 'download-itinerary', label: 'Download Itinerary', visible: true, order: 5 },
+  { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 6 },
+  { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 7 },
+  { id: 'note', label: 'Notes', visible: true, order: 8 },
+  { id: 'faqs', label: "FAQ's", visible: true, order: 9 }
 ];
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'trip-info', label: 'Trip Info' },
   { id: 'trip-cost', label: 'Trip Cost' },
   { id: 'itinerary', label: 'Itinerary' },
+  { id: 'download-itinerary', label: 'Download Itinerary' },
   { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion' },
   { id: 'things-to-carry', label: 'Things to Carry' },
-  { id: 'note', label: 'Note' },
+  { id: 'note', label: 'Notes' },
   { id: 'faqs', label: "FAQ's" }
 ];
 
@@ -424,15 +432,35 @@ export default function PackageDetail() {
     }
   }, [slug, location.pathname]);
 
-  let rawSections = trip?.sectionSettings && trip.sectionSettings.length > 0
+  const sectionsToRender = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'trip-info', label: 'Trip Info' },
+    { id: 'trip-cost', label: 'Trip Cost' },
+    { id: 'itinerary', label: 'Itinerary' },
+    { id: 'download-itinerary', label: 'Download Itinerary' },
+    { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion' },
+    { id: 'things-to-carry', label: 'Things to Carry' },
+    { id: 'note', label: 'Notes' },
+    { id: 'faqs', label: "FAQ's" }
+  ];
+
+  const rawSectionsFromDb = trip?.sectionSettings && trip.sectionSettings.length > 0
     ? trip.sectionSettings
-    : DEFAULT_SECTIONS;
+    : [];
 
-  if (!rawSections.some(s => s.id === 'faqs')) {
-    rawSections = [...rawSections, { id: 'faqs', label: "FAQ's", visible: true, order: 7 }];
-  }
+  const finalSections = sectionsToRender.map(sec => {
+    const dbSec = rawSectionsFromDb.find(s => s.id === sec.id || (sec.id === 'note' && s.id === 'note'));
+    const visible = dbSec ? dbSec.visible !== false : true;
+    if (sec.id === 'download-itinerary' && !trip?.itineraryPdfUrl) {
+      return { ...sec, visible: false };
+    }
+    return {
+      ...sec,
+      visible
+    };
+  });
 
-  const visibleSections = rawSections.filter(sec => sec.visible !== false);
+  const visibleSections = finalSections.filter(sec => sec.visible);
 
   // Scroll listener for 100% accurate sticky detection and zero layout shift flickering
   useEffect(() => {
@@ -663,20 +691,10 @@ export default function PackageDetail() {
   const daysVal = dMatch ? `${dMatch[1]} DAYS` : (durationStr.includes('Day') ? durationStr.toUpperCase() : 'DAYS');
   const nightsVal = nMatch ? `${nMatch[1]} NIGHTS` : 'NIGHTS';
 
-  const NAV_ITEMS = visibleSections.map(sec => {
-    let label = sec.label || sec.id;
-    if (sec.id === 'overview') label = 'Overview';
-    else if (sec.id === 'trip-cost') label = 'Trip Cost';
-    else if (sec.id === 'itinerary') label = 'Itinerary';
-    else if (sec.id === 'inclusions-exclusions') label = 'Inclusion & Exclusion';
-    else if (sec.id === 'things-to-carry') label = 'Things to Carry';
-    else if (sec.id === 'note') label = 'Note';
-    else if (sec.id === 'faqs') label = "FAQ's";
-    return {
-      id: sec.id,
-      label: label
-    };
-  });
+  const NAV_ITEMS = visibleSections.map(sec => ({
+    id: sec.id,
+    label: sec.label
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -903,23 +921,26 @@ export default function PackageDetail() {
                         className="prose max-w-none text-gray-700 text-sm md:text-base leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: trip.overview || trip.description }}
                       />
+                    </section>
+                  );
+                }
 
-                      {/* 4. TRIP INFO GRID BLOCK */}
-                      <div className="mt-8 pt-8 border-t border-slate-100">
-                        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6 tracking-tight">Trip Info</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                          {(trip.tripInfo || DEFAULT_TRIP_INFO).map((item, idx) => (
-                            <div key={idx} className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-[#eff6f9] text-[#136b8a] flex items-center justify-center shrink-0">
-                                {renderIcon(item.icon)}
-                              </div>
-                              <div>
-                                <span className="text-xs font-medium text-slate-500 block">{item.label}</span>
-                                <span className="text-sm font-bold text-slate-900 block leading-snug">{item.value}</span>
-                              </div>
+                if (sec.id === 'trip-info') {
+                  return (
+                    <section key="trip-info" id="trip-info" className="scroll-mt-32 border-b border-gray-100 pb-10">
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Trip Info</h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                        {(trip.tripInfo || DEFAULT_TRIP_INFO).map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-[#eff6f9] text-[#136b8a] flex items-center justify-center shrink-0">
+                              {renderIcon(item.icon)}
                             </div>
-                          ))}
-                        </div>
+                            <div>
+                              <span className="text-xs font-medium text-slate-500 block">{item.label}</span>
+                              <span className="text-sm font-bold text-slate-900 block leading-snug">{item.value}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </section>
                   );
@@ -1041,33 +1062,35 @@ export default function PackageDetail() {
                           );
                         })}
                       </div>
+                    </section>
+                  );
+                }
 
-                      {/* 7. DOWNLOAD ITINERARY BLOCK AFTER ITINERARY */}
-                      {trip.itineraryPdfUrl && (
-                        <div className="mt-10 pt-6 border-t border-gray-100">
-                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Download Itinerary</h2>
-                          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                              <svg className="w-10 h-12 text-gray-400 shrink-0" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M1.5 3C1.5 1.34315 2.84315 0 4.5 0H14.25L22.5 8.25V27C22.5 28.6569 21.1569 30 19.5 30H4.5C2.84315 30 1.5 28.6569 1.5 27V3Z" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
-                                <path d="M14.25 0V8.25H22.5" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
-                                <rect x="0.5" y="15" width="16" height="9" rx="1.5" fill="#EF4444"/>
-                                <text x="2.5" y="21.5" fill="white" fontSize="6.5" fontWeight="bold" fontFamily="sans-serif">PDF</text>
-                              </svg>
-                              <div>
-                                <h4 className="text-base font-bold text-slate-900">Want to read it later ?</h4>
-                                <p className="text-xs md:text-sm text-slate-500 mt-0.5">Download this tour's PDF brochure and start your planning offline.</p>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => setIsModalOpen(true)}
-                              className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
-                            >
-                              Download PDF
-                            </button>
+                if (sec.id === 'download-itinerary') {
+                  if (!trip.itineraryPdfUrl) return null;
+                  return (
+                    <section key="download-itinerary" id="download-itinerary" className="scroll-mt-32 border-b border-gray-100 pb-10">
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Download Itinerary</h2>
+                      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <svg className="w-10 h-12 text-gray-400 shrink-0" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M1.5 3C1.5 1.34315 2.84315 0 4.5 0H14.25L22.5 8.25V27C22.5 28.6569 21.1569 30 19.5 30H4.5C2.84315 30 1.5 28.6569 1.5 27V3Z" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
+                            <path d="M14.25 0V8.25H22.5" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
+                            <rect x="0.5" y="15" width="16" height="9" rx="1.5" fill="#EF4444"/>
+                            <text x="2.5" y="21.5" fill="white" fontSize="6.5" fontWeight="bold" fontFamily="sans-serif">PDF</text>
+                          </svg>
+                          <div>
+                            <h4 className="text-base font-bold text-slate-900">Want to read it later ?</h4>
+                            <p className="text-xs md:text-sm text-slate-500 mt-0.5">Download this tour's PDF brochure and start your planning offline.</p>
                           </div>
                         </div>
-                      )}
+                        <button
+                          onClick={() => setIsModalOpen(true)}
+                          className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
+                        >
+                          Download PDF
+                        </button>
+                      </div>
                     </section>
                   );
                 }
@@ -1135,7 +1158,7 @@ export default function PackageDetail() {
                   const noteList = Array.isArray(trip.notes) ? trip.notes : (typeof trip.notes === 'string' ? trip.notes.split('\n').filter(Boolean) : []);
                   return (
                     <section key="note" id="note" className="scroll-mt-32 border-b border-gray-100 pb-10">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Note</h2>
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Notes</h2>
                       {isNoteHtml ? (
                         <div dangerouslySetInnerHTML={{ __html: trip.notes }} className="prose max-w-none text-xs md:text-sm text-slate-700 leading-relaxed" />
                       ) : (
