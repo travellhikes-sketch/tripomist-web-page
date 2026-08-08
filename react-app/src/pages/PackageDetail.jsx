@@ -434,33 +434,42 @@ export default function PackageDetail() {
 
   const visibleSections = rawSections.filter(sec => sec.visible !== false);
 
-  // Sentinel scroll listener using IntersectionObserver for 100% accurate sticky detection
+  // Scroll listener for 100% accurate sticky detection and zero layout shift flickering
   useEffect(() => {
-    if (!navSentinelRef.current) return;
+    const handleScroll = () => {
+      if (!navSentinelRef.current) return;
 
-    const triggerOffset = mainNavHeight + exploreNavHeight;
+      const sentinelRect = navSentinelRef.current.getBoundingClientRect();
+      const currentSticky = isNavSticky;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const isStickyNow = !entry.isIntersecting && entry.boundingClientRect.top < triggerOffset;
-        setIsNavSticky(isStickyNow);
-
-        window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
-          detail: { isSticky: isStickyNow }
-        }));
-      },
-      {
-        threshold: [0, 1],
-        rootMargin: `-${triggerOffset}px 0px 0px 0px`
+      if (!currentSticky) {
+        // Scroll DOWN: activate sticky when sentinel reaches bottom of the Explore Nav
+        const threshold = mainNavHeight + exploreNavHeight;
+        if (sentinelRect.top <= threshold) {
+          setIsNavSticky(true);
+          window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+            detail: { isSticky: true }
+          }));
+        }
+      } else {
+        // Scroll UP: deactivate sticky when sentinel goes above the main navbar position
+        const threshold = mainNavHeight;
+        if (sentinelRect.top > threshold) {
+          setIsNavSticky(false);
+          window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
+            detail: { isSticky: false }
+          }));
+        }
       }
-    );
+    };
 
-    observer.observe(navSentinelRef.current);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
     return () => {
-      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [mainNavHeight, exploreNavHeight]);
+  }, [isNavSticky, mainNavHeight, exploreNavHeight]);
 
   // Scroll Spy Active Section
   useEffect(() => {
