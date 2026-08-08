@@ -462,6 +462,8 @@ export default function PackageDetail() {
 
   const visibleSections = finalSections.filter(sec => sec.visible);
 
+  const [mainNavBottom, setMainNavBottom] = useState(64);
+
   // Scroll listener for 100% accurate sticky detection and zero layout shift flickering
   useEffect(() => {
     const handleScroll = () => {
@@ -470,9 +472,33 @@ export default function PackageDetail() {
       const sentinelRect = navSentinelRef.current.getBoundingClientRect();
       const currentSticky = isNavSticky;
 
+      // Dynamically measure the actual main navbar bottom position relative to viewport
+      const mainNav = document.getElementById('main-navbar');
+      const exploreNav = document.getElementById('explore-navbar');
+
+      let currentMainNavBottom = 64;
+      if (mainNav) {
+        currentMainNavBottom = mainNav.getBoundingClientRect().bottom;
+        setMainNavBottom(currentMainNavBottom);
+      }
+
+      // Also dynamically measure exploreNav if visible
+      let currentExploreNavHeight = exploreNavHeight;
+      if (exploreNav && !exploreNav.classList.contains('hidden')) {
+        const height = exploreNav.getBoundingClientRect().height;
+        if (height > 0) {
+          currentExploreNavHeight = height;
+          setExploreNavHeight(height);
+        } else {
+          setExploreNavHeight(0);
+        }
+      } else {
+        setExploreNavHeight(0);
+      }
+
       if (!currentSticky) {
         // Scroll DOWN: activate sticky when sentinel reaches bottom of the Explore Nav
-        const threshold = mainNavHeight + exploreNavHeight;
+        const threshold = currentMainNavBottom + currentExploreNavHeight;
         if (sentinelRect.top <= threshold) {
           setIsNavSticky(true);
           window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
@@ -481,7 +507,7 @@ export default function PackageDetail() {
         }
       } else {
         // Scroll UP: deactivate sticky when sentinel goes above the main navbar position
-        const threshold = mainNavHeight;
+        const threshold = currentMainNavBottom;
         if (sentinelRect.top > threshold) {
           setIsNavSticky(false);
           window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
@@ -497,7 +523,7 @@ export default function PackageDetail() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [isNavSticky, mainNavHeight, exploreNavHeight]);
+  }, [isNavSticky, exploreNavHeight]);
 
   // Scroll Spy Active Section
   useEffect(() => {
@@ -630,8 +656,10 @@ export default function PackageDetail() {
     setActiveSection(secId);
     const el = document.getElementById(secId);
     if (el) {
-      const yOffset = -120;
-      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      const mainNav = document.getElementById('main-navbar');
+      const bottom = mainNav ? mainNav.getBoundingClientRect().bottom : 64;
+      const offset = bottom + sectionNavHeight + 10;
+      const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
@@ -881,7 +909,7 @@ export default function PackageDetail() {
                   : 'relative mb-8 border-b border-gray-200'
               }`}
               style={{
-                top: isNavSticky ? `${mainNavHeight}px` : undefined
+                top: isNavSticky ? `${mainNavBottom}px` : undefined
               }}
             >
               <div className="max-w-7xl mx-auto flex items-center gap-6 md:gap-8 overflow-x-auto hide-scrollbar">
@@ -906,7 +934,7 @@ export default function PackageDetail() {
             </div>
 
             {/* SPACER when sticky is active so page content doesn't jump */}
-            {isNavSticky && <div style={{ height: `${sectionNavHeight + exploreNavHeight}px` }} className="w-full" />}
+            {isNavSticky && <div style={{ height: `${sectionNavHeight}px` }} className="w-full" />}
 
             {/* ==================================================
                 VERTICAL SECTIONS CONTENT (DYNAMIC ORDER & VISIBILITY)

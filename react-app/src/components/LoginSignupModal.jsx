@@ -11,6 +11,21 @@ const countryCodes = [
   { code: '+971', country: 'AE' }
 ];
 
+const slideVariants = {
+  enter: (dir) => ({
+    x: dir > 0 ? '100%' : '-100%',
+    opacity: 1
+  }),
+  center: {
+    x: 0,
+    opacity: 1
+  },
+  exit: (dir) => ({
+    x: dir > 0 ? '-100%' : '100%',
+    opacity: 1
+  })
+};
+
 export default function LoginSignupModal({ isOpen, onClose }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'forgot'
   const [step, setStep] = useState(1); // 1: Registration Form, 2: OTP
@@ -34,6 +49,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   // Slider State
   const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [direction, setDirection] = useState(1); // 1 for next, -1 for prev
   const [isPaused, setIsPaused] = useState(false);
 
   const navigate = useNavigate();
@@ -58,6 +74,13 @@ export default function LoginSignupModal({ isOpen, onClose }) {
         .order('display_order', { ascending: true });
       if (!error && data) {
         setSlides(data);
+        // Preload images to prevent blank loading flash
+        data.forEach(item => {
+          if (item.image_url) {
+            const img = new Image();
+            img.src = item.image_url;
+          }
+        });
       }
     } catch (e) {
       console.error('Error fetching slides', e);
@@ -67,6 +90,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   useEffect(() => {
     if (slides.length <= 1 || isPaused || !isOpen) return;
     const interval = setInterval(() => {
+      setDirection(1);
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(interval);
@@ -384,13 +408,17 @@ export default function LoginSignupModal({ isOpen, onClose }) {
                   onMouseLeave={() => setIsPaused(false)}
                 >
                   {slides.length > 0 ? (
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence initial={false} custom={direction}>
                       <motion.div
                         key={currentSlide}
-                        initial={{ opacity: 0, scale: 1.05 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.8 }}
+                        custom={direction}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{
+                          x: { type: "tween", ease: "easeInOut", duration: 0.6 }
+                        }}
                         className="absolute inset-0"
                       >
                         <img src={slides[currentSlide].image_url} alt={slides[currentSlide].title} className="w-full h-full object-cover" />
@@ -413,12 +441,16 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
                   {/* Dots */}
                   {slides.length > 1 && (
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                       {slides.map((_, idx) => (
                         <button
                           key={idx}
-                          onClick={() => setCurrentSlide(idx)}
-                          className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'}`}
+                          onClick={() => {
+                            if (idx === currentSlide) return;
+                            setDirection(idx > currentSlide ? 1 : -1);
+                            setCurrentSlide(idx);
+                          }}
+                          className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'}`}
                         />
                       ))}
                     </div>

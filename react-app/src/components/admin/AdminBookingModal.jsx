@@ -329,7 +329,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] flex flex-col shadow-xl animate-fade-in">
         
         <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-white z-10 shrink-0">
