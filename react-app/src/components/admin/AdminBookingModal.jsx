@@ -8,6 +8,13 @@ const optionalNumber = (value) => {
   return Number.isNaN(number) ? null : number;
 };
 
+// Normalize phone to 10-digit digits only, return null if invalid
+const normalizePhone = (phone) => {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  return digits.length === 10 ? digits : null;
+};
+
 const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -77,8 +84,13 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
   }, [isOpen, bookingId]);
 
   const loadPackages = async () => {
-    const { data } = await supabase.from('Pakage').select('id, name, price');
-    if (data) setPackages(data);
+    const { data, error } = await supabase.from('Pakage').select('id, title, slug, destination, state, price');
+    if (error) {
+      console.error('Error fetching packages:', error);
+      setError('Failed to load packages: ' + (error.message || 'unknown'));
+    } else if (data) {
+      setPackages(data);
+    }
   };
 
   const loadBooking = async (id) => {
@@ -141,10 +153,10 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
     if (advance > total) advance = total;
     const remaining = total - advance;
 
-    let payStatus = 'unpaid';
-    if (advance === 0) payStatus = 'unpaid';
-    else if (advance > 0 && remaining > 0) payStatus = 'partially_paid';
-    else if (remaining === 0 && total > 0) payStatus = 'paid';
+    let payStatus = 'pending';
+    if (remaining === 0 && total > 0) {
+      payStatus = 'paid';
+    }
 
     setFormData(prev => {
       if (prev.advance_payment === advance && prev.remaining_payment === remaining && prev.payment_status === payStatus) {
@@ -161,12 +173,14 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
     if (name === 'package_id') {
-      const selectedPkg = packages.find(p => p.id === value);
+      const numericId = value ? Number(value) : null;
+      const selectedPkg = packages.find(p => p.id === numericId);
       setFormData(prev => ({
         ...prev,
-        package_id: value,
-        package_title: selectedPkg ? selectedPkg.name : '',
+        package_id: numericId,
+        package_title: selectedPkg ? selectedPkg.title : '',
         total_amount: selectedPkg && !prev.total_amount ? selectedPkg.price : prev.total_amount
       }));
     } else {
@@ -213,20 +227,75 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Create Booking click handler invoked');
     setError(null);
 
     // Validation
     if (travellers.length === 0) {
+      setActiveTab('travellers');
       setError('At least one traveller is required.');
       return;
     }
     if (!travellers.some(t => t.is_primary)) {
+      setActiveTab('travellers');
       setError('Exactly one traveller must be marked as primary.');
       return;
     }
-    for (let i=0; i<travellers.length; i++) {
-      if (!travellers[i].full_name.trim()) {
-        setError(`Traveller ${i+1} must have a full name.`);
+    for (let i = 0; i < travellers.length; i++) {
+      const t = travellers[i];
+      if (!t.full_name?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Full Name is required.`);
+        return;
+      }
+      if (!t.phone?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Phone is required.`);
+        return;
+      }
+      if (!t.email?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Email is required.`);
+        return;
+      }
+      if (!t.age?.toString().trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Age is required.`);
+        return;
+      }
+      if (!t.gender?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Gender is required.`);
+        return;
+      }
+      if (!t.id_type?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - ID Document Type is required.`);
+        return;
+      }
+      if (!t.id_number?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - ID Document Number is required.`);
+        return;
+      }
+      if (!t.sharing_type?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Sharing Type is required.`);
+        return;
+      }
+      if (!t.pickup_point?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Pickup Point is required.`);
+        return;
+      }
+      if (!t.emergency_contact_name?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Emergency Contact Name is required.`);
+        return;
+      }
+      if (!t.emergency_contact_phone?.trim()) {
+        setActiveTab('travellers');
+        setError(`Traveller ${i + 1} - Emergency Contact Phone is required.`);
         return;
       }
     }
@@ -239,15 +308,39 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
       }
       
       const primaryTraveller = travellers.find(t => t.is_primary);
+      const normalizedPhone = normalizePhone(primaryTraveller?.phone);
+      if (!normalizedPhone) {
+        setError('Primary traveller phone must be a valid 10-digit number.');
+        setSubmitting(false);
+        return;
+      }
       
-      const finalBookingData = {
-        ...formData,
-        customer_name: primaryTraveller ? primaryTraveller.full_name : formData.customer_name,
-        customer_phone: primaryTraveller ? primaryTraveller.phone : formData.customer_phone,
-        customer_email: primaryTraveller ? primaryTraveller.email : formData.customer_email,
-        travellers_count: travellers.length,
-        updated_at: new Date().toISOString()
-      };
+              const finalBookingData = {
+          ...formData,
+          package_id: formData.package_id || null,
+          // Required fields mapping
+          customer_name: primaryTraveller ? primaryTraveller.full_name : formData.customer_name,
+          phone: normalizedPhone,
+          // Compatibility fields (preserve if needed)
+          customer_phone: normalizedPhone,
+          customer_email: primaryTraveller ? primaryTraveller.email : formData.customer_email,
+          // Use DB-safe payment_status directly
+          payment_status: formData.payment_status,
+          // Nullable foreign keys
+          user_id: null,
+          checkout_lead_id: null,
+          travellers: travellers.length,
+          updated_at: new Date().toISOString()
+        };
+      
+      // Clean payload: convert empty strings to null for nullable columns
+      Object.keys(finalBookingData).forEach(key => {
+        const val = finalBookingData[key];
+        if (typeof val === 'string' && val.trim() === '') {
+          finalBookingData[key] = null;
+        }
+      });
+      console.log('Submitting booking payload:', finalBookingData);
 
       let currentBookingId = bookingId;
 
@@ -314,8 +407,14 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
       onSuccess && onSuccess();
       onClose();
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'Failed to save booking.');
+      console.error('Booking save error:', err);
+      let errMsg = '';
+      if (err && typeof err === 'object' && 'code' in err) {
+        errMsg = `code: ${err.code}, message: ${err.message}, details: ${err.details || ''}, hint: ${err.hint || ''}`;
+      } else {
+        errMsg = err.message || (err.details ? err.details : 'Failed to save booking.');
+      }
+      setError(errMsg);
     } finally {
       setSubmitting(false);
     }
@@ -329,7 +428,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] flex flex-col shadow-xl animate-fade-in">
         
         <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-white z-10 shrink-0">
@@ -384,12 +483,35 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                       <label className="block text-xs font-medium text-gray-600 mb-1">Select Package</label>
                       <select name="package_id" value={formData.package_id || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
                         <option value="">-- Custom Package / None --</option>
-                        {packages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        {packages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                       </select>
                     </div>
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 relative">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Package Title (Editable) *</label>
                       <input type="text" name="package_title" required value={formData.package_title || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      {/* Autocomplete suggestions */}
+                      {formData.package_title && packages.filter(p => {
+                        const lower = formData.package_title.toLowerCase();
+                        return p.title?.toLowerCase().includes(lower) || p.destination?.toLowerCase().includes(lower) || p.state?.toLowerCase().includes(lower);
+                      }).length > 0 && (
+                        <div className="absolute z-20 bg-white border border-gray-200 rounded mt-1 max-h-48 overflow-y-auto shadow-lg w-full">
+                          {packages.filter(p => {
+                            const lower = formData.package_title.toLowerCase();
+                            return p.title?.toLowerCase().includes(lower) || p.destination?.toLowerCase().includes(lower) || p.state?.toLowerCase().includes(lower);
+                          }).map(p => (
+                            <div key={p.id} className="px-3 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                package_id: p.id,
+                                package_title: p.title,
+                                total_amount: p.price
+                              }));
+                            }}>
+                              {p.title}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Travel Date *</label>
