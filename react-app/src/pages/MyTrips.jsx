@@ -47,6 +47,11 @@ export default function MyTrips() {
       }
       setUser(session.user);
 
+      const { error: linkError } = await supabase.rpc('link_my_bookings');
+      if (linkError) {
+        console.error('Failed to link historical bookings:', linkError.message);
+      }
+
       const { data: bookingsData, error: fetchError } = await supabase
         .from('bookings')
         .select('*')

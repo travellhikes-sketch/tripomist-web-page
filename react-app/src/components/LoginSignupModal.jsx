@@ -11,6 +11,24 @@ const countryCodes = [
   { code: '+971', country: 'AE' }
 ];
 
+const normalizePhone = (inputStr) => {
+  let cCode = '';
+  let rest = inputStr;
+  const sortedCodes = [...countryCodes].sort((a, b) => b.code.length - a.code.length);
+  for (let { code } of sortedCodes) {
+    if (inputStr.startsWith(code)) {
+      cCode = code;
+      rest = inputStr.slice(code.length);
+      break;
+    }
+  }
+  let localPhone = rest.replace(/\D/g, '');
+  if (localPhone.length === 11 && localPhone.startsWith('0')) {
+    localPhone = localPhone.substring(1);
+  }
+  return cCode ? cCode + ' ' + localPhone : localPhone;
+};
+
 const slideVariants = {
   enter: (dir) => ({
     x: dir > 0 ? '100%' : '-100%',
@@ -28,7 +46,6 @@ const slideVariants = {
 
 export default function LoginSignupModal({ isOpen, onClose }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'forgot'
-  const [step, setStep] = useState(1); // 1: Registration Form, 2: OTP
   
   // Registration State
   const [fullName, setFullName] = useState('');
@@ -36,7 +53,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
@@ -45,6 +62,8 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Slider State
   const [slides, setSlides] = useState([]);
@@ -58,7 +77,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setAuthMode('login');
-      setStep(1);
+
       setErrorMsg('');
       setSuccessMsg('');
       fetchSlides();
@@ -98,77 +117,73 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName || !phone || !email || !password) {
-      setErrorMsg("Please fill in all fields.");
+    // Basic validation
+    if (!fullName || !phone || !email || !password || !confirmPassword) {
+      setErrorMsg('Please fill in all fields.');
       return;
     }
     if (phone.length < 10) {
-      setErrorMsg("Please enter a valid phone number.");
+      setErrorMsg('Please enter a valid phone number.');
       return;
     }
     if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters.");
+      setErrorMsg('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
       return;
     }
     setLoading(true);
     setErrorMsg('');
-    
-    // Simulate sending OTP (UI step transition)
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMsg("OTP sent successfully to " + countryCode + " " + phone);
-      setStep(2);
-    }, 800);
-  };
-
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
-    if (otp.length < 4) {
-      setErrorMsg("Please enter the OTP.");
-      return;
-    }
-    setLoading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-    
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone: countryCode + " " + phone
-          }
-        }
+        options: { data: { full_name: fullName, phone: countryCode + ' ' + phone } }
       });
-
-      if (signUpError) {
+      if (error) {
         setLoading(false);
-        setErrorMsg(signUpError.message || "Registration failed.");
+        setErrorMsg(error.message || 'Registration failed.');
         return;
       }
-
-      const confirmationRequired = data && data.user && !data.session;
-      await supabase.auth.signOut();
-      setLoading(false);
-
-      if (confirmationRequired) {
-        setSuccessMsg("Registration Initiated! Please check your email to verify your account.");
-      } else {
-        setSuccessMsg("Registration Successful! Please Sign In.");
+      // Determine if email confirmation is required
+      const requiresConfirmation = data && data.user && !data.session;
+      // Upsert profile row (if user id available)
+      if (data?.user?.id) {
+        const normalizedPhone = normalizePhone(countryCode + phone);
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: fullName,
+          phone: normalizedPhone,
+          // preserve any existing role defaults via DB defaults
+        });
       }
-
-      setTimeout(() => {
-        setAuthMode('login');
-        setStep(1);
-        setSuccessMsg('');
-      }, 4000);
+      if (requiresConfirmation) {
+        setSuccessMsg('Registration Initiated! Please check your email to verify your account.');
+      } else {
+        if (data?.session) {
+          const { error: linkError } = await supabase.rpc('link_my_bookings');
+          if (linkError) {
+            console.error('Failed to link historical bookings:', linkError.message);
+          }
+        }
+        setSuccessMsg('Registration Successful! You are now logged in.');
+        // Store user in mock storage for UI consistency
+        safeStorage.setItem('mock_current_user', JSON.stringify(data.user));
+        window.dispatchEvent(new Event('auth-state-change'));
+        setTimeout(() => {
+          setAuthMode('login');
+          onClose();
+        }, 1500);
+      }
     } catch (err) {
       setLoading(false);
-      setErrorMsg(err.message || "Registration failed. Please try again.");
+      setErrorMsg(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -177,25 +192,27 @@ export default function LoginSignupModal({ isOpen, onClose }) {
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
         password: loginPassword
       });
-
       if (error) {
         setLoading(false);
-        setErrorMsg("Invalid Email or Password.");
+        setErrorMsg('Invalid Email or Password.');
         return;
       }
-
+      if (data?.session) {
+        const { error: linkError } = await supabase.rpc('link_my_bookings');
+        if (linkError) {
+          console.error('Failed to link historical bookings:', linkError.message);
+        }
+      }
       if (data?.user) {
         safeStorage.setItem('mock_current_user', JSON.stringify(data.user));
         window.dispatchEvent(new Event('auth-state-change'));
       }
-
-      // Handle pending claim if needed
+      // pending claim handling (unchanged)
       const pendingClaimStr = sessionStorage.getItem('pending_claim');
       if (pendingClaimStr && data?.user) {
         try {
@@ -209,12 +226,9 @@ export default function LoginSignupModal({ isOpen, onClose }) {
               .is('user_id', null);
             sessionStorage.removeItem('pending_claim');
           }
-        } catch (e) {
-          console.error("Failed to parse pending claim", e);
-        }
+        } catch (e) { console.error('Failed to parse pending claim', e); }
       }
-
-      setSuccessMsg("Sign In Successful!");
+      setSuccessMsg('Sign In Successful!');
       setTimeout(() => {
         setLoading(false);
         onClose();
@@ -224,7 +238,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
       }, 1000);
     } catch (err) {
       setLoading(false);
-      setErrorMsg(err.message || "An error occurred during login.");
+      setErrorMsg(err.message || 'An error occurred during login.');
     }
   };
 
@@ -261,7 +275,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
     return (
       <div className="w-full flex flex-col items-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {authMode === 'register' ? (step === 1 ? 'Create an Account' : 'Verify OTP') : authMode === 'forgot' ? 'Reset Password' : 'Sign in to TripoMist'}
+          {authMode === 'register' ? 'Create an Account' : authMode === 'forgot' ? 'Reset Password' : 'Sign in to TripoMist'}
         </h2>
         <p className="text-sm text-gray-500 mb-6 text-center">
           {authMode === 'register' ? 'Join us and start your adventure' : authMode === 'forgot' ? 'Enter your email to receive a recovery link' : 'Welcome back, traveler!'}
@@ -281,27 +295,29 @@ export default function LoginSignupModal({ isOpen, onClose }) {
         )}
 
         <div className="w-full max-w-sm">
-          {authMode === 'register' && step === 1 && (
+          {authMode === 'register' && (
             <form className="space-y-4" onSubmit={handleRegisterSubmit}>
               <div className="flex gap-4">
                 <div className="w-1/2">
-                  <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} placeholder="First Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                  <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Full Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
                 </div>
                 <div className="w-1/2">
-                  <input type="text" placeholder="Last Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                  <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="w-24 px-2 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#136b8a]">
+                    {countryCodes.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                  </select>
+                  <input type="tel" required value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="Phone" maxLength={10} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] mt-1" />
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="w-24 px-2 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#136b8a]">
-                  {countryCodes.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
-                </select>
-                <input type="tel" required value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="Phone Number" maxLength={10} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
               </div>
               <div>
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
               </div>
-              <div>
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600">{showPassword ? 'Hide' : 'Show'}</button>
+              </div>
+              <div className="relative">
+                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600">{showConfirmPassword ? 'Hide' : 'Show'}</button>
               </div>
               <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70">
                 {loading ? 'Processing...' : 'Submit'}
@@ -309,21 +325,13 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             </form>
           )}
 
-          {authMode === 'register' && step === 2 && (
-            <form className="space-y-4" onSubmit={handleOtpSubmit}>
-              <p className="text-sm text-center text-gray-500 mb-4">We've sent a 4-digit code to {countryCode} {phone}</p>
-              <input type="text" required value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} placeholder="••••" maxLength={4} className="w-full px-4 py-4 text-center text-2xl tracking-[0.5em] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70">
-                {loading ? 'Verifying...' : 'Verify & Complete'}
-              </button>
-              <button type="button" onClick={() => setStep(1)} className="w-full mt-2 text-sm text-gray-500 hover:text-gray-700">Go Back</button>
-            </form>
-          )}
-
           {authMode === 'login' && (
             <form className="space-y-4" onSubmit={handleLoginSubmit}>
               <input type="email" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email or Phone" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-              <input type="password" required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600">{showPassword ? 'Hide' : 'Show'}</button>
+              </div>
               <div className="flex justify-end">
                 <button type="button" onClick={() => { setAuthMode('forgot'); setErrorMsg(''); setSuccessMsg(''); }} className="text-sm font-bold text-[#136b8a]">Forgot Password?</button>
               </div>
@@ -343,7 +351,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             </form>
           )}
 
-          {step !== 2 && authMode !== 'forgot' && (
+          {authMode !== 'forgot' && (
             <div className="mt-6 text-center border-t border-gray-100 pt-6">
               <p className="text-sm text-gray-600">
                 {authMode === 'register' ? "Already have an account? " : "Don't have an account? "}

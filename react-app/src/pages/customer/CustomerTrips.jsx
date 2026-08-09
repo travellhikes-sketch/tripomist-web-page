@@ -33,6 +33,11 @@ const CustomerTrips = () => {
     setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
+      const { error: linkError } = await supabase.rpc('link_my_bookings');
+      if (linkError) {
+        console.error('Failed to link historical bookings:', linkError.message);
+      }
+
       const { data: bData, error: bErr } = await supabase
         .from('bookings')
         .select('*')
