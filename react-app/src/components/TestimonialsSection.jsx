@@ -107,9 +107,7 @@ export default function TestimonialsSection() {
         {/* Header row: left heading/subtext, right "See all" link */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-10 text-left">
           <div>
-            <div className="inline-flex items-center gap-2 mb-2 text-[#136b8a]">
-              <span className="font-label-caps tracking-widest uppercase font-bold text-xs">Customer Stories</span>
-            </div>
+
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: textColor }}>
               What Travelers Say
             </h2>

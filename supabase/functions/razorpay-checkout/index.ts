@@ -121,6 +121,54 @@ serve(async (req) => {
     const body: CheckoutRequest = await req.json()
     const { action } = body
 
+// Security: Edge Function must authorize every guest initialize/status/prepare/verify/release action using the checkout lead token.
+    let guestAuthorized = false
+    let currentLeadId = null
+    let guestName = null
+    let guestPhone = null
+    let guestEmail = null
+
+    if (leadIdHeader && leadTokenHeader) {
+      // Look up and verify checkout lead token
+      const { data: leadData } = await adminClient
+        .from('checkout_leads')
+        .select('id, lead_token, customer_name, phone, email, lead_status, created_at')
+        .eq('id', leadIdHeader)
+        .maybeSingle()
+
+      if (leadData && leadData.lead_token) {
+        // Enforce token hash equality check
+        const textEncoder = new TextEncoder()
+        const tokenBytes = textEncoder.encode(leadTokenHeader)
+        const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        const clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+        if (leadData.lead_token === clientTokenHash) {
+          const now = new Date()
+          // Expiry limit: 24 hours
+          const createdAt = new Date(leadData.created_at)
+          const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000)
+          const isExpired = expiresAt <= now
+
+          if (leadData.lead_status !== 'converted' && leadData.lead_status !== 'failed' && !isExpired) {
+            guestAuthorized = true
+            currentLeadId = leadData.id
+            guestName = leadData.customer_name
+            guestPhone = leadData.phone
+            guestEmail = leadData.email
+          }
+        }
+      }
+    }
+
+    if (!user && !guestAuthorized) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: missing token session or active lead authentication' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'create_guest_lead') {
       // Read all fields sent by BookingModal using p_ prefix keys
       const rawName  = (body as any).p_customer_name ?? ''
@@ -138,6 +186,7 @@ serve(async (req) => {
       const packageReference = String(rawPackageReference ?? '').trim();
 
       let packageId: number | null = null;
+      let packageRow = null;
 
       if (/^\d+$/.test(packageReference)) {
         const parsedId = Number(packageReference);
@@ -146,28 +195,39 @@ serve(async (req) => {
         }
       }
 
-      if (packageId === null && packageReference !== '') {
-        const { data: packageRow, error: packageLookupError } =
-          await adminClient
-            .from('Pakage')
-            .select('id, title, destination')
-            .ilike('slug', packageReference)
-            .maybeSingle();
-
-        if (packageLookupError || !packageRow || !packageRow.id) {
-          return new Response(
-            JSON.stringify({ error: "Package configuration could not be resolved" }),
-            {
-              status: 400,
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'application/json'
-              },
-            }
-          );
-        }
-        packageId = packageRow.id;
+      if (packageId !== null && packageId > 0) {
+        const { data, error } = await adminClient
+          .from('Pakage')
+          .select('id, title, destination')
+          .eq('id', packageId)
+          .maybeSingle();
+        if (!error && data) packageRow = data;
+      } else if (packageReference !== '') {
+        const { data, error } = await adminClient
+          .from('Pakage')
+          .select('id, title, destination')
+          .ilike('slug', packageReference)
+          .maybeSingle();
+        if (!error && data) packageRow = data;
       }
+
+      if (!packageRow || !packageRow.id) {
+        return new Response(
+          JSON.stringify({ error: "Package configuration could not be resolved" }),
+          {
+            status: 400,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            },
+          }
+        );
+      }
+
+      packageId = packageRow.id;
+      // Use authoritative DB values
+      const securePackageTitle = packageRow.title || pPackageTitle;
+      const secureDestination = packageRow.destination || pDestination;
 
       if (packageId === null || !Number.isSafeInteger(packageId) || packageId <= 0) {
         return new Response(
@@ -301,8 +361,8 @@ serve(async (req) => {
         p_phone: normalizedPhone,
         p_email: normEmail,
         p_package_id: packageId,
-        p_package_title: pPackageTitle,
-        p_destination: pDestination,
+        p_package_title: securePackageTitle,
+        p_destination: secureDestination,
         p_travel_date: pTravelDate,
         p_travellers: pTravellers,
         p_selected_sharing: pSelectedSharing,
@@ -321,15 +381,23 @@ serve(async (req) => {
 
       if (leadError) {
         console.error('create_checkout_lead RPC failed', {
-          code: leadError.code,
-          message: leadError.message,
-          details: leadError.details,
-          hint: leadError.hint,
+          action: 'create_guest_lead',
+          authenticated: !!user,
+          leadIdPresent: !!leadIdHeader,
+          tokenPresent: !!leadTokenHeader,
+          rpcName: 'create_checkout_lead',
+          errorCode: leadError.code,
+          errorMessage: leadError.message,
+          errorDetails: leadError.details,
+          errorHint: leadError.hint,
         });
 
         return new Response(
           JSON.stringify({
-            error: 'Failed to create checkout session'
+            error: 'lead_save_failed',
+            action: 'create_guest_lead',
+            code: leadError.code || 'unknown_error',
+            message: leadError.message || 'Failed to create checkout session'
           }),
           {
             status: 500,
@@ -376,53 +444,6 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
       });
-    }
-// Security: Edge Function must authorize every guest initialize/status/prepare/verify/release action using the checkout lead token.
-    let guestAuthorized = false
-    let currentLeadId = null
-    let guestName = null
-    let guestPhone = null
-    let guestEmail = null
-
-    if (!user && leadIdHeader && leadTokenHeader) {
-      // Look up and verify checkout lead token
-      const { data: leadData } = await adminClient
-        .from('checkout_leads')
-        .select('id, lead_token_hash, customer_name, phone, email, lead_status, created_at')
-        .eq('id', leadIdHeader)
-        .maybeSingle()
-
-      if (leadData && leadData.lead_token_hash) {
-        // Enforce token hash equality check
-        const textEncoder = new TextEncoder()
-        const tokenBytes = textEncoder.encode(leadTokenHeader)
-        const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-
-        if (leadData.lead_token_hash === clientTokenHash) {
-          const now = new Date()
-          // Expiry limit: 24 hours
-          const createdAt = new Date(leadData.created_at)
-          const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000)
-          const isExpired = expiresAt <= now
-
-          if (leadData.lead_status !== 'converted' && leadData.lead_status !== 'failed' && !isExpired) {
-            guestAuthorized = true
-            currentLeadId = leadData.id
-            guestName = leadData.customer_name
-            guestPhone = leadData.phone
-            guestEmail = leadData.email
-          }
-        }
-      }
-    }
-
-    if (!user && !guestAuthorized) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: missing token session or active lead authentication' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
     }
 
     if (action === 'checkout_status') {
@@ -974,6 +995,11 @@ serve(async (req) => {
     // update_guest_lead: requires verified lead headers; leadId in body must match currentLeadId from auth gate
     if (action === 'update_guest_lead') {
       // Must be guest-authorized (headers already verified above)
+      if (leadIdHeader && leadTokenHeader && (!guestAuthorized || !currentLeadId)) {
+        return new Response(JSON.stringify({ error: 'invalid_checkout_lead_auth' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
       if (!guestAuthorized || !currentLeadId) {
         return new Response(JSON.stringify({ error: 'Unauthorized: valid lead token headers required.' }), {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1002,13 +1028,29 @@ serve(async (req) => {
 
       const { data: updateData, error: updateError } = await adminClient.rpc('update_checkout_lead', {
         p_lead_id: currentLeadId,
-        p_lead_token: leadTokenHeader,
+        p_lead_token: clientTokenHash,
         p_current_step: pCurrentStep,
         p_selected_sharing: pSelectedSharing,
         p_estimated_amount: pEstimatedAmount,
       })
       if (updateError) {
-        return new Response(JSON.stringify({ error: updateError.message || 'Failed to update guest lead.' }), {
+        console.error('update_checkout_lead RPC failed', {
+          action: 'update_guest_lead',
+          authenticated: !!user,
+          leadIdPresent: !!leadIdHeader,
+          tokenPresent: !!leadTokenHeader,
+          rpcName: 'update_checkout_lead',
+          errorCode: updateError.code,
+          errorMessage: updateError.message,
+          errorDetails: updateError.details,
+          errorHint: updateError.hint,
+        });
+        return new Response(JSON.stringify({
+          error: 'lead_save_failed',
+          action: 'update_guest_lead',
+          code: updateError.code || 'unknown_error',
+          message: updateError.message || 'Failed to update guest lead.'
+        }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }

@@ -45,7 +45,7 @@ const AdminBookingActivityLogs = () => {
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto font-sans">
+    <div className="p-6 max-w-7xl mx-auto ">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -53,7 +53,7 @@ const AdminBookingActivityLogs = () => {
           </h1>
           <p className="text-gray-500 mt-1">Audit trail of all modifications made to bookings.</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative">
             <input
@@ -113,9 +113,9 @@ const AdminBookingActivityLogs = () => {
                   filteredLogs.map(log => (
                     <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                       <td className="p-4 text-gray-500 whitespace-nowrap">
-                        {new Date(log.changed_at).toLocaleString(undefined, { 
-                          dateStyle: 'medium', 
-                          timeStyle: 'short' 
+                        {new Date(log.changed_at).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
                         })}
                       </td>
                       <td className="p-4">
@@ -130,7 +130,7 @@ const AdminBookingActivityLogs = () => {
                       <td className="p-4">
                         {log.field_name ? (
                           <div>
-                            Changed <span className="font-mono text-xs bg-gray-100 px-1 rounded">{log.field_name}</span>
+                            Changed <span className=" text-xs bg-gray-100 px-1 rounded">{log.field_name}</span>
                             {log.old_value && (
                               <span className="text-gray-500"> from <span className="line-through text-red-400">{log.old_value}</span></span>
                             )}
@@ -143,7 +143,7 @@ const AdminBookingActivityLogs = () => {
                         )}
                         {log.note && <div className="text-xs text-gray-400 mt-1">{log.note}</div>}
                       </td>
-                      <td className="p-4 text-gray-500 font-mono text-xs max-w-[120px] truncate" title={log.changed_by}>
+                      <td className="p-4 text-gray-500  text-xs max-w-[120px] truncate" title={log.changed_by}>
                         {log.changed_by || 'System'}
                       </td>
                     </tr>

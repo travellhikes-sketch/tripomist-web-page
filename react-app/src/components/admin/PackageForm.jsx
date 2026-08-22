@@ -55,13 +55,16 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [cardCtaText, setCardCtaText] = useState('Click');
   const [cardCtaAction, setCardCtaAction] = useState('open_package');
   const [cardCtaUrl, setCardCtaUrl] = useState('');
+  const [availableWeekdays, setAvailableWeekdays] = useState([]);
+  const [departureDates, setDepartureDates] = useState([]);
+  const [newDepartureDate, setNewDepartureDate] = useState('');
+  const [isExploreAll, setIsExploreAll] = useState(false);
+  const [isUpcoming, setIsUpcoming] = useState(false);
 
   // Section Visibility & Order Controls
   const [sectionSettings, setSectionSettings] = useState(DEFAULT_SECTION_SETTINGS);
 
-  // Upload States
-  const [uploadingGallery, setUploadingGallery] = useState(false);
-  const [uploadingPdf, setUploadingPdf] = useState(false);
+  // Upload States Removed (URLs only)
 
   const [dynamicSections, setDynamicSections] = useState([]);
   const [dynamicInterests, setDynamicInterests] = useState([]);
@@ -80,7 +83,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
           supabase.from('explore_departments').select('id, slug, title').eq('is_active', true).eq('allow_package_placement', true).order('display_order'),
           supabase.from('promo_strips').select('id, slug, text').eq('is_active', true).eq('allow_package_placement', true).order('display_order')
         ]);
-        
+
         if (secRes.data) setDynamicSections(secRes.data);
         if (intRes.data) setDynamicInterests(intRes.data);
         if (destRes.data) setDynamicDestinations(destRes.data);
@@ -117,6 +120,8 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setGalleryImages(initialData.gallery_images ? (Array.isArray(initialData.gallery_images) ? initialData.gallery_images : (typeof initialData.gallery_images === 'string' ? JSON.parse(initialData.gallery_images) : [])) : []);
       setItineraryPdfUrl(initialData.itinerary_pdf_url || '');
       setNotes(initialData.notes || '');
+      setAvailableWeekdays(initialData.available_weekdays || []);
+      setDepartureDates(initialData.departure_dates || []);
 
       // Parse things_to_carry
       let parsedThings = [];
@@ -200,6 +205,8 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       setCardCtaText(initialData.card_cta_text || 'Click');
       setCardCtaAction(initialData.card_cta_action || 'open_package');
       setCardCtaUrl(initialData.card_cta_url || '');
+      setIsExploreAll(initialData.is_explore_all || false);
+      setIsUpcoming(initialData.is_upcoming || false);
 
       // Parse section_settings
       if (initialData.section_settings) {
@@ -245,78 +252,18 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     });
   };
 
-  // Gallery Storage File Upload
-  const handleGalleryFileUpload = async (event) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
+  // Gallery Storage File Upload Removed - URLs Only
 
-    setUploadingGallery(true);
-    try {
-      const uploadedUrls = [];
-      for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `packages/gallery/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('website-assets')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('website-assets')
-          .getPublicUrl(filePath);
-
-        uploadedUrls.push(publicUrl);
-      }
-      setGalleryImages(prev => [...prev, ...uploadedUrls]);
-      if (!imageUrl && uploadedUrls.length > 0) {
-        setImageUrl(uploadedUrls[0]);
-      }
-    } catch (err) {
-      alert('Error uploading gallery image(s): ' + err.message);
-      console.error('Gallery Upload Error:', err);
-    } finally {
-      setUploadingGallery(false);
-      event.target.value = '';
-    }
-  };
-
-  // Itinerary PDF Storage Upload
-  const handlePdfFileUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploadingPdf(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `itinerary_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `packages/itineraries/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('website-assets')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('website-assets')
-        .getPublicUrl(filePath);
-
-      setItineraryPdfUrl(publicUrl);
-    } catch (err) {
-      alert('Error uploading itinerary PDF: ' + err.message);
-      console.error('PDF Upload Error:', err);
-    } finally {
-      setUploadingPdf(false);
-      event.target.value = '';
-    }
-  };
+  // Itinerary PDF Storage Upload Removed - URLs Only
 
   const addGalleryImageByUrl = () => {
-    if (!newGalleryUrl.trim()) return;
-    setGalleryImages(prev => [...prev, newGalleryUrl.trim()]);
+    const url = newGalleryUrl.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      alert('Please enter a valid HTTP or HTTPS URL.');
+      return;
+    }
+    setGalleryImages(prev => [...prev, url]);
     setNewGalleryUrl('');
   };
 
@@ -509,6 +456,8 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       original_price: originalPrice ? Number(originalPrice) : null,
       discount_text: discountText.trim() || null,
       departure_from: departureFrom.trim() || null,
+      available_weekdays: availableWeekdays,
+      departure_dates: [...departureDates].sort(),
       image_url: imageUrl.trim() || null,
       banner_image: bannerImage.trim() || null,
       gallery_images: galleryImages,
@@ -541,6 +490,8 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       card_cta_text: cardCtaText.trim() || 'Click',
       card_cta_action: cardCtaAction,
       card_cta_url: cardCtaUrl.trim() || null,
+      is_explore_all: isExploreAll,
+      is_upcoming: isUpcoming,
     };
     onSubmit(pkg);
   };
@@ -549,10 +500,10 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[150] p-4 md:p-6">
+      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full flex flex-col max-h-[95vh]">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl z-10">
+        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl shrink-0">
           <h2 className="text-xl font-bold text-gray-900">
             {initialData ? 'Edit Package' : 'Create New Package'}
           </h2>
@@ -565,7 +516,8 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+          <form onSubmit={handleSubmit} className="space-y-6">
           {jsonError && (
             <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200">
               {jsonError}
@@ -624,6 +576,101 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             </div>
           </div>
 
+          {/* Departure Availability (Specific Dates) */}
+          <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <label className={`${labelClass} text-slate-900 font-bold mb-0`}>
+                Departure Availability
+              </label>
+              <div className="text-xs text-slate-500">
+                Package-specific schedule
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>A. Regular Departure Days</label>
+              <div className="text-xs text-slate-500 mb-2 font-medium">Select the weekdays on which this package normally departs. Upcoming dates will be generated automatically.</div>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                  <label key={day} className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm cursor-pointer hover:bg-slate-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      className="rounded border-slate-300 text-[#136b8a] focus:ring-[#136b8a]"
+                      checked={availableWeekdays.includes(day)}
+                      onChange={(e) => {
+                        if (e.target.checked) setAvailableWeekdays(prev => [...prev, day]);
+                        else setAvailableWeekdays(prev => prev.filter(d => d !== day));
+                      }}
+                    />
+                    {day.substring(0, 3)}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-200">
+              <label className={labelClass}>B. Additional / Special Departure Dates</label>
+              <div className="text-xs text-slate-500 mb-3 font-medium">Add any extra departure date that does not follow the regular weekly schedule.</div>
+              <div className="flex gap-2 items-center mb-3">
+                <input
+                  type="date"
+                  value={newDepartureDate}
+                  onChange={e => setNewDepartureDate(e.target.value)}
+                  className={`${inputClass} max-w-[200px]`}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!newDepartureDate) return;
+                    if (departureDates.includes(newDepartureDate)) {
+                      alert('Date already added!');
+                      return;
+                    }
+                    setDepartureDates(prev => [...prev, newDepartureDate].sort());
+                    setNewDepartureDate('');
+                  }}
+                  className="px-3.5 py-2 bg-[#136b8a] text-white rounded-lg text-sm font-bold hover:bg-[#0f556e] whitespace-nowrap flex items-center gap-1"
+                >
+                  <Plus size={16} /> Add Date
+                </button>
+              </div>
+
+              {/* Warning if date doesn't match available days */}
+              {newDepartureDate && availableWeekdays.length > 0 && (
+                (() => {
+                  const dayName = new Date(newDepartureDate).toLocaleDateString('en-US', { weekday: 'long' });
+                  if (!availableWeekdays.includes(dayName)) {
+                    return (
+                      <div className="text-xs text-amber-600 mb-2 font-medium">
+                        Warning: This date is {dayName} but the package is marked for {availableWeekdays.join(', ')}.
+                      </div>
+                    );
+                  }
+                  return null;
+                })()
+              )}
+
+              {departureDates.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {departureDates.map((dateStr, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 bg-white border border-slate-300 px-3 py-1.5 rounded-full text-sm font-medium text-slate-700 shadow-sm">
+                      {new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      <button
+                        type="button"
+                        onClick={() => setDepartureDates(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-slate-400 hover:text-rose-600 transition-colors ml-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">No exact departure dates added. "Dates Coming Soon" will be shown.</p>
+              )}
+            </div>
+          </div>
+
           {/* Main Cover & Banner URLs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -644,22 +691,9 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <label className={`${labelClass} text-slate-900 font-bold mb-0`}>
                 Package Photo Gallery ({galleryImages.length})
               </label>
-              <label className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-colors">
-                {uploadingGallery ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <UploadCloud size={15} />
-                )}
-                Upload Image(s)
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleGalleryFileUpload}
-                  disabled={uploadingGallery}
-                  className="hidden"
-                />
-              </label>
+              <div className="text-xs text-slate-500">
+                Paste Cloudinary or external media URL
+              </div>
             </div>
 
             {/* URL Fallback */}
@@ -736,7 +770,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-500 italic">No gallery photos added yet. Upload files or paste image URLs above.</p>
+              <p className="text-xs text-slate-500 italic">No gallery photos added yet. Paste image URLs above.</p>
             )}
           </div>
 
@@ -749,22 +783,9 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 <FileText size={18} className="text-[#136b8a]" />
                 <span>Downloadable Itinerary PDF</span>
               </label>
-
-              <label className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-colors">
-                {uploadingPdf ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <UploadCloud size={15} />
-                )}
-                {itineraryPdfUrl ? 'Replace PDF' : 'Upload PDF'}
-                <input
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={handlePdfFileUpload}
-                  disabled={uploadingPdf}
-                  className="hidden"
-                />
-              </label>
+              <div className="text-xs text-slate-500">
+                Paste Cloudinary or external media URL
+              </div>
             </div>
 
             {itineraryPdfUrl ? (
@@ -791,7 +812,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               value={itineraryPdfUrl}
               onChange={e => setItineraryPdfUrl(e.target.value)}
               className={inputClass}
-              placeholder="Or paste direct PDF URL (https://...)"
+              placeholder="Paste direct PDF URL (https://...)"
             />
           </div>
 
@@ -879,7 +900,24 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
           </div>
 
           {/* Status and Clickable */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+              <label className={labelClass}>Package Availability</label>
+              <select
+                value={listingCategories.includes('upcoming-trips') ? 'upcoming' : 'active'}
+                onChange={e => {
+                  const isUpcoming = e.target.value === 'upcoming';
+                  setListingCategories(prev => {
+                    const filtered = prev.filter(c => c !== 'upcoming-trips');
+                    return isUpcoming ? [...filtered, 'upcoming-trips'] : filtered;
+                  });
+                }}
+                className={inputClass}
+              >
+                <option value="active">Active Package</option>
+                <option value="upcoming">Upcoming Package</option>
+              </select>
+            </div>
             <div>
               <label className={labelClass}>Status</label>
               <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass}>
@@ -890,11 +928,11 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             <div>
               <label className={labelClass}>Card Clickable</label>
               <div className="flex items-center h-[38px] px-3 border border-gray-300 rounded-lg bg-gray-50">
-                <input 
-                  type="checkbox" 
-                  checked={isClickable} 
-                  onChange={e => setIsClickable(e.target.checked)} 
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-2" 
+                <input
+                  type="checkbox"
+                  checked={isClickable}
+                  onChange={e => setIsClickable(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-2"
                 />
                 <span className="text-sm text-gray-700 font-medium">
                   {isClickable ? 'ON (Normal Package)' : 'OFF (Card Only, Non-clickable)'}
@@ -949,10 +987,36 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             </div>
           </div>
 
+          {/* Package Visibility / Trip Groups */}
+          <div className="border border-gray-200 bg-gray-50 p-4 rounded-xl space-y-4">
+            <h3 className="text-sm font-bold text-gray-900">Package Visibility / Trip Groups</h3>
+            <p className="text-xs text-gray-500 mb-2 font-medium">Select where this package should be prominently featured on the homepage.</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isExploreAll}
+                  onChange={(e) => setIsExploreAll(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Explore All Departures</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isUpcoming}
+                  onChange={(e) => setIsUpcoming(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Upcoming Trips</span>
+              </label>
+            </div>
+          </div>
+
           {/* Placements */}
           <div className="border-t border-gray-200 pt-5 space-y-6">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Package Placements</h3>
-            
+
             {/* Homepage Sections */}
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-3">Homepage Sections</h4>
@@ -1052,6 +1116,71 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 })}
               </div>
             </div>
+
+            {/* Additional Recommendation Placements */}
+            <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <h4 className="text-sm font-bold text-gray-900 mb-1">Additional Recommendation Placements</h4>
+              <p className="text-xs text-gray-500 mb-4">Select pages where this package should appear in the "Explore More Trips" section at the bottom.</p>
+              
+              <div className="space-y-6">
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Destinations (Explore More)</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {dynamicDestinations.length === 0 && <div className="text-xs text-gray-500">No active destinations.</div>}
+                    {dynamicDestinations.map(dest => {
+                      const isChecked = selectedPlacements.some(p => p.type === 'recommendation_destination' && p.id === dest.id);
+                      return (
+                        <label key={`rec-dest-${dest.id}`} className="flex items-center gap-3 cursor-pointer group relative">
+                          <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('recommendation_destination', dest.id, dest.slug)} />
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                            {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className="text-sm text-gray-700 select-none">{dest.name}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Interests (Explore More)</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {dynamicInterests.length === 0 && <div className="text-xs text-gray-500">No active interests.</div>}
+                    {dynamicInterests.map(int => {
+                      const isChecked = selectedPlacements.some(p => p.type === 'recommendation_interest' && p.id === int.id);
+                      return (
+                        <label key={`rec-int-${int.id}`} className="flex items-center gap-3 cursor-pointer group relative">
+                          <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('recommendation_interest', int.id, int.slug)} />
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                            {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className="text-sm text-gray-700 select-none">{int.name}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Dynamic Listing Sections (Explore More)</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {dynamicSections.length === 0 && <div className="text-xs text-gray-500">No active listing sections.</div>}
+                    {dynamicSections.map(sec => {
+                      const isChecked = selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === sec.id);
+                      return (
+                        <label key={`rec-listing-${sec.id}`} className="flex items-center gap-3 cursor-pointer group relative">
+                          <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('recommendation_listing', sec.id, sec.section_key)} />
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                            {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          <span className="text-sm text-gray-700 select-none">{sec.title}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Section Data Content Fields */}
@@ -1059,19 +1188,19 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Package Content Data</h3>
             <div>
               <label className={labelClass}>Itinerary (JSON array)</label>
-              <textarea value={itinerary} onChange={e => setItinerary(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={5} placeholder={'[\n  { "title": "Day 1 - Arrival", "description": "Arrive and check in..." },\n  { "title": "Day 2 - Sightseeing", "description": "Visit local spots..." }\n]'} />
+              <textarea value={itinerary} onChange={e => setItinerary(e.target.value)} className={`${inputClass}  text-xs`} rows={5} placeholder={'[\n  { "title": "Day 1 - Arrival", "description": "Arrive and check in..." },\n  { "title": "Day 2 - Sightseeing", "description": "Visit local spots..." }\n]'} />
             </div>
             <div>
               <label className={labelClass}>Inclusions (JSON array)</label>
-              <textarea value={inclusions} onChange={e => setInclusions(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'["Accommodation", "Meals", "Transport", "Guide"]'} />
+              <textarea value={inclusions} onChange={e => setInclusions(e.target.value)} className={`${inputClass}  text-xs`} rows={3} placeholder={'["Accommodation", "Meals", "Transport", "Guide"]'} />
             </div>
             <div>
               <label className={labelClass}>Exclusions (JSON array)</label>
-              <textarea value={exclusions} onChange={e => setExclusions(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'["Flights", "Personal expenses", "Insurance"]'} />
+              <textarea value={exclusions} onChange={e => setExclusions(e.target.value)} className={`${inputClass}  text-xs`} rows={3} placeholder={'["Flights", "Personal expenses", "Insurance"]'} />
             </div>
             <div>
               <label className={labelClass}>Costings (JSON array)</label>
-              <textarea value={costings} onChange={e => setCostings(e.target.value)} className={`${inputClass} font-mono text-xs`} rows={3} placeholder={'[\n  { "type": "Double Sharing", "price": "₹19,999 per person" }\n]'} />
+              <textarea value={costings} onChange={e => setCostings(e.target.value)} className={`${inputClass}  text-xs`} rows={3} placeholder={'[\n  { "type": "Double Sharing", "price": "₹19,999 per person" }\n]'} />
             </div>
             {/* Structured Repeatable Control: Things to Carry */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
@@ -1398,6 +1527,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

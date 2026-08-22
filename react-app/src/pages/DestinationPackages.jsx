@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import PackageCard from '../components/PackageCard';
+import RecommendedExtraPackages from '../components/RecommendedExtraPackages';
 import { supabase } from '../supabaseClient';
 import { PackageIcon, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const DestinationPackages = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [destId, setDestId] = useState(null);
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -32,6 +34,7 @@ const DestinationPackages = () => {
           
         if (destData) {
           destId = destData.id;
+          setDestId(destData.id);
           titleStr = destData.name;
           document.title = `${titleStr} Packages - TripoMist`;
         }
@@ -128,6 +131,14 @@ const DestinationPackages = () => {
                 />
               ))}
             </div>
+          )}
+
+          {destId && (
+            <RecommendedExtraPackages 
+              placementType="recommendation_destination" 
+              placementId={destId} 
+              excludePackageIds={packages.map(p => p.id)}
+            />
           )}
         </div>
       </main>

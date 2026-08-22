@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
-import { getPackageDuration } from './MyAccount';
+import { getPackageDuration } from '../utils/formatters';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
 
 const statusColors = {
@@ -47,7 +47,7 @@ export default function BookingDetail() {
 
       const { data, error: fetchError } = await supabase
         .from('bookings')
-        .select('*')
+        .select('*, booking_travellers(*)')
         .eq('id', slug)
         .eq('user_id', session.user.id)
         .single();
@@ -64,7 +64,7 @@ export default function BookingDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      <div className="min-h-screen bg-gray-50 flex flex-col ">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
@@ -77,7 +77,7 @@ export default function BookingDetail() {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      <div className="min-h-screen bg-gray-50 flex flex-col ">
         <Navbar />
         <main className="flex-1 max-w-3xl mx-auto px-4 py-20 w-full text-center">
           <div className="bg-red-50 text-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -94,18 +94,45 @@ export default function BookingDetail() {
     );
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const travelDateObj = booking.travel_date ? new Date(booking.travel_date) : null;
+  const totalAmount = Number(booking.total_amount || 0);
+  const manualDiscount = Number(booking.manual_discount_amount || 0);
+  const finalPayable = Number(booking.final_amount || totalAmount);
 
-  // Determine timeline statuses
-  const isCreated = true;
-  const isPaid = booking.payment_status?.toLowerCase() === 'paid';
-  const isConfirmed = booking.booking_status?.toLowerCase() === 'confirmed' || booking.booking_status?.toLowerCase() === 'completed';
-  const isTripCompleted = booking.booking_status?.toLowerCase() === 'completed' || (travelDateObj && travelDateObj < today && booking.booking_status?.toLowerCase() !== 'cancelled');
+  const amountPaid = booking.payment_status?.toLowerCase() === 'paid' ? finalPayable : Number(booking.advance_payment || 0);
+  const remaining = Math.max(finalPayable - amountPaid, 0);
+
+  const bookingStatus = booking.booking_status?.toLowerCase();
+  const isCancelled = bookingStatus === 'cancelled';
+  
+  const packageTrackState = booking.package_track_state?.toLowerCase() || 'booking_placed';
+  const trackStages = [
+    { id: 'booking_placed', label: 'Booking Placed' },
+    { id: 'booking_confirmed', label: 'Booking Confirmed' },
+    { id: 'trip_scheduled', label: 'Trip Scheduled' },
+    { id: 'full_payment_received', label: 'Full Payment Received' },
+    { id: 'trip_completed', label: 'Trip Completed' }
+  ];
+
+  let currentStageIndex = trackStages.findIndex(s => s.id === packageTrackState);
+  if (currentStageIndex === -1) currentStageIndex = 0;
+
+  // Truth guard
+  if (remaining > 0 && currentStageIndex >= 3) {
+    currentStageIndex = 2; // Cap at Trip Scheduled
+  }
+
+  const pickupPoint = booking.pickup_point || 
+    (booking.booking_travellers && booking.booking_travellers.find(t => t.is_primary)?.pickup_point) || 
+    (booking.booking_travellers && booking.booking_travellers[0]?.pickup_point) || 
+    'Not specified';
+    
+  const sharingType = booking.selected_sharing || 
+    (booking.booking_travellers && booking.booking_travellers.find(t => t.is_primary)?.sharing_type) || 
+    (booking.booking_travellers && booking.booking_travellers[0]?.sharing_type) || 
+    'Not specified';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col ">
       <Navbar />
 
       {/* Hero Header */}
@@ -126,22 +153,22 @@ export default function BookingDetail() {
                 {booking.destination}
               </p>
             )}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-5">
-              <button 
-                onClick={() => generatePDFVoucher(booking, 'download')}
-                className="bg-white text-[#136b8a] hover:bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">download</span>
-                Download Voucher
-              </button>
-              <button 
-                onClick={() => generatePDFVoucher(booking, 'open')}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">visibility</span>
-                View Voucher
-              </button>
-            </div>
+              <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
+                <button
+                  onClick={() => generatePDFVoucher(booking, 'download')}
+                  className="bg-white text-[#136b8a] hover:bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">download</span>
+                  Download Invoice
+                </button>
+                <button
+                  onClick={() => generatePDFVoucher(booking, 'open')}
+                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                  View Invoice
+                </button>
+              </div>
           </div>
           <div className="flex flex-col gap-2 items-center md:items-end bg-black/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
             <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Status Overview</div>
@@ -155,79 +182,116 @@ export default function BookingDetail() {
 
       {/* Main Details Panel */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 -mt-24 pb-20 relative z-20">
-        
+
         {/* Booking Timeline */}
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#136b8a]">route</span>
-            Booking Status Timeline
+            <span className="material-symbols-outlined text-[#136b8a]">timeline</span>
+            Your Package Track
           </h3>
-          <div className="relative pt-8 pb-4">
-            {/* Connecting Line (Horizontal) */}
-            <div className="absolute top-[2rem] left-0 w-full h-[2px] bg-gray-100 hidden sm:block -z-0"></div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-6 relative z-10">
-              {[
-                { label: 'Booking Placed', desc: 'Trip payload registered', active: isCreated, done: isCreated },
-                { label: 'Booking Confirmed', desc: 'Confirmed by operator', active: isConfirmed, done: isConfirmed },
-                { label: 'Payment Received', desc: 'Securely processed', active: isPaid, done: isPaid },
-                { label: 'Trip Scheduled', desc: 'Dates locked in', active: isConfirmed && isPaid, done: isConfirmed && isPaid },
-                { label: 'Trip Completed', desc: 'Completed successfully', active: isTripCompleted, done: isTripCompleted }
-              ].map((step, idx) => (
-                <div key={idx} className="flex gap-4 sm:flex-col items-start sm:items-center text-left sm:text-center group relative">
-                  
-                  {/* Connecting line on Mobile (Vertical) */}
-                  {idx !== 4 && (
-                    <div className="absolute top-8 left-4 w-[2px] h-[calc(100%+1.5rem)] bg-gray-100 sm:hidden -z-10"></div>
-                  )}
-
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-sm flex-shrink-0 ${
-                    step.done 
-                      ? 'bg-emerald-500 text-white shadow-emerald-200' 
-                      : step.active 
-                      ? 'bg-[#136b8a] text-white shadow-blue-200' 
-                      : 'bg-white text-gray-400 border-2 border-gray-100'
-                  }`}>
-                    {step.done ? <span className="material-symbols-outlined text-[18px]">check</span> : idx + 1}
-                  </div>
-                  <div className="pt-2 sm:pt-0">
-                    <p className={`font-bold text-sm ${step.active ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</p>
-                    <p className="text-xs text-gray-400 mt-1">{step.desc}</p>
-                  </div>
-                </div>
-              ))}
+          
+          {isCancelled ? (
+            <div className="flex items-center justify-center py-6 px-4 bg-red-50 rounded-xl border border-red-100">
+              <div className="flex flex-col items-center gap-2 text-red-600">
+                <span className="material-symbols-outlined text-4xl">cancel</span>
+                <span className="font-bold text-lg">Booking Cancelled</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative">
+              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gray-100 -translate-y-1/2 z-0 rounded"></div>
+              <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-0 relative z-10">
+                {trackStages.map((stage, idx) => {
+                  const isCompleted = idx <= currentStageIndex;
+                  return (
+                    <div key={stage.id} className="flex md:flex-col items-center gap-4 md:gap-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors z-10 ${
+                        isCompleted ? 'bg-[#136b8a] border-[#136b8a] text-white' : 'bg-white border-gray-200 text-gray-300'
+                      }`}>
+                        <span className="material-symbols-outlined text-[16px]">
+                          {isCompleted ? 'check' : 'circle'}
+                        </span>
+                      </div>
+                      <div className="flex-1 md:text-center z-10">
+                        <p className={`text-sm font-bold ${isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                          {stage.label}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left Columns: Traveller & Package Details */}
           <div className="md:col-span-2 space-y-6">
-            
+
             {/* Traveller Details */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
               <h3 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-50 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#136b8a]">group</span>
-                Traveller Details
+                Traveller Details ({booking.booking_travellers?.length || 1})
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Full Name</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.customer_name || '—'}</p>
+              
+              {booking.booking_travellers && booking.booking_travellers.length > 0 ? (
+                <div className="space-y-4">
+                  {booking.booking_travellers.map((traveller, index) => {
+                     let trStatus = 'Active';
+                     let trColor = 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                     if (traveller.status?.toLowerCase() === 'cancelled') {
+                       trStatus = 'Cancelled';
+                       trColor = 'bg-red-50 text-red-700 border-red-100';
+                     } else if (traveller.status?.toLowerCase() === 'completed') {
+                       trStatus = 'Completed';
+                       trColor = 'bg-blue-50 text-blue-700 border-blue-100';
+                     }
+                     
+                     return (
+                       <div key={traveller.id || index} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                         <div>
+                           <div className="flex items-center gap-2 mb-1">
+                             <p className="font-bold text-gray-900">{traveller.name || 'Traveller ' + (index+1)}</p>
+                             {traveller.is_primary && (
+                               <span className="text-[10px] bg-[#136b8a]/10 text-[#136b8a] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Primary</span>
+                             )}
+                           </div>
+                           <p className="text-xs text-gray-500">
+                             {traveller.email || booking.customer_email || booking.email || 'No email'}
+                           </p>
+                         </div>
+                         <div className="flex items-center gap-3">
+                           <span className="text-xs font-semibold text-gray-500 capitalize">{traveller.sharing_type || sharingType}</span>
+                           <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${trColor}`}>
+                             {trStatus}
+                           </span>
+                         </div>
+                       </div>
+                     );
+                  })}
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Email Address</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.email || '—'}</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+                  <div>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Full Name</p>
+                    <p className="font-semibold text-gray-800 mt-1">{booking.customer_name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Email Address</p>
+                    <p className="font-semibold text-gray-800 mt-1">{booking.customer_email || booking.email || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Phone Number</p>
+                    <p className="font-semibold text-gray-800 mt-1">{booking.phone ? `+91 ${booking.phone}` : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Travellers</p>
+                    <p className="font-semibold text-gray-800 mt-1">{booking.travellers || 1} Person(s)</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Phone Number</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.phone ? `+91 ${booking.phone}` : '—'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Travellers</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.travellers || 1} Person(s)</p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Package Details */}
@@ -240,10 +304,6 @@ export default function BookingDetail() {
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Package Title</p>
                   <p className="font-semibold text-gray-800 mt-1">{booking.package_title || '—'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Destination</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.destination || '—'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Duration</p>
@@ -267,7 +327,15 @@ export default function BookingDetail() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Sharing Type</p>
-                  <p className="font-semibold text-gray-800 mt-1">{booking.selected_sharing || '—'}</p>
+                  <p className="font-semibold text-gray-800 mt-1 capitalize">
+                    {sharingType}
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Pickup Point</p>
+                  <p className="font-semibold text-gray-800 mt-1 capitalize">
+                    {pickupPoint}
+                  </p>
                 </div>
               </div>
               {booking.special_request && (
@@ -290,25 +358,58 @@ export default function BookingDetail() {
 
               <div className="space-y-3 text-sm pb-4 border-b border-gray-100">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Total Price</span>
+                  <span className="text-gray-500">Total Amount</span>
                   <span className="font-semibold text-gray-800">
-                    ₹{(Number(booking.total_amount) || Number(booking.final_amount) || 0).toLocaleString('en-IN')}
+                    ₹{totalAmount.toLocaleString('en-IN')}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                {manualDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Discount Allowed</span>
+                    <span className="font-bold">-₹{manualDiscount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-gray-50 pt-2">
+                  <span className="font-bold text-gray-700">Final Payable</span>
+                  <span className="font-bold text-gray-900">
+                    ₹{finalPayable.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between mt-2">
                   <span className="text-gray-500">Amount Paid</span>
                   <span className="font-bold text-emerald-700">
-                    ₹{(Number(booking.final_amount) || 0).toLocaleString('en-IN')}
+                    ₹{amountPaid.toLocaleString('en-IN')}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                
+                {remaining > 0 && (
+                  <div className="flex justify-between pt-2">
+                    <span className="font-bold text-gray-700">Remaining</span>
+                    <span className="font-bold text-rose-600">
+                      ₹{remaining.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between pt-2 border-t border-gray-100">
                   <span className="text-gray-500">Payment Status</span>
-                  <span className="font-semibold capitalize text-gray-800">{booking.payment_status || '—'}</span>
+                  <span className={`font-semibold capitalize ${booking.payment_status?.toLowerCase() === 'paid' ? 'text-emerald-700' : 'text-amber-600'}`}>
+                    {booking.payment_status || 'Pending'}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-1">
+                  <span className="text-gray-500">Payment Method</span>
+                  <span className="font-semibold text-gray-800 capitalize">
+                    {booking.payment_method || 'Online'}
+                  </span>
                 </div>
               </div>
 
-              <div className="text-xs font-mono text-gray-400 break-all space-y-2 mt-4">
-                <div>Razorpay Payment ID:<br/><span className="text-gray-600 font-semibold">{booking.razorpay_payment_id || '—'}</span></div>
+              <div className="text-xs text-gray-400 break-all space-y-2 mt-4">
+                {booking.razorpay_payment_id && (
+                  <div>Razorpay Payment ID:<br/><span className="text-gray-600 font-semibold">{booking.razorpay_payment_id}</span></div>
+                )}
                 <div>Booking Date:<br/>
                   <span className="text-gray-600 font-semibold">
                     {booking.created_at ? new Date(booking.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -316,61 +417,6 @@ export default function BookingDetail() {
                 </div>
               </div>
             </div>
-
-            {/* Travel Documents (Disabled Placeholders) */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#136b8a]">folder_zip</span>
-                Documents
-              </h3>
-              
-              <div className="flex flex-col gap-3">
-                {/* Download Voucher */}
-                <div className="relative group">
-                  <button
-                    disabled
-                    className="w-full flex items-center justify-between p-3.5 bg-gray-50 text-gray-400 border border-gray-200/80 rounded-xl cursor-not-allowed text-sm font-semibold opacity-60"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-gray-400">confirmation_number</span>
-                      Download Voucher
-                    </span>
-                    <span className="material-symbols-outlined text-[18px]">download</span>
-                  </button>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-30">
-                    Coming soon
-                  </div>
-                </div>
-
-                {/* Download Invoice */}
-                <div className="relative group">
-                  <button
-                    disabled
-                    className="w-full flex items-center justify-between p-3.5 bg-gray-50 text-gray-400 border border-gray-200/80 rounded-xl cursor-not-allowed text-sm font-semibold opacity-60"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-gray-400">receipt_long</span>
-                      Download Invoice
-                    </span>
-                    <span className="material-symbols-outlined text-[18px]">download</span>
-                  </button>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-30">
-                    Coming soon
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Support Desk Box */}
-            <div className="bg-blue-50 border border-blue-100 rounded-3xl p-6 text-sm text-center">
-              <span className="material-symbols-outlined text-3xl text-[#136b8a] mb-2 block">contact_support</span>
-              <p className="font-semibold text-gray-900">Questions about your trip?</p>
-              <p className="text-xs text-gray-500 mt-1">Get in touch with our operations desk anytime.</p>
-              <a href="mailto:info@tripomist.com" className="mt-3 inline-block bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">
-                Email Operations
-              </a>
-            </div>
-
           </div>
         </div>
 

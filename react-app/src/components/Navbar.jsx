@@ -4,12 +4,14 @@ import { supabase } from '../utils/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import ExploreNavbar from './ExploreNavbar'
 import LoginSignupModal from './LoginSignupModal'
+import UserDropdown from './ui/user-dropdown'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [user, setUser] = useState(null)
   const [userRole, setUserRole] = useState('guest')
+  const [userProfileData, setUserProfileData] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const searchRef = useRef(null)
@@ -22,6 +24,23 @@ function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const handleDropdownAction = async (action) => {
+    if (action === 'logout') {
+      await supabase.auth.signOut();
+      navigate('/');
+    } else if (action === 'my-account') {
+      navigate('/my-account');
+    } else if (action === 'my-trips') {
+      navigate('/my-trips');
+    } else if (action === 'my-account-settings') {
+      navigate('/my-account?section=profile');
+    } else if (action === 'admin') {
+      navigate('/admin');
+    } else if (action === 'support') {
+      navigate('/my-account?section=support');
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     setSearchQuery(params.get('search') || '')
@@ -30,13 +49,16 @@ function Navbar() {
   const checkUserRole = async (currentUser) => {
     if (!currentUser) {
       setUserRole('guest')
+      setUserProfileData(null)
       return;
     }
     try {
-      const { data } = await supabase.from('profiles').select('role').eq('id', currentUser.id).single()
+      const { data } = await supabase.from('profiles').select('role, full_name, avatar_url').eq('id', currentUser.id).single()
       setUserRole(data?.role || 'user')
+      setUserProfileData(data || null)
     } catch (err) {
       setUserRole('user')
+      setUserProfileData(null)
     }
   }
 
@@ -412,15 +434,19 @@ function Navbar() {
             </button>
 
             {user ? (
-              <Link to="/my-account" className="hidden lg:flex items-center justify-center w-10 h-10 bg-primary/10 text-primary font-bold rounded-full transition-transform hover:scale-105 border border-primary/20 shadow-sm overflow-hidden">
-                {user.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-lg">
-                    {user.user_metadata?.full_name ? user.user_metadata.full_name.charAt(0).toUpperCase() : 'U'}
-                  </span>
-                )}
-              </Link>
+              <div className="hidden lg:flex items-center">
+                <UserDropdown
+                  user={{
+                    name: userProfileData?.full_name || user.user_metadata?.full_name || 'User',
+                    username: user.email || '',
+                    avatar: userProfileData?.avatar_url || user.user_metadata?.avatar_url || '',
+                    initials: (userProfileData?.full_name || user.user_metadata?.full_name) ? (userProfileData?.full_name || user.user_metadata?.full_name).charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U'),
+                    status: "online",
+                    role: userRole
+                  }}
+                  onAction={handleDropdownAction}
+                />
+              </div>
             ) : (
               <button onClick={() => setShowAuthModal(true)} className="hidden lg:flex bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 items-center gap-1 shadow-sm cursor-pointer">
                 <span className="material-symbols-outlined text-[16px]">login</span> <span className="hidden sm:inline">{settings?.login_button_text || 'Login'}</span>

@@ -8,7 +8,7 @@ export default function AdminExploreDepartments() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   // Form State
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -33,7 +33,7 @@ export default function AdminExploreDepartments() {
       .from('explore_departments')
       .select('*')
       .order('display_order', { ascending: true });
-    
+
     if (error) {
       alert('Failed to fetch explore departments');
       console.error(error);
@@ -132,7 +132,7 @@ export default function AdminExploreDepartments() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) return;
-    
+
     // Check if it's a parent of others
     const children = departments.filter(d => d.parent_id === id);
     if (children.length > 0) {
@@ -155,11 +155,11 @@ export default function AdminExploreDepartments() {
 
     const newDepts = [...departments];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
+
     // Swap display_orders
     const currentOrder = newDepts[index].display_order;
     const targetOrder = newDepts[targetIndex].display_order;
-    
+
     newDepts[index].display_order = targetOrder;
     newDepts[targetIndex].display_order = currentOrder;
 
@@ -261,13 +261,13 @@ export default function AdminExploreDepartments() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-10">
               <h2 className="text-lg font-bold text-gray-900">{editingId ? 'Edit Item' : 'Add New Item'}</h2>
               <button onClick={closeModal} className="text-gray-500 hover:bg-gray-100 p-2 rounded-lg transition-colors"><X size={20}/></button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -307,10 +307,10 @@ export default function AdminExploreDepartments() {
                 </select>
               </div>
 
-              <MediaUploader 
-                url={heroBannerUrl} 
-                onUrlChange={setHeroBannerUrl} 
-                folder="departments" 
+              <MediaUploader
+                url={heroBannerUrl}
+                onUrlChange={setHeroBannerUrl}
+                folder="departments"
               />
 
               <div>
@@ -326,7 +326,7 @@ export default function AdminExploreDepartments() {
                   <input type="checkbox" className="hidden" checked={isActive} onChange={e=>setIsActive(e.target.checked)} />
                   <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Show in Navigation</span>
                 </label>
-                
+
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <div className={`w-5 h-5 flex items-center justify-center rounded border transition-colors ${allowPackagePlacement ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`}>
                     {allowPackagePlacement && <Check size={14} className="text-white" />}

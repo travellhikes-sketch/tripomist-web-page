@@ -1,42 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
-import { getPackageDuration } from './MyAccount';
+import { getPackageDuration } from '../utils/formatters';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
 
-const statusColors = {
-  confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  pending: 'bg-amber-100 text-amber-700 border-amber-200',
-  cancelled: 'bg-red-100 text-red-700 border-red-200',
-  completed: 'bg-blue-100 text-blue-700 border-blue-200',
-  new: 'bg-gray-100 text-gray-700 border-gray-200',
-};
-
-const paymentColors = {
-  paid: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  pending: 'bg-amber-100 text-amber-700 border-amber-200',
-  failed: 'bg-red-100 text-red-700 border-red-200',
-  refunded: 'bg-purple-100 text-purple-700 border-purple-200',
-};
-
-function StatusBadge({ status, colorMap }) {
-  const color = colorMap[status?.toLowerCase()] || 'bg-gray-100 text-gray-700 border-gray-200';
-  return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${color} capitalize`}>
-      {status || 'Unknown'}
-    </span>
-  );
-}
+import { getStatusBadge, getPaymentBadge } from '../utils/statusHelpers';
 
 export default function MyTrips() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'completed' | 'cancelled'
+  const filterParam = searchParams.get('filter') || 'all';
+  const [activeTab, setActiveTab] = useState(filterParam);
+
+  useEffect(() => {
+    setActiveTab(searchParams.get('filter') || 'all');
+  }, [searchParams]);
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    setSearchParams({ filter: tab });
+  };
 
   useEffect(() => {
     async function loadBookings() {
@@ -54,7 +43,7 @@ export default function MyTrips() {
 
       const { data: bookingsData, error: fetchError } = await supabase
         .from('bookings')
-        .select('*')
+        .select('*, booking_travellers(sharing_type, pickup_point, is_primary)')
         .eq('user_id', session.user.id)
         .order('travel_date', { ascending: true });
 
@@ -97,6 +86,8 @@ export default function MyTrips() {
 
   // Filter bookings based on activeTab
   const filteredBookings = bookings.filter((b) => {
+    if (activeTab === 'all') return true;
+
     const tDate = b.travel_date ? new Date(b.travel_date) : null;
     const status = b.booking_status?.toLowerCase();
 
@@ -111,7 +102,7 @@ export default function MyTrips() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
+    <div className="flex flex-col min-h-screen bg-gray-50 ">
       <Navbar />
 
       {/* Hero Header */}
@@ -129,10 +120,10 @@ export default function MyTrips() {
       {/* Tabs Menu */}
       <div className="bg-white border-b border-gray-100 sticky top-16 z-30">
         <div className="max-w-5xl mx-auto px-4 flex gap-8">
-          {['upcoming', 'completed', 'cancelled'].map((tab) => (
+          {['all', 'upcoming', 'completed', 'cancelled'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabClick(tab)}
               className={`py-4 px-1 text-sm font-bold border-b-2 uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === tab
                   ? 'border-[#136b8a] text-[#136b8a]'
@@ -141,6 +132,7 @@ export default function MyTrips() {
             >
               {tab} ({
                 bookings.filter((b) => {
+                  if (tab === 'all') return true;
                   const tDate = b.travel_date ? new Date(b.travel_date) : null;
                   const status = b.booking_status?.toLowerCase();
                   if (tab === 'cancelled') return status === 'cancelled';
@@ -153,7 +145,7 @@ export default function MyTrips() {
         </div>
       </div>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-10">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-10 pb-24 md:pb-10">
         {/* Loading Skeletons */}
         {loading && (
           <div className="flex flex-col gap-5">
@@ -225,6 +217,19 @@ export default function MyTrips() {
               }
 
               const tripImg = booking.banner_image || booking.image_url;
+              
+              const amountPaid = booking.payment_status === 'paid' ? Number(booking.final_amount || 0) : Number(booking.advance_payment || 0);
+              const remaining = Math.max(Number(booking.final_amount || 0) - amountPaid, 0);
+              
+              const pickupPoint = booking.pickup_point || 
+                (booking.booking_travellers && booking.booking_travellers.find(t => t.is_primary)?.pickup_point) || 
+                (booking.booking_travellers && booking.booking_travellers[0]?.pickup_point) || 
+                'Not specified';
+              
+              const sharingType = booking.selected_sharing || 
+                (booking.booking_travellers && booking.booking_travellers.find(t => t.is_primary)?.sharing_type) || 
+                (booking.booking_travellers && booking.booking_travellers[0]?.sharing_type) || 
+                'Not specified';
 
               return (
                 <div
@@ -248,7 +253,7 @@ export default function MyTrips() {
                           <span className="material-symbols-outlined text-4xl text-white/80">luggage</span>
                         </div>
                       )}
-                      
+
                       {tripDaysLeft !== null && (
                         <div className="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm z-10">
                           {tripDaysLeft} days left
@@ -272,13 +277,13 @@ export default function MyTrips() {
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          <StatusBadge status={booking.booking_status} colorMap={statusColors} />
-                          <StatusBadge status={booking.payment_status} colorMap={paymentColors} />
+                          {getStatusBadge(booking.booking_status)}
+                          {getPaymentBadge(booking.payment_status, booking.advance_payment)}
                         </div>
                       </div>
 
                       {/* Details grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-y-1.5 gap-x-4 text-xs md:text-sm mb-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-xs md:text-sm mb-3">
                         <div className="flex flex-col">
                           <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Booking ID</span>
                           <span className="font-bold text-[#136b8a]">{booking.booking_id || '—'}</span>
@@ -301,50 +306,62 @@ export default function MyTrips() {
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Sharing</span>
-                          <span className="font-semibold text-gray-800">{booking.selected_sharing || '—'}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Amount Paid</span>
-                          <span className="font-bold text-emerald-700 text-sm md:text-base">
-                            {booking.final_amount ? `₹${Number(booking.final_amount).toLocaleString('en-IN')}` : '—'}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
                           <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Booked On</span>
                           <span className="font-semibold text-gray-800">
                             {booking.created_at ? new Date(booking.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                           </span>
                         </div>
+                        
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Sharing</span>
+                          <span className="font-semibold text-gray-800 capitalize">
+                            {sharingType}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Pickup Point</span>
+                          <span className="font-semibold text-gray-800 capitalize truncate" title={pickupPoint}>
+                            {pickupPoint}
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Amount Paid</span>
+                          <span className="font-bold text-emerald-700 text-sm md:text-base">
+                            {amountPaid > 0 ? `₹${amountPaid.toLocaleString('en-IN')}` : '-'}
+                          </span>
+                        </div>
+                        {remaining > 0 && (
+                          <div className="flex flex-col">
+                            <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Remaining</span>
+                            <span className="font-bold text-rose-600 text-sm md:text-base">
+                              ₹{remaining.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
+                        {Number(booking.manual_discount_amount) > 0 && (
+                          <div className="flex flex-col col-span-2 md:col-span-4 mt-1">
+                            <span className="text-xs font-semibold text-emerald-600">
+                              Discount: ₹{Number(booking.manual_discount_amount).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Payment reference */}
                       {booking.razorpay_payment_id && (
-                        <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-gray-400 font-mono bg-gray-50 rounded-lg px-2.5 py-1 w-fit border border-gray-100">
+                        <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-gray-400  bg-gray-50 rounded-lg px-2.5 py-1 w-fit border border-gray-100">
                           <span className="material-symbols-outlined text-[12px]">receipt_long</span>
                           Payment Ref: {booking.razorpay_payment_id}
                         </div>
                       )}
                       {/* Action Buttons */}
                       <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-3">
-                        <Link 
+                        <Link
                           to={`/my-trip/${booking.id}`}
                           className="bg-[#136b8a] text-white px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-[#0f556e] transition-colors"
                         >
                           View Details
                         </Link>
-                        <button 
-                          onClick={() => generatePDFVoucher(booking, 'download')}
-                          className="bg-white border border-gray-200 text-[#136b8a] px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-50 transition-colors cursor-pointer"
-                        >
-                          Download Voucher
-                        </button>
-                        <button 
-                          onClick={() => generatePDFVoucher(booking, 'open')}
-                          className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-slate-50 transition-colors cursor-pointer"
-                        >
-                          View Voucher
-                        </button>
                       </div>
                     </div>
                   </div>

@@ -7,11 +7,11 @@ const AdminServiceRecovery = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [selectedCase, setSelectedCase] = useState(null);
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [modalError, setModalError] = useState(null);
-  
+
 
 
   useEffect(() => {
@@ -58,20 +58,20 @@ const AdminServiceRecovery = () => {
         .eq('id', id);
 
       if (error) throw error;
-      
-      setCases(prev => prev.map(c => 
+
+      setCases(prev => prev.map(c =>
         c.id === id ? { ...c, status: newStatus, resolution_notes: (newStatus === 'resolved' ? (resolutionNotes || currentNotes) : currentNotes), resolved_at: (newStatus === 'resolved' ? new Date().toISOString() : null) } : c
       ));
-      
+
       if (selectedCase?.id === id) {
-        setSelectedCase(prev => ({ 
-          ...prev, 
-          status: newStatus, 
+        setSelectedCase(prev => ({
+          ...prev,
+          status: newStatus,
           resolution_notes: (newStatus === 'resolved' ? (resolutionNotes || currentNotes) : currentNotes),
           resolved_at: (newStatus === 'resolved' ? new Date().toISOString() : null)
         }));
       }
-      
+
       if (newStatus === 'resolved') {
         setResolutionNotes('');
         setSelectedCase(null);
@@ -117,9 +117,9 @@ const AdminServiceRecovery = () => {
         <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 max-w-md">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search by customer, booking ID, or issue..." 
+            <input
+              type="text"
+              placeholder="Search by customer, booking ID, or issue..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-rose-500"
@@ -158,7 +158,7 @@ const AdminServiceRecovery = () => {
                   </td>
                   <td className="py-2 px-4">
                     <div className="font-semibold text-gray-900">{c.bookings?.customer_name || 'Unknown'}</div>
-                    <div className="text-xs text-[#136b8a] font-mono">{c.bookings?.booking_id || 'N/A'}</div>
+                    <div className="text-xs text-[#136b8a] ">{c.bookings?.booking_id || 'N/A'}</div>
                   </td>
                   <td className="py-2 px-4">
                     <div className="text-gray-800 truncate max-w-[250px]">{c.issue_description}</div>
@@ -170,7 +170,7 @@ const AdminServiceRecovery = () => {
                     </span>
                   </td>
                   <td className="py-2 px-4 text-right">
-                     <button 
+                     <button
                        onClick={() => setSelectedCase(c)}
                        className="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-indigo-200"
                      >
@@ -186,7 +186,7 @@ const AdminServiceRecovery = () => {
 
       {/* Case Details Drawer/Modal */}
       {selectedCase && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
             <div className="flex justify-between items-start mb-6 border-b pb-4">
               <div>
@@ -202,7 +202,7 @@ const AdminServiceRecovery = () => {
                 <X size={16} />
               </button>
             </div>
-            
+
             {modalError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center gap-2 mb-4 text-sm">
                 <AlertCircle size={16} /> {modalError}
@@ -217,7 +217,7 @@ const AdminServiceRecovery = () => {
               </div>
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <span className="text-gray-500 block text-xs uppercase font-bold mb-1">Booking Info</span>
-                <span className="font-mono text-[#136b8a] font-bold">{selectedCase.bookings?.booking_id}</span>
+                <span className=" text-[#136b8a] font-bold">{selectedCase.bookings?.booking_id}</span>
                 <div className="text-gray-600 truncate mt-1">{selectedCase.bookings?.package_title}</div>
               </div>
             </div>
@@ -228,7 +228,7 @@ const AdminServiceRecovery = () => {
                 {selectedCase.issue_description}
               </div>
             </div>
-            
+
             {selectedCase.compensation_offered && (
               <div className="mb-6">
                 <h3 className="text-sm font-bold text-gray-800 mb-2">Compensation Details</h3>
@@ -240,7 +240,7 @@ const AdminServiceRecovery = () => {
 
             <div className="mb-6">
               <h3 className="text-sm font-bold text-gray-800 mb-2">Resolution Notes {selectedCase.status === 'open' && '*'}</h3>
-              <textarea 
+              <textarea
                 value={selectedCase.status === 'resolved' ? selectedCase.resolution_notes || '' : resolutionNotes}
                 onChange={e => setResolutionNotes(e.target.value)}
                 readOnly={selectedCase.status === 'resolved'}

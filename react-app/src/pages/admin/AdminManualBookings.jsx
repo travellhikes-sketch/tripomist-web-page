@@ -11,7 +11,7 @@ const AdminManualBookings = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Filters
   const [dateFilter, setDateFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -71,18 +71,18 @@ const AdminManualBookings = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      
+
       let filteredData = data || [];
       if (searchTerm) {
         const lowerSearch = searchTerm.toLowerCase();
-        filteredData = filteredData.filter(b => 
+        filteredData = filteredData.filter(b =>
           (b.booking_reference && b.booking_reference.toLowerCase().includes(lowerSearch)) ||
           (b.customer_name && b.customer_name.toLowerCase().includes(lowerSearch)) ||
           (b.customer_email && b.customer_email.toLowerCase().includes(lowerSearch)) ||
           (b.package_title && b.package_title.toLowerCase().includes(lowerSearch))
         );
       }
-      
+
       setBookings(filteredData);
     } catch (err) {
       setError(err.message);
@@ -99,17 +99,16 @@ const AdminManualBookings = () => {
   useEffect(() => {
     const total = parseFloat(formData.total_amount) || 0;
     let advance = parseFloat(formData.advance_payment) || 0;
-    
+
     // Validations on change
     if (advance < 0) advance = 0;
     if (advance > total) advance = total;
 
     const remaining = total - advance;
 
-    let payStatus = 'unpaid';
-    if (advance === 0) payStatus = 'unpaid';
-    else if (advance > 0 && remaining > 0) payStatus = 'partially_paid';
-    else if (remaining === 0 && total > 0) payStatus = 'paid';
+    let payStatus = 'pending';
+    if (total > 0 && remaining <= 0) payStatus = 'paid';
+    else if (remaining > 0) payStatus = 'pending';
 
     setFormData(prev => {
       // only update if changed to avoid loop
@@ -127,7 +126,7 @@ const AdminManualBookings = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'package_id') {
       const selectedPkg = packages.find(p => p.id === value);
       setFormData(prev => ({
@@ -149,7 +148,7 @@ const AdminManualBookings = () => {
     } else {
       setCurrentBooking(null);
       setFormData({
-        ...initialFormState, 
+        ...initialFormState,
         booking_reference: `MB-${Date.now().toString().slice(-6)}`
       });
     }
@@ -182,11 +181,11 @@ const AdminManualBookings = () => {
       b.package_title, b.travel_date, b.travellers_count, b.total_amount, b.advance_payment, b.remaining_payment,
       b.payment_status, b.booking_status
     ]);
-    
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
       + rows.map(e => e.map(item => `"${String(item || '').replace(/"/g, '""')}"`).join(",")).join("\n");
-      
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -205,8 +204,8 @@ const AdminManualBookings = () => {
   };
 
   const paymentColors = {
-    unpaid: 'bg-red-100 text-red-800',
-    partially_paid: 'bg-amber-100 text-amber-800',
+    failed: 'bg-red-100 text-red-800',
+    pending: 'bg-amber-100 text-amber-800',
     paid: 'bg-emerald-100 text-emerald-800'
   };
 
@@ -249,9 +248,8 @@ const AdminManualBookings = () => {
         <div>
           <select value={paymentFilter} onChange={e => setPaymentFilter(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm outline-none">
             <option value="">All Payments</option>
-            <option value="unpaid">Unpaid</option>
-            <option value="partially_paid">Partially Paid</option>
-            <option value="paid">Paid</option>
+            <option value="pending">Half Paid – Remaining on Board</option>
+            <option value="paid">Full Payment Done</option>
           </select>
         </div>
       </div>
@@ -291,7 +289,7 @@ const AdminManualBookings = () => {
                       <div className="text-xs text-gray-500">{booking.travel_date}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">₹{booking.total_amount}</div>
+                      <div className="font-medium text-gray-900">₹{booking.final_amount || booking.total_amount}</div>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium mt-1 ${paymentColors[booking.payment_status] || 'bg-gray-100'}`}>
                         {booking.payment_status?.replace('_', ' ').toUpperCase()}
                       </span>

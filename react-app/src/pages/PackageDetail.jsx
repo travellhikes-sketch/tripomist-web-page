@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import BookingModal from '../components/BookingModal';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Footer from '../components/Footer'
+import { generateDepartureDates } from '../utils/dateUtils';
 import DownloadItineraryModal from '../components/DownloadItineraryModal';
 import ReviewsSection from '../components/ReviewsSection';
 import { supabase } from '../utils/supabaseClient';
@@ -10,7 +11,7 @@ import { formatSlugToTitle } from '../utils/formatters';
 import {
   Download,
   ShoppingCart,
-  Share2,
+  Forward,
   ChevronLeft,
   ChevronRight,
   X,
@@ -410,7 +411,8 @@ export default function PackageDetail() {
           trustBenefits: parsedTrustBenefits,
           faqs: parsedFaqs,
           days: parsedDays,
-          costings: data.costings || []
+          costings: data.costings || [],
+          departureDates: generateDepartureDates(data.available_weekdays, data.departure_dates)
         });
       }
       setLoading(false);
@@ -740,7 +742,7 @@ export default function PackageDetail() {
                 <button
                   type="button"
                   onClick={scrollGalleryLeft}
-                  className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-none bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
+                  className="hidden md:flex absolute left-0 -translate-x-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-[#136b8a] items-center justify-center transition-all z-20 shadow-md border border-gray-200 cursor-pointer"
                   title="Previous Images"
                 >
                   <ChevronLeft size={24} />
@@ -748,7 +750,7 @@ export default function PackageDetail() {
                 <button
                   type="button"
                   onClick={scrollGalleryRight}
-                  className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-none bg-black/70 hover:bg-black/90 text-white items-center justify-center transition-all z-20 shadow-md cursor-pointer"
+                  className="hidden md:flex absolute right-0 translate-x-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-[#136b8a] items-center justify-center transition-all z-20 shadow-md border border-gray-200 cursor-pointer"
                   title="Next Images"
                 >
                   <ChevronRight size={24} />
@@ -798,7 +800,7 @@ export default function PackageDetail() {
             <div className="relative flex-grow flex items-center justify-center px-4 sm:px-12 select-none">
               <button
                 onClick={prevImage}
-                className="absolute left-4 sm:left-8 w-12 h-12 rounded-none bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-10"
+                className="absolute left-4 sm:left-8 w-12 h-12 rounded-full bg-white/95 hover:bg-white text-[#136b8a] flex items-center justify-center transition-all cursor-pointer z-10 border border-gray-200/50 shadow-md"
               >
                 <ChevronLeft size={28} />
               </button>
@@ -811,7 +813,7 @@ export default function PackageDetail() {
 
               <button
                 onClick={nextImage}
-                className="absolute right-4 sm:right-8 w-12 h-12 rounded-none bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-10"
+                className="absolute right-4 sm:right-8 w-12 h-12 rounded-full bg-white/95 hover:bg-white text-[#136b8a] flex items-center justify-center transition-all cursor-pointer z-10 border border-gray-200/50 shadow-md"
               >
                 <ChevronRight size={28} />
               </button>
@@ -837,19 +839,19 @@ export default function PackageDetail() {
         {/* ==================================================
             MAIN LAYOUT: CONTENT (LEFT) + BOOKING CARD (RIGHT)
         ================================================== */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-36 lg:pb-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
+
           {/* LEFT COLUMN: Title, Actions, Section Nav & Vertical Sections */}
           <div className="lg:col-span-8 flex flex-col">
 
             {/* 2.2 PROMINENT TITLE & ALIGNED DAYS/NIGHTS PILLS */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight font-sans uppercase">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight  uppercase break-words">
                 {trip.title}
               </h1>
 
               {/* OUTLINED ROUNDED DURATION PILLS */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
                 <span className="inline-flex items-center px-3.5 py-1 rounded-full border border-[#136b8a]/40 bg-[#eff6f9] text-[#136b8a] text-xs font-bold tracking-wider uppercase shadow-xs">
                   {daysVal}
                 </span>
@@ -860,7 +862,7 @@ export default function PackageDetail() {
             </div>
 
             {/* 2.4 ACTION ROW DIRECTLY BELOW TITLE AREA */}
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-8 flex-wrap">
               {/* 1. Download Itinerary (Left) */}
               {trip.itineraryPdfUrl ? (
                 <button
@@ -889,9 +891,9 @@ export default function PackageDetail() {
               <button
                 onClick={handleShare}
                 title="Share Package"
-                className="w-10 h-10 rounded-full border border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 flex items-center justify-center text-gray-700 transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100/60 transition-all active:scale-95 shrink-0 cursor-pointer"
               >
-                <Share2 size={18} />
+                <Forward size={22} />
               </button>
             </div>
 
@@ -1250,7 +1252,7 @@ export default function PackageDetail() {
           {/* RIGHT COLUMN: STICKY BOOKING CARD */}
           <div className="lg:col-span-4">
             <div className="sticky top-28 bg-white border border-gray-200 rounded-3xl p-6 shadow-xl space-y-6">
-              
+
               {/* Starting Price & GST */}
               <div className="space-y-1 pb-4 border-b border-gray-100">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Starting Price</span>
@@ -1323,13 +1325,13 @@ export default function PackageDetail() {
               <div className="space-y-3 pt-2">
                 <button
                   onClick={handleBookNow}
-                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-extrabold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98"
+                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-extrabold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 btn-shiny"
                 >
                   Book Now
                 </button>
                 <button
                   onClick={handleSendEnquiry}
-                  className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all text-sm tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2"
+                  className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all text-sm tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2 btn-shiny"
                 >
                   <MessageCircle size={18} />
                   <span>Send Enquiry</span>
@@ -1348,8 +1350,13 @@ export default function PackageDetail() {
       <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
-        packageData={trip}
-        initialTravellers={travellers}
+        tripTitle={trip.title}
+        price={trip.numericPrice * travellers}
+        travellers={travellers}
+        destination={trip.destination || trip.title}
+        packageId={trip.id}
+        costings={trip.costings}
+        departureDates={trip.departureDates}
       />
 
       {/* Download Itinerary Modal */}
@@ -1358,6 +1365,7 @@ export default function PackageDetail() {
         onClose={() => setIsModalOpen(false)}
         tripTitle={trip.title}
         pdfUrl={trip.itineraryPdfUrl}
+        packageSlug={slug}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { 
+import {
   User, Mail, Phone, Search, RefreshCw, TrendingUp, ShoppingBag, Calendar, X, MapPin
 } from 'lucide-react';
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
@@ -43,8 +43,8 @@ const AdminUsers = () => {
       const findCustomerGroup = (userId, email, phone) => {
         const normEmail = normalizeEmail(email);
         const normPhone = normalizePhone(phone);
-        
-        return customerGroups.find(g => 
+
+        return customerGroups.find(g =>
           (userId && g.user_id === userId) ||
           (normPhone && g.normPhone === normPhone) ||
           (normEmail && g.normEmail === normEmail)
@@ -89,7 +89,7 @@ const AdminUsers = () => {
           if (!group.email) { group.email = bEmail; group.normEmail = normalizeEmail(bEmail); }
           if (!group.user_id && bUserId) group.user_id = bUserId;
         }
-        
+
         group.bookings.push(booking);
       });
 
@@ -124,7 +124,7 @@ const AdminUsers = () => {
         const totalSpend = g.bookings.reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
         const totalPaid = g.bookings.reduce((sum, b) => sum + Number(b.advance_payment || b.paid_amount || 0), 0);
         const pendingAmount = totalSpend - totalPaid;
-        
+
         const completedTrips = g.bookings.filter(b => b.booking_status?.toLowerCase() === 'completed').length;
         const upcomingTrips = g.bookings.filter(b => ['confirmed', 'upcoming'].includes(b.booking_status?.toLowerCase()) && new Date(b.travel_date) >= new Date()).length;
         const cancelledTrips = g.bookings.filter(b => b.booking_status?.toLowerCase() === 'cancelled').length;
@@ -135,7 +135,7 @@ const AdminUsers = () => {
         let types = [];
         if (totalBookings === 1) types.push('New');
         else if (totalBookings > 1) types.push('Repeat');
-        
+
         if (g.isProfile || g.user_id) types.push('Registered');
         else types.push('Guest');
 
@@ -176,7 +176,7 @@ const AdminUsers = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(c => 
+  const filteredCustomers = customers.filter(c =>
     (c.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.phone || '').includes(searchTerm)
@@ -189,7 +189,7 @@ const AdminUsers = () => {
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
           <p className="text-gray-500 mt-1">View customer profiles, booking history, and spending patterns.</p>
         </div>
-        <button 
+        <button
           onClick={fetchCustomers}
           className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm font-medium"
         >
@@ -201,9 +201,9 @@ const AdminUsers = () => {
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search customers by name, email, or phone..." 
+          <input
+            type="text"
+            placeholder="Search customers by name, email, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] transition-all"
@@ -271,7 +271,7 @@ const AdminUsers = () => {
                       </div>
                     </td>
                     <td className="py-3 px-6 text-right">
-                      <button 
+                      <button
                         onClick={() => handleViewHistory(customer)}
                         className="bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#136b8a] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
                       >
@@ -287,9 +287,9 @@ const AdminUsers = () => {
       </div>
 
       {selectedCustomer && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
+        <div className="fixed inset-0 z-[80] overflow-hidden flex justify-end">
           <div className="absolute inset-0 bg-black/45" onClick={() => setSelectedCustomer(null)} />
-          <div className="relative w-full max-w-lg bg-slate-50 h-full shadow-2xl flex flex-col z-10 animate-slide-in">
+          <div className="relative w-full max-w-lg bg-slate-50 h-full shadow-2xl flex flex-col z-50 animate-slide-in">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-[#136b8a] text-white">
               <div>
                 <h3 className="text-lg font-bold">{selectedCustomer.full_name || 'Customer Profile'}</h3>
@@ -325,7 +325,7 @@ const AdminUsers = () => {
                 <div className="flex justify-between items-center">
                   <h4 className="font-bold text-gray-900 text-sm">Booking History</h4>
                 </div>
-                
+
                 {loadingHistory ? (
                   <div className="flex items-center justify-center py-10">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#136b8a]"></div>
@@ -341,7 +341,7 @@ const AdminUsers = () => {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h5 className="font-bold text-gray-950 text-sm">{b.package_title}</h5>
-                            <p className="text-[10px] text-gray-500 font-mono mt-0.5">Ref: {b.booking_reference || b.booking_id || b.id.substring(0,8)}</p>
+                            <p className="text-[10px] text-gray-500  mt-0.5">Ref: {b.booking_reference || b.booking_id || b.id.substring(0,8)}</p>
                           </div>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                             b.booking_status?.toLowerCase() === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'
@@ -353,7 +353,7 @@ const AdminUsers = () => {
                           <div><span className="text-gray-400">Paid:</span> ₹{(b.advance_payment || b.paid_amount || 0).toLocaleString()}</div>
                           <div><span className="text-gray-400">Due:</span> <span className="text-amber-600 font-bold">₹{((b.total_amount || 0) - (b.advance_payment || b.paid_amount || 0)).toLocaleString()}</span></div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setEditBookingId(b.id)}
                           className="w-full text-center text-xs font-bold text-[#136b8a] bg-[#136b8a]/10 hover:bg-[#136b8a]/20 py-2 rounded-lg transition-colors"
                         >
@@ -370,7 +370,7 @@ const AdminUsers = () => {
       )}
 
       {/* AdminBookingModal for Open Booking */}
-      <AdminBookingModal 
+      <AdminBookingModal
         isOpen={!!editBookingId}
         onClose={() => setEditBookingId(null)}
         onSuccess={() => {

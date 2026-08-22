@@ -18,15 +18,15 @@ const AdminRoomAllocation = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch bookings with their travellers and rooms
       const { data, error: fetchError } = await supabase
         .from('bookings')
         .select(`
-          id, 
-          booking_reference, 
-          package_title, 
-          travel_date, 
+          id,
+          booking_reference,
+          package_title,
+          travel_date,
           status,
           booking_travellers (id, sharing_type, room_id),
           booking_rooms (id, room_number, room_type)
@@ -39,12 +39,12 @@ const AdminRoomAllocation = () => {
       const processedBookings = (data || []).map(b => {
         const travellers = b.booking_travellers || [];
         const rooms = b.booking_rooms || [];
-        
+
         const totalTravellers = travellers.length;
         const doubleTravellers = travellers.filter(t => t.sharing_type === 'Double').length;
         const tripleTravellers = travellers.filter(t => t.sharing_type === 'Triple').length;
         const quadTravellers = travellers.filter(t => t.sharing_type === 'Quad').length;
-        
+
         const allocatedTravellers = travellers.filter(t => t.room_id !== null).length;
         const unallocatedTravellers = totalTravellers - allocatedTravellers;
 
@@ -82,13 +82,13 @@ const AdminRoomAllocation = () => {
     fetchBookings(); // Refresh data in case changes were made
   };
 
-  const filteredBookings = bookings.filter(b => 
+  const filteredBookings = bookings.filter(b =>
     (b.booking_reference?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (b.package_title?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto font-sans">
+    <div className="p-6 max-w-7xl mx-auto ">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -172,7 +172,7 @@ const AdminRoomAllocation = () => {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
                             <div className="w-full bg-gray-200 rounded-full h-1.5 max-w-[100px]">
-                              <div 
+                              <div
                                 className={`h-1.5 rounded-full ${booking.stats.unallocated === 0 && booking.stats.total > 0 ? 'bg-emerald-500' : 'bg-amber-500'}`}
                                 style={{ width: `${booking.stats.total > 0 ? (booking.stats.allocated / booking.stats.total) * 100 : 0}%` }}
                               ></div>

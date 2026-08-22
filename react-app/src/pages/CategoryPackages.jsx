@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import PackageCard from '../components/PackageCard';
+import RecommendedExtraPackages from '../components/RecommendedExtraPackages';
 import { supabase } from '../supabaseClient';
 import { PackageIcon, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -12,6 +13,8 @@ const CategoryPackages = () => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [categoryId, setCategoryId] = useState(null);
+  const [pType, setPType] = useState(null);
 
   const [sectionData, setSectionData] = useState(null);
 
@@ -42,6 +45,8 @@ const CategoryPackages = () => {
 
         if (titleStr) {
           setSectionData({ title: titleStr });
+          setCategoryId(categoryId);
+          setPType(pType);
         }
 
         if (!categoryId) {
@@ -136,6 +141,14 @@ const CategoryPackages = () => {
                 />
               ))}
             </div>
+          )}
+
+          {categoryId && pType && (
+            <RecommendedExtraPackages 
+              placementType={pType === 'homepage_section' ? 'recommendation_listing' : `recommendation_${pType}`} 
+              placementId={categoryId} 
+              excludePackageIds={packages.map(p => p.id)}
+            />
           )}
         </div>
       </main>

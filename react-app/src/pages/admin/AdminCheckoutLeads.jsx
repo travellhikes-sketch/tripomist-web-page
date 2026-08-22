@@ -112,7 +112,7 @@ const AdminCheckoutLeads = () => {
       (l.package_title?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || l.lead_status === statusFilter;
-    
+
     let matchesDate = true;
     if (dateFilter) {
       const leadDateStr = l.created_at ? l.created_at.split('T')[0] : '';
@@ -256,7 +256,7 @@ const AdminCheckoutLeads = () => {
                   <tr key={lead.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     {/* Lead Number */}
                     <td className="px-4 py-3">
-                      <span className="font-mono text-xs font-bold text-gray-800">{lead.lead_number}</span>
+                      <span className=" text-xs font-bold text-gray-800">{lead.lead_number}</span>
                       {isPossiblyAbandoned(lead) && (
                         <span className="ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full">
                           <Clock size={10} /> Abandoned?

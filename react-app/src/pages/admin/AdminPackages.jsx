@@ -167,7 +167,7 @@ const AdminPackages = () => {
         .update({ [field]: newValue })
         .eq('id', pkg.id);
       if (toggleErr) throw toggleErr;
-      
+
       await fetchPackages();
     } catch (err) {
       console.error('Toggle error:', err);
@@ -429,7 +429,7 @@ const AdminPackages = () => {
 
       {/* ── Delete Confirmation Modal ───────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 rounded-full">

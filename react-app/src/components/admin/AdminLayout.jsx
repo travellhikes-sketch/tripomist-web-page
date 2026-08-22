@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { 
-  LayoutDashboard, 
-  Package, 
-  CalendarDays, 
-  Users, 
+import {
+  LayoutDashboard,
+  Package,
+  CalendarDays,
+  Users,
   UserPlus,
-  LogOut, 
-  Menu, 
-  X, 
+  LogOut,
+  Menu,
+  X,
   ExternalLink,
   MessageSquare,
   Settings,
@@ -36,8 +36,8 @@ const AdminLayout = () => {
 
   // Open collapsibles based on current route on mount/route change
   useEffect(() => {
-    if (location.pathname.startsWith('/admin/manual-bookings') || 
-        location.pathname.startsWith('/admin/bookings') || 
+    if (location.pathname.startsWith('/admin/manual-bookings') ||
+        location.pathname.startsWith('/admin/bookings') ||
         location.pathname.startsWith('/admin/checkout-leads') ||
         location.pathname.startsWith('/admin/booking-activity-logs')) {
       setIsBookingsOpen(true);
@@ -58,25 +58,25 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-sm">
+    <div className="flex min-h-screen bg-slate-50  text-sm admin-layout">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-20 bg-black/40 md:hidden transition-opacity" 
+        <div
+          className="fixed inset-0 z-20 bg-black/40 md:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-30 w-56 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out md:static md:translate-x-0 flex flex-col ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      <aside
+        className={`fixed inset-y-0 left-0 z-[60] w-56 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out flex flex-col ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="flex items-center justify-between h-14 px-5 border-b border-gray-100 flex-shrink-0">
           <span className="text-base font-bold text-gray-800 tracking-tight">TripoMist Admin</span>
-          <button 
-            className="md:hidden text-gray-500 hover:text-gray-700" 
+          <button
+            className="md:hidden text-gray-500 hover:text-gray-700"
             onClick={() => setSidebarOpen(false)}
           >
             <X size={20} />
@@ -88,7 +88,7 @@ const AdminLayout = () => {
             to="/admin/dashboard"
             className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
               location.pathname === '/admin/dashboard'
-                ? 'bg-slate-100 text-slate-900 font-semibold' 
+                ? 'bg-slate-100 text-slate-900 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
             onClick={() => setSidebarOpen(false)}
@@ -101,7 +101,7 @@ const AdminLayout = () => {
             to="/admin/packages"
             className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
               location.pathname.startsWith('/admin/packages')
-                ? 'bg-slate-100 text-slate-900 font-semibold' 
+                ? 'bg-slate-100 text-slate-900 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
             onClick={() => setSidebarOpen(false)}
@@ -112,7 +112,7 @@ const AdminLayout = () => {
 
           {/* Bookings Collapsible */}
           <div className="pt-2">
-            <button 
+            <button
               onClick={() => setIsBookingsOpen(!isBookingsOpen)}
               className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
@@ -133,6 +133,9 @@ const AdminLayout = () => {
                 <Link to="/admin/checkout-leads" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/checkout-leads') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   Checkout Leads
                 </Link>
+                <Link to="/admin/itinerary-leads" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/itinerary-leads') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
+                  Itinerary Leads
+                </Link>
 
                 <Link to="/admin/booking-activity-logs" className={`block px-3 py-1.5 rounded-md transition-colors ${location.pathname.startsWith('/admin/booking-activity-logs') ? 'bg-slate-100 text-slate-900 font-medium' : 'text-gray-600 hover:bg-gray-50'}`} onClick={() => setSidebarOpen(false)}>
                   Activity Logs
@@ -143,27 +146,28 @@ const AdminLayout = () => {
               </div>
             )}
           </div>
-          
+
+
+
+
           <Link
-            to="/admin/service-recovery"
+            to="/admin/ai-chatbot"
             className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
-              location.pathname.startsWith('/admin/service-recovery')
-                ? 'bg-slate-100 text-slate-900 font-semibold' 
+              location.pathname.startsWith('/admin/ai-chatbot')
+                ? 'bg-slate-100 text-slate-900 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
             onClick={() => setSidebarOpen(false)}
           >
-            <ShieldAlert size={18} className={location.pathname.startsWith('/admin/service-recovery') ? 'text-rose-600' : 'text-gray-400'} />
-            Service Recovery
+            <MessageSquare size={18} className={location.pathname.startsWith('/admin/ai-chatbot') ? 'text-slate-800' : 'text-gray-400'} />
+            AI Chatbot
           </Link>
-          
-
 
           <Link
             to="/admin/users"
             className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
               location.pathname.startsWith('/admin/users')
-                ? 'bg-slate-100 text-slate-900 font-semibold' 
+                ? 'bg-slate-100 text-slate-900 font-semibold'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
             onClick={() => setSidebarOpen(false)}
@@ -174,7 +178,7 @@ const AdminLayout = () => {
 
           {/* Website Management Collapsible */}
           <div className="pt-2">
-            <button 
+            <button
               onClick={() => setIsWebsiteMgmtOpen(!isWebsiteMgmtOpen)}
               className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
@@ -216,7 +220,7 @@ const AdminLayout = () => {
 
           {/* Website Pages Collapsible */}
           <div className="pt-2">
-            <button 
+            <button
               onClick={() => setIsWebsitePagesOpen(!isWebsitePagesOpen)}
               className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
@@ -252,8 +256,8 @@ const AdminLayout = () => {
         </nav>
 
         <div className="p-3 border-t border-gray-100 space-y-1 flex-shrink-0">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             target="_blank"
             className="flex items-center gap-2.5 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 transition-colors"
           >
@@ -271,12 +275,12 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-screen w-full md:pl-56">
         {/* Top Header for Mobile */}
-        <header className="flex items-center justify-between h-14 px-4 bg-white border-b border-gray-100 md:hidden z-10 flex-shrink-0">
+        <header className="sticky top-0 flex items-center justify-between h-14 px-4 bg-white border-b border-gray-100 md:hidden z-[40] flex-shrink-0">
           <span className="text-base font-bold text-gray-800">Admin</span>
-          <button 
-            className="text-gray-600 focus:outline-none p-1" 
+          <button
+            className="text-gray-600 focus:outline-none p-1"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu size={20} />
@@ -284,7 +288,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto bg-slate-50 p-4 md:p-6">
+        <div className="flex-1 bg-slate-50 p-4 md:p-6">
           <React.Suspense fallback={
             <div className="flex items-center justify-center h-[50vh]">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-800"></div>

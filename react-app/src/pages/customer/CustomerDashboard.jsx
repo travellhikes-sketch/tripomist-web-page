@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import { Link } from 'react-router-dom';
-import { 
-  Map, 
-  CreditCard, 
-  CalendarClock, 
+import {
+  Map,
+  CreditCard,
+  CalendarClock,
   Search,
   ChevronRight,
   Clock,
@@ -33,7 +33,7 @@ const CustomerDashboard = () => {
         .select('*')
         .eq('user_id', session.user.id)
         .order('travel_date', { ascending: false });
-        
+
       if (!error && data) {
         setBookings(data);
       }
@@ -48,14 +48,14 @@ const CustomerDashboard = () => {
   const handleClaimSubmit = async (e) => {
     e.preventDefault();
     setClaimStatus('loading');
-    
+
     try {
       const { data, error } = await supabase.rpc('claim_booking', {
         p_booking_id: claimForm.booking_id
       });
-      
+
       if (error) throw error;
-      
+
       if (data?.success) {
         setClaimStatus('success');
         fetchBookings(); // Refresh list
@@ -103,7 +103,7 @@ const CustomerDashboard = () => {
           <p className="text-sm text-gray-500 font-medium">Total Trips</p>
           <h3 className="text-2xl font-bold text-gray-900">{bookings.length}</h3>
         </div>
-        
+
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -113,14 +113,14 @@ const CustomerDashboard = () => {
           <p className="text-sm text-gray-500 font-medium">Upcoming</p>
           <h3 className="text-2xl font-bold text-gray-900">{upcomingTrips.length}</h3>
         </div>
-        
+
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-bold text-gray-800 mb-1">Booked over Phone/WhatsApp?</p>
               <p className="text-xs text-gray-500 max-w-[200px]">Link your manual booking to view it here.</p>
             </div>
-            <button 
+            <button
               onClick={() => setShowClaimModal(true)}
               className="bg-[#136b8a] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#0f556e] transition-colors flex items-center gap-1 shrink-0"
             >
@@ -140,7 +140,7 @@ const CustomerDashboard = () => {
             </Link>
           )}
         </div>
-        
+
         {latestTrip ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
             <div className="md:w-1/3 bg-gray-100 p-6 flex flex-col justify-center border-b md:border-b-0 md:border-r border-gray-200">
@@ -152,7 +152,7 @@ const CustomerDashboard = () => {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-1">{latestTrip.package_title}</h3>
               <p className="text-sm font-semibold text-gray-500 mb-4">{new Date(latestTrip.travel_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              
+
               <Link to={`/account/trips/${latestTrip.id}`} className="mt-auto w-full text-center bg-gray-900 text-white font-bold py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm">
                 View Itinerary
               </Link>
@@ -160,7 +160,7 @@ const CustomerDashboard = () => {
             <div className="md:w-2/3 p-6 grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-gray-500 mb-1">Booking ID</p>
-                <p className="font-mono font-bold text-gray-900 text-sm">{latestTrip.booking_id || latestTrip.booking_reference || latestTrip.id}</p>
+                <p className=" font-bold text-gray-900 text-sm">{latestTrip.booking_id || latestTrip.booking_reference || latestTrip.id}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-1">Travellers</p>
@@ -197,7 +197,7 @@ const CustomerDashboard = () => {
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-2">Find My Booking</h3>
               <p className="text-sm text-gray-500 mb-6">Enter your phone number and the Booking ID you received over WhatsApp/Email.</p>
-              
+
               <form onSubmit={handleClaimSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">Booking ID</label>
@@ -213,7 +213,7 @@ const CustomerDashboard = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {claimStatus === 'success' && (
                   <div className="bg-emerald-50 text-emerald-700 p-3 rounded-lg text-xs flex items-start gap-2">
                     <CheckCircle size={16} className="shrink-0 mt-0.5" />
@@ -223,7 +223,7 @@ const CustomerDashboard = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="pt-2 flex gap-3">
                   <button type="button" onClick={() => setShowClaimModal(false)} className="flex-1 px-4 py-2 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm">Cancel</button>
                   <button type="submit" disabled={claimStatus === 'loading'} className="flex-1 px-4 py-2 font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-lg transition-colors text-sm disabled:opacity-50">

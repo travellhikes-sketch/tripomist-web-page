@@ -14,7 +14,7 @@ const countryCodes = [
 function Login() {
   const [authMode, setAuthMode] = useState('register') // 'register' | 'login'
   const [step, setStep] = useState(1) // 1: Registration Form, 2: OTP
-  
+
   // Registration State
   const [fullName, setFullName] = useState('')
   const [countryCode, setCountryCode] = useState('+91')
@@ -22,7 +22,7 @@ function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
-  
+
   // Login State
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -30,7 +30,7 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
-  
+
   const navigate = useNavigate()
   const location = useLocation()
   const redirectTo = new URLSearchParams(location.search).get('redirect') || '/'
@@ -52,7 +52,7 @@ function Login() {
     }
     setLoading(true)
     setErrorMsg('')
-    
+
     // Simulate sending OTP (UI step transition)
     setTimeout(() => {
       setLoading(false)
@@ -71,7 +71,7 @@ function Login() {
     setLoading(true)
     setErrorMsg('')
     setSuccessMsg('')
-    
+
     try {
       // Create the user in Supabase with email + password
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -156,7 +156,7 @@ function Login() {
               .eq('id', claimData.id)
               .eq('razorpay_payment_id', claimData.razorpay_payment_id)
               .is('user_id', null);
-            
+
             if (claimError) {
               console.error("Booking claim failed:", claimError);
             } else {
@@ -214,8 +214,8 @@ function Login() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
-      
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
+
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
       <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl z-0 pointer-events-none"></div>
@@ -223,15 +223,15 @@ function Login() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight drop-shadow-sm">
-          {authMode === 'register' 
+          {authMode === 'register'
             ? (step === 1 ? 'Create an Account' : 'Verify OTP')
             : authMode === 'forgot'
             ? 'Reset Password'
             : 'Sign in to TripoMist'}
         </h2>
         <p className="mt-2 text-center text-sm text-teal-100 font-medium">
-          {authMode === 'register' 
-            ? 'Join us and start your adventure' 
+          {authMode === 'register'
+            ? 'Join us and start your adventure'
             : authMode === 'forgot'
             ? 'Enter your email to receive a recovery link'
             : 'Welcome back, traveler!'}
@@ -240,7 +240,7 @@ function Login() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
         <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100">
-          
+
           {errorMsg && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
               <span className="material-symbols-outlined text-[18px]">error</span>
@@ -275,7 +275,7 @@ function Login() {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
                 <div className="flex gap-2">
-                  <select 
+                  <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
                     className="w-24 px-2 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] font-medium text-gray-900 bg-white"
@@ -371,7 +371,7 @@ function Login() {
                   {loading ? 'Verifying...' : 'Verify & Complete'}
                 </button>
               </div>
-              
+
               <div className="text-center">
                 <button type="button" onClick={() => setStep(1)} className="text-sm font-bold text-gray-500 hover:text-gray-700 cursor-pointer">
                   Go Back
@@ -499,7 +499,7 @@ function Login() {
 
         </div>
       </div>
-      
+
       {/* CSS for slanted background */}
       <style dangerouslySetInnerHTML={{__html: `
         .clip-path-slant {

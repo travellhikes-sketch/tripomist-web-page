@@ -1,110 +1,141 @@
-import React from 'react';
-import { Phone, Mail, MessageCircle, MapPin, ExternalLink, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../utils/supabaseClient';
 
 const CustomerSupport = () => {
-  const faqs = [
-    {
-      q: "How can I check my pickup details?",
-      a: "Your pickup point and reporting time are available in the 'My Trips' section under 'Trip Details'. If they are not updated yet, our team will contact you 24 hours before departure."
-    },
-    {
-      q: "Can I change my boarding point?",
-      a: "Changes to boarding points must be requested at least 48 hours before departure. Please contact us via WhatsApp to request a change."
-    },
-    {
-      q: "How do I pay my pending balance?",
-      a: "Currently, online payments for pending balances are being upgraded. Please contact our support team via WhatsApp or Call to complete your payment securely."
-    },
-    {
-      q: "What is the cancellation policy?",
-      a: "Cancellations made 15 days before departure incur a 25% fee. Cancellations within 15 days are non-refundable. Please refer to our Refund Policy for more details."
+  const [siteSettings, setSiteSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('settings')
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching site settings:', error);
+        } else if (data) {
+          setSiteSettings(data.settings?.customer_support);
+        }
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    loadSettings();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="animate-pulse flex flex-col gap-4 max-w-4xl mx-auto p-4 md:p-8">
+        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="h-20 bg-gray-100 rounded-2xl w-full"></div>
+        <div className="h-20 bg-gray-100 rounded-2xl w-full"></div>
+        <div className="h-20 bg-gray-100 rounded-2xl w-full"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="animate-fade-in max-w-4xl mx-auto space-y-6">
+    <div className="animate-fade-in max-w-4xl mx-auto p-4 md:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Support & Contact</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Help & Support</h1>
         <p className="text-gray-500 mt-1">We're here to help make your journey smooth and memorable.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Contact Cards */}
-        <div className="space-y-4">
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Phone size={24} />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">Call Us</h3>
-            <p className="text-sm text-gray-500 mb-4">Available 10 AM to 7 PM</p>
-            <a href="tel:+918800626084" className="inline-block bg-gray-100 text-gray-900 font-bold py-2 px-6 rounded-lg hover:bg-gray-200 transition-colors">
-              +91 8800626084
-            </a>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
-            <div className="w-12 h-12 bg-[#25D366]/10 text-[#25D366] rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle size={24} />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">WhatsApp Support</h3>
-            <p className="text-sm text-gray-500 mb-4">Quickest way to reach us</p>
-            <a href="https://wa.me/918800626084" target="_blank" rel="noreferrer" className="inline-block bg-[#25D366] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#1ebd5a] transition-colors">
-              Chat on WhatsApp
-            </a>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
-            <div className="w-10 h-10 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center shrink-0">
-              <Mail size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1">Email</h3>
-              <a href="mailto:support@tripomist.com" className="text-sm text-[#136b8a] hover:underline font-medium">support@tripomist.com</a>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-start gap-4">
-            <div className="w-10 h-10 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center shrink-0">
-              <MapPin size={20} />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1">Office</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                New Delhi, India
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQs */}
-        <div className="bg-white p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm h-fit">
-          <h2 className="font-bold text-gray-900 text-lg mb-6 flex items-center gap-2">
-            <HelpCircle size={20} className="text-[#136b8a]"/> Frequently Asked Questions
-          </h2>
-          
-          <div className="space-y-6">
-            {faqs.map((faq, index) => (
-              <div key={index} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                <h3 className="font-bold text-gray-800 text-sm mb-2">{faq.q}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{faq.a}</p>
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+        <div className="flex flex-col gap-0 divide-y divide-gray-100">
+          {siteSettings?.whatsapp?.enabled && (
+            <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#136b8a] text-xl">chat</span>
+                  {siteSettings.whatsapp.title || 'WhatsApp'}
+                </h4>
+                {siteSettings.whatsapp.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.whatsapp.value}</p>}
+                {siteSettings.whatsapp.description && <p className="text-xs text-gray-500 mt-1">{siteSettings.whatsapp.description}</p>}
               </div>
-            ))}
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <p className="text-sm text-gray-500 mb-3">Need more information?</p>
-            <div className="flex flex-wrap gap-3">
-              <a href="/terms-conditions" target="_blank" className="text-xs font-bold text-[#136b8a] bg-blue-50 px-3 py-1.5 rounded flex items-center gap-1 hover:bg-blue-100 transition-colors">
-                Terms & Conditions <ExternalLink size={10} />
-              </a>
-              <a href="/refund-policy" target="_blank" className="text-xs font-bold text-[#136b8a] bg-blue-50 px-3 py-1.5 rounded flex items-center gap-1 hover:bg-blue-100 transition-colors">
-                Refund Policy <ExternalLink size={10} />
-              </a>
+              <div className="flex items-center gap-2">
+                {siteSettings.whatsapp.value && (
+                  <button onClick={() => navigator.clipboard.writeText(siteSettings.whatsapp.value)} className="text-sm text-[#136b8a] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Copy</button>
+                )}
+                {siteSettings.whatsapp.value && (
+                  <a href={`https://wa.me/${siteSettings.whatsapp.value.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm text-white font-bold bg-[#25D366] px-4 py-2 rounded-lg hover:bg-[#1ebd5b] transition-colors">Message</a>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
+          )}
 
+          {siteSettings?.call?.enabled && (
+            <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#136b8a] text-xl">call</span>
+                  {siteSettings.call.title || 'Call Us'}
+                </h4>
+                {siteSettings.call.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.call.value}</p>}
+                {siteSettings.call.description && <p className="text-xs text-gray-500 mt-1">{siteSettings.call.description}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                {siteSettings.call.value && (
+                  <>
+                    <button onClick={() => navigator.clipboard.writeText(siteSettings.call.value)} className="text-sm text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Copy</button>
+                    <a href={`tel:${siteSettings.call.value}`} className="text-sm text-white font-bold bg-[#136b8a] px-4 py-2 rounded-lg hover:bg-[#0f556e] transition-colors">Call</a>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {siteSettings?.email?.enabled && (
+            <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#136b8a] text-xl">mail</span>
+                  {siteSettings.email.title || 'Email'}
+                </h4>
+                {siteSettings.email.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.email.value}</p>}
+                {siteSettings.email.description && <p className="text-xs text-gray-500 mt-1">{siteSettings.email.description}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                {siteSettings.email.value && (
+                  <>
+                    <button onClick={() => navigator.clipboard.writeText(siteSettings.email.value)} className="text-sm text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Copy</button>
+                    <a href={`mailto:${siteSettings.email.value}`} className="text-sm text-[#136b8a] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Email Us</a>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {siteSettings?.live_chat?.enabled && (
+            <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#136b8a] text-xl">support_agent</span>
+                  {siteSettings.live_chat.title || 'Live Chat'}
+                </h4>
+                {siteSettings.live_chat.description && <p className="text-xs text-gray-500 mt-1">{siteSettings.live_chat.description}</p>}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('tripomist:open-chatbot'))}
+                  className="text-sm text-white font-bold bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                  Start Chat
+                </button>
+              </div>
+            </div>
+          )}
+
+          {(!siteSettings || (!siteSettings.whatsapp?.enabled && !siteSettings.call?.enabled && !siteSettings.email?.enabled && !siteSettings.live_chat?.enabled)) && (
+             <div className="py-8 text-center text-gray-500">
+               Support contact methods are currently not configured. Please check back later.
+             </div>
+          )}
+        </div>
       </div>
     </div>
   );

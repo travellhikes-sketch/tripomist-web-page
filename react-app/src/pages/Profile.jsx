@@ -9,7 +9,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState('My Profile');
-  
+
   // Edit States
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -17,14 +17,14 @@ export default function Profile() {
   const [editGender, setEditGender] = useState('');
   const [editCity, setEditCity] = useState('');
   const [editPhoto, setEditPhoto] = useState('');
-  
+
   const [message, setMessage] = useState({ text: '', type: '' });
   const [saving, setSaving] = useState(false);
-  
+
   // Upload States
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function Profile() {
 
     try {
       const { data, error } = await supabase.auth.updateUser({
-        data: { 
+        data: {
           full_name: editName,
           phone: editPhone,
           dob: editDob,
@@ -148,7 +148,7 @@ export default function Profile() {
         }
       });
       if (error) throw error;
-      
+
       setUser(data.user);
 
       try {
@@ -190,7 +190,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col ">
         <Navbar />
         <div className="flex-1 flex justify-center items-center py-20">
           <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
@@ -203,14 +203,14 @@ export default function Profile() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col ">
       <Navbar />
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 md:py-12">
         <h1 className="text-3xl font-bold text-gray-900 mb-8 tracking-tight">Account Settings</h1>
-        
+
         <div className="flex flex-col md:flex-row gap-8">
-          
+
           {/* Sidebar */}
           <aside className="w-full md:w-64 flex-shrink-0">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-1">
@@ -219,8 +219,8 @@ export default function Profile() {
                   key={tab.id}
                   onClick={() => tab.action ? tab.action() : setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-left ${
-                    activeTab === tab.id 
-                      ? 'bg-blue-50 text-[#136b8a]' 
+                    activeTab === tab.id
+                      ? 'bg-blue-50 text-[#136b8a]'
                       : `text-gray-600 hover:bg-gray-50 ${tab.textClass || ''}`
                   }`}
                 >
@@ -236,7 +236,7 @@ export default function Profile() {
           {/* Content Area */}
           <div className="flex-1">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10">
-              
+
               {message.text && (
                 <div className={`p-4 mb-6 rounded-xl flex items-start gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                   <span className="material-symbols-outlined text-[20px]">
@@ -255,7 +255,7 @@ export default function Profile() {
                       {saving ? 'Saving...' : <><span className="material-symbols-outlined text-[16px]">edit</span> Edit</>}
                     </button>
                   </div>
-                  
+
                   <div className="flex items-center gap-6 mb-8">
                     <div className="relative group">
                       <div className="w-24 h-24 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
@@ -300,7 +300,7 @@ export default function Profile() {
                       {saving ? 'Saving...' : <><span className="material-symbols-outlined text-[16px]">edit</span> Edit</>}
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">First Name</label>
@@ -336,7 +336,7 @@ export default function Profile() {
                       {saving ? 'Saving...' : <><span className="material-symbols-outlined text-[16px]">edit</span> Edit</>}
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Email Address (Read Only)</label>
@@ -372,7 +372,7 @@ export default function Profile() {
                     <h2 className="text-xl font-bold text-gray-900">My Trips</h2>
                     <Link to="/my-trips" className="text-sm font-bold text-[#136b8a] hover:underline">View All</Link>
                   </div>
-                  
+
                   {bookings.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {bookings.slice(0, 4).map(booking => (

@@ -66,7 +66,7 @@ const ServiceRecoveryCreationModal = ({ isOpen, onClose, onSuccess, booking }) =
 
           <div className="bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
             <div className="text-xs uppercase font-bold text-gray-500 mb-1">Booking Reference</div>
-            <div className="font-mono text-[#136b8a] font-bold">{booking.booking_id || booking.id}</div>
+            <div className=" text-[#136b8a] font-bold">{booking.booking_id || booking.id}</div>
             <div className="text-sm font-semibold text-gray-900 mt-1">{booking.customer_name} - {booking.package_title}</div>
           </div>
 
