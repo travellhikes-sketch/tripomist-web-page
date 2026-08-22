@@ -233,7 +233,7 @@ const AdminMenuManager = () => {
         <div {...provided.dragHandleProps} className={`cursor-grab text-gray-400 hover:text-gray-600 ${isDragDisabled ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}>
           <GripVertical size={16} />
         </div>
-        <div className="font-mono text-xs text-gray-400 w-4">{item.display_order}</div>
+        <div className=" text-xs text-gray-400 w-4">{item.display_order}</div>
         <div className="flex items-center gap-2 truncate">
           {item.icon && <span className="material-symbols-outlined text-[16px] text-gray-500">{item.icon}</span>}
           <span className={`font-medium ${isChild ? 'text-gray-700' : 'text-gray-900'} truncate`} title={item.label}>{item.label}</span>

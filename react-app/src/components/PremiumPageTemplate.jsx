@@ -9,7 +9,8 @@ const PremiumPageTemplate = ({
   mobile_banner_image,
   seo_title,
   content,
-  children
+  children,
+  fullWidthLayout = false
 }) => {
   useEffect(() => {
     if (seo_title) {
@@ -108,11 +109,11 @@ const PremiumPageTemplate = ({
       )}
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 md:px-12 lg:px-20 py-12">
-        <div className="bg-white rounded-2xl p-6 md:p-12 shadow-sm border border-gray-100">
+      <main className={`flex-grow max-w-7xl mx-auto w-full py-12 ${fullWidthLayout ? 'px-4 md:px-8' : 'px-4 md:px-12 lg:px-20'}`}>
+        <div className={fullWidthLayout ? '' : 'bg-white rounded-2xl p-6 md:p-12 shadow-sm border border-gray-100'}>
           {/* Fallback title rendering if no banner exists */}
           {!hero_image_url && (
-            <div className="mb-10 border-b border-gray-100 pb-8 text-left">
+            <div className={`mb-10 border-b border-gray-100 pb-8 text-left ${fullWidthLayout ? 'px-4' : ''}`}>
               <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                 {title}
               </h1>
@@ -125,14 +126,16 @@ const PremiumPageTemplate = ({
           )}
 
           {content && (
-            isHtml ? (
-              <div
-                className="prose max-w-none text-left text-base md:text-lg leading-relaxed text-[#3e4850]"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
-              />
-            ) : (
-              renderLegacyContent(content)
-            )
+            <div className={fullWidthLayout ? 'px-4' : ''}>
+              {isHtml ? (
+                <div
+                  className="prose max-w-none text-left text-base md:text-lg leading-relaxed text-[#3e4850]"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+                />
+              ) : (
+                renderLegacyContent(content)
+              )}
+            </div>
           )}
 
           {/* Children components (e.g. reviews page extra grids) */}

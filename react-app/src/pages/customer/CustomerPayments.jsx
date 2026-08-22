@@ -19,7 +19,7 @@ const CustomerPayments = () => {
         .select('id, booking_id, booking_reference, package_title, created_at, total_amount, amount_paid, pending_amount, payment_status')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
-        
+
       if (!error && data) {
         setBookings(data);
       }
@@ -69,7 +69,7 @@ const CustomerPayments = () => {
         <div className="px-6 py-4 border-b border-gray-200 bg-slate-50">
           <h2 className="font-bold text-gray-900 flex items-center gap-2"><Receipt size={18} className="text-gray-400"/> Payment History</h2>
         </div>
-        
+
         {bookings.length === 0 ? (
           <div className="p-8 text-center text-gray-500 text-sm">
             No payment history found.
@@ -89,7 +89,7 @@ const CustomerPayments = () => {
               <tbody className="divide-y divide-gray-100">
                 {bookings.map(b => (
                   <tr key={b.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-bold text-gray-700">{b.booking_id || b.booking_reference || b.id}</td>
+                    <td className="px-6 py-4  font-bold text-gray-700">{b.booking_id || b.booking_reference || b.id}</td>
                     <td className="px-6 py-4 font-medium text-gray-900">{b.package_title}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${b.payment_status?.toLowerCase() === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>

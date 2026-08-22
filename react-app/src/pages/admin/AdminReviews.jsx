@@ -84,6 +84,8 @@ const AdminReviews = () => {
     is_active: true
   });
   const [mediaSaving, setMediaSaving] = useState(false);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [editingMediaItem, setEditingMediaItem] = useState(null);
 
   useEffect(() => {
     fetchReviews();
@@ -383,6 +385,43 @@ const AdminReviews = () => {
       fetchGalleryMedia();
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const handleEditMedia = (item) => {
+    setEditingMediaItem({ ...item });
+    setIsMediaModalOpen(true);
+  };
+
+  const handleSaveEditedMedia = async (e) => {
+    e.preventDefault();
+    if (!editingMediaItem.media_url) {
+      alert('Media URL is required.');
+      return;
+    }
+    setMediaSaving(true);
+    try {
+      const { error: updateErr } = await supabase
+        .from('gallery_media')
+        .update({
+          media_type: editingMediaItem.media_type,
+          media_url: editingMediaItem.media_url,
+          thumbnail_url: editingMediaItem.thumbnail_url,
+          title: editingMediaItem.title,
+          display_order: editingMediaItem.display_order,
+          is_active: editingMediaItem.is_active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingMediaItem.id);
+      if (updateErr) throw updateErr;
+      setIsMediaModalOpen(false);
+      setEditingMediaItem(null);
+      fetchGalleryMedia();
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setMediaSaving(false);
     }
   };
 
@@ -687,6 +726,27 @@ const AdminReviews = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
           <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Manage Travel Media Gallery</h2>
 
+          {/* Gallery Section Title form */}
+          <form onSubmit={handleSavePageSettings} className="bg-gray-50 p-4 rounded-xl border flex flex-col md:flex-row md:items-end gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gallery Section Title (Public Page)</label>
+              <input
+                type="text"
+                value={pageSettings.gallery_heading || ''}
+                onChange={e => setPageSettings({...pageSettings, gallery_heading: e.target.value})}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="e.g. Travel Memories Gallery"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Save size={16} /> {saving ? 'Saving...' : 'Save Title'}
+            </button>
+          </form>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Add New Media Form */}
             <div className="lg:col-span-1">
@@ -791,13 +851,9 @@ const AdminReviews = () => {
                       </div>
 
                       <div className="flex-grow space-y-2 min-w-0">
-                        <input
-                          type="text"
-                          value={item.title || ''}
-                          onChange={e => handleUpdateMediaField(item.id, 'title', e.target.value)}
-                          className="w-full font-semibold text-sm border-b focus:border-blue-500 focus:outline-none"
-                          placeholder="Untitled Caption"
-                        />
+                        <div className="font-semibold text-sm text-gray-900 line-clamp-1 border-b pb-1">
+                          {item.title || 'Untitled Caption'}
+                        </div>
 
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span className="capitalize">{item.media_type}</span>
@@ -819,12 +875,20 @@ const AdminReviews = () => {
                           >
                             {item.is_active ? 'Active' : 'Inactive'}
                           </button>
-                          <button
-                            onClick={() => handleDeleteMedia(item.id)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1 rounded"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEditMedia(item)}
+                              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1 rounded font-medium flex items-center gap-1 text-xs"
+                            >
+                              <Edit2 size={14} /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMedia(item.id)}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1 rounded font-medium flex items-center gap-1 text-xs"
+                            >
+                              <Trash2 size={14} /> Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1034,7 +1098,7 @@ const AdminReviews = () => {
 
       {/* Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[80] overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
             <div className="fixed inset-0 transition-opacity bg-gray-900/75" onClick={() => setIsModalOpen(false)}></div>
             <div className="relative inline-block w-full max-w-2xl p-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl sm:my-8">
@@ -1134,6 +1198,98 @@ const AdminReviews = () => {
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
                   <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
                     <Save size={16} /> {saving ? 'Saving...' : 'Save Review'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Media Edit Modal Form */}
+      {isMediaModalOpen && editingMediaItem && (
+        <div className="fixed inset-0 z-[80] overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-gray-900/75" onClick={() => setIsMediaModalOpen(false)}></div>
+            <div className="relative inline-block w-full max-w-xl p-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl sm:my-8">
+              <div className="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  Edit Gallery Media
+                </h3>
+                <button onClick={() => setIsMediaModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditedMedia} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Media Type</label>
+                    <select
+                      value={editingMediaItem.media_type}
+                      onChange={e => setEditingMediaItem({...editingMediaItem, media_type: e.target.value})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                    <input
+                      type="number"
+                      value={editingMediaItem.display_order}
+                      onChange={e => setEditingMediaItem({...editingMediaItem, display_order: Number(e.target.value)})}
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Caption / Title</label>
+                  <input
+                    type="text"
+                    value={editingMediaItem.title || ''}
+                    onChange={e => setEditingMediaItem({...editingMediaItem, title: e.target.value})}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="edit_media_active"
+                    checked={editingMediaItem.is_active}
+                    onChange={e => setEditingMediaItem({...editingMediaItem, is_active: e.target.checked})}
+                    className="h-4 w-4 text-blue-600 rounded"
+                  />
+                  <label htmlFor="edit_media_active" className="ml-2 text-sm font-medium text-gray-900">Active (Visible)</label>
+                </div>
+
+                <div className="border-t pt-4">
+                  <MediaUploader
+                    url={editingMediaItem.media_url}
+                    onUrlChange={url => setEditingMediaItem({...editingMediaItem, media_url: url})}
+                    label="Media URL"
+                    folder="gallery"
+                  />
+                </div>
+
+                {editingMediaItem.media_type === 'video' && (
+                  <div className="border-t pt-4">
+                    <MediaUploader
+                      url={editingMediaItem.thumbnail_url}
+                      onUrlChange={url => setEditingMediaItem({...editingMediaItem, thumbnail_url: url})}
+                      label="Video Thumbnail Image"
+                      folder="gallery_thumbs"
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+                  <button type="button" onClick={() => setIsMediaModalOpen(false)} className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                  <button type="submit" disabled={mediaSaving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                    <Save size={16} /> {mediaSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

@@ -4,7 +4,8 @@ import { generatePDFVoucher } from '../../utils/pdfGenerator';
 import {
   X, Check, XCircle, Copy, Download, Search,
   Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
-  MoreVertical, Phone, MessageCircle, Edit, Tag, Building
+  MoreVertical, Phone, MessageCircle, Edit, Tag, Building,
+  Globe, Mail, Users
 } from 'lucide-react';
 
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
@@ -35,7 +36,36 @@ const AdminBookings = () => {
   const [packageFilter, setPackageFilter] = useState('all');
 
   // Drawer state
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null); // preserved for legacy logic if needed
+  const [viewDetailsBooking, setViewDetailsBooking] = useState(null);
+  const [selectedTravellers, setSelectedTravellers] = useState([]);
+  const [loadingTravellers, setLoadingTravellers] = useState(false);
+
+  // Classification Modal State
+  const [classificationModal, setClassificationModal] = useState({ isOpen: false, channel: 'unclassified', company: '', notes: '' });
+
+  useEffect(() => {
+    if (!viewDetailsBooking) {
+      setSelectedTravellers([]);
+      return;
+    }
+    let isMounted = true;
+    setLoadingTravellers(true);
+    supabase.from('booking_travellers').select('*').eq('booking_id', viewDetailsBooking.id)
+      .then(({ data, error }) => {
+        if (isMounted) {
+          if (!error) setSelectedTravellers(data || []);
+          else setSelectedTravellers([]);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setSelectedTravellers([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingTravellers(false);
+      });
+    return () => { isMounted = false; };
+  }, [viewDetailsBooking]);
 
   // Pagination & Selection
   const [currentPage, setCurrentPage] = useState(1);
@@ -225,8 +255,8 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
     if (error) throw error;
     await fetchBookings();
 
-    // Update selectedBooking state so drawer displays updated details
-    setSelectedBooking(prev => {
+    // Update viewDetailsBooking state so drawer displays updated details
+    setViewDetailsBooking(prev => {
       if (prev && prev.id === booking.id) {
         return {
           ...prev,
@@ -281,7 +311,9 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       alert('Booking cancelled successfully.');
       fetchBookings();
       setCancelModal({ isOpen: false, booking: null });
-      setSelectedBooking(null);
+      if (viewDetailsBooking && viewDetailsBooking.id === b.id) {
+        setViewDetailsBooking(prev => ({ ...prev, booking_status: 'cancelled' }));
+      }
     } catch (err) {
       console.error(err);
       alert('Failed to cancel booking: ' + err.message);
@@ -292,8 +324,42 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
 
   const handleMarkProblem = (booking) => {
     setCancelModal({ isOpen: false, booking: null });
-    setSelectedBooking(null);
     setServiceRecoveryModal({ isOpen: true, booking });
+  };
+
+  const handleDrawerConfirmPayment = () => {
+    setConfirmModalConfig({
+      isOpen: true,
+      title: 'Confirm Payment',
+      message: 'Are you sure you want to mark this booking as fully paid?',
+      type: 'amber',
+      onConfirm: async () => {
+        try {
+          const fullPayable = Number(viewDetailsBooking.final_payable_amount ?? viewDetailsBooking.final_amount ?? viewDetailsBooking.total_amount ?? 0);
+          const { error } = await supabase
+            .from('bookings')
+            .update({
+               payment_status: 'paid',
+               advance_payment: fullPayable,
+               remaining_payment: 0
+            })
+            .eq('id', viewDetailsBooking.id);
+
+          if (error) throw error;
+
+          fetchBookings();
+          setViewDetailsBooking(prev => ({
+            ...prev,
+            payment_status: 'paid',
+            advance_payment: fullPayable,
+            remaining_payment: 0
+          }));
+        } catch (err) {
+          console.error(err);
+          alert('Failed to update payment status.');
+        }
+      }
+    });
   };
 
   const exportToCSV = () => {
@@ -417,8 +483,9 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in overflow-x-hidden">
-      {/* Sticky Header & Toolbar */}
+    <>
+      <div className="flex flex-col h-full animate-fade-in overflow-x-hidden">
+        {/* Sticky Header & Toolbar */}
       <div className="sticky top-0 z-10 bg-slate-50 pb-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
           <div>
@@ -445,36 +512,6 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
             </button>
           </div>
         </div>
-
-        <AdminBookingModal
-          isOpen={showManualBooking || !!editBookingId}
-          onClose={() => { setShowManualBooking(false); setEditBookingId(null); }}
-          onSuccess={() => { fetchBookings(); setEditBookingId(null); setShowManualBooking(false); setSelectedBooking(null); }}
-          bookingId={editBookingId}
-        />
-
-        <ConfirmModal
-          isOpen={confirmModalConfig.isOpen}
-          onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
-          title={confirmModalConfig.title}
-          message={confirmModalConfig.message}
-          onConfirm={confirmModalConfig.onConfirm}
-          type={confirmModalConfig.type}
-        />
-
-        <ServiceRecoveryCreationModal
-          isOpen={serviceRecoveryModal.isOpen}
-          onClose={() => setServiceRecoveryModal({ isOpen: false, booking: null })}
-          booking={serviceRecoveryModal.booking}
-          onSuccess={(data) => {
-            if (data?.voucher_code) {
-              window.prompt('Service recovery voucher generated! Copy to clipboard:', data.voucher_code);
-            } else {
-              alert('Service recovery case created successfully.');
-            }
-            fetchBookings();
-          }}
-        />
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md flex items-center justify-between mb-4 text-sm">
@@ -663,11 +700,10 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
     </td>
     <td className="py-2 px-4 text-right">
       <button
-        onClick={() => {
-          setSelectedBooking(booking);
-          setClassificationChannel(booking.sales_channel || 'unclassified');
-          setB2bCompany(booking.b2b_partner_company || '');
-          setB2bNotes(booking.b2b_notes || '');
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setViewDetailsBooking(booking);
         }}
         className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
       >
@@ -725,203 +761,270 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           </div>
         )}
       </div>
+      </div>
 
-
-      {/* Drawer */}
-      {selectedBooking && (
+      {/* Booking Details Drawer */}
+      {viewDetailsBooking && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSelectedBooking(null)} />
-          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-slate-50 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-200 border-l border-gray-200 text-sm">
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setViewDetailsBooking(null)} />
+          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-slate-50 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-200 border-l border-gray-200 text-sm">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
               <div>
-<h2 className="text-base font-bold text-gray-900">Booking Details</h2>
-<p className="text-[#136b8a] font-mono text-xs font-bold">{selectedBooking.booking_id}</p>
+                <h2 className="text-base font-bold text-gray-900">Booking Details</h2>
+                <p className="text-xs text-gray-500  mt-0.5">{viewDetailsBooking.booking_reference || viewDetailsBooking.booking_id}</p>
               </div>
-              <button onClick={() => setSelectedBooking(null)} className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-<X size={18} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setEditBookingId(viewDetailsBooking.id);
+                  }}
+                  className="p-2 text-[#136b8a] bg-[#136b8a]/10 hover:bg-[#136b8a]/20 rounded-full transition-colors"
+                  title="Edit Booking"
+                >
+                  <Edit size={16} />
+                </button>
+                <button onClick={() => setViewDetailsBooking(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><X size={20} /></button>
+              </div>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-5 space-y-6">
 
-              {/* Quick Actions Header */}
-              <div className="grid grid-cols-2 gap-2">
-<button onClick={() => handleQuickAction(selectedBooking, 'confirm')} className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-emerald-200 transition-colors">
-  <Check size={14} /> Confirm
-</button>
-<button onClick={() => handleQuickAction(selectedBooking, 'cancel')} className="bg-rose-50 text-rose-700 hover:bg-rose-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-rose-200 transition-colors">
-  <XCircle size={14} /> Cancel
-</button>
-<button onClick={() => handleQuickAction(selectedBooking, 'markPaid')} className="col-span-2 bg-[#136b8a]/10 text-[#136b8a] hover:bg-[#136b8a]/20 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-[#136b8a]/20 transition-colors">
-  <CreditCard size={14} /> Mark Paid
-</button>
-<button onClick={() => handleMarkProblem(selectedBooking)} className="col-span-2 bg-amber-50 text-amber-700 hover:bg-amber-100 py-1.5 rounded-md text-xs font-bold flex justify-center items-center gap-1 border border-amber-200 transition-colors mt-1">
-   Problem Faced (Service Recovery)
-</button>
+              {/* Core Booking Info */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Core Information</h3>
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-start border-b border-gray-100 pb-3">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Package</p>
+                      <p className="font-semibold text-gray-900">{viewDetailsBooking.package_title}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 mb-1">Travel Date</p>
+                      <p className="font-medium text-gray-900 flex items-center justify-end gap-1"><Calendar size={12} className="text-[#136b8a]"/> {viewDetailsBooking.travel_date ? new Date(viewDetailsBooking.travel_date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Booking Source</p>
+                      <p className="font-medium text-gray-900 capitalize flex items-center gap-1">
+                        {viewDetailsBooking.booking_source === 'website' ? <Globe size={12} className="text-blue-500"/> :
+                         viewDetailsBooking.booking_source === 'whatsapp' ? <MessageCircle size={12} className="text-green-500"/> :
+                         <Phone size={12} className="text-amber-500"/>}
+                        {viewDetailsBooking.booking_source || 'Unknown'}
+                      </p>
+                    </div>
+                    <div>
+                       <p className="text-xs text-gray-500 mb-1">Sales Channel</p>
+                       <div className="font-medium text-gray-900">
+                          {viewDetailsBooking.sales_channel === 'b2b' ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="flex items-center gap-1 text-purple-700 bg-purple-50 px-2 py-0.5 rounded w-max"><Building size={12}/> B2B – Transferred/Sold</span>
+                              {viewDetailsBooking.b2b_partner_company && <span className="text-xs text-gray-700 font-bold">Agency: {viewDetailsBooking.b2b_partner_company}</span>}
+                              {viewDetailsBooking.b2b_notes && <span className="text-[11px] text-gray-500 italic break-words max-w-[200px]">Notes: {viewDetailsBooking.b2b_notes}</span>}
+                            </div>
+                          ) : viewDetailsBooking.sales_channel === 'b2c' ? (
+                            <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded w-max"><User size={12}/> B2C</span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-gray-700 bg-gray-100 px-2 py-0.5 rounded w-max">Unclassified</span>
+                          )}
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Booking Status</p>
+                      {getStatusBadge(viewDetailsBooking.booking_status)}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Payment Status</p>
+                      <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${viewDetailsBooking.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : viewDetailsBooking.payment_status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}`}>
+                        {viewDetailsBooking.payment_status === 'paid' ? 'Full Payment Done' : viewDetailsBooking.payment_status === 'pending' ? 'Half Paid' : viewDetailsBooking.payment_status?.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Customer */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-<div className="flex justify-between items-start mb-2">
-  <h3 className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1"><User size={12}/> Customer</h3>
-  {selectedBooking.user_id ? (
-    <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Account Linked</span>
-  ) : (
-    <span className="text-[9px] uppercase font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Not Linked</span>
-  )}
-</div>
-<div className="font-semibold text-gray-900">{selectedBooking.customer_name}</div>
-
-<div className="mt-2 text-xs flex justify-between items-center">
-  <span className="text-gray-600">{selectedBooking.phone}</span>
-  <div className="flex gap-2">
-    <a href={`tel:+${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}`} className="text-gray-400 hover:text-blue-600"><Phone size={14} /></a>
-    <a href={`https://wa.me/${selectedBooking.phone ? (selectedBooking.phone.replace(/\D/g, '').startsWith('91') ? selectedBooking.phone.replace(/\D/g, '') : `91${selectedBooking.phone.replace(/\D/g, '')}`) : ''}?text=${encodeURIComponent(`Hi ${selectedBooking.customer_name}, this is TripoMist. Regarding your booking for ${selectedBooking.package_title}...`)}`} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-green-600">
-      <MessageCircle size={14} />
-    </a>
-  </div>
-</div>
-
-{selectedBooking.email && (
-  <div className="mt-2 text-xs flex justify-between items-center">
-    <span className="text-gray-600 truncate">{selectedBooking.email}</span>
-    <button onClick={() => handleQuickAction(selectedBooking, 'copyEmail')} className="text-gray-400 hover:text-[#136b8a]"><Copy size={14} /></button>
-  </div>
-)}
-
-{!selectedBooking.user_id && (
-  <button onClick={() => {
-    const msg = `Hi ${selectedBooking.customer_name}, your TripoMist booking has been added to our system.\n\nYou can view your booking, payment status and trip details by logging in to the TripoMist website using the same phone number or email used during booking.\n\nBooking ID: ${selectedBooking.booking_id || selectedBooking.booking_reference || selectedBooking.id}`;
-    navigator.clipboard.writeText(msg);
-    alert('Login instructions copied to clipboard!');
-  }} className="mt-3 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 rounded-md text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1">
-    <Copy size={12}/> Copy Login Instructions
-  </button>
-)}
+              {/* Financials */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1"><CreditCard size={14}/> Financials</h3>
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">Total Price</span>
+                      <span className="font-semibold text-gray-900">₹{Number(viewDetailsBooking.total_amount || 0).toLocaleString()}</span>
+                    </div>
+                    {Number(viewDetailsBooking.manual_discount_amount || 0) > 0 && (
+                      <div className="flex justify-between items-center text-sm text-emerald-600">
+                        <span>Discount Allowed ({Number(viewDetailsBooking.total_amount || 0) > 0 ? ((Number(viewDetailsBooking.manual_discount_amount || 0) / Number(viewDetailsBooking.total_amount || 0)) * 100).toFixed(2) : 0}%)</span>
+                        <span className="font-bold">-₹{Number(viewDetailsBooking.manual_discount_amount || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {Number(viewDetailsBooking.manual_discount_amount || 0) > 0 && (
+                      <div className="flex justify-between items-center text-sm pt-1 border-t border-gray-100">
+                        <span className="font-semibold text-gray-700">Final Payable</span>
+                        <span className="font-semibold text-gray-900">₹{Number(viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0).toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-sm mt-2">
+                      <span className="text-gray-500">Amount Paid</span>
+                      <span className="font-semibold text-emerald-600">₹{Number(viewDetailsBooking.payment_status === 'paid' ? (viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) : (viewDetailsBooking.advance_payment || 0)).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
+                      <span className="text-gray-500 font-medium">Remaining Due</span>
+                      <span className="font-bold text-amber-600">₹{Math.max(0, Number(viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) - Number(viewDetailsBooking.payment_status === 'paid' ? (viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) : (viewDetailsBooking.advance_payment || 0))).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  {viewDetailsBooking.payment_method && (
+                    <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                      Method: <span className="font-medium text-gray-900 uppercase">{viewDetailsBooking.payment_method}</span>
+                    </div>
+                  )}
+                  {viewDetailsBooking.notes && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 mb-1">Notes</p>
+                      <p className="text-sm text-gray-800 italic bg-gray-50 p-2 rounded">"{viewDetailsBooking.notes}"</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Sales Classification */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3">
-<h3 className="text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1"><Tag size={12}/> Sales Classification</h3>
-<div className="grid grid-cols-1 gap-3">
-  <div>
-    <label className="text-xs font-semibold text-gray-700 block mb-1">Sales Type</label>
-    <select
-      value={classificationChannel}
-      onChange={(e) => setClassificationChannel(e.target.value)}
-      className="w-full text-xs p-2 border border-gray-300 rounded"
-    >
-      <option value="unclassified">Unclassified</option>
-      <option value="b2c">B2C - Service Provided by TripoMist</option>
-      <option value="b2b">B2B - Transferred/Sold to Partner</option>
-    </select>
-  </div>
-  {classificationChannel === 'b2b' && (
-    <>
-      <div>
-         <label className="text-xs font-semibold text-gray-700 block mb-1 flex items-center gap-1"><Building size={12}/> Partner Company *</label>
-         <input
-           type="text"
-           value={b2bCompany}
-           onChange={(e) => setB2bCompany(e.target.value)}
-           className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
-           placeholder="Enter agency name"
-         />
-      </div>
-      <div>
-         <label className="text-xs font-semibold text-gray-700 block mb-1">B2B Notes</label>
-         <input
-           type="text"
-           value={b2bNotes}
-           onChange={(e) => setB2bNotes(e.target.value)}
-           className="w-full text-xs p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none"
-           placeholder="Optional notes"
-         />
-      </div>
-    </>
-  )}
-  <button
-    onClick={() => classifyBooking(selectedBooking, classificationChannel, b2bCompany, b2bNotes)}
-    className="w-full bg-[#136b8a] text-white text-xs font-bold py-2 rounded hover:bg-[#0f556e] transition-colors"
-  >
-    Save Classification
-  </button>
-</div>
+              {/* Primary Customer */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Primary Customer (Lead)</h3>
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#136b8a]/10 rounded-full flex items-center justify-center text-[#136b8a] font-bold">
+                      {viewDetailsBooking.customer_name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{viewDetailsBooking.customer_name}</p>
+                      <p className="text-xs text-gray-500">Primary Contact</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                    <p className="text-sm text-gray-700 flex items-center gap-2"><Phone size={14} className="text-gray-400"/> {viewDetailsBooking.customer_phone || viewDetailsBooking.phone || 'N/A'}</p>
+                    <p className="text-sm text-gray-700 flex items-center gap-2"><Mail size={14} className="text-gray-400"/> {viewDetailsBooking.customer_email || viewDetailsBooking.email || 'N/A'}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Package Details */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
-<h3 className="text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1"><Package size={12}/> Package Details</h3>
-<div className="font-semibold text-[#136b8a] text-sm">{selectedBooking.package_title}</div>
-<div className="grid grid-cols-2 gap-2 text-xs">
-  <div>
-    <span className="text-gray-500 block">Travel Date</span>
-    <span className="font-medium">{selectedBooking.travel_date ? new Date(selectedBooking.travel_date).toLocaleDateString() : '-'}</span>
-  </div>
-  <div>
-    <span className="text-gray-500 block">Travellers</span>
-    <span className="font-medium">{selectedBooking.travellers} Pax</span>
-  </div>
-  <div>
-    <span className="text-gray-500 block">Sharing</span>
-    <span className="font-medium capitalize">{selectedBooking.selected_sharing || '-'}</span>
-  </div>
-</div>
-{selectedBooking.special_request && (
-  <div className="text-xs bg-orange-50 text-orange-800 p-2 rounded border border-orange-100 mt-2">
-    <span className="font-bold">Request:</span> {selectedBooking.special_request}
-  </div>
-)}
-              </div>
+              {/* Travellers List */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1"><Users size={14}/> All Travellers ({viewDetailsBooking.travellers_count || selectedTravellers.length})</h3>
+                {loadingTravellers ? (
+                  <div className="p-4 text-center text-gray-500 text-sm animate-pulse">Loading travellers...</div>
+                ) : selectedTravellers.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedTravellers.map((t, idx) => (
+                      <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm relative overflow-hidden">
+                        {t.is_primary && (
+                          <div className="absolute top-0 right-0 bg-[#136b8a] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">PRIMARY</div>
+                        )}
+                        <p className="font-bold text-gray-900 mb-1">{t.full_name} <span className="text-gray-400 font-normal text-xs ml-1">({t.age} yrs, {t.gender})</span></p>
 
-              {/* Status & Billing */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 text-xs">
- <div className="flex justify-between items-center">
-   <span className="text-gray-500">Booking Status</span>
-   {getStatusBadge(selectedBooking.booking_status)}
- </div>
- <div className="flex justify-between items-center">
-   <span className="text-gray-500">Payment Status</span>
-   {getPaymentBadge(selectedBooking.payment_status)}
- </div>
- <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
-   <span className="font-semibold text-gray-700">Total Paid</span>
-   <span className="text-base font-bold text-[#136b8a]">₹{Number(selectedBooking.final_amount || selectedBooking.total_amount || 0).toLocaleString()}</span>
- </div>
- {selectedBooking.razorpay_payment_id && (
-   <div className="pt-2 border-t border-gray-100">
-     <span className="text-gray-500 block mb-1">Razorpay ID</span>
-     <span className="font-mono text-gray-800 break-all bg-gray-50 p-1 rounded border border-gray-100 block">{selectedBooking.razorpay_payment_id}</span>
-   </div>
- )}
+                        <div className="grid grid-cols-2 gap-y-2 mt-3 text-xs">
+                           <div>
+                             <span className="text-gray-400 block mb-0.5">Phone</span>
+                             <span className="font-medium text-gray-800">{t.phone || '-'}</span>
+                           </div>
+                           <div>
+                             <span className="text-gray-400 block mb-0.5">Email</span>
+                             <span className="font-medium text-gray-800 line-clamp-1" title={t.email}>{t.email || '-'}</span>
+                           </div>
+                           <div>
+                             <span className="text-gray-400 block mb-0.5">{t.id_document_type || 'ID Document'}</span>
+                             <span className="font-medium text-gray-800 uppercase">{t.id_document_number || '-'}</span>
+                           </div>
+                           <div>
+                             <span className="text-gray-400 block mb-0.5">Sharing Type</span>
+                             <span className="font-medium text-gray-800 capitalize">{t.sharing_type || '-'}</span>
+                           </div>
+                           <div className="col-span-2 mt-1">
+                             <span className="text-gray-400 block mb-0.5">Pickup Point</span>
+                             <span className="font-medium text-gray-800">{t.pickup_point || '-'}</span>
+                           </div>
+                           {t.emergency_contact_name && (
+                             <div className="col-span-2 bg-rose-50/50 p-2 rounded border border-rose-100 mt-2">
+                               <span className="text-rose-400 block mb-0.5 text-[10px] font-bold uppercase">Emergency Contact</span>
+                               <span className="font-medium text-gray-800">{t.emergency_contact_name} {t.emergency_contact_phone ? `(${t.emergency_contact_phone})` : ''}</span>
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 border-dashed rounded-xl p-6 text-center text-gray-500 text-sm">
+                    No individual traveller records found.
+                  </div>
+                )}
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
-Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
+                Created: {new Date(viewDetailsBooking.created_at).toLocaleString('en-GB')}
+              </div>
+
+              {/* BOOKING CONTROLS */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Booking Controls</h3>
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
+                  <div className="flex flex-col gap-2">
+                    {viewDetailsBooking.payment_status !== 'paid' && (
+                      <button
+                        onClick={handleDrawerConfirmPayment}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold transition-colors text-sm"
+                      >
+                        Confirm Payment
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setCancelModal({ isOpen: true, booking: viewDetailsBooking });
+                        setCancelReason('');
+                        setCancelNotes('');
+                        setCancelResolution('Cancel Without Refund');
+                      }}
+                      className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-lg font-bold transition-colors text-sm"
+                    >
+                      Cancel Booking
+                    </button>
+                    <button
+                      onClick={() => {
+                        setClassificationModal({
+                          isOpen: true,
+                          channel: viewDetailsBooking.sales_channel || 'unclassified',
+                          company: viewDetailsBooking.b2b_partner_company || '',
+                          notes: viewDetailsBooking.b2b_notes || ''
+                        });
+                      }}
+                      className="w-full bg-slate-100 hover:bg-slate-200 text-gray-800 py-2 rounded-lg font-bold transition-colors text-sm border border-gray-300"
+                    >
+                      Change Classification
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Action Button */}
               <div className="grid grid-cols-2 gap-2 mt-4">
-<button
-  onClick={() => setEditBookingId(selectedBooking.id)}
-  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
->
-  <Edit size={16} /> Edit Booking
-</button>
-<button
-  onClick={() => generatePDFVoucher(selectedBooking, 'download')}
-  className="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm"
->
-  <Download size={16} /> Voucher
-</button>
+                <button
+                  onClick={() => generatePDFVoucher(viewDetailsBooking, 'download')}
+                  className="w-full bg-slate-800  text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm col-span-2"
+                >
+                  <Download size={16} /> Voucher
+                </button>
               </div>
+
             </div>
           </div>
         </>
       )}
       {/* Cancel Modal */}
       {cancelModal.isOpen && cancelModal.booking && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-rose-600 px-6 py-4 flex justify-between items-center text-white">
                <h3 className="text-lg font-bold">Cancel Booking</h3>
@@ -994,7 +1097,104 @@ Created: {new Date(selectedBooking.created_at).toLocaleString('en-GB')}
           </div>
         </div>
       )}
-    </div>
+
+      {/* Modals outside sticky header to prevent stacking context overlap */}
+      <AdminBookingModal
+        isOpen={showManualBooking || !!editBookingId}
+        onClose={() => { setShowManualBooking(false); setEditBookingId(null); }}
+        onSuccess={() => { fetchBookings(); setEditBookingId(null); setShowManualBooking(false); setSelectedBooking(null); }}
+        bookingId={editBookingId}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModalConfig.isOpen}
+        onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        onConfirm={confirmModalConfig.onConfirm}
+        type={confirmModalConfig.type}
+      />
+
+      <ServiceRecoveryCreationModal
+        isOpen={serviceRecoveryModal.isOpen}
+        onClose={() => setServiceRecoveryModal({ isOpen: false, booking: null })}
+        booking={serviceRecoveryModal.booking}
+        onSuccess={(data) => {
+          if (data?.voucher_code) {
+            window.prompt('Service recovery voucher generated! Copy to clipboard:', data.voucher_code);
+          } else {
+            alert('Service recovery case created successfully.');
+          }
+          fetchBookings();
+        }}
+      />
+
+      {/* Classification Modal */}
+      {classificationModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-[#136b8a] px-6 py-4 flex justify-between items-center text-white">
+               <h3 className="text-lg font-bold">Change Classification</h3>
+               <button onClick={() => setClassificationModal({ isOpen: false })} className="text-white/80 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+               <div>
+                 <label className="block text-sm font-semibold text-gray-700 mb-1">Sales Channel</label>
+                 <select
+                   value={classificationModal.channel}
+                   onChange={e => setClassificationModal(prev => ({ ...prev, channel: e.target.value }))}
+                   className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none"
+                 >
+                   <option value="unclassified">Unclassified</option>
+                   <option value="b2c">B2C – Service Provided by TripoMist</option>
+                   <option value="b2b">B2B – Transferred/Sold to Partner</option>
+                 </select>
+               </div>
+               {classificationModal.channel === 'b2b' && (
+                 <>
+                   <div>
+                     <label className="block text-sm font-semibold text-gray-700 mb-1">Agency / Company Name *</label>
+                     <input
+                       type="text"
+                       value={classificationModal.company}
+                       onChange={e => setClassificationModal(prev => ({ ...prev, company: e.target.value }))}
+                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none"
+                       placeholder="Partner Company Name"
+                     />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-semibold text-gray-700 mb-1">Notes</label>
+                     <textarea
+                       value={classificationModal.notes}
+                       onChange={e => setClassificationModal(prev => ({ ...prev, notes: e.target.value }))}
+                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none"
+                       placeholder="Additional details..."
+                       rows="2"
+                     />
+                   </div>
+                 </>
+               )}
+            </div>
+            <div className="bg-gray-100 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button onClick={() => setClassificationModal({ isOpen: false })} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Abort</button>
+              <button
+                onClick={async () => {
+                  if (classificationModal.channel === 'b2b' && !classificationModal.company.trim()) {
+                    alert('Agency / Company Name is required for B2B.');
+                    return;
+                  }
+                  await classifyBooking(viewDetailsBooking, classificationModal.channel, classificationModal.company, classificationModal.notes);
+                  setClassificationModal({ isOpen: false });
+                }}
+                className="px-5 py-2 text-sm font-bold text-white bg-[#136b8a] rounded-lg hover:bg-[#0f556e] transition-colors shadow-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

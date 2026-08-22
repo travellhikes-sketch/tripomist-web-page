@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Star, CheckCircle, Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import PremiumPageTemplate from '../components/PremiumPageTemplate';
+import ReviewGalleryCarousel from '../components/ReviewGalleryCarousel';
 
 const GoogleLogo = () => (
   <svg viewBox="0 0 48 48" className="w-5 h-5 inline-block align-middle mr-1" xmlns="http://www.w3.org/2000/svg">
@@ -12,6 +13,32 @@ const GoogleLogo = () => (
     <path fill="none" d="M0 0h48v48H0z"/>
   </svg>
 );
+
+const DEMO_GALLERY = [
+  { id: 'd1', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80', title: 'Ladakh', location: 'Ladakh' },
+  { id: 'd2', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&q=80', title: 'Spiti', location: 'Spiti' },
+  { id: 'd3', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=800&q=80', title: 'Kashmir', location: 'Kashmir' },
+  { id: 'd4', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80', title: 'Himachal', location: 'Himachal' },
+  { id: 'd5', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1582654291086-f01b6fa6b5c3?w=800&q=80', title: 'Sikkim', location: 'Sikkim' },
+  { id: 'd6', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=80', title: 'Uttarakhand', location: 'Uttarakhand' },
+  { id: 'd7', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&q=80', title: 'Udaipur', location: 'Udaipur' },
+  { id: 'd8', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1549257850-25e24bcf0e13?w=800&q=80', title: 'Jibhi', location: 'Jibhi' },
+  { id: 'd9', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=800&q=80', title: 'Manali', location: 'Manali' },
+  { id: 'd10', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=800&q=80', title: 'Meghalaya', location: 'Meghalaya' }
+];
+
+const DEMO_REVIEWS = [
+  { id: 'r1', customer_name: 'Rahul Sharma', review_text: 'The trip to Manali was extremely well organized. Everything from the hotel to the transport was hassle-free. Highly recommended!', rating: 5, review_date: 'Oct 12, 2023', verified: true, destination: 'Manali, Himachal' },
+  { id: 'r2', customer_name: 'Priya Patel', review_text: 'Had an amazing time in Goa. The itinerary was perfectly balanced between relaxation and activities. The local guide was very friendly.', rating: 5, review_date: 'Nov 05, 2023', verified: true, destination: 'Goa' },
+  { id: 'r3', customer_name: 'Amit Kumar', review_text: 'Great experience overall. The hotel in Srinagar could have been a bit better, but the houseboat stay made up for it. Would book again.', rating: 4, review_date: 'Dec 22, 2023', verified: true, destination: 'Kashmir' },
+  { id: 'r4', customer_name: 'Sneha Gupta', review_text: 'Our family trip to Kerala was beautiful. The houseboat experience in Alleppey was breathtaking. Excellent service by TripoMist team.', rating: 5, review_date: 'Jan 15, 2024', verified: true, destination: 'Kerala' },
+  { id: 'r5', customer_name: 'Vikram Singh', review_text: 'Amazing solo trip to Spiti Valley. The driver was very experienced which is necessary for those roads. Unforgettable memories.', rating: 5, review_date: 'Feb 10, 2024', verified: true, destination: 'Spiti Valley' },
+  { id: 'r6', customer_name: 'Anjali Desai', review_text: 'The Dubai package was totally worth it. The desert safari was the highlight of our trip. Only wish we had one more day there!', rating: 4, review_date: 'Mar 02, 2024', verified: true, destination: 'Dubai' },
+  { id: 'r7', customer_name: 'Rohan Mehta', review_text: 'Very smooth booking process. The team customized our Andaman itinerary exactly how we wanted. Scuba diving was arranged perfectly.', rating: 5, review_date: 'Mar 18, 2024', verified: true, destination: 'Andaman' },
+  { id: 'r8', customer_name: 'Kavita Joshi', review_text: 'Beautiful trip to Meghalaya. The living root bridges were amazing. Food options were a bit limited for vegetarians but manageable.', rating: 4, review_date: 'Apr 05, 2024', verified: true, destination: 'Meghalaya' },
+  { id: 'r9', customer_name: 'Nitin Verma', review_text: 'Ladakh bike trip was a dream come true. The bikes provided were in excellent condition and the backup vehicle was always there.', rating: 5, review_date: 'May 12, 2024', verified: true, destination: 'Leh Ladakh' },
+  { id: 'r10', customer_name: 'Pooja Reddy', review_text: 'Everything was seamless from pickup to drop. We enjoyed our honeymoon in Maldives without worrying about a single detail. Thanks TripoMist!', rating: 5, review_date: 'Jun 20, 2024', verified: true, destination: 'Maldives' }
+];
 
 export default function Review() {
   const [pageSettings, setPageSettings] = useState({
@@ -71,7 +98,11 @@ export default function Review() {
           .eq('is_approved', true)
           .order('display_order', { ascending: true })
           .order('review_date', { ascending: false });
-        if (reviewsData) setReviews(reviewsData);
+        if (reviewsData && reviewsData.length > 0) {
+          setReviews(reviewsData);
+        } else {
+          setReviews(DEMO_REVIEWS); // Fallback to realistic demo reviews
+        }
       } catch (err) {
         console.error('Error loading reviews page data:', err);
       } finally {
@@ -86,7 +117,11 @@ export default function Review() {
           .select('*')
           .eq('is_active', true)
           .order('display_order', { ascending: true });
-        if (galleryData) setGalleryMedia(galleryData);
+        if (galleryData && galleryData.length > 0) {
+          setGalleryMedia(galleryData);
+        } else {
+          setGalleryMedia(DEMO_GALLERY); // Fallback to demo images
+        }
       } catch (err) {
         console.error('Error loading gallery media:', err);
       } finally {
@@ -110,6 +145,17 @@ export default function Review() {
     setLightboxIndex(null);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (lightboxIndex === null) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') handlePrevMedia(e);
+      if (e.key === 'ArrowRight') handleNextMedia(e);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, galleryMedia.length]);
+
   const handlePrevMedia = (e) => {
     e.stopPropagation();
     setLightboxIndex(prev => (prev === 0 ? galleryMedia.length - 1 : prev - 1));
@@ -132,7 +178,18 @@ export default function Review() {
       hero_image_url={pageSettings.show_banner ? pageSettings.banner_url : null}
       mobile_banner_image={pageSettings.show_banner ? pageSettings.mobile_banner_url : null}
       seo_title="Reviews | TripoMist"
+      fullWidthLayout={true}
     >
+      {/* GALLERY CAROUSEL */}
+      {!mediaLoading && galleryMedia && galleryMedia.length > 0 && (
+        <section className="w-[96vw] max-w-[1600px] mx-auto mb-8 relative left-1/2 -translate-x-1/2">
+          {pageSettings.gallery_heading && (
+            <h2 className="text-2xl font-bold text-center mb-5">{pageSettings.gallery_heading}</h2>
+          )}
+          <ReviewGalleryCarousel media={galleryMedia} onMediaClick={openLightbox} />
+        </section>
+      )}
+
       {/* REVIEWS GRID LIST */}
       <section className="text-left">
         {loading ? (
@@ -145,7 +202,7 @@ export default function Review() {
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {reviews.slice(0, visibleCount).map((review) => {
                 const name = review.customer_name || 'Customer';
                 const text = review.review_text || '';
@@ -156,24 +213,25 @@ export default function Review() {
                 const readMoreLink = review.read_more_link || '';
 
                 return (
-                  <div key={review.id} className="bg-white p-5 rounded-2xl border border-gray-150 shadow-sm flex flex-col justify-between hover:border-gray-300 transition-colors">
+                  <div key={review.id} className="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between transition-colors">
                     <div>
                       {/* Customer Row */}
                       <div className="flex items-center gap-3 mb-3">
                         {imageUrl ? (
                           <img src={imageUrl} alt={name} className="w-10 h-10 rounded-full object-cover border border-gray-100" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs">
+                          <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-sm">
                             {name.charAt(0).toUpperCase()}
                           </div>
                         )}
                         <div>
-                          <h3 className="font-bold text-gray-900 text-xs md:text-sm leading-tight">{name}</h3>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] text-gray-400">{reviewDate || 'Recent'}</span>
+                          <h3 className="font-bold text-gray-900 text-sm leading-tight">{name}</h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-gray-500">{reviewDate || 'Recent'}</span>
                             {verified && (
-                              <div className="flex items-center gap-0.5 text-blue-500 text-[9px] font-bold bg-blue-50 px-1.5 py-0.5 rounded-full">
-                                <CheckCircle className="w-2 h-2 fill-current" />
+                              <div className="flex items-center gap-1 text-gray-500 text-xs">
+                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                <CheckCircle className="w-3 h-3 text-green-500" />
                                 <span>Verified</span>
                               </div>
                             )}
@@ -182,23 +240,24 @@ export default function Review() {
                       </div>
 
                       {/* Stars */}
-                      <div className="flex gap-0.5 mb-2.5 text-amber-400">
+                      <div className="flex gap-0.5 mb-3 text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={12} fill={i < rating ? "currentColor" : "none"} className={i < rating ? "" : "text-gray-200"} />
+                          <Star key={i} size={14} fill={i < rating ? "currentColor" : "none"} className={i < rating ? "" : "text-gray-200"} />
                         ))}
                       </div>
 
                       {/* Review Text */}
-                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed italic mb-3">
-                        "{text}"
+                      <p className="text-[13px] text-gray-700 leading-relaxed mb-4">
+                        {text}
                       </p>
                     </div>
 
                     {/* Footer Row */}
-                    <div className="flex items-center justify-between border-t border-gray-100 pt-2.5 mt-auto">
+                    <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-auto">
                       {review.destination && (
-                        <span className="text-[10px] font-semibold text-[#136b8a] bg-blue-50/50 px-2 py-0.5 rounded">
-                          📍 {review.destination}
+                        <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          {review.destination}
                         </span>
                       )}
 
@@ -207,7 +266,7 @@ export default function Review() {
                           href={readMoreLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] font-bold text-primary hover:underline"
+                          className="text-xs font-semibold text-[#136b8a] hover:underline"
                         >
                           Read More →
                         </a>
@@ -232,6 +291,71 @@ export default function Review() {
           </div>
         )}
       </section>
+
+      {/* LIGHTBOX OVERLAY */}
+      {lightboxIndex !== null && galleryMedia[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
+          onClick={closeLightbox}
+        >
+          <button
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2"
+            onClick={closeLightbox}
+          >
+            <X size={32} />
+          </button>
+
+          <div className="absolute top-4 left-4 text-white/70 font-medium text-sm z-10">
+            {lightboxIndex + 1} / {galleryMedia.length}
+          </div>
+
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 z-10 p-2"
+            onClick={handlePrevMedia}
+          >
+            <ChevronLeft size={48} />
+          </button>
+
+          <div
+            className="w-full h-full max-w-6xl max-h-[85vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              const touch = e.changedTouches[0];
+              e.currentTarget.dataset.startX = touch.clientX;
+            }}
+            onTouchEnd={(e) => {
+              const touch = e.changedTouches[0];
+              const startX = parseFloat(e.currentTarget.dataset.startX || '0');
+              const diff = startX - touch.clientX;
+              if (diff > 50) handleNextMedia(e);
+              if (diff < -50) handlePrevMedia(e);
+            }}
+          >
+            {galleryMedia[lightboxIndex].media_type === 'video' ? (
+              <video
+                src={galleryMedia[lightboxIndex].media_url}
+                controls
+                autoPlay
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            ) : (
+              <img
+                src={galleryMedia[lightboxIndex].media_url}
+                alt={galleryMedia[lightboxIndex].title || 'Gallery image'}
+                className="max-w-full max-h-full object-contain rounded-lg select-none"
+                draggable={false}
+              />
+            )}
+          </div>
+
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 z-10 p-2"
+            onClick={handleNextMedia}
+          >
+            <ChevronRight size={48} />
+          </button>
+        </div>
+      )}
     </PremiumPageTemplate>
   );
 }

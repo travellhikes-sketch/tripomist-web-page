@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PackageCard from '../components/PackageCard'
+import RecommendedExtraPackages from '../components/RecommendedExtraPackages'
 import { supabase } from '../supabaseClient'
 import { PackageIcon, RefreshCw, AlertCircle, Volume2, VolumeX } from 'lucide-react'
 
@@ -254,6 +255,14 @@ export default function ListingPage() {
               />
             ))}
           </div>
+        )}
+
+        {pageData && pageData.type !== 'all' && pageData.id && (
+          <RecommendedExtraPackages
+            placementType={pageData.type === 'homepage_section' ? 'recommendation_listing' : `recommendation_${pageData.type}`}
+            placementId={pageData.id}
+            excludePackageIds={packages.map(p => p.id)}
+          />
         )}
       </main>
 

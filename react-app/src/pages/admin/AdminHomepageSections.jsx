@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { 
-  Edit3, 
-  Trash2, 
-  Plus, 
+import {
+  Edit3,
+  Trash2,
+  Plus,
   CheckCircle,
   XCircle,
   AlertCircle
@@ -15,7 +15,7 @@ const AdminHomepageSections = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  
+
   const initialFormState = {
     section_key: '',
     title: '',
@@ -126,7 +126,7 @@ const AdminHomepageSections = () => {
           <p className="text-gray-500 mt-1">Manage titles, visibility, and limits for homepage package sections.</p>
         </div>
         {!isEditing && (
-          <button 
+          <button
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium"
           >
@@ -146,7 +146,7 @@ const AdminHomepageSections = () => {
       {isEditing ? (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
           <h2 className="text-lg font-bold">{currentItem ? 'Edit Section' : 'New Section'}</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Section Key</label>
@@ -185,7 +185,7 @@ const AdminHomepageSections = () => {
               <label className="text-sm font-medium text-gray-700">Section is Active</label>
             </div>
           </div>
-          
+
           <div className="flex gap-2 pt-4">
             <button type="submit" className="bg-[#136b8a] text-white px-6 py-2 rounded-lg hover:bg-[#0f556e]">Save Section</button>
             <button type="button" onClick={handleCancel} className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200">Cancel</button>
@@ -199,23 +199,23 @@ const AdminHomepageSections = () => {
             <div key={item.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded font-mono uppercase">{item.section_key}</span>
+                  <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded  uppercase">{item.section_key}</span>
                   <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
                     {item.is_active ? 'ACTIVE' : 'HIDDEN'}
                   </span>
                 </div>
                 <h3 className="font-bold text-gray-900 text-lg">{item.title}</h3>
                 {item.subtitle && <p className="text-sm text-gray-500 mt-1">Subtitle: {item.subtitle}</p>}
-                
+
                 <div className="mt-4 pt-4 border-t border-gray-50 space-y-2">
                   <p className="text-xs text-gray-600"><strong>View All:</strong> {item.view_all_text}</p>
                   <p className="text-xs text-gray-600"><strong>Route:</strong> {item.view_all_route || 'None'}</p>
                   <p className="text-xs text-gray-600"><strong>Max Cards:</strong> {item.max_cards}</p>
                 </div>
               </div>
-              
+
               <div className="flex justify-between items-center w-full mt-4 pt-4 border-t border-gray-50">
-                <span className="text-xs text-gray-400 font-mono">Order: {item.display_order}</span>
+                <span className="text-xs text-gray-400 ">Order: {item.display_order}</span>
                 <div className="flex gap-2">
                   <button onClick={() => handleToggleActive(item.id, item.is_active)} className={`p-1.5 rounded-lg border ${item.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-100' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-100'}`} title="Toggle Visibility">
                     {item.is_active ? <XCircle size={16} /> : <CheckCircle size={16} />}

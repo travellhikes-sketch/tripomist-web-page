@@ -20,8 +20,11 @@ const PackageCard = ({
   isClickable = true,
   cardCtaText = 'Click',
   cardCtaAction = 'open_package',
-  cardCtaUrl = ''
+  cardCtaUrl = '',
+  departureDates = [],
+  listingCategories = []
 }) => {
+  const isUpcoming = Array.isArray(listingCategories) && listingCategories.includes('upcoming-trips');
   const displayPrice = price ? (typeof price === 'string' && !price.includes('/-') ? `${price}/-` : price) : null;
   const displayOriginalPrice = originalPrice ? (typeof originalPrice === 'string' && !originalPrice.includes('/-') ? `${originalPrice}/-` : originalPrice) : null;
   
@@ -44,68 +47,163 @@ const PackageCard = ({
   const CardWrapper = shouldBeClickable ? Link : 'div';
   const wrapperProps = shouldBeClickable ? { to: finalLink || '#' } : {};
 
+  // ── MONTH-WISE date logic ──
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingDates = (departureDates || [])
+    .filter(d => new Date(d) >= today)
+    .sort();
+
+  // Group by nearest month that has dates
+  let previewDates = [];
+  let extraCount = 0;
+
+  if (upcomingDates.length > 0) {
+    const firstDate = new Date(upcomingDates[0]);
+    const targetMonth = firstDate.getMonth();
+    const targetYear = firstDate.getFullYear();
+
+    // Filter only dates from that same month+year
+    const sameMonthDates = upcomingDates.filter(d => {
+      const dt = new Date(d);
+      return dt.getMonth() === targetMonth && dt.getFullYear() === targetYear;
+    });
+
+    previewDates = sameMonthDates.slice(0, 2);
+    extraCount = sameMonthDates.length - 2;
+  }
+
+  // ── UPCOMING VARIANT (image-focused, minimal) ──
+  if (isUpcoming) {
+    return (
+      <CardWrapper
+        {...wrapperProps}
+        draggable={false}
+        className={`rounded-[10px] overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300 cursor-pointer' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
+      >
+        {/* Full-bleed background image */}
+        <div className="absolute inset-0 bg-cover bg-center group-hover:scale-[1.03] transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
+
+        {/* Subtle gradient at bottom only */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+
+        {/* Spacer */}
+        <div className="flex-1"></div>
+
+        {/* Bottom: Title + Starting Price */}
+        <div className="relative z-10 p-4 pb-5 flex flex-col items-center text-center">
+          <h3 className="text-white text-[16px] md:text-[18px] font-bold leading-[1.2] line-clamp-2 drop-shadow-sm uppercase tracking-wide">
+            {tripTitle}
+          </h3>
+          {displayPrice && (
+            <p className="text-white/80 text-[12px] md:text-[13px] font-medium mt-1.5 drop-shadow-sm">
+              Starting Price <span className="text-white font-bold">{displayPrice}</span>
+            </p>
+          )}
+        </div>
+      </CardWrapper>
+    );
+  }
+
+  // ── DEFAULT VARIANT (full detail card) ──
   return (
     <CardWrapper 
       {...wrapperProps}
       draggable={false}
-      className={`rounded-3xl overflow-hidden group relative flex flex-col shadow-sm transition-all duration-300 select-none block bg-[#cdeae7] border border-gray-100 ${shouldBeClickable ? 'hover:shadow-xl' : 'opacity-95'} ${className || 'w-full h-[360px]'}`}
+      className={`rounded-[10px] overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
     >
-      {/* Top Image Section */}
-      <div className="relative w-full h-[55%] overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
-        <div className="absolute inset-0 bg-black/10"></div>
-        
-        <div className="absolute top-4 left-4 right-4 flex justify-end items-start gap-2 z-10 pointer-events-none">
+      {/* Full-bleed background image */}
+      <div className="absolute inset-0 bg-cover bg-center group-hover:scale-[1.03] transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
 
-          {/* Secondary Badges/Discount in Lime Green */}
-          <div className="flex flex-col items-end gap-2">
-            {finalSecondaryBadge && (
-              <div className={
-                finalSecondaryBadge.toLowerCase() === 'coming soon' 
-                  ? "bg-white/30 backdrop-blur-md text-black font-extrabold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm border border-white/50" 
-                  : "bg-white/30 backdrop-blur-md text-[#136b8a] font-extrabold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm border border-[#136b8a]/30"
-              }>
-                {finalSecondaryBadge}
-              </div>
-            )}
-            {discountText && !finalSecondaryBadge && (
-              <div className="bg-white/30 backdrop-blur-md text-[#136b8a] font-extrabold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm border border-[#136b8a]/30">
-                {discountText}
-              </div>
-            )}
-          </div>
+      {/* Gradient overlay — stronger at bottom for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
+
+      {/* Top badges area */}
+      <div className="relative z-10 flex justify-between items-start p-3">
+        {/* Left: Best Seller badge — capsule/pill style */}
+        <div className="flex flex-col gap-1.5">
+          {bestSeller && (
+            <div className="bg-white/85 backdrop-blur-sm text-[#136b8a] font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider">
+              Best Seller
+            </div>
+          )}
         </div>
 
-
+        {/* Right: Secondary badge / Discount — capsule/pill style */}
+        <div className="flex flex-col items-end gap-1.5">
+          {finalSecondaryBadge && (
+            <div className={
+              finalSecondaryBadge.toLowerCase() === 'coming soon' 
+                ? "bg-white/85 backdrop-blur-sm text-gray-800 font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider" 
+                : "bg-white/85 backdrop-blur-sm text-[#136b8a] font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider"
+            }>
+              {finalSecondaryBadge}
+            </div>
+          )}
+          {discountText && !finalSecondaryBadge && (
+            <div className="bg-white/85 backdrop-blur-sm text-[#136b8a] font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider">
+              {discountText}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Bottom Content Section */}
-      <div className="flex flex-col p-5 h-[45%] justify-between">
-        <div>
-          <h3 className="text-gray-900 text-[20px] md:text-[22px] font-extrabold leading-[1.2] mb-2 line-clamp-2 min-h-[48px] md:min-h-[53px]">{tripTitle}</h3>
-          
-          <div className="flex items-center gap-1.5 text-gray-500">
-            <span className="material-symbols-outlined text-[16px]">schedule</span>
-            <span className="text-[12px] font-medium tracking-wide">{duration}</span>
+      {/* Spacer to push content to bottom */}
+      <div className="flex-1"></div>
+
+      {/* Bottom content — over image with gradient behind */}
+      <div className="relative z-10 flex flex-col p-3.5 pt-2 gap-1.5">
+        {/* Title */}
+        <h3 className="text-white text-[15px] md:text-[16px] font-bold leading-[1.25] line-clamp-2 drop-shadow-sm">{tripTitle}</h3>
+        
+        {/* Duration + Dates Row */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* Duration — LEFT */}
+          <div className="flex items-center gap-1 text-white/80 shrink-0">
+            <span className="material-symbols-outlined text-[13px]">schedule</span>
+            <span className="text-[10px] font-semibold tracking-wide">{duration}</span>
+          </div>
+
+          {/* Date capsules — RIGHT (red/pink accent) */}
+          <div className="flex items-center gap-1 flex-wrap justify-end">
+            {previewDates.length > 0 ? (
+              <>
+                {previewDates.map((d, idx) => (
+                  <div
+                    key={idx}
+                    className="shrink-0 bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-100 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                  >
+                    {new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                  </div>
+                ))}
+                {extraCount > 0 && (
+                  <div className="shrink-0 bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-100 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    +{extraCount} More
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-[9px] font-semibold text-white/60 italic">Dates Coming Soon</div>
+            )}
           </div>
         </div>
 
-        <div className="flex items-end justify-between w-full mt-2">
+        {/* Price and CTA Row */}
+        <div className="flex items-end justify-between w-full mt-0.5">
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price</span>
+            <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">Price</span>
             <div className="flex items-center gap-2">
-              <span className="text-[#136b8a] font-extrabold text-[22px] leading-none">
+              <span className="text-white font-extrabold text-[18px] leading-none drop-shadow-sm">
                 {displayPrice}
               </span>
             </div>
           </div>
           
-          {/* Animated View Detail Arrow or Coming Soon */}
-          <div className={`relative overflow-hidden group/btn bg-gray-50 rounded-full px-3 py-1.5 border border-gray-100 flex items-center transition-all ${shouldBeClickable ? 'cursor-pointer' : 'cursor-default'}`}>
-            {shouldBeClickable && <div className="absolute inset-0 w-0 bg-[#136b8a] transition-all duration-300 ease-out group-hover/btn:w-full z-0"></div>}
-            <div className={`relative z-10 flex items-center font-bold text-[12px] whitespace-nowrap transition-colors duration-300 ${shouldBeClickable ? 'text-gray-900 group-hover/btn:text-white' : 'text-gray-400'}`}>
+          {/* CTA Button */}
+          <div className={`relative overflow-hidden group/btn bg-white/15 backdrop-blur-sm rounded-[5px] px-3 py-1.5 border border-white/25 flex items-center transition-all ${shouldBeClickable ? 'cursor-pointer hover:bg-white/25' : 'cursor-default'}`}>
+            <div className={`relative z-10 flex items-center font-bold text-[11px] whitespace-nowrap transition-colors duration-300 ${shouldBeClickable ? 'text-white' : 'text-white/50'}`}>
               <span className={shouldBeClickable ? "mr-1" : ""}>{displayCtaText}</span>
-              {shouldBeClickable && <span className="material-symbols-outlined text-[16px]">arrow_outward</span>}
+              {shouldBeClickable && <span className="material-symbols-outlined text-[14px]">arrow_outward</span>}
             </div>
           </div>
         </div>

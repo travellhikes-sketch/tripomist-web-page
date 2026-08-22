@@ -8,7 +8,7 @@ export default function AdminLoginSlider() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState(null);
-  
+
   // Form State
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -159,9 +159,9 @@ export default function AdminLoginSlider() {
                     <div className="font-bold text-gray-900">{slide.title || '—'}</div>
                     <div className="text-gray-500 text-xs">{slide.subtitle || '—'}</div>
                   </td>
-                  <td className="px-6 py-4 font-mono">{slide.display_order}</td>
+                  <td className="px-6 py-4 ">{slide.display_order}</td>
                   <td className="px-6 py-4">
-                    <button 
+                    <button
                       onClick={() => toggleStatus(slide.id, slide.is_active)}
                       className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${slide.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
                     >
@@ -186,7 +186,7 @@ export default function AdminLoginSlider() {
       {/* Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                 <h3 className="font-bold text-gray-900">{editingSlide ? 'Edit Slide' : 'Add Slide'}</h3>
@@ -194,10 +194,10 @@ export default function AdminLoginSlider() {
               </div>
               <form onSubmit={handleSave} className="p-6 space-y-4">
                 <div>
-                  <MediaUploader 
-                    url={imageUrl} 
-                    onUrlChange={setImageUrl} 
-                    folder="login_slider" 
+                  <MediaUploader
+                    url={imageUrl}
+                    onUrlChange={setImageUrl}
+                    folder="login_slider"
                     label="Image URL *"
                   />
                 </div>

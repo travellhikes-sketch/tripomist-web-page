@@ -16,7 +16,7 @@ export default function ItineraryChopta() {
   const [activeAccordion, setActiveAccordion] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isReadMore, setIsReadMore] = useState(false)
-  
+
   // New States for Redesign
   const [activeTab, setActiveTab] = useState('Itinerary')
   const [isAddedToCart, setIsAddedToCart] = useState(false)
@@ -111,7 +111,7 @@ export default function ItineraryChopta() {
   let trip = tripsData["Spiti Valley"];
   if (id) {
     const formattedId = id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    
+
     // Check specific overrides first
     if (id.toLowerCase().includes("ladakh")) trip = tripsData["Ladakh"];
     else if (id.toLowerCase().includes("kashmir")) trip = tripsData["Kashmir"];
@@ -133,7 +133,7 @@ export default function ItineraryChopta() {
     setIsAddedToCart(isAdded);
   }, [trip.title]);
 
-  
+
     const handleAddToCart = () => {
     let cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
     if (isAddedToCart) {
@@ -176,7 +176,7 @@ export default function ItineraryChopta() {
     <div className="flex flex-col min-h-screen bg-white">
       <Navbar />
 
-      
+
       <main className="w-full flex-grow">
         {/* Hero Section */}
         <div className="relative w-full h-[45vh] md:h-[60vh] bg-gray-900 overflow-hidden">
@@ -190,13 +190,13 @@ export default function ItineraryChopta() {
 
         {/* Content Layout */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-10 relative">
-          
+
           {/* Left Column: Itinerary & Details */}
           <div className="lg:col-span-8 flex flex-col">
-            
+
             {/* Title & Description */}
             <div className="mb-6">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-sans tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4  tracking-tight">
                 About {trip.title} Trip From Delhi
               </h1>
               <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-2">
@@ -210,12 +210,12 @@ export default function ItineraryChopta() {
             {/* Tabs */}
             <div className="flex gap-3 overflow-x-auto pb-2 mb-10 hide-scrollbar border-b border-gray-100">
               {['Itinerary', 'Inclusions', 'Costing'].map((tab) => (
-                <button 
+                <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-2 rounded-full whitespace-nowrap font-bold text-sm transition-all border cursor-pointer
-                    ${activeTab === tab 
-                      ? 'bg-[#eff6f9] text-[#136b8a] border-[#136b8a]' 
+                    ${activeTab === tab
+                      ? 'bg-[#eff6f9] text-[#136b8a] border-[#136b8a]'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
                     }`}
                 >
@@ -241,7 +241,7 @@ export default function ItineraryChopta() {
                       </span>
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => setIsModalOpen(true)}
                       className="btn-shiny bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
                     >
@@ -252,11 +252,11 @@ export default function ItineraryChopta() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col gap-4">
                   {trip.days.map((day, idx) => (
                     <div key={day.num} className="bg-[#eff6f9] rounded-2xl overflow-hidden border border-[#b9dae6]">
-                      <button 
+                      <button
                         onClick={() => toggleAccordion(idx)}
                         className="w-full px-5 py-4 md:px-6 md:py-5 flex items-center justify-between text-left cursor-pointer hover:bg-[#deedf4] transition-colors"
                       >
@@ -266,7 +266,7 @@ export default function ItineraryChopta() {
                           </div>
                           <h3 className="font-bold text-gray-900 text-base md:text-lg uppercase tracking-tight">{day.title}</h3>
                         </div>
-                        <span 
+                        <span
                           className="material-symbols-outlined text-gray-800 transition-transform duration-300 flex-shrink-0 font-bold"
                           style={{ transform: activeAccordion === idx ? 'rotate(180deg)' : 'rotate(0deg)' }}
                         >
@@ -292,7 +292,7 @@ export default function ItineraryChopta() {
             {activeTab === 'Inclusions' && (
               <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">What included in package and what not ??</h2>
-                
+
                 <h3 className="text-lg font-bold text-[#136b8a] mb-4">Included</h3>
                 <ul className="space-y-4 text-gray-700 font-medium">
                   <li className="flex gap-3 items-start">
@@ -339,13 +339,13 @@ export default function ItineraryChopta() {
                 <p className="text-gray-500 font-medium">Content for {activeTab} will be available here.</p>
               </section>
             )}
-            
+
           </div>
 
           {/* Right Column: Sticky Booking Card (Desktop Only) */}
           <div className="w-full lg:col-span-4 relative mt-8 lg:mt-0">
             <div className="sticky top-[100px] bg-white rounded-3xl border border-gray-200 p-6 shadow-lg shadow-gray-100">
-              
+
               {/* Price Details */}
               <div className="mb-6 border-b border-gray-100 pb-5">
                 <span className="font-semibold text-gray-900 text-sm block mb-1">Starting Price</span>
@@ -377,15 +377,15 @@ export default function ItineraryChopta() {
                 <span className="font-bold text-gray-800 text-sm">Total Amount</span>
                 <span className="font-extrabold text-[#136b8a] text-xl">₹{totalAmount.toLocaleString()}</span>
               </div>
-              
+
               {/* Action Buttons */}
-              <button 
+              <button
                 onClick={handleBookNow}
                 className="btn-shiny w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mb-4 text-lg cursor-pointer"
               >
                 <span className="relative z-10">Book Now</span>
               </button>
-              <button 
+              <button
                 onClick={handleSendEnquiry}
                 className="w-full mt-4 bg-[#25D366] hover:bg-[#20b858] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg cursor-pointer"
               >
@@ -395,7 +395,7 @@ export default function ItineraryChopta() {
               <p className="text-center text-gray-500 text-[11px] font-medium mt-2 mb-2">
                 fill the blanks to send enquiry to expert
               </p>
-              
+
             </div>
           </div>
         </div>
@@ -403,13 +403,13 @@ export default function ItineraryChopta() {
 
 
 
-      
-      <DownloadItineraryModal 
+
+      <DownloadItineraryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         tripTitle={trip.title}
       />
-      <BookingModal 
+      <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         tripTitle={trip.title}
@@ -425,4 +425,4 @@ export default function ItineraryChopta() {
     </div>
   )
 
-}  
+}

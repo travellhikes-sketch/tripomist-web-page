@@ -10,7 +10,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
   const [isActive, setIsActive] = useState(true)
   const [botName, setBotName] = useState('Chat With Us')
   const [welcomeMessage, setWelcomeMessage] = useState("Hello! I'm TripoMist. How can I assist you today with your travel plans?")
-  
+
   const [messages, setMessages] = useState(() => {
     try {
       const stored = sessionStorage.getItem('tripomist_chat_session')
@@ -36,6 +36,18 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
   useEffect(() => {
     setIsOpen(isOpenExternal)
   }, [isOpenExternal])
+
+  useEffect(() => {
+    const handleOpenChatbot = () => {
+      setIsOpen(true)
+    }
+
+    window.addEventListener('tripomist:open-chatbot', handleOpenChatbot)
+
+    return () => {
+      window.removeEventListener('tripomist:open-chatbot', handleOpenChatbot)
+    }
+  }, [])
 
   // Load Config
   useEffect(() => {
@@ -122,7 +134,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
       }
 
       const botReply = data?.reply || "Sorry, I couldn't formulate a response. Please try again."
-      
+
       setMessages(prev => [...prev, { role: 'assistant', content: botReply }])
     } catch (err) {
       console.error("Chatbot Edge Function Error:", err)
@@ -136,12 +148,12 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.3, y: 300, originX: 0.5, originY: 1 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.3, y: 300 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed inset-0 z-[100] w-full h-full flex flex-col bg-white font-sans"
+          className="fixed inset-0 z-[100] w-full h-full flex flex-col bg-white "
         >
           {/* Header */}
           <div className="bg-[#f8f9fa] p-4 text-gray-800 flex items-center justify-between border-b border-gray-200 shadow-sm relative z-10 shrink-0">
@@ -150,14 +162,14 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
               <h3 className="font-extrabold text-[22px] text-[#136b8a] tracking-tight m-0">{botName}</h3>
             </div>
             <div className="flex items-center gap-3">
-              <a 
-                href="tel:+919990802608" 
+              <a
+                href="tel:+919990802608"
                 className="w-11 h-11 rounded-full bg-[#eff6f9] text-[#136b8a] flex items-center justify-center hover:bg-[#136b8a] hover:text-white transition-colors shadow-sm cursor-pointer"
                 title="Call TripoMist"
               >
                 <span className="material-symbols-outlined text-[22px] font-bold">call</span>
               </a>
-              <button 
+              <button
                 onClick={handleClose}
                 className="w-11 h-11 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 flex items-center justify-center transition-colors cursor-pointer border-none shadow-sm"
                 title="Close Chat"
@@ -175,16 +187,16 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
               </div>
             )}
             {messages.map((msg, index) => (
-              <div 
+              <div
                 key={index}
                 className={`flex flex-col max-w-[85%] md:max-w-[70%] ${
                   msg.role === 'user' ? 'self-end items-end' : 'self-start items-start'
                 }`}
               >
-                <div 
+                <div
                   className={`px-6 py-4 rounded-[1.5rem] text-base leading-relaxed shadow-sm ${
-                    msg.role === 'user' 
-                      ? 'bg-[#136b8a] text-white rounded-tr-sm' 
+                    msg.role === 'user'
+                      ? 'bg-[#136b8a] text-white rounded-tr-sm'
                       : 'bg-[#f3f4f6] text-gray-800 rounded-tl-sm border border-gray-100'
                   }`}
                 >
@@ -253,11 +265,11 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
 
           {/* Input Form */}
           <div className="bg-[#f8f9fa] border-t border-gray-200 p-4 shrink-0">
-            <form 
+            <form
               onSubmit={handleSend}
               className="max-w-5xl mx-auto flex items-center gap-3"
             >
-              <input 
+              <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -265,8 +277,8 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
                 disabled={isLoading || !isActive}
                 className="flex-1 bg-white border border-gray-300 rounded-full px-6 py-4 text-base focus:outline-none focus:border-[#136b8a] focus:ring-2 focus:ring-[#136b8a]/20 transition-all disabled:opacity-50 disabled:bg-gray-100 shadow-sm"
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading || !input.trim() || !isActive}
                 className="w-14 h-14 rounded-full bg-[#136b8a] hover:bg-[#0f556e] text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md"
               >

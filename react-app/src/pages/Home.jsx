@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -12,9 +12,39 @@ import PackageCard from '../components/PackageCard'
 import { supabase } from '../supabaseClient'
 import FeaturedTripCard from '../components/FeaturedTripCard'
 import ReviewsSection from '../components/ReviewsSection'
-import BenefitsSection from '../components/BenefitsSection'
-import StatsStrip from '../components/StatsStrip'
+import PromoCarousel from '../components/PromoCarousel'
+import { generateDepartureDates } from '../utils/dateUtils'
 import TestimonialsSection from '../components/TestimonialsSection'
+import StatsStrip from '../components/StatsStrip'
+
+const DEFAULT_LAYOUT_ORDER = [
+  'destinations',
+  'interests',
+  'promo_carousel',
+  'recommended',
+  'static_banner',
+  'why_choose_us',
+  'why_choose_us_carousel',
+  'best_seller',
+  'upcoming_trips',
+  'stats_strip',
+  'international',
+  'testimonials'
+];
+
+const getMergedLayoutOrder = (savedOrder) => {
+  if (!Array.isArray(savedOrder) || savedOrder.length === 0) {
+    return DEFAULT_LAYOUT_ORDER;
+  }
+  const uniqueSaved = Array.from(new Set(savedOrder)).filter(key => DEFAULT_LAYOUT_ORDER.includes(key));
+  const missing = DEFAULT_LAYOUT_ORDER.filter(key => !uniqueSaved.includes(key));
+  return [...uniqueSaved, ...missing];
+};
+
+const isExternal = (url) => {
+  if (!url) return false;
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
+};
 
 function Home() {
   const [dynamicPackageSections, setDynamicPackageSections] = useState([]);
@@ -25,6 +55,25 @@ function Home() {
   const [sections, setSections] = useState({});
   const [heroSettings, setHeroSettings] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
+
+  const [layoutOrder, setLayoutOrder] = useState(DEFAULT_LAYOUT_ORDER);
+  const [staticBanner, setStaticBanner] = useState(null);
+  const [whyChooseUsHeading, setWhyChooseUsHeading] = useState('Why Choose Us');
+  const [whyChooseUsSubheading, setWhyChooseUsSubheading] = useState("India's Fastest Growing Travel Company");
+
+  // Refs for package row scrolling (fix #5)
+  const rowRefs = useRef({});
+  const getRowRef = useCallback((key) => {
+    if (!rowRefs.current[key]) rowRefs.current[key] = React.createRef();
+    return rowRefs.current[key];
+  }, []);
+  const scrollRow = useCallback((key, dir) => {
+    const el = rowRefs.current[key]?.current;
+    if (!el) return;
+    const card = el.firstElementChild;
+    const amount = card ? card.getBoundingClientRect().width + 16 : 300;
+    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     async function fetchAllData() {
@@ -85,6 +134,27 @@ function Home() {
         const { data: hData } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'hero').single();
         if (hData) {
           setHeroSettings(hData.setting_value);
+        }
+
+        // Fetch Layout Order, Static Banner, and Why Choose Us heading settings
+        const { data: settingsData } = await supabase
+          .from('site_settings')
+          .select('setting_key, setting_value');
+
+        if (settingsData) {
+          const orderItem = settingsData.find(s => s.setting_key === 'homepage_section_order');
+          if (orderItem && Array.isArray(orderItem.setting_value)) {
+            setLayoutOrder(getMergedLayoutOrder(orderItem.setting_value));
+          }
+          const bannerItem = settingsData.find(s => s.setting_key === 'homepage_static_banner');
+          if (bannerItem) {
+            setStaticBanner(bannerItem.setting_value);
+          }
+          const trustItem = settingsData.find(s => s.setting_key === 'why_choose_us_banners');
+          if (trustItem && trustItem.setting_value) {
+            setWhyChooseUsHeading(trustItem.setting_value.title || 'Why Choose Us');
+            setWhyChooseUsSubheading(trustItem.setting_value.subtitle || "India's Fastest Growing Travel Company");
+          }
         }
       } catch (err) {
         console.error("Error fetching homepage configs:", err);
@@ -158,15 +228,14 @@ function Home() {
 
     const isInternational = sec.section_key === 'international';
     const isBestSellerFlag = sec.section_key === 'best_seller';
+    const rowKey = sec.section_key || sec.id;
+    const rowRef = getRowRef(rowKey);
 
     return (
       <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest overflow-hidden border-t border-gray-50">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
-              <span className="material-symbols-outlined text-[16px]">{sec.icon || 'inventory_2'}</span>
-              <span className="font-label-caps text-label-caps tracking-widest uppercase font-bold">{sec.subtitle || 'Category'}</span>
-            </div>
+
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg">
               {sec.title}
             </h2>
@@ -192,26 +261,49 @@ function Home() {
             </p>
           </div>
         ) : (
-          <div className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
-            {sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => (
-              <PackageCard destination={pkg.destination} state={pkg.state}
-                key={pkg.id}
-                bestSeller={isBestSellerFlag || pkg.best_seller}
-                className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0"
-                tripTitle={pkg.title}
-                price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request'}
-                duration={pkg.duration || 'Flexible'}
-                description={pkg.short_description || pkg.destination || ''}
-                bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"}
-                link={isInternational && !pkg.price ? '#' : `/itinerary/${pkg.slug}`}
-                badge={isInternational && !pkg.price ? 'Coming Soon' : ''}
-                primaryBadgeText={pkg.primary_badge_text}
-                secondaryBadgeText={pkg.secondary_badge_text}
-                showPrimaryBadge={pkg.show_primary_badge}
-                showSecondaryBadge={pkg.show_secondary_badge}
-                isClickable={pkg.is_clickable ?? true}
-              />
-            ))}
+          <div className="relative group/row">
+            {/* Left Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollRow(rowKey, 'left')}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              aria-label="Scroll left"
+            >
+              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+            </button>
+            {/* Right Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollRow(rowKey, 'right')}
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              aria-label="Scroll right"
+            >
+              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
+
+            <div ref={rowRef} className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+              {sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => (
+                <PackageCard destination={pkg.destination} state={pkg.state}
+                  key={pkg.id}
+                  listingCategories={pkg.listing_categories}
+                  bestSeller={isBestSellerFlag || pkg.best_seller}
+                  className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0"
+                  tripTitle={pkg.title}
+                  price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request'}
+                  duration={pkg.duration || 'Flexible'}
+                  description={pkg.short_description || pkg.destination || ''}
+                  bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"}
+                  link={isInternational && !pkg.price ? '#' : `/itinerary/${pkg.slug}`}
+                  badge={isInternational && !pkg.price ? 'Coming Soon' : ''}
+                  primaryBadgeText={pkg.primary_badge_text}
+                  secondaryBadgeText={pkg.secondary_badge_text}
+                  showPrimaryBadge={pkg.show_primary_badge}
+                  showSecondaryBadge={pkg.show_secondary_badge}
+                  isClickable={pkg.is_clickable ?? true}
+                  departureDates={generateDepartureDates(pkg.available_weekdays, pkg.departure_dates)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </section>
@@ -311,45 +403,125 @@ function Home() {
         </div>
         )}
 
-        {/* Dynamic Sections (Before Reviews) */}
+        {/* Dynamic Sections */}
         {pageLoading ? (
           <div className="flex justify-center items-center py-20 text-gray-400">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a] mb-3"></div>
             <span className="text-sm font-medium ml-3">Loading sections...</span>
           </div>
         ) : (() => {
-          let benefitsRendered = false;
-          return dynamicPackageSections.filter(sec => sec.display_order <= 5).map(sec => {
-            const isRecommended = sec.section_key === 'recommended';
-            if (isRecommended) benefitsRendered = true;
-            return (
-              <React.Fragment key={sec.id}>
-                {renderPackageSection(sec)}
-                {isRecommended && <BenefitsSection />}
-              </React.Fragment>
-            );
-          }).concat(!benefitsRendered && dynamicPackageSections.length > 0 ? [<BenefitsSection key="fallback-benefits" />] : []);
-        })()}
+          const sectionRenderers = {
+            destinations: (() => {
+              const sec = dynamicPackageSections.find((s) => s.section_key === 'destinations');
+              return sec ? <React.Fragment key={sec.id}>{renderPackageSection(sec)}</React.Fragment> : null;
+            })(),
+            interests: (() => {
+              const sec = dynamicPackageSections.find((s) => s.section_key === 'interests');
+              return sec ? <React.Fragment key={sec.id}>{renderPackageSection(sec)}</React.Fragment> : null;
+            })(),
+            promo_carousel: <PromoCarousel key="large-promo-carousel" settingKey="homepage_promo_banners" size="large" />,
+            recommended: (() => {
+              const sec = dynamicPackageSections.find((s) => s.section_key === 'recommended');
+              return sec ? <React.Fragment key={sec.id}>{renderPackageSection(sec)}</React.Fragment> : null;
+            })(),
+            static_banner: (() => {
+              if (!staticBanner || !staticBanner.active || !staticBanner.image) return null;
+              const isExt = isExternal(staticBanner.cta_link);
+              const content = (
+                <div className="relative flex items-center overflow-hidden w-full bg-gradient-to-r from-teal-800 to-slate-900 h-[150px] sm:h-[180px] md:h-[200px] lg:h-[220px] rounded-lg border border-gray-100/50 shadow-none">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url('${staticBanner.image}')` }}
+                  />
+                  <div className="absolute inset-0 bg-black/45" />
+                  
+                  <div className="relative z-10 flex flex-col justify-center px-8 sm:px-16 md:px-20 lg:px-24 py-6 max-w-3xl text-left select-none animate-in fade-in duration-700">
+                    {staticBanner.title && (
+                      <h3 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-2 drop-shadow-sm">
+                        {staticBanner.title}
+                      </h3>
+                    )}
+                    {staticBanner.subtitle && (
+                      <p className="text-white/90 text-xs sm:text-sm md:text-base leading-relaxed mb-4 max-w-lg">
+                        {staticBanner.subtitle}
+                      </p>
+                    )}
+                    {staticBanner.cta_text && staticBanner.clickable && (
+                      <span className="inline-flex items-center gap-1.5 bg-white text-[#136b8a] font-bold text-[10px] md:text-xs px-3.5 py-1.5 md:px-4.5 md:py-2 rounded-full w-fit shadow-sm">
+                        {staticBanner.cta_text}
+                        <span className="material-symbols-outlined text-[13px] md:text-[15px]">arrow_outward</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
 
-        {/* Stats Strip */}
-        <StatsStrip />
+              return (
+                <div key="static-banner-container" className="relative max-w-[1550px] w-[94vw] mx-auto my-6 md:my-8 px-0">
+                  {staticBanner.clickable && staticBanner.cta_link ? (
+                    isExt ? (
+                      <a href={staticBanner.cta_link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                        {content}
+                      </a>
+                    ) : (
+                      <Link to={staticBanner.cta_link} className="block w-full h-full">
+                        {content}
+                      </Link>
+                    )
+                  ) : (
+                    <div className="w-full h-full">
+                      {content}
+                    </div>
+                  )}
+                </div>
+              );
+            })(),
+            why_choose_us: (
+              <div key="why-choose-us-heading" className="text-center mt-10 mb-4 px-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-550">
+                  {whyChooseUsHeading}
+                </h2>
+                {whyChooseUsSubheading && (
+                  <p className="text-sm sm:text-base text-gray-500 mt-2 max-w-xl mx-auto font-medium">
+                    {whyChooseUsSubheading}
+                  </p>
+                )}
+              </div>
+            ),
+            why_choose_us_carousel: <PromoCarousel key="small-promo-carousel" settingKey="why_choose_us_banners" size="small" showTitle={false} />,
+            best_seller: (() => {
+              const sec = dynamicPackageSections.find((s) => s.section_key === 'best_seller');
+              return sec ? <React.Fragment key={sec.id}>{renderPackageSection(sec)}</React.Fragment> : null;
+            })(),
+            upcoming_trips: (() => {
+              const sec = dynamicPackageSections.find((s) => s.section_key === 'upcoming_trips');
+              return sec ? <React.Fragment key={sec.id}>{renderPackageSection(sec)}</React.Fragment> : null;
+            })(),
+            stats_strip: <StatsStrip key="stats-strip" />,
+            international: (() => {
+              const sec = dynamicPackageSections.find((s) => s.section_key === 'international');
+              return sec ? <React.Fragment key={sec.id}>{renderPackageSection(sec)}</React.Fragment> : null;
+            })(),
+            testimonials: <TestimonialsSection key="testimonials-section" />
+          };
 
-        {/* Dynamic Package Sections (After Banners) */}
-        {!pageLoading && (() => {
-          const afterSections = dynamicPackageSections.filter(sec => sec.display_order > 5);
-          return (
-            <>
-              {afterSections.map(sec => (
+          return layoutOrder.map((key) => {
+            if (sectionRenderers[key] !== undefined) {
+              return sectionRenderers[key];
+            }
+            // Fallback for custom dynamic database sections
+            const sec = dynamicPackageSections.find((s) => s.section_key === key);
+            if (sec) {
+              return (
                 <React.Fragment key={sec.id}>
                   {renderPackageSection(sec)}
                 </React.Fragment>
-              ))}
-            </>
-          );
-        })()}
-
-        {/* Homepage Testimonials */}
-        <TestimonialsSection />
+              );
+            }
+            return null;
+          });
+        })()
+        }
       </main>
 
       <Footer />

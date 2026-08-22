@@ -33,7 +33,7 @@ const AdminLogin = () => {
           .select('role')
           .eq('id', data.user.id)
           .single();
-          
+
         if (profileError && profileError.code !== 'PGRST116') {
           console.error(profileError);
         }
@@ -54,7 +54,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 ">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Admin Login
@@ -72,7 +72,7 @@ const AdminLogin = () => {
                 {error}
               </div>
             )}
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address

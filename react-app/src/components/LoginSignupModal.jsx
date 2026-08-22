@@ -2,14 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase, safeStorage } from '../utils/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
+import EmailOtpVerification from './EmailOtpVerification';
 
-const countryCodes = [
-  { code: '+91', country: 'IN' },
-  { code: '+1', country: 'US/CA' },
-  { code: '+44', country: 'UK' },
-  { code: '+61', country: 'AU' },
-  { code: '+971', country: 'AE' }
-];
+const countryCodes = []; // Kept for backwards compatibility if needed, but not used in UI
 
 const normalizePhone = (inputStr) => {
   let cCode = '';
@@ -45,16 +40,16 @@ const slideVariants = {
 };
 
 export default function LoginSignupModal({ isOpen, onClose }) {
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'forgot'
-  
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'login-otp' | 'register' | 'forgot'
+
   // Registration State
-  const [fullName, setFullName] = useState('');
-  const [countryCode, setCountryCode] = useState('+91');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -119,15 +114,17 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    // Basic validation
-    if (!fullName || !phone || !email || !password || !confirmPassword) {
+    const fName = firstName.trim();
+    const lName = lastName.trim();
+    if (!fName || !lName || !phone || !email || !password || !confirmPassword) {
       setErrorMsg('Please fill in all fields.');
       return;
     }
-    if (phone.length < 10) {
-      setErrorMsg('Please enter a valid phone number.');
+    if (phone.length !== 10) {
+      setErrorMsg('Please enter a valid 10-digit phone number.');
       return;
     }
+    const normalizedEmail = email.trim().toLowerCase();
     if (password.length < 6) {
       setErrorMsg('Password must be at least 6 characters.');
       return;
@@ -139,46 +136,18 @@ export default function LoginSignupModal({ isOpen, onClose }) {
     setLoading(true);
     setErrorMsg('');
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName, phone: countryCode + ' ' + phone } }
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: { shouldCreateUser: true }
       });
       if (error) {
         setLoading(false);
         setErrorMsg(error.message || 'Registration failed.');
         return;
       }
-      // Determine if email confirmation is required
-      const requiresConfirmation = data && data.user && !data.session;
-      // Upsert profile row (if user id available)
-      if (data?.user?.id) {
-        const normalizedPhone = normalizePhone(countryCode + phone);
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          full_name: fullName,
-          phone: normalizedPhone,
-          // preserve any existing role defaults via DB defaults
-        });
-      }
-      if (requiresConfirmation) {
-        setSuccessMsg('Registration Initiated! Please check your email to verify your account.');
-      } else {
-        if (data?.session) {
-          const { error: linkError } = await supabase.rpc('link_my_bookings');
-          if (linkError) {
-            console.error('Failed to link historical bookings:', linkError.message);
-          }
-        }
-        setSuccessMsg('Registration Successful! You are now logged in.');
-        // Store user in mock storage for UI consistency
-        safeStorage.setItem('mock_current_user', JSON.stringify(data.user));
-        window.dispatchEvent(new Event('auth-state-change'));
-        setTimeout(() => {
-          setAuthMode('login');
-          onClose();
-        }, 1500);
-      }
+
+      setAuthMode('register-otp');
+      setSuccessMsg('Registration Initiated! Please check your email to verify your account.');
     } catch (err) {
       setLoading(false);
       setErrorMsg(err.message || 'Registration failed. Please try again.');
@@ -242,6 +211,47 @@ export default function LoginSignupModal({ isOpen, onClose }) {
     }
   };
 
+  const handleOtpSuccess = async (verifiedEmail, session) => {
+    try {
+      if (session) {
+        const { error: linkError } = await supabase.rpc('link_my_bookings');
+        if (linkError) {
+          console.error('Failed to link historical bookings:', linkError.message);
+        }
+      }
+      if (session?.user) {
+        safeStorage.setItem('mock_current_user', JSON.stringify(session.user));
+        window.dispatchEvent(new Event('auth-state-change'));
+      }
+
+      const pendingClaimStr = sessionStorage.getItem('pending_claim');
+      if (pendingClaimStr && session?.user) {
+        try {
+          const claimData = JSON.parse(pendingClaimStr);
+          if (claimData.id && claimData.razorpay_payment_id) {
+            await supabase
+              .from('bookings')
+              .update({ user_id: session.user.id })
+              .eq('id', claimData.id)
+              .eq('razorpay_payment_id', claimData.razorpay_payment_id)
+              .is('user_id', null);
+            sessionStorage.removeItem('pending_claim');
+          }
+        } catch (e) { console.error('Failed to parse pending claim', e); }
+      }
+
+      setSuccessMsg('Sign In Successful!');
+      setTimeout(() => {
+        onClose();
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get('redirect');
+        if (redirect) navigate(redirect);
+      }, 1000);
+    } catch (err) {
+      setErrorMsg('An error occurred finishing login.');
+    }
+  };
+
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     if (!email) {
@@ -299,46 +309,135 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             <form className="space-y-4" onSubmit={handleRegisterSubmit}>
               <div className="flex gap-4">
                 <div className="w-1/2">
-                  <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Full Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                  <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
                 </div>
                 <div className="w-1/2">
-                  <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="w-24 px-2 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#136b8a]">
-                    {countryCodes.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
-                  </select>
-                  <input type="tel" required value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="Phone" maxLength={10} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] mt-1" />
+                  <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
                 </div>
+              </div>
+              <div>
+                <input type="tel" required value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="Phone Number" maxLength={10} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
               </div>
               <div>
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
               </div>
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600">{showPassword ? 'Hide' : 'Show'}</button>
+                <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#136b8a] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
               </div>
               <div className="relative">
-                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600">{showConfirmPassword ? 'Hide' : 'Show'}</button>
+                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#136b8a] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70">
-                {loading ? 'Processing...' : 'Submit'}
+              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70 mt-4">
+                {loading ? 'Processing...' : 'Create Account'}
               </button>
             </form>
           )}
 
+          {authMode === 'register-otp' && (
+            <div className="space-y-4">
+              <EmailOtpVerification
+                email={email}
+                shouldCreateUser={false}
+                initialStep={2}
+                onVerifySuccess={async (verifiedEmail, session) => {
+                  if (session?.user) {
+                    const fName = firstName.trim();
+                    const lName = lastName.trim();
+                    const full_name = `${fName} ${lName}`;
+                    const { error: updateError } = await supabase.auth.updateUser({
+                      password: password,
+                      data: {
+                        first_name: fName,
+                        last_name: lName,
+                        full_name: full_name,
+                        phone: phone
+                      }
+                    });
+
+                    if (updateError) {
+                      console.error('Error updating user password/metadata:', updateError);
+                      setErrorMsg('Failed to finalize account creation. Please try again.');
+                      return;
+                    }
+
+                    await supabase.from('profiles').upsert({
+                      id: session.user.id,
+                      full_name,
+                      phone,
+                    });
+
+                    await supabase.auth.signOut();
+                  }
+
+                  setSuccessMsg('');
+                  setErrorMsg('');
+                  setAuthMode('register-success');
+                }}
+                onBack={() => { setAuthMode('register'); setErrorMsg(''); setSuccessMsg(''); }}
+              />
+            </div>
+          )}
+
+          {authMode === 'register-success' && (
+             <div className="py-8 text-center flex flex-col items-center gap-4 w-full">
+               <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+                 <span className="material-symbols-outlined text-3xl">check</span>
+               </div>
+               <h3 className="font-bold text-gray-900 text-2xl">Account Created Successfully</h3>
+               <p className="text-gray-500 text-sm mb-4 leading-relaxed px-4">
+                 Your email has been verified.<br/>
+                 You can now sign in to your TripoMist account.
+               </p>
+               <button
+                 onClick={() => { setAuthMode('login'); setErrorMsg(''); setSuccessMsg(''); }}
+                 className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors"
+               >
+                 Sign In
+               </button>
+             </div>
+          )}
+
           {authMode === 'login' && (
             <form className="space-y-4" onSubmit={handleLoginSubmit}>
-              <input type="email" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email or Phone" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+              <input type="email" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600">{showPassword ? 'Hide' : 'Show'}</button>
+                <input type={showPassword ? "text" : "password"} required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#136b8a] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
               </div>
               <div className="flex justify-end">
                 <button type="button" onClick={() => { setAuthMode('forgot'); setErrorMsg(''); setSuccessMsg(''); }} className="text-sm font-bold text-[#136b8a]">Forgot Password?</button>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70">
+              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70 mt-2">
                 {loading ? 'Signing In...' : 'Sign In'}
               </button>
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">OR</span>
+                <div className="flex-grow border-t border-gray-200"></div>
+              </div>
+              <button type="button" onClick={() => { setAuthMode('login-otp'); setErrorMsg(''); setSuccessMsg(''); }} className="w-full py-3.5 bg-white border border-gray-200 text-[#136b8a] font-bold rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+                Login with Email OTP
+              </button>
             </form>
+          )}
+
+          {authMode === 'login-otp' && (
+            <div className="space-y-4">
+              <EmailOtpVerification
+                email={loginEmail}
+                shouldCreateUser={false}
+                onVerifySuccess={handleOtpSuccess}
+                onBack={() => { setAuthMode('login'); setErrorMsg(''); setSuccessMsg(''); }}
+              />
+            </div>
           )}
 
           {authMode === 'forgot' && (
@@ -351,12 +450,16 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             </form>
           )}
 
-          {authMode !== 'forgot' && (
+          {['login', 'register', 'login-otp', 'register-otp'].includes(authMode) && (
             <div className="mt-6 text-center border-t border-gray-100 pt-6">
               <p className="text-sm text-gray-600">
-                {authMode === 'register' ? "Already have an account? " : "Don't have an account? "}
-                <button type="button" onClick={() => setAuthMode(authMode === 'register' ? 'login' : 'register')} className="font-bold text-[#136b8a] hover:underline">
-                  {authMode === 'register' ? 'Sign In' : 'Switch to Sign Up'}
+                {['register', 'register-otp'].includes(authMode) ? "Already have an account? " : "Don't have an account? "}
+                <button type="button" onClick={() => {
+                  setAuthMode(['register', 'register-otp'].includes(authMode) ? 'login' : 'register');
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                }} className="font-bold text-[#136b8a] hover:underline">
+                  {['register', 'register-otp'].includes(authMode) ? 'Sign In' : 'Create Account'}
                 </button>
               </p>
             </div>
@@ -410,7 +513,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
               {/* Desktop View */}
               <div className="hidden md:flex w-full h-[600px]">
                 {/* Carousel */}
-                <div 
+                <div
                   className="w-1/2 relative bg-[#136b8a] overflow-hidden group"
                   onMouseEnter={() => setIsPaused(true)}
                   onMouseLeave={() => setIsPaused(false)}

@@ -96,10 +96,7 @@ const ReviewsSection = ({ packageId = null, featuredOnly = false }) => {
     <section className="w-full py-12 px-4 md:px-12 lg:px-20 bg-surface-container-lowest border-t border-gray-50">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 mb-4 text-[#136b8a]">
-            <MessageSquare size={16} />
-            <span className="font-label-caps tracking-widest uppercase font-bold text-sm">Customer Stories</span>
-          </div>
+
           <h2 className="text-3xl md:text-4xl text-on-surface font-bold">
             What Travelers Say
           </h2>

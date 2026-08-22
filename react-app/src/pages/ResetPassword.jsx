@@ -6,7 +6,7 @@ export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [isRecoverySessionValid, setIsRecoverySessionValid] = useState(false);
@@ -103,7 +103,7 @@ export default function ResetPassword() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
         <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative text-center">
           <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100 flex flex-col items-center justify-center">
@@ -117,7 +117,7 @@ export default function ResetPassword() {
 
   if (!isRecoverySessionValid) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
         <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight drop-shadow-sm">
@@ -145,8 +145,8 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
-      
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
+
       {/* Slanted Background */}
       <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
       <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl z-0 pointer-events-none"></div>
@@ -163,14 +163,14 @@ export default function ResetPassword() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
         <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100">
-          
+
           {errorMsg && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
               <span className="material-symbols-outlined text-[18px]">error</span>
               {errorMsg}
             </div>
           )}
-          
+
           {successMsg && (
             <div className="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
               <span className="material-symbols-outlined text-[18px]">check_circle</span>
@@ -235,7 +235,7 @@ export default function ResetPassword() {
 
         </div>
       </div>
-      
+
       <style dangerouslySetInnerHTML={{__html: `
         .clip-path-slant {
           clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%);

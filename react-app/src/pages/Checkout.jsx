@@ -27,7 +27,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-container-lowest font-sans">
+    <div className="flex flex-col min-h-screen bg-surface-container-lowest ">
       <Navbar />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8 md:py-12 mt-20">
@@ -37,7 +37,7 @@ export default function Checkout() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Left Column: Cart Items */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             {cartItems.length > 0 ? (
@@ -71,9 +71,9 @@ export default function Checkout() {
           {/* Right Column: Payment Summary */}
           <div className="lg:col-span-4 relative">
             <div className="sticky top-[100px] bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              
+
               <h2 className="text-xl font-bold text-gray-900 mb-6">Payment Summary</h2>
-              
+
               <div className="space-y-3 mb-6 border-b border-gray-100 pb-6">
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
                   <span>Subtotal ({cartItems.length} Packages)</span>
@@ -92,7 +92,7 @@ export default function Checkout() {
                 <span className="font-extrabold text-[#136b8a] text-2xl">₹{billTotal.toLocaleString()}</span>
               </div>
 
-              <button 
+              <button
                 onClick={handleBookNow}
                 disabled={cartItems.length === 0}
                 className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] text-lg"
@@ -104,8 +104,8 @@ export default function Checkout() {
           </div>
         </div>
       </main>
-      
-      <BookingModal 
+
+      <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         tripTitle={cartItems.length === 1 ? cartItems[0].title : "Multiple Packages"}
@@ -116,7 +116,7 @@ export default function Checkout() {
         destination={cartItems.length === 1 ? cartItems[0].destination || cartItems[0].title : "Multiple Destinations"}
         costings={null}
       />
-      
+
       <Footer />
     </div>
   )

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { 
-  Edit3, 
-  Trash2, 
-  Plus, 
+import {
+  Edit3,
+  Trash2,
+  Plus,
   CheckCircle,
   XCircle,
   AlertCircle
@@ -16,7 +16,7 @@ const AdminInterests = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  
+
   const initialFormState = {
     name: '',
     slug: '',
@@ -129,7 +129,7 @@ const AdminInterests = () => {
           <p className="text-gray-500 mt-1">Manage the 'Destination According To Interest' cards.</p>
         </div>
         {!isEditing && (
-          <button 
+          <button
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium"
           >
@@ -149,7 +149,7 @@ const AdminInterests = () => {
       {isEditing ? (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
           <h2 className="text-lg font-bold">{currentItem ? 'Edit Interest' : 'New Interest'}</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -164,18 +164,18 @@ const AdminInterests = () => {
               <input type="text" name="route" value={formData.route || ''} onChange={handleInputChange} className="w-full p-2 border rounded" required placeholder="e.g. /trips/trek" />
             </div>
             <div className="md:col-span-2">
-              <MediaUploader 
-                url={formData.image_url} 
-                onUrlChange={(url) => setFormData({...formData, image_url: url})} 
-                folder="interests" 
+              <MediaUploader
+                url={formData.image_url}
+                onUrlChange={(url) => setFormData({...formData, image_url: url})}
+                folder="interests"
                 label="Circle/Front Image"
               />
             </div>
             <div className="md:col-span-2">
-              <MediaUploader 
-                url={formData.hero_banner_url} 
-                onUrlChange={(url) => setFormData({...formData, hero_banner_url: url})} 
-                folder="interests" 
+              <MediaUploader
+                url={formData.hero_banner_url}
+                onUrlChange={(url) => setFormData({...formData, hero_banner_url: url})}
+                folder="interests"
                 label="Hero Banner"
                 hint="Large image or video shown at the top of the interest page."
               />
@@ -193,7 +193,7 @@ const AdminInterests = () => {
               <label className="text-sm font-medium text-gray-700">Active</label>
             </div>
           </div>
-          
+
           <div className="flex gap-2 pt-4">
             <button type="submit" className="bg-[#136b8a] text-white px-6 py-2 rounded-lg hover:bg-[#0f556e]">Save Interest</button>
             <button type="button" onClick={handleCancel} className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200">Cancel</button>
@@ -209,8 +209,8 @@ const AdminInterests = () => {
                 <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
               </div>
               <h3 className="font-bold text-gray-900 text-sm mb-1">{item.name}</h3>
-              <p className="text-[10px] text-gray-500 mb-3 font-mono">{item.route}</p>
-              
+              <p className="text-[10px] text-gray-500 mb-3 ">{item.route}</p>
+
               <div className="flex justify-between items-center w-full mt-auto pt-3 border-t border-gray-50">
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
                   {item.is_active ? 'ON' : 'OFF'}

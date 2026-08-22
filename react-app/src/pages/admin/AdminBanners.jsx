@@ -9,7 +9,7 @@ const AdminBanners = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(null);
-  
+
   const initialFormState = {
     label: '', title: '', highlighted_text: '', subtitle: '', price_text: '', desktop_image: '',
     button_text: 'Explore Now', button_link: '', display_order: 0, is_active: true,
@@ -164,23 +164,23 @@ const AdminBanners = () => {
       {isEditing ? (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
           <h2 className="text-lg font-bold">{currentBanner ? 'Edit Banner' : 'New Banner'}</h2>
-          
+
           {jsonError && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200">{jsonError}</div>}
 
           {/* Core Banner Visuals */}
           <div className="space-y-4">
             <h3 className="text-md font-semibold border-b pb-2">1. Visuals & Layout</h3>
             <div className="grid grid-cols-1 gap-6 mb-4">
-              <MediaUploader 
-                url={formData.desktop_image} 
-                onUrlChange={(url) => setFormData({...formData, desktop_image: url})} 
-                folder="banners" 
+              <MediaUploader
+                url={formData.desktop_image}
+                onUrlChange={(url) => setFormData({...formData, desktop_image: url})}
+                folder="banners"
                 label="Desktop Image URL *"
               />
-              <MediaUploader 
-                url={formData.mobile_banner} 
-                onUrlChange={(url) => setFormData({...formData, mobile_banner: url})} 
-                folder="banners" 
+              <MediaUploader
+                url={formData.mobile_banner}
+                onUrlChange={(url) => setFormData({...formData, mobile_banner: url})}
+                folder="banners"
                 label="Mobile Image URL (Optional)"
               />
             </div>
@@ -229,31 +229,17 @@ const AdminBanners = () => {
             <div><label className={labelClass}>Full Description</label><textarea name="full_description" value={formData.full_description || ''} onChange={handleInputChange} className={inputClass} rows={4} /></div>
           </div>
 
-          {/* Dynamic Promo Offer Page Content */}
-          <div className="space-y-4">
-            <h3 className="text-md font-semibold border-b pb-2">3b. Promo Offer Page & Stripe Fields</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label className={labelClass}>Internal Promo Name</label><input type="text" name="internal_name" value={formData.internal_name || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>Promo Stripe Text</label><input type="text" name="promo_stripe_text" value={formData.promo_stripe_text || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>Promo Page Title</label><input type="text" name="page_title" value={formData.page_title || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>Promo Page Subtitle</label><input type="text" name="page_subtitle" value={formData.page_subtitle || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>CTA Button Text</label><input type="text" name="cta_text" value={formData.cta_text || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>CTA Button Link</label><input type="text" name="cta_link" value={formData.cta_link || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>Start Date</label><input type="datetime-local" name="start_date" value={formData.start_date || ''} onChange={handleInputChange} className={inputClass} /></div>
-              <div><label className={labelClass}>End Date</label><input type="datetime-local" name="end_date" value={formData.end_date || ''} onChange={handleInputChange} className={inputClass} /></div>
-            </div>
-            <div><label className={labelClass}>Full Offer Content</label><textarea name="content" value={formData.content || ''} onChange={handleInputChange} className={inputClass} rows={4} /></div>
-          </div>
+
 
           {/* Detail JSONs */}
           <div className="space-y-4">
             <h3 className="text-md font-semibold border-b pb-2">4. Detail JSON Fields</h3>
-            <div><label className={labelClass}>Itinerary JSON</label><textarea name="itinerary" value={formData.itinerary || ''} onChange={handleInputChange} className={`${inputClass} font-mono`} rows={4} /></div>
-            <div><label className={labelClass}>Inclusions JSON</label><textarea name="inclusions" value={formData.inclusions || ''} onChange={handleInputChange} className={`${inputClass} font-mono`} rows={3} /></div>
-            <div><label className={labelClass}>Exclusions JSON</label><textarea name="exclusions" value={formData.exclusions || ''} onChange={handleInputChange} className={`${inputClass} font-mono`} rows={3} /></div>
-            <div><label className={labelClass}>Costings JSON</label><textarea name="costings" value={formData.costings || ''} onChange={handleInputChange} className={`${inputClass} font-mono`} rows={3} /></div>
+            <div><label className={labelClass}>Itinerary JSON</label><textarea name="itinerary" value={formData.itinerary || ''} onChange={handleInputChange} className={`${inputClass} `} rows={4} /></div>
+            <div><label className={labelClass}>Inclusions JSON</label><textarea name="inclusions" value={formData.inclusions || ''} onChange={handleInputChange} className={`${inputClass} `} rows={3} /></div>
+            <div><label className={labelClass}>Exclusions JSON</label><textarea name="exclusions" value={formData.exclusions || ''} onChange={handleInputChange} className={`${inputClass} `} rows={3} /></div>
+            <div><label className={labelClass}>Costings JSON</label><textarea name="costings" value={formData.costings || ''} onChange={handleInputChange} className={`${inputClass} `} rows={3} /></div>
           </div>
-          
+
           <div className="flex gap-2 pt-4">
             <button type="submit" className="bg-[#136b8a] text-white px-6 py-2 rounded-lg hover:bg-[#0f556e]">Save Banner</button>
             <button type="button" onClick={handleCancel} className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200">Cancel</button>
@@ -279,7 +265,7 @@ const AdminBanners = () => {
                 </div>
               </div>
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-50">
-                <span className="text-xs text-gray-400 font-mono">Order: {banner.display_order}</span>
+                <span className="text-xs text-gray-400 ">Order: {banner.display_order}</span>
                 <div className="flex gap-2">
                   <button onClick={() => handleToggleActive(banner.id, banner.is_active)} className={`p-1.5 rounded-lg border ${banner.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-100' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-100'}`} title="Toggle Status">
                     {banner.is_active ? <XCircle size={16} /> : <CheckCircle size={16} />}
