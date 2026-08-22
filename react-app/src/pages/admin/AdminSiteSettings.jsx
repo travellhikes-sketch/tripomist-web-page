@@ -1,9 +1,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
+import MediaUploader from '../../components/admin/MediaUploader';
+
+const normalizeBanner = (banner, index) => {
+  if (!banner) return null;
+  const id = banner.id || `pb_${index}_${Date.now()}`;
+  const image = banner.image || banner.image_url || '';
+  const title = banner.title || '';
+  const subtitle = banner.subtitle || '';
+  const cta_text = banner.cta_text || banner.cta_label || '';
+  const cta_link = banner.cta_link || banner.cta_url || '';
+  const active = banner.active !== undefined ? banner.active : (banner.is_active !== undefined ? banner.is_active : true);
+  const display_order = banner.display_order !== undefined ? parseInt(banner.display_order, 10) : (index + 1);
+  return {
+    id,
+    image,
+    image_url: image,
+    title,
+    subtitle,
+    cta_text,
+    cta_label: cta_text,
+    cta_link,
+    cta_url: cta_link,
+    active,
+    is_active: active,
+    display_order
+  };
+};
 import {
   Save, AlertCircle, CheckCircle, RefreshCw,
   Monitor, LayoutTemplate, MessageSquare, Link as LinkIcon, Box,
-  Shield, BarChart2, Trash2, ArrowUp, ArrowDown, Plus
+  Shield, BarChart2, Trash2, ArrowUp, ArrowDown, Plus,
+  Image, Layers
 } from 'lucide-react';
 
 const AdminSiteSettings = () => {
@@ -22,9 +50,17 @@ const AdminSiteSettings = () => {
     social_links: {},
     package_detail_settings: {},
     trust_benefits: {},
+    homepage_promo_banners: {},
+    why_choose_us_banners: {},
     stats_strip: {},
-    testimonials_section: {}
+    testimonials_section: {},
+    customer_support: {},
+    homepage_static_banner: {},
+    homepage_section_order: [],
+    typography: {}
   });
+
+  const [homepageSectionOrder, setHomepageSectionOrder] = useState([]);
 
   const TABS = [
     { id: 'hero', label: 'Hero Section', icon: Monitor },
@@ -32,8 +68,14 @@ const AdminSiteSettings = () => {
     { id: 'footer', label: 'Footer & Contact', icon: LayoutTemplate },
     { id: 'social_links', label: 'Social Media', icon: LinkIcon },
     { id: 'package_detail_settings', label: 'Package Detail', icon: Box },
-    { id: 'trust_benefits', label: 'Trust & Benefits', icon: Shield },
-    { id: 'stats_strip', label: 'Stats Strip', icon: BarChart2 }
+    { id: 'trust_benefits', label: 'Experience Section', icon: Shield },
+    { id: 'homepage_promo_banners', label: 'Promo Banners', icon: Shield },
+    { id: 'why_choose_us_banners', label: 'Why Choose Us Banners', icon: Shield },
+    { id: 'stats_strip', label: 'Stats Strip', icon: BarChart2 },
+    { id: 'customer_support', label: 'Customer Support', icon: MessageSquare },
+    { id: 'homepage_static_banner', label: 'Static Banner', icon: Image },
+    { id: 'homepage_section_order', label: 'Homepage Layout', icon: Layers },
+    { id: 'typography', label: 'Typography', icon: LayoutTemplate }
   ];
 
   const fetchSettings = useCallback(async () => {
@@ -63,8 +105,49 @@ const AdminSiteSettings = () => {
               { id: '2', heading: 'Certified Guides', description: 'Travel with experienced trip captains who know the mountains like the back of their hand.', icon: 'Shield', is_active: true },
               { id: '3', heading: 'Small Groups', description: 'Intimate group sizes (12-16 pax) ensure personal attention and stronger bonds among travellers.', icon: 'Users', is_active: true },
               { id: '4', heading: 'Local Community', description: 'Start your journey from Delhi with like-minded locals. Pre-trip meetups to break the ice.', icon: 'Sparkles', is_active: true }
+            ],
+            promo_banners: []
+          };
+        } else {
+          const existingBanners = newSettings.trust_benefits.promo_banners;
+          if (existingBanners) {
+            newSettings.trust_benefits.promo_banners = existingBanners.map((b, idx) => normalizeBanner(b, idx));
+          }
+        }
+
+        // Prefill homepage_promo_banners
+        if (!newSettings.homepage_promo_banners || !Array.isArray(newSettings.homepage_promo_banners.banners)) {
+          newSettings.homepage_promo_banners = {
+            banners: [
+              { id: 'pb1', title: 'VALLEY OF FLOWERS', subtitle: 'Explore the Himalayan Bloom', image: 'https://res.cloudinary.com/yefluulb/image/upload/v1784911022/file_000000008360820babc664eada874536_if2ae0.png', image_url: 'https://res.cloudinary.com/yefluulb/image/upload/v1784911022/file_000000008360820babc664eada874536_if2ae0.png', cta_text: 'Explore Trip', cta_label: 'Explore Trip', cta_link: '/itinerary/valley-of-flowers-with-hemkund-sahib', cta_url: '/itinerary/valley-of-flowers-with-hemkund-sahib', active: true, is_active: true, display_order: 1, clickable: true },
+              { id: 'pb2', title: 'KEDARNATH', subtitle: 'Journey to the Sacred Himalayas', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200', image_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200', cta_text: 'Explore Trip', cta_label: 'Explore Trip', cta_link: '/destinations/uttarakhand', cta_url: '/destinations/uttarakhand', active: true, is_active: true, display_order: 2, clickable: true },
+              { id: 'pb3', title: 'HAMPTA PASS', subtitle: 'Cross Into Another World', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=1200', image_url: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=1200', cta_text: 'Explore Trek', cta_label: 'Explore Trek', cta_link: '/itinerary/hampta-pass-trek', cta_url: '/itinerary/hampta-pass-trek', active: true, is_active: true, display_order: 3, clickable: true },
+              { id: 'pb4', title: 'LADAKH', subtitle: 'Ride Beyond the Ordinary', image: 'https://images.unsplash.com/photo-1581793746485-04698e79a4e8?q=80&w=1200', image_url: 'https://images.unsplash.com/photo-1581793746485-04698e79a4e8?q=80&w=1200', cta_text: 'Explore Tour', cta_label: 'Explore Tour', cta_link: '/destinations/ladakh', cta_url: '/destinations/ladakh', active: true, is_active: true, display_order: 4, clickable: true }
             ]
           };
+        } else {
+          newSettings.homepage_promo_banners.banners = newSettings.homepage_promo_banners.banners.map((b, idx) => normalizeBanner(b, idx));
+        }
+
+        // Prefill why_choose_us_banners
+        if (!newSettings.why_choose_us_banners || !Array.isArray(newSettings.why_choose_us_banners.banners)) {
+          newSettings.why_choose_us_banners = {
+            title: 'Why Choose Us',
+            subtitle: "India's Fastest Growing Travel Company",
+            banners: [
+              { id: 'tb1', title: 'Best for Solo Travelers', subtitle: 'Travel solo. Return with a tribe. Intimate group sizes ensure personal attention and stronger bonds.', image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?q=80&w=1200', image_url: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?q=80&w=1200', active: true, is_active: true, display_order: 1, clickable: false, cta_text: '', cta_label: '', cta_link: '', cta_url: '' },
+              { id: 'tb2', title: 'Safe for Girls', subtitle: 'Our group trips have a 60:40 gender ratio with certified female and male trip captains.', image: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=1200', image_url: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?q=80&w=1200', active: true, is_active: true, display_order: 2, clickable: false, cta_text: '', cta_label: '', cta_link: '', cta_url: '' },
+              { id: 'tb3', title: 'Experienced Trip Captains', subtitle: 'Certified mountaineers and local guides who know the terrain, safety protocols, and cultures.', image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=1200', image_url: 'https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=1200', active: true, is_active: true, display_order: 3, clickable: false, cta_text: '', cta_label: '', cta_link: '', cta_url: '' }
+            ]
+          };
+        } else {
+          newSettings.why_choose_us_banners.banners = newSettings.why_choose_us_banners.banners.map((b, idx) => normalizeBanner(b, idx));
+          if (!newSettings.why_choose_us_banners.title) {
+            newSettings.why_choose_us_banners.title = 'Why Choose Us';
+          }
+          if (!newSettings.why_choose_us_banners.subtitle) {
+            newSettings.why_choose_us_banners.subtitle = "India's Fastest Growing Travel Company";
+          }
         }
         if (!newSettings.stats_strip || !newSettings.stats_strip.cards) {
           newSettings.stats_strip = {
@@ -76,7 +159,69 @@ const AdminSiteSettings = () => {
             ]
           };
         }
+        if (!newSettings.customer_support || Object.keys(newSettings.customer_support).length === 0) {
+          newSettings.customer_support = {
+            whatsapp: { enabled: true, title: 'WhatsApp', value: '', description: '' },
+            call: { enabled: true, title: 'Call Us', value: '', description: '' },
+            email: { enabled: true, title: 'Email', value: '', description: '' },
+            live_chat: { enabled: true, title: 'Live Chat', description: 'Need quick help? You can chat with our support team directly.' }
+          };
+        }
+        if (!newSettings.homepage_static_banner || Object.keys(newSettings.homepage_static_banner).length === 0) {
+          newSettings.homepage_static_banner = {
+            active: true,
+            image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200',
+            title: 'KEDARNATH',
+            subtitle: 'Journey to the Sacred Himalayas',
+            clickable: true,
+            cta_text: 'Explore Trip',
+            cta_link: '/destinations/uttarakhand'
+          };
+        }
+        if (!newSettings.typography) {
+          newSettings.typography = {
+            heading_font: 'Ranchers'
+          };
+        }
+        let mergedOrder = [];
+        if (!newSettings.homepage_section_order || !Array.isArray(newSettings.homepage_section_order)) {
+          mergedOrder = [
+            'destinations',
+            'interests',
+            'promo_carousel',
+            'recommended',
+            'static_banner',
+            'why_choose_us',
+            'why_choose_us_carousel',
+            'best_seller',
+            'upcoming_trips',
+            'stats_strip',
+            'international',
+            'testimonials'
+          ];
+          newSettings.homepage_section_order = mergedOrder;
+        } else {
+          const DEFAULT_ORDER = [
+            'destinations',
+            'interests',
+            'promo_carousel',
+            'recommended',
+            'static_banner',
+            'why_choose_us',
+            'why_choose_us_carousel',
+            'best_seller',
+            'upcoming_trips',
+            'stats_strip',
+            'international',
+            'testimonials'
+          ];
+          const uniqueSaved = Array.from(new Set(newSettings.homepage_section_order)).filter(key => DEFAULT_ORDER.includes(key));
+          const missing = DEFAULT_ORDER.filter(key => !uniqueSaved.includes(key));
+          mergedOrder = [...uniqueSaved, ...missing];
+          newSettings.homepage_section_order = mergedOrder;
+        }
 
+        setHomepageSectionOrder(mergedOrder);
         setSettings(newSettings);
       }
     } catch (err) {
@@ -138,6 +283,33 @@ const AdminSiteSettings = () => {
     } catch (err) {
       console.error('Error saving settings:', err);
       setError(err.message || 'Failed to save settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveLayoutOrder = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const { error: upsertErr } = await supabase
+        .from('site_settings')
+        .upsert({
+          setting_key: 'homepage_section_order',
+          setting_value: homepageSectionOrder,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_key' });
+
+      if (upsertErr) throw upsertErr;
+
+      setSettings(prev => ({
+        ...prev,
+        homepage_section_order: homepageSectionOrder
+      }));
+      setSuccess('Homepage layout order saved successfully!');
+    } catch (err) {
+      console.error('Error saving layout order:', err);
+      setError(err.message || 'Failed to save layout order.');
     } finally {
       setSaving(false);
     }
@@ -327,6 +499,35 @@ const AdminSiteSettings = () => {
               <div className="pt-4 flex justify-end">
                 <button onClick={() => handleSave('hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Hero Settings
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TYPOGRAPHY TAB */}
+          {activeTab === 'typography' && (
+            <div className="space-y-6 animate-in">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Typography Settings</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Heading Font Family</label>
+                  <select
+                    value={settings.typography.heading_font || 'Ranchers'}
+                    onChange={e => handleChange('typography', 'heading_font', e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="Ranchers">Ranchers (Playful/Bouncy)</option>
+                    <option value="Fredoka">Fredoka (Rounded/Modern)</option>
+                    <option value="Inter">Inter (Clean/Professional)</option>
+                    <option value="Titan One">Titan One (Bold/Playful)</option>
+                    <option value="Lilita One">Lilita One (Round/Bold)</option>
+                    <option value="Spicy Rice">Spicy Rice (Chunky/Casual)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="pt-4 flex justify-end">
+                <button onClick={() => handleSave('typography')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                  <Save size={16} /> Save Typography
                 </button>
               </div>
             </div>
@@ -648,9 +849,364 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end">
+              <div className="pt-4 flex justify-end border-t mt-4">
                 <button onClick={() => handleSave('trust_benefits')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Experience Section Settings
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* HOMEPAGE PROMOTIONAL BANNERS TAB */}
+          {activeTab === 'homepage_promo_banners' && (
+            <div className="space-y-6 animate-in">
+              <div className="flex items-center justify-between border-b pb-2">
+                <h2 className="text-lg font-bold text-gray-900">Homepage Promotional Banners</h2>
+                <button
+                  onClick={() => {
+                    const banners = settings.homepage_promo_banners?.banners || [];
+                    const newBanner = {
+                      id: Date.now().toString(),
+                      title: 'NEW BANNER',
+                      subtitle: 'Banner subtitle',
+                      image: '',
+                      image_url: '',
+                      cta_text: 'Explore Trip',
+                      cta_label: 'Explore Trip',
+                      cta_link: '',
+                      cta_url: '',
+                      active: true,
+                      is_active: true,
+                      display_order: banners.length + 1,
+                      clickable: true
+                    };
+                    handleChange('homepage_promo_banners', 'banners', [...banners, newBanner]);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold"
+                >
+                  <Plus size={14} /> Add Banner
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(settings.homepage_promo_banners?.banners || []).map((banner, idx) => (
+                  <div key={banner.id} className="bg-gray-50 border p-4 rounded-xl space-y-3">
+                    <div className="flex justify-between items-center border-b pb-2">
+                      <span className="text-xs font-semibold text-gray-500">Promo Banner #{idx + 1}</span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            const list = [...(settings.homepage_promo_banners?.banners || [])];
+                            if (idx === 0) return;
+                            const temp = list[idx]; list[idx] = list[idx - 1]; list[idx - 1] = temp;
+                            const updatedList = list.map((b, i) => ({ ...b, display_order: i + 1 }));
+                            handleChange('homepage_promo_banners', 'banners', updatedList);
+                          }}
+                          disabled={idx === 0}
+                          className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"
+                        ><ArrowUp size={12} /></button>
+                        <button
+                          onClick={() => {
+                            const list = [...(settings.homepage_promo_banners?.banners || [])];
+                            if (idx === list.length - 1) return;
+                            const temp = list[idx]; list[idx] = list[idx + 1]; list[idx + 1] = temp;
+                            const updatedList = list.map((b, i) => ({ ...b, display_order: i + 1 }));
+                            handleChange('homepage_promo_banners', 'banners', updatedList);
+                          }}
+                          disabled={idx === (settings.homepage_promo_banners?.banners || []).length - 1}
+                          className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"
+                        ><ArrowDown size={12} /></button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this promo banner?")) {
+                              const list = (settings.homepage_promo_banners?.banners || [])
+                                .filter(b => b.id !== banner.id)
+                                .map((b, i) => ({ ...b, display_order: i + 1 }));
+                              handleChange('homepage_promo_banners', 'banners', list);
+                            }
+                          }}
+                          className="p-1 bg-red-50 text-red-500 rounded hover:bg-red-100"
+                        ><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelClass}>Banner Title</label>
+                        <input type="text" value={banner.title || ''}
+                          onChange={e => {
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, title: e.target.value } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          className={inputClass} placeholder="VALLEY OF FLOWERS" />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Status</label>
+                        <select value={(banner.active !== undefined ? banner.active : banner.is_active) !== false ? 'true' : 'false'}
+                          onChange={e => {
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, active: e.target.value === 'true', is_active: e.target.value === 'true' } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          className={inputClass}>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Subtitle / Description</label>
+                        <input type="text" value={banner.subtitle || ''}
+                          onChange={e => {
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, subtitle: e.target.value } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          className={inputClass} placeholder="Explore the Himalayan Bloom" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <MediaUploader
+                          url={banner.image || banner.image_url || ''}
+                          onUrlChange={url => {
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, image: url, image_url: url } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          folder="homepage_promo_banners"
+                          label="Banner Image"
+                          hint="Upload a wide banner image. Recommended ratio: 1200x450 px."
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>CTA Button Label</label>
+                        <input type="text" value={banner.cta_text || banner.cta_label || ''}
+                          onChange={e => {
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_text: e.target.value, cta_label: e.target.value } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          className={inputClass} placeholder="Explore Trip" />
+                      </div>
+                      <div>
+                        <label className={labelClass}>CTA Link / URL</label>
+                        <input type="text" value={banner.cta_link || banner.cta_url || ''}
+                          onChange={e => {
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: e.target.value, cta_url: e.target.value } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          className={inputClass} placeholder="/itinerary/valley-of-flowers..." />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Display Order</label>
+                        <input type="number" value={banner.display_order || ''}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10) || 1;
+                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, display_order: val } : b);
+                            handleChange('homepage_promo_banners', 'banners', list);
+                          }}
+                          className={inputClass} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button onClick={() => handleSave('homepage_promo_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                  <Save size={16} /> Save Promo Banners
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* WHY CHOOSE US TRUST BANNERS TAB */}
+          {activeTab === 'why_choose_us_banners' && (
+            <div className="space-y-6 animate-in">
+              <div className="flex items-center justify-between border-b pb-2">
+                <h2 className="text-lg font-bold text-gray-900">Why Choose Us Banners Settings</h2>
+                <button
+                  onClick={() => {
+                    const banners = settings.why_choose_us_banners?.banners || [];
+                    const newBanner = {
+                      id: Date.now().toString(),
+                      title: 'NEW TRUST BANNER',
+                      subtitle: 'Description of trust point',
+                      image: '',
+                      image_url: '',
+                      cta_text: '',
+                      cta_label: '',
+                      cta_link: '',
+                      cta_url: '',
+                      active: true,
+                      is_active: true,
+                      display_order: banners.length + 1,
+                      clickable: false
+                    };
+                    handleChange('why_choose_us_banners', 'banners', [...banners, newBanner]);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold"
+                >
+                  <Plus size={14} /> Add Trust Banner
+                </button>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-xl border space-y-3">
+                <label className={labelClass + " font-bold text-gray-700"}>Why Choose Us Heading</label>
+                <input
+                  type="text"
+                  value={settings.why_choose_us_banners?.title || ''}
+                  onChange={e => handleChange('why_choose_us_banners', 'title', e.target.value)}
+                  className={inputClass}
+                  placeholder="Why Choose Us"
+                />
+                <p className="text-xs text-gray-400">This centered heading appears directly above the lower trust carousel on the homepage.</p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-xl border space-y-3">
+                <label className={labelClass + " font-bold text-gray-700"}>Why Choose Us Subheading</label>
+                <input
+                  type="text"
+                  value={settings.why_choose_us_banners?.subtitle || ''}
+                  onChange={e => handleChange('why_choose_us_banners', 'subtitle', e.target.value)}
+                  className={inputClass}
+                  placeholder="India's Fastest Growing Travel Company"
+                />
+                <p className="text-xs text-gray-400">This subheading appears directly below the heading on the homepage.</p>
+              </div>
+
+              <div className="space-y-4">
+                {(settings.why_choose_us_banners?.banners || []).map((banner, idx) => (
+                  <div key={banner.id} className="bg-gray-55 border p-4 rounded-xl space-y-3">
+                    <div className="flex justify-between items-center border-b pb-2">
+                      <span className="text-xs font-semibold text-gray-500">Trust Banner #{idx + 1}</span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            const list = [...(settings.why_choose_us_banners?.banners || [])];
+                            if (idx === 0) return;
+                            const temp = list[idx]; list[idx] = list[idx - 1]; list[idx - 1] = temp;
+                            const updatedList = list.map((b, i) => ({ ...b, display_order: i + 1 }));
+                            handleChange('why_choose_us_banners', 'banners', updatedList);
+                          }}
+                          disabled={idx === 0}
+                          className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"
+                        ><ArrowUp size={12} /></button>
+                        <button
+                          onClick={() => {
+                            const list = [...(settings.why_choose_us_banners?.banners || [])];
+                            if (idx === list.length - 1) return;
+                            const temp = list[idx]; list[idx] = list[idx + 1]; list[idx + 1] = temp;
+                            const updatedList = list.map((b, i) => ({ ...b, display_order: i + 1 }));
+                            handleChange('why_choose_us_banners', 'banners', updatedList);
+                          }}
+                          disabled={idx === (settings.why_choose_us_banners?.banners || []).length - 1}
+                          className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"
+                        ><ArrowDown size={12} /></button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this trust banner?")) {
+                              const list = (settings.why_choose_us_banners?.banners || [])
+                                .filter(b => b.id !== banner.id)
+                                .map((b, i) => ({ ...b, display_order: i + 1 }));
+                              handleChange('why_choose_us_banners', 'banners', list);
+                            }
+                          }}
+                          className="p-1 bg-red-50 text-red-500 rounded hover:bg-red-100"
+                        ><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelClass}>Banner Title</label>
+                        <input type="text" value={banner.title || ''}
+                          onChange={e => {
+                            const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, title: e.target.value } : b);
+                            handleChange('why_choose_us_banners', 'banners', list);
+                          }}
+                          className={inputClass} placeholder="Best for Solo Travelers" />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Status</label>
+                        <select value={(banner.active !== undefined ? banner.active : banner.is_active) !== false ? 'true' : 'false'}
+                          onChange={e => {
+                            const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, active: e.target.value === 'true', is_active: e.target.value === 'true' } : b);
+                            handleChange('why_choose_us_banners', 'banners', list);
+                          }}
+                          className={inputClass}>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Subtitle / Description</label>
+                        <input type="text" value={banner.subtitle || ''}
+                          onChange={e => {
+                            const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, subtitle: e.target.value } : b);
+                            handleChange('why_choose_us_banners', 'banners', list);
+                          }}
+                          className={inputClass} placeholder="Travel solo. Return with a tribe." />
+                      </div>
+                      <div className="md:col-span-2">
+                        <MediaUploader
+                          url={banner.image || banner.image_url || ''}
+                          onUrlChange={url => {
+                            const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, image: url, image_url: url } : b);
+                            handleChange('why_choose_us_banners', 'banners', list);
+                          }}
+                          folder="why_choose_us_banners"
+                          label="Banner Image"
+                          hint="Upload a wide trust banner image. Recommended ratio: 1200x200 px."
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Clickable (Yes / No)</label>
+                        <select value={banner.clickable ? 'true' : 'false'}
+                          onChange={e => {
+                            const val = e.target.value === 'true';
+                            const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, clickable: val, is_clickable: val } : b);
+                            handleChange('why_choose_us_banners', 'banners', list);
+                          }}
+                          className={inputClass}>
+                            <option value="false">NO (Display Only - No Navigation)</option>
+                            <option value="true">YES (Navigates to Route/URL on click)</option>
+                        </select>
+                      </div>
+                      {banner.clickable && (
+                        <>
+                          <div>
+                            <label className={labelClass}>CTA Button Label (optional)</label>
+                            <input type="text" value={banner.cta_text || banner.cta_label || ''}
+                              onChange={e => {
+                                const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_text: e.target.value, cta_label: e.target.value } : b);
+                                handleChange('why_choose_us_banners', 'banners', list);
+                              }}
+                              className={inputClass} placeholder="Learn More" />
+                          </div>
+                          <div>
+                            <label className={labelClass}>CTA Link / URL</label>
+                            <input type="text" value={banner.cta_link || banner.cta_url || ''}
+                              onChange={e => {
+                                const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: e.target.value, cta_url: e.target.value } : b);
+                                handleChange('why_choose_us_banners', 'banners', list);
+                              }}
+                              className={inputClass} placeholder="/group-trips or https://..." />
+                          </div>
+                        </>
+                      )}
+                      <div>
+                        <label className={labelClass}>Display Order</label>
+                        <input type="number" value={banner.display_order || ''}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10) || 1;
+                            const list = (settings.why_choose_us_banners?.banners || []).map(b => b.id === banner.id ? { ...b, display_order: val } : b);
+                            handleChange('why_choose_us_banners', 'banners', list);
+                          }}
+                          className={inputClass} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button onClick={() => handleSave('why_choose_us_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                  <Save size={16} /> Save Why Choose Us Settings
                 </button>
               </div>
             </div>
@@ -738,7 +1294,363 @@ const AdminSiteSettings = () => {
             </div>
           )}
 
+          {/* CUSTOMER SUPPORT TAB */}
+          {activeTab === 'customer_support' && (
+            <div className="space-y-6 animate-in">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Customer Account Support Configuration</h2>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* WhatsApp */}
+                <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> WhatsApp</h3>
+                    <select value={settings.customer_support?.whatsapp?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'whatsapp', { ...settings.customer_support.whatsapp, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Label/Title</label>
+                    <input type="text" value={settings.customer_support?.whatsapp?.title || ''} onChange={e => handleChange('customer_support', 'whatsapp', { ...settings.customer_support.whatsapp, title: e.target.value })} className={inputClass} placeholder="WhatsApp" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>WhatsApp Number</label>
+                    <input type="text" value={settings.customer_support?.whatsapp?.value || ''} onChange={e => handleChange('customer_support', 'whatsapp', { ...settings.customer_support.whatsapp, value: e.target.value })} className={inputClass} placeholder="+91 00000 00000" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Optional Description</label>
+                    <textarea value={settings.customer_support?.whatsapp?.description || ''} onChange={e => handleChange('customer_support', 'whatsapp', { ...settings.customer_support.whatsapp, description: e.target.value })} className={inputClass} rows={2} />
+                  </div>
+                </div>
+
+                {/* Call */}
+                <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> Call</h3>
+                    <select value={settings.customer_support?.call?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'call', { ...settings.customer_support.call, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Label/Title</label>
+                    <input type="text" value={settings.customer_support?.call?.title || ''} onChange={e => handleChange('customer_support', 'call', { ...settings.customer_support.call, title: e.target.value })} className={inputClass} placeholder="Call Us" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Phone Number</label>
+                    <input type="text" value={settings.customer_support?.call?.value || ''} onChange={e => handleChange('customer_support', 'call', { ...settings.customer_support.call, value: e.target.value })} className={inputClass} placeholder="+91 00000 00000" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Optional Description</label>
+                    <textarea value={settings.customer_support?.call?.description || ''} onChange={e => handleChange('customer_support', 'call', { ...settings.customer_support.call, description: e.target.value })} className={inputClass} rows={2} />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> Email</h3>
+                    <select value={settings.customer_support?.email?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'email', { ...settings.customer_support.email, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Label/Title</label>
+                    <input type="text" value={settings.customer_support?.email?.title || ''} onChange={e => handleChange('customer_support', 'email', { ...settings.customer_support.email, title: e.target.value })} className={inputClass} placeholder="Email" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Email Address</label>
+                    <input type="text" value={settings.customer_support?.email?.value || ''} onChange={e => handleChange('customer_support', 'email', { ...settings.customer_support.email, value: e.target.value })} className={inputClass} placeholder="support@example.com" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Optional Description</label>
+                    <textarea value={settings.customer_support?.email?.description || ''} onChange={e => handleChange('customer_support', 'email', { ...settings.customer_support.email, description: e.target.value })} className={inputClass} rows={2} />
+                  </div>
+                </div>
+
+                {/* Live Chat */}
+                <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> Live Chat</h3>
+                    <select value={settings.customer_support?.live_chat?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'live_chat', { ...settings.customer_support.live_chat, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
+                      <option value="true">Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Label/Title</label>
+                    <input type="text" value={settings.customer_support?.live_chat?.title || ''} onChange={e => handleChange('customer_support', 'live_chat', { ...settings.customer_support.live_chat, title: e.target.value })} className={inputClass} placeholder="Live Chat" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Explanatory Text</label>
+                    <textarea value={settings.customer_support?.live_chat?.description || ''} onChange={e => handleChange('customer_support', 'live_chat', { ...settings.customer_support.live_chat, description: e.target.value })} className={inputClass} rows={3} placeholder="Need quick help? You can chat with our support team directly." />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button onClick={() => handleSave('customer_support')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                  <Save size={16} /> Save Support Settings
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STATIC BANNER TAB */}
+          {activeTab === 'homepage_static_banner' && (
+            <div className="space-y-6 animate-in">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Homepage Static Banner Configuration</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <select
+                    value={settings.homepage_static_banner?.active !== false ? 'true' : 'false'}
+                    onChange={e => handleChange('homepage_static_banner', 'active', e.target.value === 'true')}
+                    className={inputClass}
+                  >
+                    <option value="true">Active (Show Banner)</option>
+                    <option value="false">Inactive (Hide Banner)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Clickable (Yes / No)</label>
+                  <select
+                    value={settings.homepage_static_banner?.clickable !== false ? 'true' : 'false'}
+                    onChange={e => handleChange('homepage_static_banner', 'clickable', e.target.value === 'true')}
+                    className={inputClass}
+                  >
+                    <option value="true">YES (Navigates to Link/URL on click)</option>
+                    <option value="false">NO (Display Only - No Navigation)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Banner Title (optional)</label>
+                  <input
+                    type="text"
+                    value={settings.homepage_static_banner?.title || ''}
+                    onChange={e => handleChange('homepage_static_banner', 'title', e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. KEDARNATH"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Banner Subtitle (optional)</label>
+                  <input
+                    type="text"
+                    value={settings.homepage_static_banner?.subtitle || ''}
+                    onChange={e => handleChange('homepage_static_banner', 'subtitle', e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. Journey to the Sacred Himalayas"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>CTA Button Text (optional)</label>
+                  <input
+                    type="text"
+                    value={settings.homepage_static_banner?.cta_text || ''}
+                    onChange={e => handleChange('homepage_static_banner', 'cta_text', e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. Explore Trip"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>CTA Link / URL</label>
+                  <input
+                    type="text"
+                    value={settings.homepage_static_banner?.cta_link || ''}
+                    onChange={e => handleChange('homepage_static_banner', 'cta_link', e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. /destinations/uttarakhand"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <MediaUploader
+                    url={settings.homepage_static_banner?.image || ''}
+                    onUrlChange={url => handleChange('homepage_static_banner', 'image', url)}
+                    folder="homepage_static_banner"
+                    label="Banner Image"
+                    hint="Recommended: Wide landscape image (~1200x300px)."
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end border-t mt-6">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSave('homepage_static_banner');
+                  }}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <Save size={16} /> Save Static Banner Settings
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* HOMEPAGE SECTION ORDER TAB */}
+          {activeTab === 'homepage_section_order' && (() => {
+            const list = homepageSectionOrder || [];
+            
+            // Map keys to human-readable names
+            const SECTION_NAMES = {
+              destinations: 'Destinations Circular Strip',
+              interests: 'Destination According To Interest Strip',
+              promo_carousel: 'Top Large Promo Banner Carousel',
+              recommended: 'Recommended Packages Grid',
+              static_banner: 'Homepage Static Banner',
+              why_choose_us: 'Why Choose Us (Heading Title)',
+              why_choose_us_carousel: 'Why Choose Us (Trust Carousel)',
+              best_seller: 'Best Seller Packages Grid',
+              upcoming_trips: 'Upcoming Trips Packages Grid',
+              stats_strip: 'Stats Counters Strip',
+              international: 'International Packages Grid',
+              testimonials: 'Customer Testimonials Carousel'
+            };
+
+            const moveSection = (fromIndex, toIndex) => {
+              if (
+                fromIndex < 0 ||
+                toIndex < 0 ||
+                fromIndex >= list.length ||
+                toIndex >= list.length
+              ) return;
+
+              const next = [...list];
+              const [moved] = next.splice(fromIndex, 1);
+              next.splice(toIndex, 0, moved);
+
+              setHomepageSectionOrder(next);
+            };
+
+            const handleReset = () => {
+              const DEFAULT_ORDER = [
+                'destinations',
+                'interests',
+                'promo_carousel',
+                'recommended',
+                'static_banner',
+                'why_choose_us',
+                'why_choose_us_carousel',
+                'best_seller',
+                'upcoming_trips',
+                'stats_strip',
+                'international',
+                'testimonials'
+              ];
+              setHomepageSectionOrder(DEFAULT_ORDER);
+            };
+
+            return (
+              <div className="space-y-6 animate-in">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-2 gap-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Homepage Layout Manager</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Drag sections or use up/down arrows to reorder how they appear on the homepage.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleReset();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Reset to Default Order
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-w-2xl">
+                  {list.map((key, index) => (
+                    <div
+                      key={key}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', index.toString());
+                        e.currentTarget.classList.add('opacity-50');
+                      }}
+                      onDragEnd={(e) => {
+                        e.currentTarget.classList.remove('opacity-50');
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                        if (isNaN(fromIndex) || fromIndex === index) return;
+                        moveSection(fromIndex, index);
+                      }}
+                      className="flex items-center justify-between p-3.5 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+                          </svg>
+                        </div>
+                        <div>
+                          <span className="font-bold text-gray-800 text-sm">{SECTION_NAMES[key] || key}</span>
+                          <span className="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 ml-2 font-mono uppercase tracking-wider">{key}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            moveSection(index, index - 1);
+                          }}
+                          disabled={index === 0}
+                          className="p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                          title="Move Up"
+                        >
+                          <ArrowUp size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            moveSection(index, index + 1);
+                          }}
+                          disabled={index === list.length - 1}
+                          className="p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                          title="Move Down"
+                        >
+                          <ArrowDown size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 flex justify-end border-t mt-6">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSaveLayoutOrder();
+                    }}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  >
+                    <Save size={16} /> Save Homepage Section Order
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
         </div>
       </div>

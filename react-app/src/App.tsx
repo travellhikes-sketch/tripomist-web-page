@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom'
+import { supabase } from './supabaseClient'
 import GroupTrips from './pages/GroupTrips'
 import WeekendTrips from './pages/WeekendTrips'
 import Treks from './pages/Treks'
@@ -44,6 +45,7 @@ const AdminServiceRecovery = React.lazy(() => import('./pages/admin/AdminService
 
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
+const AdminItineraryLeads = React.lazy(() => import('./pages/admin/AdminItineraryLeads'));
 
 const AdminBookingActivityLogs = React.lazy(() => import('./pages/admin/AdminBookingActivityLogs'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
@@ -57,6 +59,7 @@ const AdminWebsitePages = React.lazy(() => import('./pages/admin/AdminWebsitePag
 const AdminMenuManager = React.lazy(() => import('./pages/admin/AdminMenuManager'));
 const AdminExploreDepartments = React.lazy(() => import('./pages/admin/AdminExploreDepartments'));
 const AdminReviews = React.lazy(() => import('./pages/admin/AdminReviews'));
+const AdminChatbot = React.lazy(() => import('./pages/admin/AdminChatbot'));
 const AdminLoginSlider = React.lazy(() => import('./pages/admin/AdminLoginSlider'));
 const DestinationPackages = React.lazy(() => import('./pages/DestinationPackages'));
 const CustomerLayout = React.lazy(() => import('./components/customer/CustomerLayout'));
@@ -91,6 +94,27 @@ function App() {
     return () => window.removeEventListener('open-chatbot', handleOpenChat);
   }, []);
 
+  useEffect(() => {
+    const fetchTypography = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'typography')
+          .single();
+        if (!error && data?.setting_value?.heading_font) {
+          const font = data.setting_value.heading_font;
+          document.documentElement.style.setProperty('--heading-font', `"${font}", sans-serif`);
+        } else {
+          document.documentElement.style.setProperty('--heading-font', '"Ranchers", sans-serif');
+        }
+      } catch (err) {
+        console.error('Error fetching typography:', err);
+      }
+    };
+    fetchTypography();
+  }, []);
+
   return (
     <>
       <ScrollToTop />
@@ -123,6 +147,7 @@ function App() {
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
               } />
               <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
+              <Route path="itinerary-leads" element={<React.Suspense fallback={<div>Loading...</div>}><AdminItineraryLeads /></React.Suspense>} />
 
               <Route path="booking-activity-logs" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminBookingActivityLogs /></React.Suspense>
@@ -150,15 +175,18 @@ function App() {
               <Route path="website-pages/menu-manager" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminMenuManager /></React.Suspense>
               } />
-              <Route 
-                path="explore-departments" 
+              <Route
+                path="explore-departments"
                 element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminExploreDepartments /></React.Suspense>
-                } 
+                }
               />
 
               <Route path="reviews" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminReviews /></React.Suspense>
+              } />
+              <Route path="ai-chatbot" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminChatbot /></React.Suspense>
               } />
               <Route path="login-slider" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminLoginSlider /></React.Suspense>
@@ -279,10 +307,10 @@ function App() {
 
       {/* GooeyDock + AI pill */}
       {!isAdminRoute && (
-        <BottomDock 
+        <BottomDock
           isChatOpen={chatOpen}
-          onOpenChat={() => setChatOpen(true)} 
-          onCloseChat={() => setChatOpen(false)} 
+          onOpenChat={() => setChatOpen(true)}
+          onCloseChat={() => setChatOpen(false)}
         />
       )}
     </>

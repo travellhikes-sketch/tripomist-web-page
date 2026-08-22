@@ -78,16 +78,16 @@ export default {
         "stack-lg": "48px"
       },
       "fontFamily": {
-        "headline-md": ["Inter", "sans-serif"],
-        "headline-lg-mobile": ["Inter", "sans-serif"],
+        "headline-md": ["Ranchers", "sans-serif"],
+        "headline-lg-mobile": ["Ranchers", "sans-serif"],
         "label-sm": ["Inter", "sans-serif"],
         "body-md": ["Inter", "sans-serif"],
         "body-lg": ["Inter", "sans-serif"],
-        "headline-lg": ["Inter", "sans-serif"],
-        "display-lg": ["Inter", "sans-serif"],
-        "display-lg-mobile": ["Inter", "sans-serif"],
-        "label-caps": ["Inter", "sans-serif"],
-        "button": ["Inter", "sans-serif"]
+        "headline-lg": ["Ranchers", "sans-serif"],
+        "display-lg": ["Ranchers", "sans-serif"],
+        "display-lg-mobile": ["Ranchers", "sans-serif"],
+        "label-caps": ["Ranchers", "sans-serif"],
+        "button": ["Ranchers", "sans-serif"]
       },
       "fontSize": {
         "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],

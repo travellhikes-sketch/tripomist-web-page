@@ -112,3 +112,59 @@
   animation: shine 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
+
+/* Hide native password reveal icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
+html, body, #root {
+  font-family: 'Inter', sans-serif;
+}
+button, input, textarea, select, option {
+  font-family: inherit;
+}
+
+/* Global Heading + CTA Font Style (Customer-facing) */
+h1, h2, h3, h4, h5, h6,
+.font-heading,
+.font-headline-md,
+.font-headline-lg,
+.font-headline-lg-mobile,
+.font-display-lg,
+.font-display-lg-mobile,
+.font-button,
+.font-label-caps,
+button,
+.btn,
+.button,
+a[class*="btn"],
+a[class*="button"],
+input[type="submit"],
+input[type="button"] {
+  font-family: var(--heading-font, 'Ranchers', sans-serif) !important;
+}
+
+/* Reset for Admin Dashboard - do not touch tables, form fields, descriptions, etc. */
+.admin-layout,
+.admin-layout *,
+.admin-layout h1,
+.admin-layout h2,
+.admin-layout h3,
+.admin-layout h4,
+.admin-layout h5,
+.admin-layout h6,
+.admin-layout button,
+.admin-layout input,
+.admin-layout select,
+.admin-layout textarea,
+.admin-layout span,
+.admin-layout table,
+.admin-layout th,
+.admin-layout td,
+.admin-layout div {
+  font-family: 'Inter', sans-serif !important;
+}
