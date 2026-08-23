@@ -434,7 +434,7 @@ function Navbar() {
             </button>
 
             {user ? (
-              <div className="hidden lg:flex items-center">
+              <div className="hidden md:flex items-center">
                 <UserDropdown
                   user={{
                     name: userProfileData?.full_name || user.user_metadata?.full_name || 'User',
@@ -448,7 +448,7 @@ function Navbar() {
                 />
               </div>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="hidden lg:flex bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 items-center gap-1 shadow-sm cursor-pointer">
+              <button onClick={() => setShowAuthModal(true)} className="hidden md:flex bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 items-center gap-1 shadow-sm cursor-pointer">
                 <span className="material-symbols-outlined text-[16px]">login</span> <span className="hidden sm:inline">{settings?.login_button_text || 'Login'}</span>
               </button>
             )}

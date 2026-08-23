@@ -318,7 +318,7 @@ function Home() {
         {/* Hero Section */}
         {(!heroSettings || heroSettings.is_active !== false) && (
         <div className="px-2 md:px-6 lg:px-8 pt-6">
-          <section className="relative w-full min-h-[500px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-8 rounded-[28px] overflow-hidden shadow-lg">
+          <section className="relative w-full min-h-[300px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-8 rounded-[28px] overflow-hidden shadow-lg">
             <div className="absolute inset-0 w-full h-full -z-10 bg-black">
               {(!heroSettings?.media_type || heroSettings.media_type === 'video') ? (
                 <video
@@ -433,7 +433,6 @@ function Home() {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url('${staticBanner.image}')` }}
                   />
-                  <div className="absolute inset-0 bg-black/45" />
                   
                   <div className="relative z-10 flex flex-col justify-center px-8 sm:px-16 md:px-20 lg:px-24 py-6 max-w-3xl text-left select-none animate-in fade-in duration-700">
                     {staticBanner.title && (
