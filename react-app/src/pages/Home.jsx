@@ -242,7 +242,7 @@ function Home() {
           </div>
           {sec.view_all_route && (
             <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to={sec.view_all_route}>
-              {sec.view_all_text || 'View All'} <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+              {'View All'} <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
             </Link>
           )}
         </div>
@@ -266,7 +266,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'left')}
-              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              className="flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
               aria-label="Scroll left"
             >
               <span className="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -275,7 +275,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'right')}
-              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              className="flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
               aria-label="Scroll right"
             >
               <span className="material-symbols-outlined text-[20px]">chevron_right</span>

@@ -143,7 +143,7 @@ export default function ListingPage() {
       <Navbar />
 
       {/* Hero Banner Section */}
-      <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden bg-black">
+      <section className="relative w-full h-[40vh] min-h-[300px] md:h-[50vh] md:min-h-[400px] overflow-hidden bg-black">
         {pageData && (
           <>
             {isVideo ? (
