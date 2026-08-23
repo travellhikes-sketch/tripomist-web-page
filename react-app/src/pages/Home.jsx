@@ -428,7 +428,7 @@ function Home() {
               if (!staticBanner || !staticBanner.active || !staticBanner.image) return null;
               const isExt = isExternal(staticBanner.cta_link);
               const content = (
-                <div className="relative flex items-center overflow-hidden w-full bg-gradient-to-r from-teal-800 to-slate-900 h-[150px] sm:h-[180px] md:h-[200px] lg:h-[220px] rounded-lg border border-gray-100/50 shadow-none">
+                <div className="relative flex items-center overflow-hidden w-full bg-gradient-to-r from-teal-800 to-slate-900 h-[60px] sm:h-[75px] md:h-[90px] lg:h-[110px] rounded-lg border border-gray-100/50 shadow-none">
                   <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url('${staticBanner.image}')` }}
