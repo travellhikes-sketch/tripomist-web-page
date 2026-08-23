@@ -266,19 +266,19 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'left')}
-              className="flex absolute left-2 md:left-0 top-1/2 -translate-y-1/2 md:-translate-x-2 z-30 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md border border-gray-200 items-center justify-center text-gray-800 hover:bg-gray-50 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              className="flex absolute left-2 md:left-2 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
               aria-label="Scroll left"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              <span className="material-symbols-outlined text-[16px]">chevron_left</span>
             </button>
             {/* Right Arrow */}
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'right')}
-              className="flex absolute right-2 md:right-0 top-1/2 -translate-y-1/2 md:translate-x-2 z-30 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md border border-gray-200 items-center justify-center text-gray-800 hover:bg-gray-50 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              className="flex absolute right-2 md:right-2 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
               aria-label="Scroll right"
             >
-              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>
 
             <div ref={rowRef} className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
