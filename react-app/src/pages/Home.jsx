@@ -232,7 +232,7 @@ function Home() {
     const rowRef = getRowRef(rowKey);
 
     return (
-      <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest overflow-hidden border-t border-gray-50">
+      <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest border-t border-gray-50">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
           <div>
 
@@ -266,7 +266,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'left')}
-              className="flex absolute left-2 md:left-2 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
+              className="flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
               aria-label="Scroll left"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_left</span>
@@ -275,7 +275,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'right')}
-              className="flex absolute right-2 md:right-2 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
+              className="flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
               aria-label="Scroll right"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
@@ -428,7 +428,7 @@ function Home() {
               if (!staticBanner || !staticBanner.active || !staticBanner.image) return null;
               const isExt = isExternal(staticBanner.cta_link);
               const content = (
-                <div className="relative flex items-center overflow-hidden w-full bg-gradient-to-r from-teal-800 to-slate-900 h-[60px] sm:h-[75px] md:h-[90px] lg:h-[110px] rounded-lg border border-gray-100/50 shadow-none">
+                <div className="relative flex items-center overflow-hidden w-full bg-gradient-to-r from-teal-800 to-slate-900 h-[40px] sm:h-[50px] md:h-[60px] lg:h-[80px] rounded-lg border border-gray-100/50 shadow-none">
                   <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url('${staticBanner.image}')` }}
