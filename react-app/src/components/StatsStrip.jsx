@@ -63,31 +63,37 @@ export default function StatsStrip() {
   }
 
   return (
-    <section className="w-full py-6 md:py-8 px-4 md:px-12 lg:px-20 bg-transparent">
-      <div className="max-w-5xl mx-auto bg-slate-100/90 border border-slate-200/90 rounded-2xl py-4 md:py-5 px-6 md:px-12 shadow-2xs flex flex-row items-center justify-around gap-4 text-center">
-        {cards.map((card, idx) => {
-          const val = card.value || (card.number ? `${card.number}+` : '');
-          const label = card.label || '';
-          const IconComponent = ICON_MAP[card.icon];
-          return (
-            <div key={card.id || idx} className="flex flex-col items-center justify-center min-w-[100px]">
-              {IconComponent && (
-                <div className="mb-1 text-[#136b8a]">
-                  <IconComponent size={20} />
+    <div className="w-full max-w-[1550px] mx-auto px-4 md:px-12 lg:px-20 my-6 md:my-8">
+      <div 
+        className="relative flex items-center overflow-hidden w-full bg-slate-100 h-[80px] sm:h-[100px] md:h-[120px] lg:h-[140px] rounded-lg border border-gray-100/50 shadow-none bg-cover bg-center"
+        style={settings.background_image ? { backgroundImage: `url('${settings.background_image}')` } : {}}
+      >
+        {settings.background_image && <div className="absolute inset-0 bg-black/40"></div>}
+        <div className={`relative z-10 w-full flex flex-row items-center justify-around gap-2 md:gap-4 text-center px-2 sm:px-6 ${settings.background_image ? 'text-white' : 'text-slate-900'}`}>
+          {cards.map((card, idx) => {
+            const val = card.value || (card.number ? `${card.number}+` : '');
+            const label = card.label || '';
+            const IconComponent = ICON_MAP[card.icon];
+            return (
+              <div key={card.id || idx} className="flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] md:min-w-[100px]">
+                {IconComponent && (
+                  <div className={`mb-0.5 md:mb-1 ${settings.background_image ? 'text-white' : 'text-[#136b8a]'}`}>
+                    <IconComponent size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                )}
+                <div className={`text-sm sm:text-lg md:text-xl lg:text-2xl font-extrabold tracking-tight flex items-center justify-center gap-1`}>
+                  <span>{val}</span>
                 </div>
-              )}
-              <div className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-1">
-                <span>{val}</span>
+                {label && (
+                  <div className={`text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs font-extrabold tracking-wider uppercase mt-0.5 ${settings.background_image ? 'text-white/80' : 'text-slate-500'}`}>
+                    {label}
+                  </div>
+                )}
               </div>
-              {label && (
-                <div className="text-[10px] md:text-xs font-extrabold tracking-wider uppercase text-slate-500 mt-0.5">
-                  {label}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

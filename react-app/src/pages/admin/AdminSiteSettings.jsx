@@ -1228,6 +1228,17 @@ const AdminSiteSettings = () => {
                     <option value="false">Hide Section</option>
                   </select>
                 </div>
+                <div>
+                  <label className={labelClass}>Background Image URL</label>
+                  <input
+                    type="text"
+                    value={settings.stats_strip.background_image || ''}
+                    onChange={e => handleChange('stats_strip', 'background_image', e.target.value)}
+                    className={inputClass}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1">Leave empty for a plain background.</p>
+                </div>
               </div>
 
               {/* Stats Cards CRUD */}
