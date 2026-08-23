@@ -228,7 +228,6 @@ export default function PromoCarousel({ settingKey = "homepage_promo_banners", s
                           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-102"
                           style={{ backgroundImage: `url('${banner.image}')` }}
                         />
-                        <div className="absolute inset-0 bg-black/40" />
                       </>
                     )}
 
