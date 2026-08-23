@@ -266,7 +266,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'left')}
-              className="flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              className="flex absolute left-2 md:left-0 top-1/2 -translate-y-1/2 md:-translate-x-2 z-30 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md border border-gray-200 items-center justify-center text-gray-800 hover:bg-gray-50 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
               aria-label="Scroll left"
             >
               <span className="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -275,7 +275,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'right')}
-              className="flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-20 w-10 h-10 rounded-full bg-white/90 border border-gray-200 items-center justify-center text-gray-600 hover:bg-white hover:text-gray-900 hover:border-gray-300 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
+              className="flex absolute right-2 md:right-0 top-1/2 -translate-y-1/2 md:translate-x-2 z-30 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white shadow-md border border-gray-200 items-center justify-center text-gray-800 hover:bg-gray-50 transition-all opacity-100 md:opacity-0 group-hover/row:opacity-100 cursor-pointer"
               aria-label="Scroll right"
             >
               <span className="material-symbols-outlined text-[20px]">chevron_right</span>
