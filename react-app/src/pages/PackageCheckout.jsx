@@ -52,7 +52,22 @@ export default function PackageCheckout() {
   const [serverFinalPayable, setServerFinalPayable] = useState(null);
 
   // 6. Track whether payment process has started
-  const [paymentStarted, setPaymentStarted] = useState(false);
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
+  const [siteSettings, setSiteSettings] = useState(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('site_settings').select('*');
+      if (data) {
+        const settingsObj = {};
+        data.forEach(item => {
+          settingsObj[item.setting_key] = item.setting_value;
+        });
+        setSiteSettings(settingsObj);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // State to block proceed payment button
   const [checkoutBlocked, setCheckoutBlocked] = useState(false);
@@ -306,7 +321,8 @@ export default function PackageCheckout() {
 
   const travellerCount = Math.max(1, Number(tripDetails?.travellers) || 1);
   const subTotal = Number(computedPrice) || 0;
-  const gst = Math.round(subTotal * 0.05);
+  const gstEnabled = siteSettings?.package_detail_settings?.gst_enabled !== undefined ? siteSettings.package_detail_settings.gst_enabled : true;
+  const gst = gstEnabled ? Math.round(subTotal * 0.05) : 0;
   const finalPayable = subTotal + gst;
 
   const safeFinalPayable = (
@@ -1001,10 +1017,12 @@ export default function PackageCheckout() {
                   <span>Subtotal ({tripDetails.travellers} × ₹{formatMoney(computedPrice / travellerCount)})</span>
                   <span>₹{formatMoney(subTotal)}</span>
                 </div>
-                <div className="flex justify-between text-gray-600 font-medium text-sm">
-                  <span>Taxes (GST 5%)</span>
-                  <span>₹{formatMoney(gst)}</span>
-                </div>
+                {gstEnabled && (
+                  <div className="flex justify-between text-gray-600 font-medium text-sm">
+                    <span>Taxes (GST 5%)</span>
+                    <span>₹{formatMoney(gst)}</span>
+                  </div>
+                )}
               </div>
 
 

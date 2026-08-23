@@ -68,12 +68,9 @@ const AdminSiteSettings = () => {
     { id: 'footer', label: 'Footer & Contact', icon: LayoutTemplate },
     { id: 'social_links', label: 'Social Media', icon: LinkIcon },
     { id: 'package_detail_settings', label: 'Package Detail', icon: Box },
-    { id: 'trust_benefits', label: 'Experience Section', icon: Shield },
-    { id: 'homepage_promo_banners', label: 'Promo Banners', icon: Shield },
     { id: 'why_choose_us_banners', label: 'Why Choose Us Banners', icon: Shield },
     { id: 'stats_strip', label: 'Stats Strip', icon: BarChart2 },
     { id: 'customer_support', label: 'Customer Support', icon: MessageSquare },
-    { id: 'homepage_static_banner', label: 'Static Banner', icon: Image },
     { id: 'homepage_section_order', label: 'Homepage Layout', icon: Layers },
     { id: 'typography', label: 'Typography', icon: LayoutTemplate }
   ];
@@ -171,11 +168,11 @@ const AdminSiteSettings = () => {
           newSettings.homepage_static_banner = {
             active: true,
             image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200',
-            title: 'KEDARNATH',
-            subtitle: 'Journey to the Sacred Himalayas',
+            title: 'Our Ongoing Departures',
+            subtitle: '',
             clickable: true,
-            cta_text: 'Explore Trip',
-            cta_link: '/destinations/uttarakhand'
+            cta_text: 'Explore Packages',
+            cta_link: '/trips/ongoing_packages'
           };
         }
         if (!newSettings.typography) {
@@ -464,36 +461,65 @@ const AdminSiteSettings = () => {
             <div className="space-y-6 animate-in">
               <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Hero Header Settings</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <MediaUploader
+                    currentImage={settings.hero.desktop_media_url}
+                    onImageUploaded={(url) => handleChange('hero', 'desktop_media_url', url)}
+                    label="Hero Image (Desktop/Default)"
+                    hint="Upload the main background image or video for the homepage hero."
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <MediaUploader
+                    currentImage={settings.hero.mobile_media_url}
+                    onImageUploaded={(url) => handleChange('hero', 'mobile_media_url', url)}
+                    label="Hero Image (Mobile - Optional)"
+                    hint="Optional. Different image/video for mobile screens."
+                  />
+                </div>
                 <div>
-                  <label className={labelClass}>Media Type</label>
-                  <select
-                    value={settings.hero.media_type || 'video'}
-                    onChange={e => handleChange('hero', 'media_type', e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="video">Video</option>
-                    <option value="image">Image</option>
-                  </select>
+                  <label className={labelClass}>Main Heading Line 1</label>
+                  <input type="text" value={settings.hero.heading_line1 || 'Find Yourself'} onChange={e => handleChange('hero', 'heading_line1', e.target.value)} className={inputClass} placeholder="Find Yourself" />
                 </div>
                 <div>
-                  <label className={labelClass}>Overlay Opacity (%)</label>
-                  <input type="number" min="0" max="100" value={settings.hero.overlay_opacity || '30'} onChange={e => handleChange('hero', 'overlay_opacity', e.target.value)} className={inputClass} />
+                  <label className={labelClass}>Main Heading Line 2 (Accent / Blue text)</label>
+                  <input type="text" value={settings.hero.heading_line2 || 'With TripoMist'} onChange={e => handleChange('hero', 'heading_line2', e.target.value)} className={inputClass} placeholder="With TripoMist" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className={labelClass}>Desktop Media URL</label>
-                  <input type="url" value={settings.hero.desktop_media_url || ''} onChange={e => handleChange('hero', 'desktop_media_url', e.target.value)} className={inputClass} placeholder="https://..." />
+                  <label className={labelClass}>Subheading</label>
+                  <input type="text" value={settings.hero.subtitle || 'Your Safe Travel Our Responsibility.'} onChange={e => handleChange('hero', 'subtitle', e.target.value)} className={inputClass} />
                 </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Mobile Media URL</label>
-                  <input type="url" value={settings.hero.mobile_media_url || ''} onChange={e => handleChange('hero', 'mobile_media_url', e.target.value)} className={inputClass} placeholder="https://..." />
+                
+                {/* Primary CTA */}
+                <div className="border-t pt-4 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center md:col-span-2 mb-2">
+                    <input type="checkbox" checked={settings.hero.show_primary_cta !== false} onChange={e => handleChange('hero', 'show_primary_cta', e.target.checked)} className="w-4 h-4 mr-2" />
+                    <label className="text-sm font-bold text-gray-800">Show Primary Button</label>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Primary CTA Text</label>
+                    <input type="text" value={settings.hero.primary_cta_text || 'Explore All Departure'} onChange={e => handleChange('hero', 'primary_cta_text', e.target.value)} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Primary CTA Destination (Route)</label>
+                    <input type="text" value={settings.hero.primary_cta_route || '/all-departures'} onChange={e => handleChange('hero', 'primary_cta_route', e.target.value)} className={inputClass} />
+                  </div>
                 </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Main Heading (HTML supported)</label>
-                  <input type="text" value={settings.hero.heading || ''} onChange={e => handleChange('hero', 'heading', e.target.value)} className={inputClass} />
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Subtitle</label>
-                  <input type="text" value={settings.hero.subtitle || ''} onChange={e => handleChange('hero', 'subtitle', e.target.value)} className={inputClass} />
+
+                {/* Secondary CTA */}
+                <div className="border-t pt-4 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center md:col-span-2 mb-2">
+                    <input type="checkbox" checked={settings.hero.show_secondary_cta !== false} onChange={e => handleChange('hero', 'show_secondary_cta', e.target.checked)} className="w-4 h-4 mr-2" />
+                    <label className="text-sm font-bold text-gray-800">Show Secondary Button</label>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Secondary CTA Text</label>
+                    <input type="text" value={settings.hero.secondary_cta_text || 'See Upcoming Trips'} onChange={e => handleChange('hero', 'secondary_cta_text', e.target.value)} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Secondary CTA Destination (Route)</label>
+                    <input type="text" value={settings.hero.secondary_cta_route || '/trips/upcoming-trips'} onChange={e => handleChange('hero', 'secondary_cta_route', e.target.value)} className={inputClass} />
+                  </div>
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
@@ -740,8 +766,26 @@ const AdminSiteSettings = () => {
                   </select>
                 </div>
                 <div>
+                  <label className={labelClass}>GST Enabled</label>
+                  <select
+                    value={settings.package_detail_settings.gst_enabled !== false ? 'true' : 'false'}
+                    onChange={e => handleChange('package_detail_settings', 'gst_enabled', e.target.value === 'true')}
+                    className={inputClass}
+                  >
+                    <option value="true">ON</option>
+                    <option value="false">OFF</option>
+                  </select>
+                </div>
+                <div>
                   <label className={labelClass}>GST Label</label>
-                  <input type="text" value={settings.package_detail_settings.gst_label || ''} onChange={e => handleChange('package_detail_settings', 'gst_label', e.target.value)} className={inputClass} />
+                  <input 
+                    type="text" 
+                    disabled={settings.package_detail_settings.gst_enabled === false}
+                    value={settings.package_detail_settings.gst_label || ''} 
+                    onChange={e => handleChange('package_detail_settings', 'gst_label', e.target.value)} 
+                    className={`${inputClass} ${settings.package_detail_settings.gst_enabled === false ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`} 
+                    placeholder="e.g. 5% GST"
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Default Enquiry Button Text</label>
@@ -852,163 +896,6 @@ const AdminSiteSettings = () => {
               <div className="pt-4 flex justify-end border-t mt-4">
                 <button onClick={() => handleSave('trust_benefits')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Experience Section Settings
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* HOMEPAGE PROMOTIONAL BANNERS TAB */}
-          {activeTab === 'homepage_promo_banners' && (
-            <div className="space-y-6 animate-in">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h2 className="text-lg font-bold text-gray-900">Homepage Promotional Banners</h2>
-                <button
-                  onClick={() => {
-                    const banners = settings.homepage_promo_banners?.banners || [];
-                    const newBanner = {
-                      id: Date.now().toString(),
-                      title: 'NEW BANNER',
-                      subtitle: 'Banner subtitle',
-                      image: '',
-                      image_url: '',
-                      cta_text: 'Explore Trip',
-                      cta_label: 'Explore Trip',
-                      cta_link: '',
-                      cta_url: '',
-                      active: true,
-                      is_active: true,
-                      display_order: banners.length + 1,
-                      clickable: true
-                    };
-                    handleChange('homepage_promo_banners', 'banners', [...banners, newBanner]);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold"
-                >
-                  <Plus size={14} /> Add Banner
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {(settings.homepage_promo_banners?.banners || []).map((banner, idx) => (
-                  <div key={banner.id} className="bg-gray-50 border p-4 rounded-xl space-y-3">
-                    <div className="flex justify-between items-center border-b pb-2">
-                      <span className="text-xs font-semibold text-gray-500">Promo Banner #{idx + 1}</span>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => {
-                            const list = [...(settings.homepage_promo_banners?.banners || [])];
-                            if (idx === 0) return;
-                            const temp = list[idx]; list[idx] = list[idx - 1]; list[idx - 1] = temp;
-                            const updatedList = list.map((b, i) => ({ ...b, display_order: i + 1 }));
-                            handleChange('homepage_promo_banners', 'banners', updatedList);
-                          }}
-                          disabled={idx === 0}
-                          className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"
-                        ><ArrowUp size={12} /></button>
-                        <button
-                          onClick={() => {
-                            const list = [...(settings.homepage_promo_banners?.banners || [])];
-                            if (idx === list.length - 1) return;
-                            const temp = list[idx]; list[idx] = list[idx + 1]; list[idx + 1] = temp;
-                            const updatedList = list.map((b, i) => ({ ...b, display_order: i + 1 }));
-                            handleChange('homepage_promo_banners', 'banners', updatedList);
-                          }}
-                          disabled={idx === (settings.homepage_promo_banners?.banners || []).length - 1}
-                          className="p-1 bg-white border rounded text-gray-500 disabled:opacity-50"
-                        ><ArrowDown size={12} /></button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm("Are you sure you want to delete this promo banner?")) {
-                              const list = (settings.homepage_promo_banners?.banners || [])
-                                .filter(b => b.id !== banner.id)
-                                .map((b, i) => ({ ...b, display_order: i + 1 }));
-                              handleChange('homepage_promo_banners', 'banners', list);
-                            }
-                          }}
-                          className="p-1 bg-red-50 text-red-500 rounded hover:bg-red-100"
-                        ><Trash2 size={12} /></button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className={labelClass}>Banner Title</label>
-                        <input type="text" value={banner.title || ''}
-                          onChange={e => {
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, title: e.target.value } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          className={inputClass} placeholder="VALLEY OF FLOWERS" />
-                      </div>
-                      <div>
-                        <label className={labelClass}>Status</label>
-                        <select value={(banner.active !== undefined ? banner.active : banner.is_active) !== false ? 'true' : 'false'}
-                          onChange={e => {
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, active: e.target.value === 'true', is_active: e.target.value === 'true' } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          className={inputClass}>
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className={labelClass}>Subtitle / Description</label>
-                        <input type="text" value={banner.subtitle || ''}
-                          onChange={e => {
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, subtitle: e.target.value } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          className={inputClass} placeholder="Explore the Himalayan Bloom" />
-                      </div>
-                      <div className="md:col-span-2">
-                        <MediaUploader
-                          url={banner.image || banner.image_url || ''}
-                          onUrlChange={url => {
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, image: url, image_url: url } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          folder="homepage_promo_banners"
-                          label="Banner Image"
-                          hint="Upload a wide banner image. Recommended ratio: 1200x450 px."
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClass}>CTA Button Label</label>
-                        <input type="text" value={banner.cta_text || banner.cta_label || ''}
-                          onChange={e => {
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_text: e.target.value, cta_label: e.target.value } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          className={inputClass} placeholder="Explore Trip" />
-                      </div>
-                      <div>
-                        <label className={labelClass}>CTA Link / URL</label>
-                        <input type="text" value={banner.cta_link || banner.cta_url || ''}
-                          onChange={e => {
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: e.target.value, cta_url: e.target.value } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          className={inputClass} placeholder="/itinerary/valley-of-flowers..." />
-                      </div>
-                      <div>
-                        <label className={labelClass}>Display Order</label>
-                        <input type="number" value={banner.display_order || ''}
-                          onChange={e => {
-                            const val = parseInt(e.target.value, 10) || 1;
-                            const list = (settings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, display_order: val } : b);
-                            handleChange('homepage_promo_banners', 'banners', list);
-                          }}
-                          className={inputClass} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('homepage_promo_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
-                  <Save size={16} /> Save Promo Banners
                 </button>
               </div>
             </div>
@@ -1403,107 +1290,6 @@ const AdminSiteSettings = () => {
               <div className="pt-4 flex justify-end">
                 <button onClick={() => handleSave('customer_support')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Support Settings
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STATIC BANNER TAB */}
-          {activeTab === 'homepage_static_banner' && (
-            <div className="space-y-6 animate-in">
-              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Homepage Static Banner Configuration</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={labelClass}>Status</label>
-                  <select
-                    value={settings.homepage_static_banner?.active !== false ? 'true' : 'false'}
-                    onChange={e => handleChange('homepage_static_banner', 'active', e.target.value === 'true')}
-                    className={inputClass}
-                  >
-                    <option value="true">Active (Show Banner)</option>
-                    <option value="false">Inactive (Hide Banner)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Clickable (Yes / No)</label>
-                  <select
-                    value={settings.homepage_static_banner?.clickable !== false ? 'true' : 'false'}
-                    onChange={e => handleChange('homepage_static_banner', 'clickable', e.target.value === 'true')}
-                    className={inputClass}
-                  >
-                    <option value="true">YES (Navigates to Link/URL on click)</option>
-                    <option value="false">NO (Display Only - No Navigation)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Banner Title (optional)</label>
-                  <input
-                    type="text"
-                    value={settings.homepage_static_banner?.title || ''}
-                    onChange={e => handleChange('homepage_static_banner', 'title', e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. KEDARNATH"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Banner Subtitle (optional)</label>
-                  <input
-                    type="text"
-                    value={settings.homepage_static_banner?.subtitle || ''}
-                    onChange={e => handleChange('homepage_static_banner', 'subtitle', e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. Journey to the Sacred Himalayas"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>CTA Button Text (optional)</label>
-                  <input
-                    type="text"
-                    value={settings.homepage_static_banner?.cta_text || ''}
-                    onChange={e => handleChange('homepage_static_banner', 'cta_text', e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. Explore Trip"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>CTA Link / URL</label>
-                  <input
-                    type="text"
-                    value={settings.homepage_static_banner?.cta_link || ''}
-                    onChange={e => handleChange('homepage_static_banner', 'cta_link', e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. /destinations/uttarakhand"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <MediaUploader
-                    url={settings.homepage_static_banner?.image || ''}
-                    onUrlChange={url => handleChange('homepage_static_banner', 'image', url)}
-                    folder="homepage_static_banner"
-                    label="Banner Image"
-                    hint="Recommended: Wide landscape image (~1200x300px)."
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 flex justify-end border-t mt-6">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleSave('homepage_static_banner');
-                  }}
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
-                >
-                  <Save size={16} /> Save Static Banner Settings
                 </button>
               </div>
             </div>

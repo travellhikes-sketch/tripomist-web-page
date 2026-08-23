@@ -4,6 +4,12 @@ import { Star, CheckCircle, Play, X, ChevronLeft, ChevronRight } from 'lucide-re
 import PremiumPageTemplate from '../components/PremiumPageTemplate';
 import ReviewGalleryCarousel from '../components/ReviewGalleryCarousel';
 
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
 const GoogleLogo = () => (
   <svg viewBox="0 0 48 48" className="w-5 h-5 inline-block align-middle mr-1" xmlns="http://www.w3.org/2000/svg">
     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -201,9 +207,23 @@ export default function Review() {
             No reviews published yet.
           </div>
         ) : (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {reviews.slice(0, visibleCount).map((review) => {
+          <div className="w-full relative px-2 md:px-6">
+            <Swiper
+              modules={[Autoplay, Navigation, Pagination]}
+              spaceBetween={20}
+              slidesPerView={1}
+              breakpoints={{
+                480: { slidesPerView: 1.1, spaceBetween: 15 },
+                768: { slidesPerView: 2, spaceBetween: 20 },
+                1024: { slidesPerView: 3, spaceBetween: 24 },
+              }}
+              autoplay={{ delay: 2500, disableOnInteraction: false }}
+              loop={reviews.length > 1}
+              navigation
+              pagination={{ clickable: true }}
+              className="!pb-12"
+            >
+              {reviews.map((review) => {
                 const name = review.customer_name || 'Customer';
                 const text = review.review_text || '';
                 const rating = review.rating || 5;
@@ -213,7 +233,8 @@ export default function Review() {
                 const readMoreLink = review.read_more_link || '';
 
                 return (
-                  <div key={review.id} className="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between transition-colors">
+                  <SwiperSlide key={review.id} className="h-auto">
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between transition-colors h-full">
                     <div>
                       {/* Customer Row */}
                       <div className="flex items-center gap-3 mb-3">
@@ -273,21 +294,10 @@ export default function Review() {
                       )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Load More Button */}
-            {visibleCount < reviews.length && (
-              <div className="flex justify-center pt-2">
-                <button
-                  onClick={handleLoadMore}
-                  className="bg-white border border-gray-200 text-gray-700 font-bold px-6 py-2.5 rounded-full hover:bg-gray-50 shadow-sm transition-all text-xs cursor-pointer"
-                >
-                  Load More Reviews
-                </button>
-              </div>
-            )}
+                </SwiperSlide>
+              );
+            })}
+            </Swiper>
           </div>
         )}
       </section>

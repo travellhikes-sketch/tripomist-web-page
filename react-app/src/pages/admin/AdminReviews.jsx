@@ -1121,14 +1121,6 @@ const AdminReviews = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Customer Email</label>
                     <input type="email" className="w-full border rounded-lg px-3 py-2 text-sm" value={formData.customer_email} onChange={e => setFormData({...formData, customer_email: e.target.value})} />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer Phone</label>
-                    <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm" value={formData.customer_phone} onChange={e => setFormData({...formData, customer_phone: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer Image URL</label>
-                    <input type="url" className="w-full border rounded-lg px-3 py-2 text-sm" value={formData.customer_image_url} onChange={e => setFormData({...formData, customer_image_url: e.target.value})} placeholder="https://..." />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

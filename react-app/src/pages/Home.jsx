@@ -353,24 +353,8 @@ function Home() {
               <div className="relative z-10 max-w-3xl mb-8">
                 <div className="mb-6 font-bold leading-tight">
                   {(() => {
-                    const raw = heroSettings?.heading || 'Find Yourself <br/> <span class="text-primary-container">With TripoMist</span>';
-                    let parts = raw.split(/<br\s*\/?>/i);
-                    if (parts.length < 2) {
-                      const match = raw.match(/(.*?)<span[^>]*>(.*?)<\/span>(.*)/i);
-                      if (match) {
-                        parts = [match[1], match[2] + (match[3] || '')];
-                      } else {
-                        // Fallback split if there's no br or span but it's a long string
-                        const textOnly = raw.replace(/<[^>]+>/g, '').trim();
-                        const words = textOnly.split(' ');
-                        const mid = Math.floor(words.length / 2) || 1;
-                        parts = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
-                      }
-                    }
-
-                    const cleanHtml = (str) => (str || '').replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').trim();
-                    const line1 = cleanHtml(parts[0]) || 'Find Yourself';
-                    const line2 = cleanHtml(parts.slice(1).join(' ')) || 'With TripoMist';
+                    const line1 = heroSettings?.heading_line1 || 'Find Yourself';
+                    const line2 = heroSettings?.heading_line2 || 'With TripoMist';
 
                     return (
                       <>
@@ -386,16 +370,21 @@ function Home() {
                 </div>
                 <p
                   className="font-body-lg text-body-lg text-white/80 max-w-2xl mb-8"
-                  dangerouslySetInnerHTML={{ __html: heroSettings?.subtitle || 'Your Safe Travel Our Responsibility<span class="text-primary-container">.</span>' }}
-                />
+                >
+                  {heroSettings?.subtitle || 'Your Safe Travel Our Responsibility.'}
+                </p>
                 <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-                  <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.primary_button_route || "/all-departures"}>
-                    {heroSettings?.primary_button_text || "Explore All Departures"}
-                    <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
-                  </Link>
-                  <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.secondary_button_route || "/trips/upcoming_trips"}>
-                    {heroSettings?.secondary_button_text || "See Upcoming Trips"}
-                  </Link>
+                  {heroSettings?.show_primary_cta !== false && (
+                    <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.primary_cta_route || "/all-departures"}>
+                      {heroSettings?.primary_cta_text || "Explore All Departures"}
+                      <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+                    </Link>
+                  )}
+                  {heroSettings?.show_secondary_cta !== false && (
+                    <Link className="inline-flex items-center justify-center border border-white/50 text-white font-button text-button px-8 py-4 rounded-lg hover:border-white hover:text-white hover:bg-white/10 transition-colors bg-black/30 backdrop-blur-sm active:scale-98 whitespace-nowrap" to={heroSettings?.secondary_cta_route || "/trips/upcoming_trips"}>
+                      {heroSettings?.secondary_cta_text || "See Upcoming Trips"}
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

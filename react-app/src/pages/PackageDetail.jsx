@@ -977,8 +977,9 @@ export default function PackageDetail() {
                 }
 
                 if (sec.id === 'trip-cost') {
-                  const gstText = siteSettings?.gst_label ? siteSettings.gst_label : '+ 5% GST';
-                  const basePriceText = `${trip.price} ${gstText}`;
+                  const gstEnabled = siteSettings?.gst_enabled !== undefined ? siteSettings.gst_enabled : true;
+                  const gstText = gstEnabled ? (siteSettings?.gst_label || '+ 5% GST') : '';
+                  const basePriceText = `${trip.price} ${gstText}`.trim();
 
                   const formatUpgradePrice = (priceVal, baseNumericPrice) => {
                     if (!priceVal) return '';
@@ -1260,9 +1261,11 @@ export default function PackageDetail() {
                   <span className="text-3xl md:text-4xl font-extrabold text-[#136b8a] tracking-tight">
                     {trip.price}
                   </span>
-                  <span className="text-xs text-gray-500 font-medium">
-                    {siteSettings?.gst_label || '+ 5% GST'}
-                  </span>
+                  {siteSettings?.gst_enabled !== false && (
+                    <span className="text-xs text-gray-500 font-medium">
+                      {siteSettings?.gst_label || '+ 5% GST'}
+                    </span>
+                  )}
                   {trip.originalPrice && (
                     <span className="text-xs text-gray-400 line-through ml-auto">
                       {trip.originalPrice}

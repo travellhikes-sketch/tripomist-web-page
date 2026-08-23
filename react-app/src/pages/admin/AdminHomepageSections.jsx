@@ -6,15 +6,28 @@ import {
   Plus,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Save,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
+import MediaUploader from '../../components/admin/MediaUploader';
 
 const AdminHomepageSections = () => {
   const [sections, setSections] = useState([]);
+  const [siteSettings, setSiteSettings] = useState({
+    homepage_promo_banners: { banners: [] },
+    homepage_static_banner: {}
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentItem, setCurrentItem] = useState(null);
+  const [success, setSuccess] = useState('');
+  
+  // Navigation State
+  const [showTypeChooser, setShowTypeChooser] = useState(false);
+  const [activeFormType, setActiveFormType] = useState(null); // 'normal', 'promo', 'static', null
+  const [currentItem, setCurrentItem] = useState(null); // only used for 'normal'
+  const [saving, setSaving] = useState(false);
 
   const initialFormState = {
     section_key: '',
@@ -23,6 +36,7 @@ const AdminHomepageSections = () => {
     icon: '',
     view_all_text: 'View All',
     view_all_route: '',
+    hero_image: '',
     display_order: 0,
     max_cards: 10,
     is_active: true
@@ -33,15 +47,54 @@ const AdminHomepageSections = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (success) {
+      const t = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [success]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('homepage_sections')
-        .select('*')
-        .order('display_order', { ascending: true });
-      if (error) throw error;
-      setSections(data || []);
+      const [sectionsRes, settingsRes] = await Promise.all([
+        supabase.from('homepage_sections').select('*').order('display_order', { ascending: true }),
+        supabase.from('site_settings').select('*').in('setting_key', ['homepage_promo_banners', 'homepage_static_banner'])
+      ]);
+
+      if (sectionsRes.error) throw sectionsRes.error;
+      if (settingsRes.error) throw settingsRes.error;
+
+      setSections(sectionsRes.data || []);
+      
+      let newSettings = {
+        homepage_promo_banners: { banners: [] },
+        homepage_static_banner: {}
+      };
+      
+      if (settingsRes.data) {
+        settingsRes.data.forEach(item => {
+          newSettings[item.setting_key] = item.setting_value;
+        });
+      }
+      
+      // Prefill defaults if not in DB
+      if (!newSettings.homepage_promo_banners || !Array.isArray(newSettings.homepage_promo_banners.banners)) {
+        newSettings.homepage_promo_banners = { banners: [] };
+      }
+      if (!newSettings.homepage_static_banner || Object.keys(newSettings.homepage_static_banner).length === 0) {
+        newSettings.homepage_static_banner = {
+          active: true,
+          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200',
+          title: 'Our Ongoing Trips',
+          subtitle: '',
+          clickable: true,
+          cta_text: 'Explore Packages',
+          cta_link: '/trips/ongoing_packages'
+        };
+      }
+      
+      setSiteSettings(newSettings);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,6 +102,7 @@ const AdminHomepageSections = () => {
     }
   };
 
+  // --- Normal Package Section Handlers ---
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -57,47 +111,16 @@ const AdminHomepageSections = () => {
     });
   };
 
-  const handleEdit = (item) => {
+  const handleEditNormal = (item) => {
     setCurrentItem(item);
     setFormData(item);
-    setIsEditing(true);
+    setActiveFormType('normal');
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    setCurrentItem(null);
-    setFormData(initialFormState);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleDeleteNormal = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this package section?')) return;
     try {
-      if (currentItem) {
-        const { error } = await supabase
-          .from('homepage_sections')
-          .update(formData)
-          .eq('id', currentItem.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('homepage_sections')
-          .insert([formData]);
-        if (error) throw error;
-      }
-      fetchData();
-      handleCancel();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this section settings?')) return;
-    try {
-      const { error } = await supabase
-        .from('homepage_sections')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('homepage_sections').delete().eq('id', id);
       if (error) throw error;
       fetchData();
     } catch (err) {
@@ -105,12 +128,9 @@ const AdminHomepageSections = () => {
     }
   };
 
-  const handleToggleActive = async (id, currentStatus) => {
+  const handleToggleActiveNormal = async (id, currentStatus) => {
     try {
-      const { error } = await supabase
-        .from('homepage_sections')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
+      const { error } = await supabase.from('homepage_sections').update({ is_active: !currentStatus }).eq('id', id);
       if (error) throw error;
       setSections(sections.map(d => d.id === id ? { ...d, is_active: !currentStatus } : d));
     } catch (err) {
@@ -118,16 +138,87 @@ const AdminHomepageSections = () => {
     }
   };
 
+  const handleSaveNormal = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      let dataToSave = { ...formData };
+      if (!currentItem) {
+        const generatedKey = formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
+        dataToSave.section_key = generatedKey;
+        dataToSave.view_all_route = `/trips/${generatedKey}`;
+      }
+
+      if (currentItem) {
+        const { error } = await supabase.from('homepage_sections').update(dataToSave).eq('id', currentItem.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('homepage_sections').insert([dataToSave]);
+        if (error) throw error;
+      }
+      await fetchData();
+      handleCancel();
+      setSuccess('Section saved successfully!');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Site Settings Handlers (Promo & Static) ---
+  const handleSettingsChange = (key, field, value) => {
+    setSiteSettings(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSaveSettings = async (settingKey) => {
+    setSaving(true);
+    try {
+      const { error: upsertErr } = await supabase
+        .from('site_settings')
+        .upsert({ 
+          setting_key: settingKey, 
+          setting_value: siteSettings[settingKey],
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_key' });
+
+      if (upsertErr) throw upsertErr;
+      await fetchData();
+      setSuccess('Settings saved successfully!');
+      handleCancel();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setActiveFormType(null);
+    setShowTypeChooser(false);
+    setCurrentItem(null);
+    setFormData(initialFormState);
+  };
+
+  const inputClass = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm";
+  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
+
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Homepage Sections Settings</h1>
-          <p className="text-gray-500 mt-1">Manage titles, visibility, and limits for homepage package sections.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Homepage Sections</h1>
+          <p className="text-gray-500 mt-1">Manage all homepage content layouts, banners, and package rails.</p>
         </div>
-        {!isEditing && (
+        {!activeFormType && !showTypeChooser && (
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={() => setShowTypeChooser(true)}
             className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium"
           >
             <Plus size={18} />
@@ -142,70 +233,362 @@ const AdminHomepageSections = () => {
           {error}
         </div>
       )}
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+          <CheckCircle size={16} />
+          {success}
+        </div>
+      )}
 
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-          <h2 className="text-lg font-bold">{currentItem ? 'Edit Section' : 'New Section'}</h2>
+      {loading ? (
+        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div></div>
+      ) : showTypeChooser ? (
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md mx-auto">
+          <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">What do you want to add?</h2>
+          <div className="space-y-4">
+            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('normal'); }} className="w-full p-4 border rounded-xl hover:border-[#136b8a] hover:bg-blue-50 transition-colors text-left font-medium text-gray-800 flex flex-col">
+              <span>Normal Packages Section</span>
+              <span className="text-xs text-gray-500 font-normal mt-1">e.g. Recommended, Best Seller, Upcoming Trips</span>
+            </button>
+            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('promo'); }} className="w-full p-4 border rounded-xl hover:border-[#136b8a] hover:bg-blue-50 transition-colors text-left font-medium text-gray-800 flex flex-col">
+              <span>Big Promo Banner</span>
+              <span className="text-xs text-gray-500 font-normal mt-1">Large image carousel for main promotions</span>
+            </button>
+            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('static'); }} className="w-full p-4 border rounded-xl hover:border-[#136b8a] hover:bg-blue-50 transition-colors text-left font-medium text-gray-800 flex flex-col">
+              <span>Short Banner</span>
+              <span className="text-xs text-gray-500 font-normal mt-1">Single wide static banner (e.g. Ongoing Trips)</span>
+            </button>
+          </div>
+          <div className="mt-6 text-center">
+            <button onClick={() => setShowTypeChooser(false)} className="text-sm text-gray-500 hover:text-gray-800 font-medium">Cancel</button>
+          </div>
+        </div>
+      ) : activeFormType === 'normal' ? (
+        <form onSubmit={handleSaveNormal} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+          <div className="flex justify-between items-center border-b pb-4">
+             <h2 className="text-xl font-bold">{currentItem ? 'Edit Normal Packages Section' : 'New Packages Section'}</h2>
+             <button type="button" onClick={handleCancel} className="text-gray-500 hover:text-gray-700 font-medium text-sm">Cancel</button>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Section Key</label>
-              <input type="text" name="section_key" value={formData.section_key || ''} onChange={handleInputChange} className="w-full p-2 border rounded" required placeholder="e.g. best_seller" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
+              <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className={inputClass} required placeholder="e.g. Best Seller" />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className="w-full p-2 border rounded" required placeholder="e.g. Best Seller" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">View All Button Text</label>
+              <input type="text" name="view_all_text" value={formData.view_all_text || ''} onChange={handleInputChange} className={inputClass} placeholder="e.g. View All" required />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-              <input type="text" name="subtitle" value={formData.subtitle || ''} onChange={handleInputChange} className="w-full p-2 border rounded" placeholder="e.g. Top Choice" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Packages Shown</label>
+              <input type="number" name="max_cards" value={formData.max_cards} onChange={handleInputChange} className={inputClass} required />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Material Icon</label>
-              <input type="text" name="icon" value={formData.icon || ''} onChange={handleInputChange} className="w-full p-2 border rounded" placeholder="e.g. award_star" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">View All Text</label>
-              <input type="text" name="view_all_text" value={formData.view_all_text || ''} onChange={handleInputChange} className="w-full p-2 border rounded" placeholder="e.g. View All" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">View All Route</label>
-              <input type="text" name="view_all_route" value={formData.view_all_route || ''} onChange={handleInputChange} className="w-full p-2 border rounded" placeholder="e.g. /trips/best-seller" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
-              <input type="number" name="display_order" value={formData.display_order} onChange={handleInputChange} className="w-full p-2 border rounded" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Cards Shown</label>
-              <input type="number" name="max_cards" value={formData.max_cards} onChange={handleInputChange} className="w-full p-2 border rounded" />
-            </div>
+
             <div className="flex items-center mt-6">
-              <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-4 h-4 mr-2" />
+              <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-5 h-5 mr-3 text-[#136b8a] rounded focus:ring-[#136b8a]" />
               <label className="text-sm font-medium text-gray-700">Section is Active</label>
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <button type="submit" className="bg-[#136b8a] text-white px-6 py-2 rounded-lg hover:bg-[#0f556e]">Save Section</button>
-            <button type="button" onClick={handleCancel} className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200">Cancel</button>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+             <MediaUploader
+               currentImage={formData.hero_image}
+               onImageUploaded={(url) => setFormData({ ...formData, hero_image: url })}
+               label="Listing Page Hero Image"
+               hint="Optional. This image will appear at the top of the 'View All' listing page for this section. Use a wide banner image (e.g. 1920x600)."
+             />
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-gray-100">
+            <button type="submit" disabled={saving} className="bg-[#136b8a] text-white px-6 py-2.5 rounded-lg hover:bg-[#0f556e] font-medium disabled:opacity-50 inline-flex gap-2 items-center">
+               <Save size={18} /> Save Section
+            </button>
+            <button type="button" onClick={handleCancel} disabled={saving} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium">Cancel</button>
           </div>
         </form>
-      ) : loading ? (
-        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div></div>
+      ) : activeFormType === 'promo' ? (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+          <div className="flex justify-between items-center border-b pb-4">
+             <h2 className="text-xl font-bold">Manage Big Promo Banner</h2>
+             <button type="button" onClick={handleCancel} className="text-gray-500 hover:text-gray-700 font-medium text-sm">Cancel</button>
+          </div>
+
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => {
+                const banners = siteSettings.homepage_promo_banners?.banners || [];
+                const newBanner = {
+                  id: `pb_${Date.now()}`,
+                  title: 'NEW BANNER',
+                  subtitle: '',
+                  image: '',
+                  image_url: '',
+                  cta_text: 'Explore Trip',
+                  cta_label: 'Explore Trip',
+                  cta_link: '',
+                  cta_url: '',
+                  active: true,
+                  is_active: true,
+                  clickable: true,
+                  display_order: banners.length + 1
+                };
+                handleSettingsChange('homepage_promo_banners', 'banners', [...banners, newBanner]);
+              }}
+              className="flex items-center gap-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+            >
+              <Plus size={16} /> Add Carousel Item
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {(siteSettings.homepage_promo_banners?.banners || []).map((banner, idx) => (
+              <div key={banner.id} className="border border-gray-200 rounded-xl bg-gray-50 p-6 relative">
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <div className="flex gap-1 border rounded-lg bg-white overflow-hidden shadow-sm mr-2">
+                    <button
+                      onClick={() => {
+                        if (idx === 0) return;
+                        const updatedList = [...(siteSettings.homepage_promo_banners?.banners || [])];
+                        const temp = updatedList[idx - 1];
+                        updatedList[idx - 1] = updatedList[idx];
+                        updatedList[idx] = temp;
+                        handleSettingsChange('homepage_promo_banners', 'banners', updatedList);
+                      }}
+                      disabled={idx === 0}
+                      className="p-1.5 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                    >
+                      <ArrowUp size={14} />
+                    </button>
+                    <div className="w-px bg-gray-200"></div>
+                    <button
+                      onClick={() => {
+                        const list = siteSettings.homepage_promo_banners?.banners || [];
+                        if (idx === list.length - 1) return;
+                        const updatedList = [...list];
+                        const temp = updatedList[idx + 1];
+                        updatedList[idx + 1] = updatedList[idx];
+                        updatedList[idx] = temp;
+                        handleSettingsChange('homepage_promo_banners', 'banners', updatedList);
+                      }}
+                      disabled={idx === (siteSettings.homepage_promo_banners?.banners || []).length - 1}
+                      className="p-1.5 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                    >
+                      <ArrowDown size={14} />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to remove this promo banner?')) {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).filter(b => b.id !== banner.id);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }
+                    }}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors bg-white shadow-sm border border-red-100"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <label className={labelClass}>Banner Title</label>
+                    <input
+                      type="text"
+                      value={banner.title || ''}
+                      onChange={e => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, title: e.target.value } : b);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Status</label>
+                    <select
+                      value={banner.active !== false ? 'true' : 'false'}
+                      onChange={e => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, active: e.target.value === 'true', is_active: e.target.value === 'true' } : b);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }}
+                      className={inputClass}
+                    >
+                      <option value="true">Active (Show)</option>
+                      <option value="false">Inactive (Hide)</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Subtitle / Description</label>
+                    <input
+                      type="text"
+                      value={banner.subtitle || ''}
+                      onChange={e => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, subtitle: e.target.value } : b);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="md:col-span-2 border rounded-xl p-4 bg-white">
+                    <MediaUploader
+                      url={banner.image || banner.image_url || ''}
+                      onUrlChange={url => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, image: url, image_url: url } : b);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }}
+                      folder="promo_banners"
+                      label="Banner Image"
+                      hint="Recommended: Wide ratio (e.g. 1200x500px). Supports images/videos."
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>CTA Button Text</label>
+                    <input
+                      type="text"
+                      value={banner.cta_text || banner.cta_label || ''}
+                      onChange={e => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_text: e.target.value, cta_label: e.target.value } : b);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>CTA Destination (Route or URL)</label>
+                    <input
+                      type="text"
+                      value={banner.cta_link || banner.cta_url || ''}
+                      onChange={e => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: e.target.value, cta_url: e.target.value } : b);
+                        handleSettingsChange('homepage_promo_banners', 'banners', list);
+                      }}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4 flex gap-3 border-t mt-6">
+            <button onClick={() => handleSaveSettings('homepage_promo_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-[#136b8a] text-white px-6 py-2.5 rounded-lg hover:bg-[#0f556e] transition-colors font-medium disabled:opacity-50">
+              <Save size={18} /> Save Promo Banners
+            </button>
+            <button type="button" onClick={handleCancel} disabled={saving} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium">Cancel</button>
+          </div>
+        </div>
+      ) : activeFormType === 'static' ? (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+          <div className="flex justify-between items-center border-b pb-4">
+             <h2 className="text-xl font-bold">Edit Short Banner</h2>
+             <button type="button" onClick={handleCancel} className="text-gray-500 hover:text-gray-700 font-medium text-sm">Cancel</button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={labelClass}>Status</label>
+              <select
+                value={siteSettings.homepage_static_banner?.active !== false ? 'true' : 'false'}
+                onChange={e => handleSettingsChange('homepage_static_banner', 'active', e.target.value === 'true')}
+                className={inputClass}
+              >
+                <option value="true">Active (Show Banner)</option>
+                <option value="false">Inactive (Hide Banner)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={labelClass}>Clickable (Yes / No)</label>
+              <select
+                value={siteSettings.homepage_static_banner?.clickable !== false ? 'true' : 'false'}
+                onChange={e => handleSettingsChange('homepage_static_banner', 'clickable', e.target.value === 'true')}
+                className={inputClass}
+              >
+                <option value="true">YES (Navigates to Link/URL on click)</option>
+                <option value="false">NO (Display Only - No Navigation)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={labelClass}>Banner Title (optional)</label>
+              <input
+                type="text"
+                value={siteSettings.homepage_static_banner?.title || ''}
+                onChange={e => handleSettingsChange('homepage_static_banner', 'title', e.target.value)}
+                className={inputClass}
+                placeholder="e.g. KEDARNATH"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Banner Subtitle (optional)</label>
+              <input
+                type="text"
+                value={siteSettings.homepage_static_banner?.subtitle || ''}
+                onChange={e => handleSettingsChange('homepage_static_banner', 'subtitle', e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Journey to the Sacred Himalayas"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>CTA Button Text (optional)</label>
+              <input
+                type="text"
+                value={siteSettings.homepage_static_banner?.cta_text || ''}
+                onChange={e => handleSettingsChange('homepage_static_banner', 'cta_text', e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Explore Trip"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>CTA Link / URL</label>
+              <input
+                type="text"
+                value={siteSettings.homepage_static_banner?.cta_link || ''}
+                onChange={e => handleSettingsChange('homepage_static_banner', 'cta_link', e.target.value)}
+                className={inputClass}
+                placeholder="e.g. /trips/ongoing_packages"
+              />
+            </div>
+
+            <div className="md:col-span-2 border rounded-xl p-4 bg-white">
+              <MediaUploader
+                url={siteSettings.homepage_static_banner?.image || ''}
+                onUrlChange={url => handleSettingsChange('homepage_static_banner', 'image', url)}
+                folder="homepage_static_banner"
+                label="Banner Image"
+                hint="Recommended: Wide landscape image (~1200x300px)."
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 flex gap-3 border-t mt-6">
+            <button
+              onClick={() => handleSaveSettings('homepage_static_banner')}
+              disabled={saving}
+              className="inline-flex items-center gap-2 bg-[#136b8a] text-white px-6 py-2.5 rounded-lg hover:bg-[#0f556e] font-medium transition-colors disabled:opacity-50"
+            >
+              <Save size={18} /> Save Short Banner
+            </button>
+            <button type="button" onClick={handleCancel} disabled={saving} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium">Cancel</button>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Normal Sections */}
           {sections.map((item) => (
             <div key={item.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded  uppercase">{item.section_key}</span>
+                  <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded uppercase">Normal Package Section</span>
                   <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
                     {item.is_active ? 'ACTIVE' : 'HIDDEN'}
                   </span>
                 </div>
                 <h3 className="font-bold text-gray-900 text-lg">{item.title}</h3>
-                {item.subtitle && <p className="text-sm text-gray-500 mt-1">Subtitle: {item.subtitle}</p>}
 
                 <div className="mt-4 pt-4 border-t border-gray-50 space-y-2">
                   <p className="text-xs text-gray-600"><strong>View All:</strong> {item.view_all_text}</p>
@@ -215,21 +598,56 @@ const AdminHomepageSections = () => {
               </div>
 
               <div className="flex justify-between items-center w-full mt-4 pt-4 border-t border-gray-50">
-                <span className="text-xs text-gray-400 ">Order: {item.display_order}</span>
+                <span className="text-xs text-gray-400">Order: {item.display_order}</span>
                 <div className="flex gap-2">
-                  <button onClick={() => handleToggleActive(item.id, item.is_active)} className={`p-1.5 rounded-lg border ${item.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-100' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-100'}`} title="Toggle Visibility">
+                  <button onClick={() => handleToggleActiveNormal(item.id, item.is_active)} className={`p-1.5 rounded-lg border ${item.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-100' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-100'}`} title="Toggle Visibility">
                     {item.is_active ? <XCircle size={16} /> : <CheckCircle size={16} />}
                   </button>
-                  <button onClick={() => handleEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-100" title="Edit">
+                  <button onClick={() => handleEditNormal(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-100" title="Edit">
                     <Edit3 size={16} />
                   </button>
-                  <button onClick={() => handleDelete(item.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-red-100" title="Delete">
+                  <button onClick={() => handleDeleteNormal(item.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-red-100" title="Delete">
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
             </div>
           ))}
+
+          {/* Big Promo Banner */}
+          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded uppercase">Big Promo Banner</span>
+                <span className="text-[10px] px-2 py-1 rounded-full font-bold bg-emerald-100 text-emerald-700">ACTIVE</span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">{(siteSettings.homepage_promo_banners?.banners || []).length} Banners</h3>
+            </div>
+            <div className="flex justify-end items-center w-full mt-4 pt-4 border-t border-gray-50">
+              <button onClick={() => setActiveFormType('promo')} className="flex items-center gap-2 px-3 py-1.5 bg-[#136b8a] text-white hover:bg-[#0f556e] rounded-lg text-sm font-medium transition-colors">
+                <Edit3 size={14} /> Manage Banners
+              </button>
+            </div>
+          </div>
+
+          {/* Short Banner */}
+          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-1 rounded uppercase">Short Banner</span>
+                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${siteSettings.homepage_static_banner?.active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                  {siteSettings.homepage_static_banner?.active !== false ? 'ACTIVE' : 'HIDDEN'}
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg">{siteSettings.homepage_static_banner?.title || 'Static Banner'}</h3>
+            </div>
+            <div className="flex justify-end items-center w-full mt-4 pt-4 border-t border-gray-50">
+              <button onClick={() => setActiveFormType('static')} className="flex items-center gap-2 px-3 py-1.5 bg-[#136b8a] text-white hover:bg-[#0f556e] rounded-lg text-sm font-medium transition-colors">
+                <Edit3 size={14} /> Edit Banner
+              </button>
+            </div>
+          </div>
+
         </div>
       )}
     </div>

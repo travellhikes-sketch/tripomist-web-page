@@ -3,21 +3,35 @@ import { useNavigate, Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import BookingModal from '../components/BookingModal'
+import { supabase } from '../utils/supabaseClient'
 
 export default function Checkout() {
   const navigate = useNavigate()
   const [cartItems, setCartItems] = useState([])
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  const [siteSettings, setSiteSettings] = useState(null)
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart')
     if (storedCart) {
       setCartItems(JSON.parse(storedCart))
     }
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('site_settings').select('*')
+      if (data) {
+        const settingsObj = {}
+        data.forEach(item => {
+          settingsObj[item.setting_key] = item.setting_value
+        })
+        setSiteSettings(settingsObj)
+      }
+    }
+    fetchSettings()
   }, [])
 
   const subTotal = cartItems.reduce((acc, item) => acc + item.total, 0)
-  const gst = Math.round(subTotal * 0.05) // 5% GST
+  const gstEnabled = siteSettings?.package_detail_settings?.gst_enabled !== undefined ? siteSettings.package_detail_settings.gst_enabled : true;
+  const gst = gstEnabled ? Math.round(subTotal * 0.05) : 0
   const convenienceFee = 0
   const billTotal = subTotal + gst + convenienceFee
   const totalTravellers = cartItems.reduce((acc, item) => acc + item.travellers, 0)
@@ -79,10 +93,12 @@ export default function Checkout() {
                   <span>Subtotal ({cartItems.length} Packages)</span>
                   <span>₹{subTotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-gray-600 font-medium text-sm">
-                  <span>Tax (GST 5%)</span>
-                  <span>₹{gst.toLocaleString()}</span>
-                </div>
+                {gstEnabled && (
+                  <div className="flex justify-between text-gray-600 font-medium text-sm">
+                    <span>Tax (GST 5%)</span>
+                    <span>₹{gst.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-end mb-8">

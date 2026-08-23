@@ -32,7 +32,7 @@ export default function ListingPage() {
           foundPage = {
             title: secData.title,
             subtitle: secData.subtitle || "",
-            hero: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
+            hero: secData.hero_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
             type: 'homepage_section',
             id: secData.id
           };
@@ -184,33 +184,25 @@ export default function ListingPage() {
       </section>
 
       {/* Content Heading & About Section */}
-      {pageData && (pageData.subtitle || pageData.description) && (
+      {pageData && pageData.description && (
         <section className="w-full max-w-7xl mx-auto px-4 pt-12">
-          {pageData.subtitle && (
-            <h2 className="text-2xl md:text-3xl text-gray-800 font-bold text-center mb-6">
-              {pageData.subtitle}
-            </h2>
-          )}
-          
-          {pageData.description && (
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 text-left mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 font-sans tracking-tight">About {pageData.title}</h2>
-              <div 
-                className={`text-gray-700 text-base md:text-lg leading-relaxed whitespace-pre-wrap transition-[max-height] duration-500 ease-in-out overflow-hidden relative ${isAboutExpanded ? 'max-h-[3000px]' : 'max-h-[5.5rem] md:max-h-[6.5rem]'}`}
-              >
-                {pageData.description}
-                {!isAboutExpanded && (
-                  <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-                )}
-              </div>
-              <button 
-                onClick={() => setIsAboutExpanded(!isAboutExpanded)} 
-                className="mt-4 text-[#136b8a] font-bold hover:underline text-sm md:text-base cursor-pointer"
-              >
-                {isAboutExpanded ? 'Read Less' : 'Read More'}
-              </button>
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 text-left mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 font-sans tracking-tight">About {pageData.title}</h2>
+            <div 
+              className={`text-gray-700 text-base md:text-lg leading-relaxed whitespace-pre-wrap transition-[max-height] duration-500 ease-in-out overflow-hidden relative ${isAboutExpanded ? 'max-h-[3000px]' : 'max-h-[5.5rem] md:max-h-[6.5rem]'}`}
+            >
+              {pageData.description}
+              {!isAboutExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+              )}
             </div>
-          )}
+            <button 
+              onClick={() => setIsAboutExpanded(!isAboutExpanded)} 
+              className="mt-4 text-[#136b8a] font-bold hover:underline text-sm md:text-base cursor-pointer"
+            >
+              {isAboutExpanded ? 'Read Less' : 'Read More'}
+            </button>
+          </div>
         </section>
       )}
 
@@ -235,7 +227,7 @@ export default function ListingPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {packages.map(pkg => (
               <PackageCard destination={pkg.destination} state={pkg.state}  
                 key={pkg.id} 
