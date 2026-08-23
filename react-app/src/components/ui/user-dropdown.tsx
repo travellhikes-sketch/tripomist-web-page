@@ -49,9 +49,9 @@ const MENU_ITEMS = {
       icon: "solar:logout-2-bold-duotone", 
       label: "Log out", 
       action: "logout", 
-      iconClass: "text-red-500 dark:text-red-400", 
-      labelClass: "text-red-500 dark:text-red-400 font-medium",
-      className: "hover:bg-red-50 focus:bg-red-50 dark:hover:bg-red-950 dark:focus:bg-red-950"
+      iconClass: "text-red-500", 
+      labelClass: "text-red-500 font-medium",
+      className: "hover:bg-red-50 focus:bg-red-50"
     }
   ]
 };
@@ -83,7 +83,7 @@ export const UserDropdown = ({
         <span className={cn("flex items-center gap-1.5 font-medium", item.labelClass)}>
           <Icon
             icon={item.icon}
-            className={`size-5 ${item.iconClass || "text-gray-500 dark:text-gray-400"}`}
+            className={`size-5 ${item.iconClass || "text-gray-500"}`}
           />
           {item.label}
         </span>
@@ -95,11 +95,11 @@ export const UserDropdown = ({
         {item.rightIcon && (
           <Icon
             icon={item.rightIcon}
-            className="size-4 text-gray-500 dark:text-gray-400"
+            className="size-4 text-gray-500"
           />
         )}
         {item.showAvatar && (
-          <Avatar className="cursor-pointer size-6 shadow border border-white dark:border-gray-700">
+          <Avatar className="cursor-pointer size-6 shadow border border-white">
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback>{user.initials}</AvatarFallback>
           </Avatar>
@@ -110,9 +110,9 @@ export const UserDropdown = ({
 
   const getStatusColor = (status) => {
     const colors = {
-      online: "text-green-600 bg-green-100 border-green-300 dark:text-green-400 dark:bg-green-900/30 dark:border-green-500/50",
-      offline: "text-gray-600 bg-gray-100 border-gray-300 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-600",
-      busy: "text-red-600 bg-red-100 border-red-300 dark:text-red-400 dark:bg-red-900/30 dark:border-red-500/50"
+      online: "text-green-600 bg-green-100 border-green-300",
+      offline: "text-gray-600 bg-gray-100 border-gray-300",
+      busy: "text-red-600 bg-red-100 border-red-300"
     };
     return colors[status.toLowerCase()] || colors.online;
   };
@@ -120,14 +120,14 @@ export const UserDropdown = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="cursor-pointer size-10 border border-white dark:border-gray-700 shadow-sm transition-transform hover:scale-105">
+        <Avatar className="cursor-pointer size-10 border border-white shadow-sm transition-transform hover:scale-105">
           <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
           <AvatarFallback className="bg-[#136b8a]/10 text-[#136b8a] font-bold">{user.initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="z-[200] no-scrollbar w-[280px] rounded-2xl bg-white dark:bg-black/90 p-0 shadow-xl border border-gray-100" align="end" sideOffset={8}>
-        <section className="bg-white dark:bg-gray-100/10 backdrop-blur-lg rounded-2xl p-1 shadow border border-gray-200 dark:border-gray-700/20">
+      <DropdownMenuContent className="z-[200] no-scrollbar w-[280px] rounded-2xl bg-white p-0 shadow-xl border border-gray-100" align="end" sideOffset={8}>
+        <section className="bg-white backdrop-blur-lg rounded-2xl p-1 shadow border border-gray-200">
           <div className="flex items-center p-3 border-b border-gray-100 mb-1">
             <div className="flex-1 flex items-center gap-3">
               <Avatar className="cursor-pointer size-12 border border-white shadow-sm">
