@@ -13,6 +13,7 @@ import { supabase } from '../supabaseClient'
 import FeaturedTripCard from '../components/FeaturedTripCard'
 import ReviewsSection from '../components/ReviewsSection'
 import PromoCarousel from '../components/PromoCarousel'
+import { CoverflowCarousel } from '../components/ui/coverflow-carousel'
 import { generateDepartureDates } from '../utils/dateUtils'
 import TestimonialsSection from '../components/TestimonialsSection'
 import StatsStrip from '../components/StatsStrip'
@@ -242,7 +243,7 @@ function Home() {
           </div>
           {sec.view_all_route && (
             <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to={sec.view_all_route}>
-              {'View All'} <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+              {sec.view_all_text || 'View All'} <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
             </Link>
           )}
         </div>
@@ -259,6 +260,23 @@ function Home() {
             <p className="text-sm text-gray-500 max-w-md text-center">
               We couldn't find any active packages for this category right now.
             </p>
+          </div>
+        ) : (sec.display_style || 'simple') === 'advanced' ? (
+          <div className="w-full bg-surface-container-lowest">
+            <CoverflowCarousel
+              showCaption
+              showNavigation
+              showPagination
+              loop
+              slides={sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => ({
+                src: pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
+                alt: pkg.title || pkg.destination || 'Package Image',
+                title: pkg.title,
+                subtitle: pkg.duration ? `${pkg.duration}` : 'Flexible',
+                meta: [{ label: "Starting from", value: pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request' }],
+                slug: pkg.slug
+              }))}
+            />
           </div>
         ) : (
           <div className="relative group/row">

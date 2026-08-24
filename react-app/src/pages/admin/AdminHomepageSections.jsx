@@ -39,7 +39,8 @@ const AdminHomepageSections = () => {
     hero_image: '',
     display_order: 0,
     max_cards: 10,
-    is_active: true
+    is_active: true,
+    display_style: 'simple'
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -113,7 +114,12 @@ const AdminHomepageSections = () => {
 
   const handleEditNormal = (item) => {
     setCurrentItem(item);
-    setFormData(item);
+    setFormData({
+      ...initialFormState,
+      ...item,
+      view_all_text: item.view_all_text || 'View All',
+      display_style: item.display_style || 'simple'
+    });
     setActiveFormType('normal');
   };
 
@@ -143,6 +149,7 @@ const AdminHomepageSections = () => {
     setSaving(true);
     try {
       let dataToSave = { ...formData };
+      dataToSave.view_all_text = dataToSave.view_all_text || 'View All';
       if (!currentItem) {
         const generatedKey = formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
         dataToSave.section_key = generatedKey;
@@ -284,6 +291,15 @@ const AdminHomepageSections = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Max Packages Shown</label>
               <input type="number" name="max_cards" value={formData.max_cards} onChange={handleInputChange} className={inputClass} required />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Display Style</label>
+              <select name="display_style" value={formData.display_style || 'simple'} onChange={handleInputChange} className={inputClass}>
+                <option value="simple">Simple (Standard Carousel)</option>
+                <option value="advanced">Advanced (3D Coverflow)</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Advanced uses an interactive 3D package carousel.</p>
             </div>
 
             <div className="flex items-center mt-6">
@@ -594,6 +610,7 @@ const AdminHomepageSections = () => {
                   <p className="text-xs text-gray-600"><strong>View All:</strong> {item.view_all_text}</p>
                   <p className="text-xs text-gray-600"><strong>Route:</strong> {item.view_all_route || 'None'}</p>
                   <p className="text-xs text-gray-600"><strong>Max Cards:</strong> {item.max_cards}</p>
+                  <p className="text-xs text-gray-600"><strong>Style:</strong> {item.display_style === 'advanced' ? 'Advanced (3D)' : 'Simple'}</p>
                 </div>
               </div>
 
