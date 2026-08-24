@@ -12,6 +12,7 @@ import {
   ArrowDown
 } from 'lucide-react';
 import MediaUploader from '../../components/admin/MediaUploader';
+import WebsiteLinkPicker from '../../components/admin/WebsiteLinkPicker';
 
 const AdminHomepageSections = () => {
   const [sections, setSections] = useState([]);
@@ -471,15 +472,13 @@ const AdminHomepageSections = () => {
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>CTA Destination (Route or URL)</label>
-                    <input
-                      type="text"
+                    <WebsiteLinkPicker
+                      label="CTA Destination (Route or URL)"
                       value={banner.cta_link || banner.cta_url || ''}
-                      onChange={e => {
-                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: e.target.value, cta_url: e.target.value } : b);
+                      onChange={val => {
+                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: val, cta_url: val } : b);
                         handleSettingsChange('homepage_promo_banners', 'banners', list);
                       }}
-                      className={inputClass}
                     />
                   </div>
                 </div>
@@ -560,12 +559,10 @@ const AdminHomepageSections = () => {
             </div>
 
             <div>
-              <label className={labelClass}>CTA Link / URL</label>
-              <input
-                type="text"
+              <WebsiteLinkPicker
+                label="CTA Link / URL"
                 value={siteSettings.homepage_static_banner?.cta_link || ''}
-                onChange={e => handleSettingsChange('homepage_static_banner', 'cta_link', e.target.value)}
-                className={inputClass}
+                onChange={val => handleSettingsChange('homepage_static_banner', 'cta_link', val)}
                 placeholder="e.g. /trips/ongoing_packages"
               />
             </div>
