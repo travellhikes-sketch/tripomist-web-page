@@ -18,7 +18,8 @@ const AdminHomepageSections = () => {
   const [sections, setSections] = useState([]);
   const [siteSettings, setSiteSettings] = useState({
     homepage_promo_banners: { banners: [] },
-    homepage_static_banner: {}
+    homepage_static_banner: {},
+    explore_more_settings: { display_style: 'normal' }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,9 +27,13 @@ const AdminHomepageSections = () => {
   
   // Navigation State
   const [showTypeChooser, setShowTypeChooser] = useState(false);
-  const [activeFormType, setActiveFormType] = useState(null); // 'normal', 'promo', 'static', null
+  const [activeFormType, setActiveFormType] = useState(null); // 'normal', 'promo', 'static', 'explore_more', null
   const [currentItem, setCurrentItem] = useState(null); // only used for 'normal'
   const [saving, setSaving] = useState(false);
+
+  const [createPageModalOpen, setCreatePageModalOpen] = useState(false);
+  const [createPageData, setCreatePageData] = useState({ title: '', route: '', hero_image: '', explore_more_style: 'normal', target_field: null, target_index: null });
+  const [createPageLoading, setCreatePageLoading] = useState(false);
 
   const initialFormState = {
     section_key: '',
@@ -37,11 +42,13 @@ const AdminHomepageSections = () => {
     icon: '',
     view_all_text: 'View All',
     view_all_route: '',
-    hero_image: '',
     display_order: 0,
     max_cards: 10,
     is_active: true,
-    display_style: 'simple'
+    display_style: 'simple',
+    advanced_cta_enabled: true,
+    advanced_cta_text: 'View Trip',
+    explore_more_style: 'normal'
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -61,7 +68,7 @@ const AdminHomepageSections = () => {
     try {
       const [sectionsRes, settingsRes] = await Promise.all([
         supabase.from('homepage_sections').select('*').order('display_order', { ascending: true }),
-        supabase.from('site_settings').select('*').in('setting_key', ['homepage_promo_banners', 'homepage_static_banner'])
+        supabase.from('site_settings').select('*').in('setting_key', ['homepage_promo_banners', 'homepage_static_banner', 'explore_more_settings'])
       ]);
 
       if (sectionsRes.error) throw sectionsRes.error;
@@ -71,7 +78,8 @@ const AdminHomepageSections = () => {
       
       let newSettings = {
         homepage_promo_banners: { banners: [] },
-        homepage_static_banner: {}
+        homepage_static_banner: {},
+        explore_more_settings: { display_style: 'normal' }
       };
       
       if (settingsRes.data) {
@@ -95,6 +103,9 @@ const AdminHomepageSections = () => {
           cta_link: '/trips/ongoing_packages'
         };
       }
+      if (!newSettings.explore_more_settings || Object.keys(newSettings.explore_more_settings).length === 0) {
+        newSettings.explore_more_settings = { display_style: 'normal' };
+      }
       
       setSiteSettings(newSettings);
     } catch (err) {
@@ -115,11 +126,15 @@ const AdminHomepageSections = () => {
 
   const handleEditNormal = (item) => {
     setCurrentItem(item);
+    const exploreMoreStyle = siteSettings.explore_more_settings?.[item.id] || 'normal';
     setFormData({
       ...initialFormState,
       ...item,
       view_all_text: item.view_all_text || 'View All',
-      display_style: item.display_style || 'simple'
+      display_style: item.display_style || 'simple',
+      advanced_cta_enabled: item.advanced_cta_enabled ?? true,
+      advanced_cta_text: item.advanced_cta_text || 'View Trip',
+      explore_more_style: exploreMoreStyle
     });
     setActiveFormType('normal');
   };
@@ -145,14 +160,59 @@ const AdminHomepageSections = () => {
     }
   };
 
-  const handleSaveNormal = async (e) => {
+    const handleCreatePackagePage = async (e) => {
+      e.preventDefault();
+      setCreatePageLoading(true);
+      setError(null);
+      try {
+        const sectionKey = createPageData.route.replace('/trips/', '').replace(/[^a-z0-9_]+/g, '');
+        const { data, error: insertError } = await supabase
+          .from('homepage_sections')
+          .insert({
+            section_key: sectionKey,
+            title: createPageData.title,
+            view_all_route: createPageData.route,
+            hero_image: createPageData.hero_image,
+            is_active: true,
+            display_order: sections.length + 1
+          })
+          .select()
+          .single();
+        
+        if (insertError) throw insertError;
+
+        // If they provided explore_more_style, we should update site_settings explore_more_settings mapping
+        // Removed explore_more_style logic
+
+        await fetchData(); // refresh sections list
+        setSuccess('Linked Package Page created successfully!');
+
+        // Update the picker value in the parent form
+        if (createPageData.target_field === 'homepage_promo_banners') {
+           const list = [...(siteSettings.homepage_promo_banners?.banners || [])];
+           list[createPageData.target_index] = { ...list[createPageData.target_index], cta_link: createPageData.route, cta_url: createPageData.route };
+           handleSettingsChange('homepage_promo_banners', 'banners', list);
+        } else if (createPageData.target_field === 'homepage_static_banner') {
+           handleSettingsChange('homepage_static_banner', 'cta_link', createPageData.route);
+        }
+        
+        setCreatePageModalOpen(false);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setCreatePageLoading(false);
+      }
+    };
+
+    const handleSaveNormal = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    try {
-      let dataToSave = { ...formData };
-      dataToSave.view_all_text = dataToSave.view_all_text || 'View All';
+      setSaving(true);
+      try {
+        let { ...dataToSave } = formData;
+        dataToSave.view_all_text = dataToSave.view_all_text || 'View All';
+      
       if (!currentItem) {
-        const generatedKey = formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
+        const generatedKey = dataToSave.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
         dataToSave.section_key = generatedKey;
         dataToSave.view_all_route = `/trips/${generatedKey}`;
       }
@@ -164,6 +224,7 @@ const AdminHomepageSections = () => {
         const { error } = await supabase.from('homepage_sections').insert([dataToSave]);
         if (error) throw error;
       }
+
       await fetchData();
       handleCancel();
       setSuccess('Section saved successfully!');
@@ -295,13 +356,33 @@ const AdminHomepageSections = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Display Style</label>
-              <select name="display_style" value={formData.display_style || 'simple'} onChange={handleInputChange} className={inputClass}>
-                <option value="simple">Simple (Standard Carousel)</option>
-                <option value="advanced">Advanced (3D Coverflow)</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">Advanced uses an interactive 3D package carousel.</p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Display Style</label>
+                <select name="display_style" value={formData.display_style || 'simple'} onChange={handleInputChange} className={inputClass}>
+                  <option value="simple">Simple (Standard Carousel)</option>
+                  <option value="advanced">Advanced (3D Coverflow)</option>
+                  <option value="advanced_1_1">Advanced (1:1 Card Slider)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Advanced styles use premium interactive layouts.</p>
+              </div>
+
+              <div>
+                <label className={labelClass}>Section Width</label>  <p className="text-xs text-gray-500 mt-1">Style for "Explore More Trips" shown when "View All" is clicked.</p>
+              </div>
             </div>
+
+            {formData.display_style?.startsWith('advanced') && (
+              <>
+                <div className="flex items-center mt-6">
+                  <input type="checkbox" name="advanced_cta_enabled" checked={formData.advanced_cta_enabled !== false} onChange={handleInputChange} className="w-5 h-5 mr-3 text-[#136b8a] rounded focus:ring-[#136b8a]" />
+                  <label className="text-sm font-medium text-gray-700">Show CTA Button in Advanced Style</label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Advanced CTA Text</label>
+                  <input type="text" name="advanced_cta_text" value={formData.advanced_cta_text || ''} onChange={handleInputChange} className={inputClass} placeholder="e.g. View Trip" />
+                </div>
+              </>
+            )}
 
             <div className="flex items-center mt-6">
               <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-5 h-5 mr-3 text-[#136b8a] rounded focus:ring-[#136b8a]" />
@@ -472,14 +553,42 @@ const AdminHomepageSections = () => {
                     />
                   </div>
                   <div>
-                    <WebsiteLinkPicker
-                      label="CTA Destination (Route or URL)"
-                      value={banner.cta_link || banner.cta_url || ''}
-                      onChange={val => {
-                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: val, cta_url: val } : b);
-                        handleSettingsChange('homepage_promo_banners', 'banners', list);
-                      }}
-                    />
+                    <div>
+                      <WebsiteLinkPicker
+                        label="CTA Destination (Route or URL)"
+                        value={banner.cta_link || banner.cta_url || ''}
+                        onChange={val => {
+                          if (val.startsWith('CREATE_PACKAGE:')) {
+                            const term = val.replace('CREATE_PACKAGE:', '');
+                            setCreatePageModalOpen(true);
+                            setCreatePageData({ title: term, route: `/trips/${term.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, hero_image: '', explore_more_style: 'normal', target_field: 'homepage_promo_banners', target_index: idx });
+                          } else {
+                            const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: val, cta_url: val } : b);
+                            handleSettingsChange('homepage_promo_banners', 'banners', list);
+                          }
+                        }}
+                      />
+                      {(() => {
+                        const link = banner.cta_link || banner.cta_url || '';
+                        const linkedSection = sections.find(s => (s.view_all_route || `/trips/${s.section_key}`) === link);
+                        if (!linkedSection) return null;
+                        return (
+                          <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-1">Linked Package Page</h4>
+                            <p className="text-xs text-gray-500 mb-3">Page: {linkedSection.title} | Route: {link}</p>
+                            <MediaUploader
+                              url={linkedSection.hero_image || ''}
+                              onUrlChange={async (url) => {
+                                const { error } = await supabase.from('homepage_sections').update({ hero_image: url }).eq('id', linkedSection.id);
+                                if (!error) setSections(sections.map(s => s.id === linkedSection.id ? { ...s, hero_image: url } : s));
+                              }}
+                              folder="homepage_sections"
+                              label="Listing Page Hero Image"
+                            />
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -562,9 +671,37 @@ const AdminHomepageSections = () => {
               <WebsiteLinkPicker
                 label="CTA Link / URL"
                 value={siteSettings.homepage_static_banner?.cta_link || ''}
-                onChange={val => handleSettingsChange('homepage_static_banner', 'cta_link', val)}
+                onChange={val => {
+                  if (val.startsWith('CREATE_PACKAGE:')) {
+                    const term = val.replace('CREATE_PACKAGE:', '');
+                    setCreatePageModalOpen(true);
+                    setCreatePageData({ title: term, route: `/trips/${term.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, hero_image: '', explore_more_style: 'normal', target_field: 'homepage_static_banner' });
+                  } else {
+                    handleSettingsChange('homepage_static_banner', 'cta_link', val);
+                  }
+                }}
                 placeholder="e.g. /trips/ongoing_packages"
               />
+              {(() => {
+                const link = siteSettings.homepage_static_banner?.cta_link || '';
+                const linkedSection = sections.find(s => (s.view_all_route || `/trips/${s.section_key}`) === link);
+                if (!linkedSection) return null;
+                return (
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-1">Linked Package Page</h4>
+                    <p className="text-xs text-gray-500 mb-3">Page: {linkedSection.title} | Route: {link}</p>
+                    <MediaUploader
+                      url={linkedSection.hero_image || ''}
+                      onUrlChange={async (url) => {
+                        const { error } = await supabase.from('homepage_sections').update({ hero_image: url }).eq('id', linkedSection.id);
+                        if (!error) setSections(sections.map(s => s.id === linkedSection.id ? { ...s, hero_image: url } : s));
+                      }}
+                      folder="homepage_sections"
+                      label="Listing Page Hero Image"
+                    />
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="md:col-span-2 border rounded-xl p-4 bg-white">
@@ -607,7 +744,7 @@ const AdminHomepageSections = () => {
                   <p className="text-xs text-gray-600"><strong>View All:</strong> {item.view_all_text}</p>
                   <p className="text-xs text-gray-600"><strong>Route:</strong> {item.view_all_route || 'None'}</p>
                   <p className="text-xs text-gray-600"><strong>Max Cards:</strong> {item.max_cards}</p>
-                  <p className="text-xs text-gray-600"><strong>Style:</strong> {item.display_style === 'advanced' ? 'Advanced (3D)' : 'Simple'}</p>
+                  <p className="text-xs text-gray-600"><strong>Style:</strong> {item.display_style === 'advanced' ? 'Advanced (3D)' : item.display_style === 'advanced_1_1' ? 'Advanced (1:1)' : 'Simple'}</p>
                 </div>
               </div>
 
@@ -662,6 +799,78 @@ const AdminHomepageSections = () => {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* Create Linked Package Page Modal */}
+      {createPageModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Create Package Page</h2>
+                <p className="text-sm text-gray-500 mt-1">Generate a new listing page and automatically link it to this banner.</p>
+              </div>
+              <button 
+                onClick={() => setCreatePageModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-full transition-colors"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreatePackagePage} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Page Title</label>
+                <input
+                  type="text"
+                  required
+                  value={createPageData.title}
+                  onChange={e => setCreatePageData({...createPageData, title: e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a] outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Route</label>
+                <input
+                  type="text"
+                  required
+                  value={createPageData.route}
+                  onChange={e => setCreatePageData({...createPageData, route: e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a] outline-none transition-all"
+                />
+              </div>
+
+              <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                <MediaUploader
+                  url={createPageData.hero_image}
+                  onUrlChange={url => setCreatePageData({...createPageData, hero_image: url})}
+                  folder="homepage_sections"
+                  label="Listing Page Hero Image"
+                  hint="Recommended: Wide landscape image for the top of the package page."
+                />
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
+                <button 
+                  type="button" 
+                  onClick={() => setCreatePageModalOpen(false)}
+                  disabled={createPageLoading}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={createPageLoading || !createPageData.title || !createPageData.route}
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {createPageLoading ? 'Creating...' : 'Create & Link Page'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

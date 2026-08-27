@@ -14,6 +14,7 @@ import FeaturedTripCard from '../components/FeaturedTripCard'
 import ReviewsSection from '../components/ReviewsSection'
 import PromoCarousel from '../components/PromoCarousel'
 import { CoverflowCarousel } from '../components/ui/coverflow-carousel'
+import SquarePackageSlider from '../components/SquarePackageSlider'
 import { generateDepartureDates } from '../utils/dateUtils'
 import TestimonialsSection from '../components/TestimonialsSection'
 import StatsStrip from '../components/StatsStrip'
@@ -172,7 +173,7 @@ function Home() {
   const renderSpecialSection = (sec) => {
     if (sec.section_key === 'destinations') {
       return (
-        <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest">
+        <section key={sec.id} className="w-full py-6 px-4 md:px-8 lg:px-10 xl:px-12 bg-surface-container-lowest">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
               {sec.title || 'Destinations'}
@@ -197,7 +198,7 @@ function Home() {
 
     if (sec.section_key === 'interests') {
       return (
-        <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest">
+        <section key={sec.id} className="w-full py-6 px-4 md:px-8 lg:px-10 xl:px-12 bg-surface-container-lowest">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
               {sec.title || 'Destination According To Interest'}
@@ -233,7 +234,7 @@ function Home() {
     const rowRef = getRowRef(rowKey);
 
     return (
-      <section key={sec.id} className="w-full py-6 px-4 md:px-12 lg:px-20 bg-surface-container-lowest border-t border-gray-50">
+      <section key={sec.id} className="w-full py-6 px-4 md:px-8 lg:px-10 xl:px-12 bg-surface-container-lowest border-t border-gray-50">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
           <div>
 
@@ -262,7 +263,7 @@ function Home() {
             </p>
           </div>
         ) : (sec.display_style || 'simple') === 'advanced' ? (
-          <div className="w-full bg-surface-container-lowest">
+          <div className="w-full bg-surface-container-lowest max-w-[1550px] w-[94vw] mx-auto overflow-hidden">
             <CoverflowCarousel
               showCaption
               showNavigation
@@ -274,17 +275,28 @@ function Home() {
                 title: pkg.title,
                 subtitle: pkg.duration ? `${pkg.duration}` : 'Flexible',
                 meta: [{ label: "Starting from", value: pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request' }],
-                slug: pkg.slug
+                slug: pkg.slug,
+                isClickable: pkg.is_clickable ?? true,
+                showCta: sec.advanced_cta_enabled !== false,
+                ctaText: sec.advanced_cta_text || 'View Trip'
               }))}
             />
           </div>
+        ) : (sec.display_style === 'advanced_1_1') ? (
+          <div className="w-full bg-surface-container-lowest max-w-[1550px] w-[94vw] mx-auto overflow-hidden">
+            <SquarePackageSlider 
+              packages={sec.packagesData.slice(0, sec.max_cards || 10)}
+              showCta={sec.advanced_cta_enabled !== false}
+              ctaText={sec.advanced_cta_text || 'View Trip'}
+            />
+          </div>
         ) : (
-          <div className="relative group/row">
+          <div className="relative group/row max-w-[1550px] w-[94vw] mx-auto">
             {/* Left Arrow */}
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'left')}
-              className="flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex"
               aria-label="Scroll left"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_left</span>
@@ -293,19 +305,19 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'right')}
-              className="flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 items-center justify-center transition-colors shadow-md cursor-pointer"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex"
               aria-label="Scroll right"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>
 
-            <div ref={rowRef} className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+            <div ref={rowRef} className="flex overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 snap-x snap-mandatory scroll-smooth">
               {sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => (
                 <PackageCard destination={pkg.destination} state={pkg.state}
                   key={pkg.id}
                   listingCategories={pkg.listing_categories}
                   bestSeller={isBestSellerFlag || pkg.best_seller}
-                  className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-center shrink-0"
+                  className="w-[85vw] sm:w-[240px] md:w-[260px] lg:w-[280px] h-[340px] md:h-[360px] snap-start shrink-0"
                   tripTitle={pkg.title}
                   price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : isInternational ? '' : 'Price on request'}
                   duration={pkg.duration || 'Flexible'}

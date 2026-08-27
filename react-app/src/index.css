@@ -123,7 +123,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
 html, body, #root {
   font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 button, input, textarea, select, option {
   font-family: inherit;

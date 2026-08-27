@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PackageCard from '../components/PackageCard'
+import RecommendedExtraPackages from '../components/RecommendedExtraPackages'
 import { supabase } from '../utils/supabaseClient'
 
 function Search() {
@@ -11,6 +12,7 @@ function Search() {
   const [packages, setPackages] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [heroSettings, setHeroSettings] = useState(null)
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -41,6 +43,15 @@ function Search() {
       } finally {
         setLoading(false)
       }
+
+      try {
+        const { data: heroData } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'search_page_hero').single()
+        if (heroData) {
+          setHeroSettings(heroData.setting_value)
+        }
+      } catch (err) {
+        // Ignore error
+      }
     }
 
     fetchSearchResults()
@@ -50,11 +61,37 @@ function Search() {
     <div className="flex flex-col min-h-screen bg-surface-container-lowest">
       <Navbar />
 
-      <main className="w-full flex-grow pt-24 pb-16 px-4 md:px-12 lg:px-20 max-w-[1600px] mx-auto">
-        <div className="mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-on-surface tracking-tight mb-2">
-            Search Results
+      {/* Hero Banner Section */}
+      <section className="relative w-full h-[40vh] min-h-[300px] md:h-[50vh] md:min-h-[400px] overflow-hidden bg-black">
+        {heroSettings?.hero_image ? (
+          <img
+            src={heroSettings.hero_image}
+            alt={heroSettings.title || 'Search Trips'}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1"
+            alt="Search Trips"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        
+        <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
+          <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight drop-shadow-md">
+            {heroSettings?.title || 'Find Your Next Adventure'}
           </h1>
+          {heroSettings?.subtitle && (
+            <p className="text-white/90 text-sm md:text-lg mt-3 max-w-2xl text-center">
+              {heroSettings.subtitle}
+            </p>
+          )}
+        </div>
+      </section>
+
+      <main className="w-full flex-grow pt-16 pb-16 px-4 md:px-12 lg:px-20 max-w-[1600px] mx-auto">
+        <div className="mb-8 md:mb-12">
           {searchQuery && (
             <p className="text-on-surface-variant text-lg">
               Showing results for <span className="font-semibold text-primary">"{searchQuery}"</span>
@@ -100,6 +137,12 @@ function Search() {
             ))}
           </div>
         )}
+        
+        <RecommendedExtraPackages
+          placementType="recommendation_listing"
+          placementId="ffffffff-ffff-ffff-ffff-ffffffffffff"
+          excludePackageIds={packages.map(p => p.id)}
+        />
       </main>
 
       <Footer />

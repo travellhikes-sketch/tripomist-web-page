@@ -41,7 +41,6 @@ const AdminSiteSettings = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
-  // Settings states
   const [settings, setSettings] = useState({
     hero: {},
     navbar: {},
@@ -49,6 +48,7 @@ const AdminSiteSettings = () => {
     contact: {},
     social_links: {},
     package_detail_settings: {},
+    explore_more_settings: {},
     trust_benefits: {},
     homepage_promo_banners: {},
     why_choose_us_banners: {},
@@ -56,6 +56,7 @@ const AdminSiteSettings = () => {
     testimonials_section: {},
     customer_support: {},
     homepage_static_banner: {},
+    search_page_hero: {},
     homepage_section_order: [],
     typography: {}
   });
@@ -64,6 +65,7 @@ const AdminSiteSettings = () => {
 
   const TABS = [
     { id: 'hero', label: 'Hero Section', icon: Monitor },
+    { id: 'search_page_hero', label: 'Search Page Hero', icon: Monitor },
     { id: 'navbar', label: 'Navbar & IG Badge', icon: LayoutTemplate },
     { id: 'footer', label: 'Footer & Contact', icon: LayoutTemplate },
     { id: 'social_links', label: 'Social Media', icon: LinkIcon },
@@ -173,6 +175,18 @@ const AdminSiteSettings = () => {
             clickable: true,
             cta_text: 'Explore Packages',
             cta_link: '/trips/ongoing_packages'
+          };
+        }
+        if (!newSettings.search_page_hero || Object.keys(newSettings.search_page_hero).length === 0) {
+          newSettings.search_page_hero = {
+            hero_image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1',
+            title: 'Find Your Next Adventure',
+            subtitle: ''
+          };
+        }
+        if (!newSettings.explore_more_settings || Object.keys(newSettings.explore_more_settings).length === 0) {
+          newSettings.explore_more_settings = {
+            'ffffffff-ffff-ffff-ffff-ffffffffffff': 'normal'
           };
         }
         if (!newSettings.typography) {
@@ -530,6 +544,36 @@ const AdminSiteSettings = () => {
             </div>
           )}
 
+          {/* SEARCH PAGE HERO TAB */}
+          {activeTab === 'search_page_hero' && (
+            <div className="space-y-6 animate-in">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Search Page Hero Settings</h2>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <MediaUploader
+                    currentImage={settings.search_page_hero.hero_image}
+                    onImageUploaded={(url) => handleChange('search_page_hero', 'hero_image', url)}
+                    label="Search Page Hero Image"
+                    hint="Upload the main background image for the search results page hero."
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Main Heading</label>
+                  <input type="text" value={settings.search_page_hero.title || 'Find Your Next Adventure'} onChange={e => handleChange('search_page_hero', 'title', e.target.value)} className={inputClass} placeholder="Find Your Next Adventure" />
+                </div>
+                <div>
+                  <label className={labelClass}>Subheading</label>
+                  <input type="text" value={settings.search_page_hero.subtitle || ''} onChange={e => handleChange('search_page_hero', 'subtitle', e.target.value)} className={inputClass} placeholder="Optional subheading" />
+                </div>
+              </div>
+              <div className="pt-4 flex justify-end">
+                <button onClick={() => handleSave('search_page_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                  <Save size={16} /> Save Search Hero
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* TYPOGRAPHY TAB */}
           {activeTab === 'typography' && (
             <div className="space-y-6 animate-in">
@@ -800,8 +844,28 @@ const AdminSiteSettings = () => {
                   <textarea value={settings.package_detail_settings.whatsapp_template || ''} onChange={e => handleChange('package_detail_settings', 'whatsapp_template', e.target.value)} className={inputClass} rows={4} />
                 </div>
               </div>
+              
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Search Results Explore More Style</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelClass}>Explore More Display Style</label>
+                    <select
+                      value={settings.explore_more_settings['ffffffff-ffff-ffff-ffff-ffffffffffff'] || 'normal'}
+                      onChange={e => handleChange('explore_more_settings', 'ffffffff-ffff-ffff-ffff-ffffffffffff', e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="normal">Normal (Horizontal Scroll)</option>
+                      <option value="advanced_1_1">Advanced (1:1 Square Slider)</option>
+                      <option value="advanced_3d">Advanced (3D Coverflow)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">Select the visual style for the "Explore More Trips" section shown on the Search Results page.</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('package_detail_settings')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => { handleSave('package_detail_settings'); handleSave('explore_more_settings'); }} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Package Defaults
                 </button>
               </div>

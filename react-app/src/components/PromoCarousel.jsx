@@ -283,14 +283,14 @@ export default function PromoCarousel({ settingKey = "homepage_promo_banners", s
             <>
               <button
                 onClick={(e) => { e.preventDefault(); prev(); }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
+                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
                 aria-label="Previous banner"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); next(); }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
+                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
                 aria-label="Next banner"
               >
                 <ChevronRight size={16} />

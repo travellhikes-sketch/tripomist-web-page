@@ -332,8 +332,9 @@ function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-[100] w-full flex flex-col bg-white">
-      <nav id="main-navbar" className="relative border-b border-gray-100">
+    <>
+    <header className="w-full flex flex-col bg-white">
+      <nav id="main-navbar" className="relative border-b border-gray-100 z-[100]">
         <div className="flex items-center justify-between w-full px-4 md:px-12 lg:px-20 py-4 bg-white relative z-50">
           {/* LEFT: Logo */}
           <div className="flex items-center gap-6 flex-shrink-0">
@@ -583,10 +584,14 @@ function Navbar() {
         )}
       </AnimatePresence>
 
-      <ExploreNavbar />
-
       <LoginSignupModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </header>
+
+    {/* Seasonal strip — rendered outside header so position:sticky works without parent overflow constraints */}
+    <div className="sticky top-0 z-[99] w-full">
+      <ExploreNavbar />
+    </div>
+    </>
   )
 }
 

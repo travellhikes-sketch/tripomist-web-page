@@ -6,6 +6,17 @@ import PackageCard from '../components/PackageCard'
 import RecommendedExtraPackages from '../components/RecommendedExtraPackages'
 import { supabase } from '../supabaseClient'
 import { PackageIcon, RefreshCw, AlertCircle, Volume2, VolumeX } from 'lucide-react'
+import SquarePackageSlider from '../components/SquarePackageSlider'
+import { CoverflowCarousel } from '../components/ui/coverflow-carousel'
+import SquarePackageCard from '../components/SquarePackageCard'
+
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
 
 export default function ListingPage() {
   const location = useLocation()
@@ -17,17 +28,26 @@ export default function ListingPage() {
   const [error, setError] = useState(null)
   const [isMuted, setIsMuted] = useState(true)
   const [isAboutExpanded, setIsAboutExpanded] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(12)
+  const [viewAllStyle, setViewAllStyle] = useState('normal')
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true)
       setError(null)
+      setVisibleCount(12)
       try {
         let foundPage = null;
         let pkgs = [];
 
         // 1. Check Homepage Sections by view_all_route
-        const { data: secData } = await supabase.from('homepage_sections').select('*').eq('view_all_route', path).single();
+        let { data: secData } = await supabase.from('homepage_sections').select('*').eq('view_all_route', path).single();
+        if (!secData && path.includes('_')) {
+          const alternatePath = path.replace(/_/g, '-');
+          const { data: altSecData } = await supabase.from('homepage_sections').select('*').eq('view_all_route', alternatePath).single();
+          secData = altSecData;
+        }
+        
         if (secData) {
           foundPage = {
             title: secData.title,
@@ -126,6 +146,18 @@ export default function ListingPage() {
         }
         setPackages(pkgs);
 
+        // Fetch display style
+        const { data: styleData } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'view_all_packages_display_style')
+          .single();
+        if (styleData && styleData.setting_value) {
+          setViewAllStyle(styleData.setting_value);
+        } else {
+          setViewAllStyle('normal');
+        }
+
       } catch (err) {
         console.error('Error fetching listing page data:', err);
         setError('Failed to load packages. Please try again later.');
@@ -178,6 +210,11 @@ export default function ListingPage() {
               <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight drop-shadow-md">
                 {pageData.title}
               </h1>
+              {packages.length > 0 && (
+                <p className="text-white/90 text-sm md:text-base mt-3 font-medium bg-black/40 px-5 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
+                  {packages.length} {packages.length === 1 ? 'Trip' : 'Trips'} Available
+                </p>
+              )}
             </div>
           </>
         )}
@@ -207,7 +244,7 @@ export default function ListingPage() {
       )}
 
       {/* Grid Section */}
-      <main className="max-w-7xl mx-auto px-4 pt-10 pb-36 w-full flex-grow">
+      <main className="w-full max-w-none px-4 md:px-6 xl:px-8 pt-10 pb-36 flex-grow">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <RefreshCw size={32} className="animate-spin mb-3 text-[#136b8a]" />
@@ -227,26 +264,90 @@ export default function ListingPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {packages.map(pkg => (
-              <PackageCard destination={pkg.destination} state={pkg.state}  
-                key={pkg.id} 
-                tripTitle={pkg.title} 
-                price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Price on request'}
-                duration={pkg.duration || 'Flexible'}
-                description={pkg.short_description || pkg.destination || ''}
-                bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"}
-                link={`/itinerary/${pkg.slug}`}
-                bestSeller={pkg.best_seller}
-                primaryBadgeText={pkg.primary_badge_text}
-                secondaryBadgeText={pkg.secondary_badge_text}
-                showPrimaryBadge={pkg.show_primary_badge}
-                showSecondaryBadge={pkg.show_secondary_badge}
-                isClickable={pkg.is_clickable ?? true}
-                className="w-full h-[360px]"
-              />
-            ))}
-          </div>
+          <>
+            {viewAllStyle === 'advanced_3d' && (
+              <div className="w-full bg-surface-container-lowest overflow-hidden py-8">
+                <CoverflowCarousel
+                  showCaption={false}
+                  showNavigation={false}
+                  showPagination={true}
+                  loop={true}
+                  slides={packages.map(pkg => ({
+                    src: pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
+                    alt: pkg.title || pkg.destination || 'Package Image',
+                    title: pkg.title,
+                    subtitle: pkg.duration ? `${pkg.duration}` : 'Flexible',
+                    meta: [{ label: "Starting from", value: pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Price on request' }],
+                    link: `/itinerary/${pkg.slug}`
+                  }))}
+                />
+              </div>
+            )}
+            
+            {(viewAllStyle === 'advanced_1_1' || viewAllStyle === 'square') && (
+              <div className="flex flex-col gap-6 md:gap-8">
+                {chunkArray(packages.slice(0, visibleCount), 7).map((chunk, chunkIndex) => (
+                  <div key={chunkIndex} className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 md:gap-6 pb-2">
+                    {chunk.map((pkg, index) => (
+                      <div key={pkg.id || index} className="flex-none snap-start w-[75vw] sm:w-[280px] md:w-[300px] lg:w-[320px]">
+                        <SquarePackageCard 
+                          pkg={pkg} 
+                          showCta={true} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                {visibleCount < packages.length && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      onClick={() => setVisibleCount(prev => prev + 14)}
+                      className="px-10 py-3.5 bg-white text-[#136b8a] border-2 border-[#136b8a] font-bold rounded-xl hover:bg-[#136b8a] hover:text-white transition-all shadow-sm active:scale-95"
+                    >
+                      Load More
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {viewAllStyle === 'normal' && (
+              <div className="flex flex-col gap-6 md:gap-8">
+                {chunkArray(packages.slice(0, visibleCount), 7).map((chunk, chunkIndex) => (
+                  <div key={chunkIndex} className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 md:gap-6 pb-2">
+                    {chunk.map(pkg => (
+                      <div key={pkg.id} className="flex-none snap-start w-[75vw] sm:w-[280px] md:w-[300px]">
+                        <PackageCard destination={pkg.destination} state={pkg.state}
+                          tripTitle={pkg.title}
+                          price={pkg.price != null && pkg.price !== '' ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Price on request'}
+                          duration={pkg.duration || 'Flexible'}
+                          description={pkg.short_description || pkg.destination || ''}
+                          bg={pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80"}
+                          link={`/itinerary/${pkg.slug}`}
+                          bestSeller={pkg.best_seller}
+                          primaryBadgeText={pkg.primary_badge_text}
+                          secondaryBadgeText={pkg.secondary_badge_text}
+                          showPrimaryBadge={pkg.show_primary_badge}
+                          showSecondaryBadge={pkg.show_secondary_badge}
+                          isClickable={pkg.is_clickable ?? true}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                {visibleCount < packages.length && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      onClick={() => setVisibleCount(prev => prev + 14)}
+                      className="px-10 py-3.5 bg-white text-[#136b8a] border-2 border-[#136b8a] font-bold rounded-xl hover:bg-[#136b8a] hover:text-white transition-all shadow-sm active:scale-95"
+                    >
+                      Load More
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {pageData && pageData.type !== 'all' && pageData.id && (

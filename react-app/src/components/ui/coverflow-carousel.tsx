@@ -16,6 +16,9 @@ export interface CoverflowSlide {
   subtitle?: string;
   meta?: { label: string; value: string }[];
   slug?: string;
+  isClickable?: boolean;
+  ctaText?: string;
+  showCta?: boolean;
 }
 
 export interface CoverflowCarouselProps {
@@ -46,13 +49,13 @@ export interface CoverflowCarouselProps {
 
 export function CoverflowCarousel({
   slides,
-  rotate = 44,
-  depth = 0.6,
-  perspective = 3,
-  falloff = 0.56,
-  fade = 0.1,
-  cardWidth = "clamp(148px, 22vw, 260px)",
-  gap = 0.05,
+  rotate = 30,
+  depth = 0.2,
+  perspective = 5,
+  falloff = 0.8,
+  fade = 0,
+  cardWidth = "clamp(240px, 30vw, 320px)",
+  gap = 0.08,
   loop = true,
   showCaption = false,
   showPagination = false,
@@ -245,11 +248,34 @@ export function CoverflowCarousel({
     return () => observer.disconnect();
   }, [paint]);
 
+  // Autoplay functionality
+  const autoplayRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const startAutoplay = React.useCallback(() => {
+    if (autoplayRef.current) clearInterval(autoplayRef.current);
+    autoplayRef.current = setInterval(() => {
+      nudge(1);
+    }, 2000);
+  }, [nudge]);
+
+  const stopAutoplay = React.useCallback(() => {
+    if (autoplayRef.current) {
+      clearInterval(autoplayRef.current);
+      autoplayRef.current = null;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    startAutoplay();
+    return () => stopAutoplay();
+  }, [startAutoplay, stopAutoplay]);
+
   React.useEffect(
     () => () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      stopAutoplay();
     },
-    [],
+    [stopAutoplay],
   );
 
   if (!slides || slides.length === 0) return null;
@@ -258,20 +284,33 @@ export function CoverflowCarousel({
 
   return (
     <div
-      className={cn("w-full py-8 md:py-12", className)}
+      className={cn("w-full max-w-[1550px] mx-auto py-8 md:py-12", className)}
       style={{ ["--cf-card" as string]: cardWidth }}
       role="region"
       aria-roledescription="carousel"
       aria-label={label}
+      onMouseEnter={stopAutoplay}
+      onMouseLeave={startAutoplay}
+      onTouchStart={stopAutoplay}
+      onTouchEnd={startAutoplay}
     >
       <div className="relative">
         <div
           ref={frameRef}
           tabIndex={0}
-          onPointerDown={onPointerDown}
+          onPointerDown={(e) => {
+            stopAutoplay();
+            onPointerDown(e);
+          }}
           onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
+          onPointerUp={(e) => {
+            endDrag(e);
+            startAutoplay();
+          }}
+          onPointerCancel={(e) => {
+            endDrag(e);
+            startAutoplay();
+          }}
           onKeyDown={(event) => {
             if (event.key === "ArrowLeft") {
               event.preventDefault();
@@ -307,19 +346,41 @@ export function CoverflowCarousel({
                 role="group"
                 aria-roledescription="slide"
                 aria-label={`${index + 1} of ${count}`}
-                onClick={() => handleCardClick(index, slide.slug)}
+                onClick={() => {
+                  if (slide.isClickable !== false) {
+                    handleCardClick(index, slide.slug);
+                  } else {
+                    goTo(index); // Still allow bringing to center
+                  }
+                }}
                 className={cn(
-                  "absolute left-1/2 top-0 aspect-square md:aspect-[4/5] overflow-hidden rounded-2xl bg-muted shadow-xl will-change-transform cursor-pointer transition-shadow hover:shadow-2xl",
+                  "absolute left-1/2 top-0 aspect-square overflow-hidden rounded-[18px] bg-muted shadow-xl will-change-transform transition-shadow hover:shadow-2xl",
+                  (index === selected && slide.isClickable !== false) ? "cursor-pointer" : (index !== selected) ? "cursor-pointer" : "cursor-default",
                   cardClassName,
                 )}
-                style={{ width: "var(--cf-card)" }}
+                style={{ width: "var(--cf-card)", transform: "translateZ(0)" }}
               >
                 <img
                   src={slide.src}
                   alt={slide.alt}
                   draggable={false}
-                  className="h-full w-full select-none object-cover"
+                  className="h-full w-full select-none object-cover rounded-[18px]"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-[18px] flex flex-col justify-end p-4 md:p-6 text-white text-left">
+                  {slide.title && <h3 className="text-lg md:text-2xl font-bold tracking-tight drop-shadow-md line-clamp-2 leading-tight">{slide.title}</h3>}
+                  {slide.subtitle && (
+                    <p className="mt-1.5 text-xs md:text-sm font-medium text-white/90 drop-shadow-sm flex items-center gap-1.5">
+                       <span className="material-symbols-outlined text-[16px]">schedule</span> {slide.subtitle}
+                    </p>
+                  )}
+                  {slide.meta && slide.meta.length > 0 && (
+                    <div className="mt-3 text-sm md:text-base font-bold text-white drop-shadow-md">
+                      {slide.meta.map(row => (
+                        <span key={row.label}>{row.label} {row.value}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -331,56 +392,21 @@ export function CoverflowCarousel({
               type="button"
               aria-label="Previous slide"
               onClick={() => nudge(-1)}
-              className="absolute left-3 md:left-8 top-1/2 z-[200] -translate-y-1/2 rounded-full bg-white/70 shadow p-2 md:p-3 text-slate-800 backdrop-blur transition hover:bg-white"
+              className="absolute left-2 md:left-4 top-1/2 z-[200] -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] transition-colors hover:bg-white"
             >
-              <ChevronLeft className="size-5 md:size-6" />
+              <ChevronLeft size={16} />
             </button>
             <button
               type="button"
               aria-label="Next slide"
               onClick={() => nudge(1)}
-              className="absolute right-3 md:right-8 top-1/2 z-[200] -translate-y-1/2 rounded-full bg-white/70 shadow p-2 md:p-3 text-slate-800 backdrop-blur transition hover:bg-white"
+              className="absolute right-2 md:right-4 top-1/2 z-[200] -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] transition-colors hover:bg-white"
             >
-              <ChevronRight className="size-5 md:size-6" />
+              <ChevronRight size={16} />
             </button>
           </>
         )}
       </div>
-
-      {showCaption && active?.title && (
-        <div
-          key={selected}
-          className="mt-4 flex flex-col items-center px-6 duration-300 animate-in fade-in"
-        >
-          <h3 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 text-center">
-            {active.title}
-          </h3>
-          {active.subtitle && (
-            <p className="mt-1.5 text-sm md:text-base font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
-              {active.subtitle}
-            </p>
-          )}
-          {active.meta && active.meta.length > 0 && (
-            <div className="mt-4 flex flex-col items-center gap-1">
-              {active.meta.map((row) => (
-                <div key={row.label} className="flex items-center gap-2 text-sm md:text-base">
-                  <span className="text-slate-500">{row.label}</span>
-                  <span className="font-bold text-slate-900">{row.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {active.slug && (
-             <button
-                onClick={() => navigate(`/itinerary/${active.slug}`)}
-                className="mt-6 flex items-center justify-center gap-2 bg-[#136b8a] text-white px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-[#0f556e] hover:shadow-lg transition-all"
-             >
-                View Trip <ChevronRight className="w-4 h-4" />
-             </button>
-          )}
-        </div>
-      )}
 
       {showPagination && (
         <div className="mt-8 flex items-center justify-center gap-2">

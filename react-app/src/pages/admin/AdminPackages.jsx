@@ -12,6 +12,8 @@ import {
   EyeOff,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   AlertCircle,
   PackageIcon,
 } from 'lucide-react';
@@ -37,29 +39,76 @@ const AdminPackages = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ── Fetch all packages ──────────────────────────────────
-  const fetchPackages = useCallback(async () => {
+  // Global Recommendation Display Style
+  const [recommendedDisplay, setRecommendedDisplay] = useState('normal');
+  const [recommendedHeading, setRecommendedHeading] = useState('Explore More Trips');
+  const [viewAllDisplay, setViewAllDisplay] = useState('normal');
+  const [seasonalDropdownColumns, setSeasonalDropdownColumns] = useState('5');
+  const [savingDisplay, setSavingDisplay] = useState(false);
+  const [showAdvancedDisplay, setShowAdvancedDisplay] = useState(false);
+
+  // ── Fetch all packages & settings ──────────────────────────────────────
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchErr } = await supabase
+      const { data: pkgs, error: fetchErr } = await supabase
         .from('Pakage')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (fetchErr) throw fetchErr;
-      setPackages(data || []);
+      setPackages(pkgs || []);
+
+      const { data: settingsData } = await supabase
+        .from('site_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['recommended_packages_display_style', 'recommended_packages_heading', 'view_all_packages_display_style', 'seasonal_dropdown_packages_per_column']);
+        
+      if (settingsData && settingsData.length > 0) {
+        const recStyle = settingsData.find(s => s.setting_key === 'recommended_packages_display_style');
+        const recHead = settingsData.find(s => s.setting_key === 'recommended_packages_heading');
+        const viewAllStyle = settingsData.find(s => s.setting_key === 'view_all_packages_display_style');
+        const seasonalCols = settingsData.find(s => s.setting_key === 'seasonal_dropdown_packages_per_column');
+        
+        if (recStyle) setRecommendedDisplay(recStyle.setting_value);
+        if (recHead) setRecommendedHeading(recHead.setting_value);
+        if (viewAllStyle) setViewAllDisplay(viewAllStyle.setting_value);
+        if (seasonalCols) setSeasonalDropdownColumns(seasonalCols.setting_value);
+      }
     } catch (err) {
-      console.error('Fetch error:', err);
-      setError(err.message || 'Failed to load packages.');
+      if (err.code !== 'PGRST116') { // ignore single() no rows error
+        console.error('Fetch error:', err);
+        setError(err.message || 'Failed to load data.');
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchPackages();
-  }, [fetchPackages]);
+    fetchData();
+  }, [fetchData]);
+
+  const handleSaveDisplaySettings = async () => {
+    setSavingDisplay(true);
+    try {
+      const updates = [
+        { setting_key: 'recommended_packages_display_style', setting_value: recommendedDisplay, updated_at: new Date().toISOString() },
+        { setting_key: 'recommended_packages_heading', setting_value: recommendedHeading, updated_at: new Date().toISOString() },
+        { setting_key: 'view_all_packages_display_style', setting_value: viewAllDisplay, updated_at: new Date().toISOString() },
+        { setting_key: 'seasonal_dropdown_packages_per_column', setting_value: seasonalDropdownColumns, updated_at: new Date().toISOString() }
+      ];
+      const { error } = await supabase.from('site_settings').upsert(updates, { onConflict: 'setting_key' });
+      if (error) throw error;
+      setSuccessMsg('Package display settings updated successfully.');
+    } catch (err) {
+      console.error('Error saving display settings:', err);
+      setError('Failed to update package display settings.');
+    } finally {
+      setSavingDisplay(false);
+    }
+  };
 
   // Auto-clear success message
   useEffect(() => {
@@ -123,7 +172,7 @@ const AdminPackages = () => {
       setSuccessMsg(`"${pkg.title}" saved successfully.`);
       setShowForm(false);
       setEditingPkg(null);
-      await fetchPackages();
+      await fetchData();
     } catch (err) {
       console.error('Save error:', err);
       setError(err.message || 'Failed to save package.');
@@ -145,7 +194,7 @@ const AdminPackages = () => {
       if (delErr) throw delErr;
       setSuccessMsg(`"${deleteTarget.title}" deleted.`);
       setDeleteTarget(null);
-      await fetchPackages();
+      await fetchData();
     } catch (err) {
       console.error('Delete error:', err);
       setError(err.message || 'Failed to delete package.');
@@ -168,7 +217,7 @@ const AdminPackages = () => {
         .eq('id', pkg.id);
       if (toggleErr) throw toggleErr;
 
-      await fetchPackages();
+      await fetchData();
     } catch (err) {
       console.error('Toggle error:', err);
       setError(err.message || `Failed to toggle ${field}.`);
@@ -244,6 +293,93 @@ const AdminPackages = () => {
         </button>
       </div>
 
+      {/* Global Recommendation Settings Card */}
+      {/* Global Recommendation Settings Card - Collapsible */}
+      {!showForm && (
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-6 overflow-hidden">
+          <button 
+            onClick={() => setShowAdvancedDisplay(!showAdvancedDisplay)}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+          >
+            <div className="flex items-center gap-2">
+              {showAdvancedDisplay
+                ? <ChevronUp size={16} className="text-gray-500 flex-shrink-0" />
+                : <ChevronDown size={16} className="text-gray-500 flex-shrink-0" />}
+              <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Advanced Package Placement</h2>
+            </div>
+            {!showAdvancedDisplay && <span className="text-xs text-gray-500 font-medium bg-white px-2.5 py-1 rounded-md border border-gray-200">Settings hidden</span>}
+          </button>
+          
+          {showAdvancedDisplay && (
+            <div className="p-4 sm:p-5 border-t border-gray-100">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Column 1: Recommendation Heading + Recommended Style */}
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Recommendation Heading</label>
+                    <input
+                      type="text"
+                      value={recommendedHeading}
+                      onChange={(e) => setRecommendedHeading(e.target.value)}
+                      placeholder="Explore More Trips"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Recommended Style</label>
+                    <select
+                      value={recommendedDisplay}
+                      onChange={(e) => setRecommendedDisplay(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="advanced_1_1">Advanced 1:1 Card Slider</option>
+                      <option value="advanced_3d">Advanced 3D Coverflow</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Column 2: Seasonal Cols */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Seasonal Cols</label>
+                  <select
+                    value={seasonalDropdownColumns}
+                    onChange={(e) => setSeasonalDropdownColumns(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    {[2,3,4,5,6,7,8,9,10].map(num => <option key={num} value={num}>{num}</option>)}
+                  </select>
+                </div>
+
+                {/* Column 3: View All Style */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">View All Style</label>
+                  <select
+                    value={viewAllDisplay}
+                    onChange={(e) => setViewAllDisplay(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="advanced_1_1">Advanced 1:1 Card Slider</option>
+                    <option value="advanced_3d">Advanced 3D Coverflow</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleSaveDisplaySettings}
+                  disabled={savingDisplay}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-70"
+                >
+                  {savingDisplay ? <RefreshCw size={14} className="animate-spin" /> : null}
+                  {savingDisplay ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Success toast */}
       {successMsg && (
         <div className="bg-green-50 text-green-800 text-sm px-4 py-3 rounded-lg border border-green-200 flex items-center gap-2 animate-in">
@@ -276,7 +412,7 @@ const AdminPackages = () => {
           />
         </div>
         <button
-          onClick={fetchPackages}
+          onClick={fetchData}
           disabled={loading}
           className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
         >

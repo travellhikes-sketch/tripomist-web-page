@@ -252,6 +252,18 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     });
   };
 
+  const selectAllPlacements = (type, items, slugKey = 'slug') => {
+    setSelectedPlacements(prev => {
+      const others = prev.filter(p => p.type !== type);
+      const newSelections = items.map(item => ({ type, id: item.id, slug: item[slugKey] }));
+      return [...others, ...newSelections];
+    });
+  };
+
+  const clearAllPlacements = (type) => {
+    setSelectedPlacements(prev => prev.filter(p => p.type !== type));
+  };
+
   // Gallery Storage File Upload Removed - URLs Only
 
   // Itinerary PDF Storage Upload Removed - URLs Only
@@ -1019,7 +1031,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
 
             {/* Homepage Sections */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Homepage Sections</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium text-gray-700">Homepage Sections</h4>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => selectAllPlacements('homepage_section', dynamicSections, 'section_key')} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => clearAllPlacements('homepage_section')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 
                 {dynamicSections.length === 0 && <div className="text-sm text-gray-500">No active homepage sections.</div>}
@@ -1040,7 +1058,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
 
             {/* Interests */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Interests</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium text-gray-700">Interests</h4>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => selectAllPlacements('interest', dynamicInterests)} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => clearAllPlacements('interest')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {dynamicInterests.length === 0 && <div className="text-sm text-gray-500">No active interests.</div>}
                 {dynamicInterests.map(int => {
@@ -1060,7 +1084,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
 
             {/* Destinations */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Destinations</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium text-gray-700">Destinations</h4>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => selectAllPlacements('destination', dynamicDestinations)} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => clearAllPlacements('destination')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {dynamicDestinations.length === 0 && <div className="text-sm text-gray-500">No active destinations.</div>}
                 {dynamicDestinations.map(dest => {
@@ -1080,7 +1110,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
 
             {/* Explore Departments */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Explore Departments</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium text-gray-700">Explore Departments</h4>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => selectAllPlacements('explore_department', exploreDepartments)} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => clearAllPlacements('explore_department')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {exploreDepartments.length === 0 && <div className="text-sm text-gray-500">No active explore departments.</div>}
                 {exploreDepartments.map(dept => {
@@ -1107,7 +1143,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               
               <div className="space-y-6">
                 <div>
-                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Destinations (Explore More)</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-xs font-semibold text-gray-600 uppercase">Destinations (Explore More)</h5>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => selectAllPlacements('recommendation_destination', dynamicDestinations)} className="text-xs text-[#136b8a] hover:underline">Select All</button>
+                      <button type="button" onClick={() => clearAllPlacements('recommendation_destination')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {dynamicDestinations.length === 0 && <div className="text-xs text-gray-500">No active destinations.</div>}
                     {dynamicDestinations.map(dest => {
@@ -1126,7 +1168,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 </div>
 
                 <div>
-                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Interests (Explore More)</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-xs font-semibold text-gray-600 uppercase">Interests (Explore More)</h5>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => selectAllPlacements('recommendation_interest', dynamicInterests)} className="text-xs text-[#136b8a] hover:underline">Select All</button>
+                      <button type="button" onClick={() => clearAllPlacements('recommendation_interest')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {dynamicInterests.length === 0 && <div className="text-xs text-gray-500">No active interests.</div>}
                     {dynamicInterests.map(int => {
@@ -1145,7 +1193,13 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 </div>
 
                 <div>
-                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Dynamic Listing Sections (Explore More)</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-xs font-semibold text-gray-600 uppercase">Dynamic Listing Sections (Explore More)</h5>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => selectAllPlacements('recommendation_listing', dynamicSections, 'section_key')} className="text-xs text-[#136b8a] hover:underline">Select All</button>
+                      <button type="button" onClick={() => clearAllPlacements('recommendation_listing')} className="text-xs text-red-600 hover:underline">Clear All</button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {dynamicSections.length === 0 && <div className="text-xs text-gray-500">No active listing sections.</div>}
                     {dynamicSections.map(sec => {
@@ -1160,6 +1214,24 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                         </label>
                       )
                     })}
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 uppercase mb-2">Search Results (Explore More)</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <label className="flex items-center gap-3 cursor-pointer group relative">
+                      <input 
+                        type="checkbox" 
+                        className="absolute opacity-0 w-0 h-0" 
+                        checked={selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff')} 
+                        onChange={() => togglePlacement('recommendation_listing', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'Search Results Page')} 
+                      />
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff') ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                        {selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff') && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      </div>
+                      <span className="text-sm text-gray-700 select-none">Search Results Page</span>
+                    </label>
                   </div>
                 </div>
               </div>
