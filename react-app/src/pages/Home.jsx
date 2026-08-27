@@ -268,7 +268,7 @@ function Home() {
               showCaption
               showNavigation
               showPagination
-              loop
+              loop={false}
               slides={sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => ({
                 src: pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
                 alt: pkg.title || pkg.destination || 'Package Image',
@@ -350,27 +350,37 @@ function Home() {
         <div className="px-2 md:px-6 lg:px-8 pt-6">
           <section className="relative w-full min-h-[300px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-8 rounded-[28px] overflow-hidden shadow-lg">
             <div className="absolute inset-0 w-full h-full -z-10 bg-black">
-              {(!heroSettings?.media_type || heroSettings.media_type === 'video') ? (
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: 'center center' }}
-                >
-                  <source src={heroSettings?.desktop_media_url || "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260629_032424_3c9c2a9d-807b-4482-80e6-dd6d9dfd4545.mp4"} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <img
-                  src={heroSettings?.desktop_media_url || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"}
-                  alt="Hero Background"
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: 'center center' }}
-                />
-              )}
+              {(() => {
+                const mediaUrl = heroSettings?.desktop_media_url || "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260629_032424_3c9c2a9d-807b-4482-80e6-dd6d9dfd4545.mp4";
+                const isVideo = heroSettings?.media_type === 'video' || mediaUrl.match(/\.(mp4|webm|ogg|mov)$/i) || mediaUrl.includes('video/upload');
+                
+                if (isVideo) {
+                  return (
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: 'center center' }}
+                      poster={mediaUrl.includes('video/upload') ? mediaUrl.replace(/\.(mp4|webm|ogg|mov)$/i, '.jpg') : undefined}
+                    >
+                      <source src={mediaUrl} />
+                      Your browser does not support the video tag.
+                    </video>
+                  );
+                } else {
+                  return (
+                    <img
+                      src={mediaUrl || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"}
+                      alt="Hero Background"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: 'center center' }}
+                    />
+                  );
+                }
+              })()}
               {/* Subtle dark overlay for text readability */}
               <div
                 className="absolute inset-0 bg-black"

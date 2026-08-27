@@ -11,7 +11,7 @@ import { formatSlugToTitle } from '../utils/formatters';
 import {
   Download,
   ShoppingCart,
-  Forward,
+  Share2,
   ChevronLeft,
   ChevronRight,
   X,
@@ -188,13 +188,12 @@ export default function PackageDetail() {
   const [mainNavHeight, setMainNavHeight] = useState(64);
   const [exploreNavHeight, setExploreNavHeight] = useState(40);
   const [sectionNavHeight, setSectionNavHeight] = useState(48);
+  const contentEndRef = useRef(null);
 
   useEffect(() => {
     const measure = () => {
-      const mainNav = document.getElementById('main-navbar');
       const exploreNav = document.getElementById('explore-navbar');
       const secNav = sectionNavRef.current;
-      if (mainNav) setMainNavHeight(mainNav.getBoundingClientRect().height);
       if (exploreNav && !exploreNav.classList.contains('hidden')) {
         setExploreNavHeight(exploreNav.getBoundingClientRect().height);
       }
@@ -474,17 +473,8 @@ export default function PackageDetail() {
       const sentinelRect = navSentinelRef.current.getBoundingClientRect();
       const currentSticky = isNavSticky;
 
-      // Dynamically measure the actual main navbar bottom position relative to viewport
-      const mainNav = document.getElementById('main-navbar');
       const exploreNav = document.getElementById('explore-navbar');
 
-      let currentMainNavBottom = 64;
-      if (mainNav) {
-        currentMainNavBottom = mainNav.getBoundingClientRect().bottom;
-        setMainNavBottom(currentMainNavBottom);
-      }
-
-      // Also dynamically measure exploreNav if visible
       let currentExploreNavHeight = exploreNavHeight;
       if (exploreNav && !exploreNav.classList.contains('hidden')) {
         const height = exploreNav.getBoundingClientRect().height;
@@ -498,19 +488,28 @@ export default function PackageDetail() {
         setExploreNavHeight(0);
       }
 
+      let isPastBottom = false;
+      if (contentEndRef.current) {
+        const endRect = contentEndRef.current.getBoundingClientRect();
+        const stickyBottom = currentExploreNavHeight + (sectionNavRef.current?.getBoundingClientRect().height || 48);
+        if (endRect.top <= stickyBottom + 20) {
+          isPastBottom = true;
+        }
+      }
+
       if (!currentSticky) {
         // Scroll DOWN: activate sticky when sentinel reaches bottom of the Explore Nav
-        const threshold = currentMainNavBottom + currentExploreNavHeight;
-        if (sentinelRect.top <= threshold) {
+        const threshold = currentExploreNavHeight;
+        if (sentinelRect.top <= threshold && !isPastBottom) {
           setIsNavSticky(true);
           window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
             detail: { isSticky: true }
           }));
         }
       } else {
-        // Scroll UP: deactivate sticky when sentinel goes above the main navbar position
-        const threshold = currentMainNavBottom;
-        if (sentinelRect.top > threshold) {
+        // Scroll UP: deactivate sticky when sentinel goes above the explore nav position or past bottom
+        const threshold = currentExploreNavHeight;
+        if (sentinelRect.top > threshold || isPastBottom) {
           setIsNavSticky(false);
           window.dispatchEvent(new CustomEvent('packageNavStickyChange', {
             detail: { isSticky: false }
@@ -530,26 +529,28 @@ export default function PackageDetail() {
   // Scroll Spy Active Section
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPos = window.scrollY + 140;
+      const exploreNav = document.getElementById('explore-navbar');
+      const exploreHeight = exploreNav ? exploreNav.getBoundingClientRect().height : 0;
+      const stickyBottom = exploreHeight + sectionNavHeight;
+
+      let currentSection = visibleSections[0]?.id || 'overview';
       for (const sec of visibleSections) {
-        const secId = sec.id;
-        const el = document.getElementById(secId);
+        const el = document.getElementById(sec.id);
         if (el) {
-          const top = el.offsetTop;
-          const height = el.offsetHeight;
-          if (scrollPos >= top && scrollPos < top + height) {
-            setActiveSection(secId);
-            break;
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= stickyBottom + 50) {
+            currentSection = sec.id;
           }
         }
       }
+      setActiveSection(currentSection);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [visibleSections]);
+  }, [visibleSections, sectionNavHeight]);
 
   useEffect(() => {
     if (!trip) return;
@@ -658,9 +659,9 @@ export default function PackageDetail() {
     setActiveSection(secId);
     const el = document.getElementById(secId);
     if (el) {
-      const mainNav = document.getElementById('main-navbar');
-      const bottom = mainNav ? mainNav.getBoundingClientRect().bottom : 64;
-      const offset = bottom + sectionNavHeight + 10;
+      const exploreNav = document.getElementById('explore-navbar');
+      const exploreHeight = exploreNav ? exploreNav.getBoundingClientRect().height : 0;
+      const offset = exploreHeight + sectionNavHeight;
       const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -734,8 +735,8 @@ export default function PackageDetail() {
         {/* ==================================================
             D. TOP PHOTO GALLERY GRID (4 EQUAL IMAGES, NO ROUNDING, ALWAYS-VISIBLE DESKTOP ARROWS)
         ================================================== */}
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-4">
-          <div className="relative w-full overflow-hidden rounded-none shadow-sm border border-slate-200">
+        <section className="w-full pt-6 pb-4 overflow-hidden">
+          <div className="relative w-full">
             {/* Gallery Left/Right Arrows (Always Visible on Desktop) */}
             {galleryImages.length > 0 && (
               <>
@@ -760,13 +761,13 @@ export default function PackageDetail() {
 
             <div
               ref={galleryContainerRef}
-              className="flex gap-0 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-smooth"
+              className="flex gap-2 sm:gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-smooth px-[5vw] sm:px-[10vw]"
             >
               {galleryImages.map((img, idx) => (
                 <div
                   key={idx}
                   onClick={() => openLightbox(idx)}
-                  className="w-full sm:w-1/2 md:w-1/4 h-[240px] sm:h-[280px] md:h-[320px] shrink-0 snap-start cursor-pointer group/img relative bg-slate-900 overflow-hidden"
+                  className="w-[85vw] sm:w-[60vw] md:w-[300px] lg:w-[304px] h-[240px] sm:h-[280px] md:h-[320px] shrink-0 snap-center cursor-pointer group/img relative bg-slate-900 overflow-hidden shadow-sm"
                 >
                   <img
                     src={img}
@@ -839,7 +840,7 @@ export default function PackageDetail() {
         {/* ==================================================
             MAIN LAYOUT: CONTENT (LEFT) + BOOKING CARD (RIGHT)
         ================================================== */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 pb-36 lg:pb-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="w-full px-4 md:px-8 py-6 pb-36 lg:pb-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
 
           {/* LEFT COLUMN: Title, Actions, Section Nav & Vertical Sections */}
           <div className="lg:col-span-8 flex flex-col">
@@ -867,7 +868,7 @@ export default function PackageDetail() {
               {trip.itineraryPdfUrl ? (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-[#7f9fd8] hover:bg-[#6f8fc8] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
                 >
                   <Download size={16} />
                   <span>Download Itinerary</span>
@@ -880,20 +881,19 @@ export default function PackageDetail() {
                 title={isAddedToCart ? "Remove from Cart" : "Add to Cart"}
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer ${
                   isAddedToCart
-                    ? 'bg-white border-2 border-[#136b8a] text-[#136b8a]'
-                    : 'bg-[#136b8a] hover:bg-[#0f556e] text-white'
+                    ? 'bg-white border-2 border-[#7f9fd8] text-[#7f9fd8]'
+                    : 'bg-[#7f9fd8] hover:bg-[#6f8fc8] text-white'
                 }`}
               >
                 <ShoppingCart size={18} />
               </button>
 
-              {/* 3. Circular Share Icon Button (Right) */}
               <button
                 onClick={handleShare}
                 title="Share Package"
                 className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100/60 transition-all active:scale-95 shrink-0 cursor-pointer"
               >
-                <Forward size={22} />
+                <Share2 size={22} />
               </button>
             </div>
 
@@ -905,13 +905,13 @@ export default function PackageDetail() {
             ================================================== */}
             <div
               ref={sectionNavRef}
-              className={`w-full bg-white transition-all ${
+              className={`w-full bg-white shadow-sm transition-all ${
                 isNavSticky
-                  ? 'fixed left-0 right-0 z-[90] shadow-md border-b border-gray-200 py-3 px-4 md:px-12 lg:px-20'
-                  : 'relative mb-8 border-b border-gray-200'
+                  ? 'fixed left-0 right-0 z-[90] py-1.5 px-4 md:px-12 lg:px-20'
+                  : 'relative mb-8 py-1.5'
               }`}
               style={{
-                top: isNavSticky ? `${mainNavBottom}px` : undefined
+                top: isNavSticky ? `${exploreNavHeight}px` : undefined
               }}
             >
               <div className="max-w-7xl mx-auto flex items-center gap-6 md:gap-8 overflow-x-auto hide-scrollbar">
@@ -921,14 +921,10 @@ export default function PackageDetail() {
                     <button
                       key={item.id}
                       onClick={() => scrollToSection(item.id)}
-                      className={`py-3 text-xs md:text-sm font-semibold transition-all whitespace-nowrap border-b-2 flex items-center gap-2 cursor-pointer ${
-                        isActive
-                          ? 'border-[#136b8a] text-[#136b8a] font-bold'
-                          : 'border-transparent text-slate-600 hover:text-[#136b8a]'
-                      }`}
+                      className={`py-2 text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${isActive ? 'text-[#136b8a]' : 'text-[#136b8a]/70 hover:text-[#136b8a]'}`}
                     >
                       {getSectionIcon(item.id)}
-                      <span>{item.label}</span>
+                      <span className={isActive ? 'border-b-[1.5px] border-[#136b8a] font-bold' : 'border-b-[1.5px] border-transparent'}>{item.label}</span>
                     </button>
                   );
                 })}
@@ -1252,7 +1248,7 @@ export default function PackageDetail() {
 
           {/* RIGHT COLUMN: STICKY BOOKING CARD */}
           <div className="lg:col-span-4">
-            <div className="sticky top-28 bg-white border border-gray-200 rounded-3xl p-6 shadow-xl space-y-6">
+            <div className="sticky top-28 bg-white rounded-3xl p-6 space-y-6">
 
               {/* Starting Price & GST */}
               <div className="space-y-1 pb-4 border-b border-gray-100">
@@ -1308,7 +1304,13 @@ export default function PackageDetail() {
                   </button>
                   <span className="w-8 text-center font-extrabold text-sm text-gray-900">{travellers}</span>
                   <button
-                    onClick={() => setTravellers(travellers + 1)}
+                    onClick={() => {
+                      if (travellers >= 15) {
+                        alert("For more than 15 travellers, please send an enquiry.");
+                      } else {
+                        setTravellers(travellers + 1);
+                      }
+                    }}
                     className="w-8 h-8 rounded-full bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-base shadow-2xs transition-colors cursor-pointer"
                   >
                     +
@@ -1317,7 +1319,7 @@ export default function PackageDetail() {
               </div>
 
               {/* Total Amount */}
-              <div className="bg-[#eff6f9] border border-[#b9dae6] rounded-2xl p-4 flex items-center justify-between">
+              <div className="bg-[#eff6f9] border border-[#b9dae6] rounded-full px-6 py-4 flex items-center justify-between">
                 <span className="text-xs md:text-sm font-bold text-gray-700">Total Amount</span>
                 <span className="text-xl md:text-2xl font-extrabold text-[#136b8a]">
                   ₹{totalAmount.toLocaleString('en-IN')}
@@ -1328,13 +1330,13 @@ export default function PackageDetail() {
               <div className="space-y-3 pt-2">
                 <button
                   onClick={handleBookNow}
-                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-extrabold py-4 rounded-2xl shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 btn-shiny"
+                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 btn-shiny"
                 >
                   Book Now
                 </button>
                 <button
                   onClick={handleSendEnquiry}
-                  className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-3.5 rounded-2xl shadow-md hover:shadow-lg transition-all text-sm tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2 btn-shiny"
+                  className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2 btn-shiny"
                 >
                   <MessageCircle size={18} />
                   <span>Send Enquiry</span>
@@ -1347,6 +1349,7 @@ export default function PackageDetail() {
         </div>
       </main>
 
+      <div ref={contentEndRef} />
       <Footer />
 
       {/* Booking Modal */}

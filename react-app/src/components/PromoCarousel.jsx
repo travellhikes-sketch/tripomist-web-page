@@ -220,15 +220,30 @@ export default function PromoCarousel({ settingKey = "homepage_promo_banners", s
                 const hasCta = banner.clickable && !!banner.cta_link;
                 const isExt = isExternal(banner.cta_link);
 
+                const isVideo = banner.image && (
+                  banner.image.toLowerCase().endsWith('.mp4') || 
+                  banner.image.toLowerCase().endsWith('.webm') ||
+                  banner.image.toLowerCase().includes('/video/upload/')
+                );
+
                 const contentMarkup = (
                   <div className={`relative flex items-center overflow-hidden w-full bg-gradient-to-r ${palette} ${heightClass} ${!banner.clickable ? 'cursor-default' : 'cursor-pointer'}`}>
                     {banner.image && (
-                      <>
+                      isVideo ? (
+                        <video
+                          src={banner.image}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-102"
+                        />
+                      ) : (
                         <div
                           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-102"
                           style={{ backgroundImage: `url('${banner.image}')` }}
                         />
-                      </>
+                      )
                     )}
 
                     {/* Text Overlay */}

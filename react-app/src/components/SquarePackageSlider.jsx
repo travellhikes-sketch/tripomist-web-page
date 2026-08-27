@@ -7,8 +7,7 @@ import 'swiper/css/navigation';
 
 const SquarePackageSlider = ({ packages, showCta, ctaText, hideNavigation }) => {
   const navigate = useNavigate();
-  const prevRef = useRef(null);
-  const nextRef = useRef(null);
+  const uniqueId = React.useId().replace(/:/g, '');
 
   if (!packages || packages.length === 0) return null;
 
@@ -26,15 +25,11 @@ const SquarePackageSlider = ({ packages, showCta, ctaText, hideNavigation }) => 
           1280: { slidesPerView: 4.5, spaceBetween: 32 },
         }}
         navigation={{
-          prevEl: prevRef.current,
-          nextEl: nextRef.current,
-        }}
-        onBeforeInit={(swiper) => {
-          swiper.params.navigation.prevEl = prevRef.current;
-          swiper.params.navigation.nextEl = nextRef.current;
+          prevEl: `.sq-prev-${uniqueId}`,
+          nextEl: `.sq-next-${uniqueId}`,
         }}
         autoplay={{ delay: 3000, disableOnInteraction: false }}
-        loop={packages.length > 4}
+        loop={false}
         className="w-full overflow-hidden"
       >
         {packages.map((pkg, index) => {
@@ -111,10 +106,10 @@ const SquarePackageSlider = ({ packages, showCta, ctaText, hideNavigation }) => 
       {/* Custom Navigation Arrows */}
       {!hideNavigation && (
         <>
-          <div ref={prevRef} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex">
+          <div className={`sq-prev-${uniqueId} absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex`}>
             <span className="material-symbols-outlined text-[16px]">chevron_left</span>
           </div>
-          <div ref={nextRef} className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex">
+          <div className={`sq-next-${uniqueId} absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex`}>
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </div>
         </>
