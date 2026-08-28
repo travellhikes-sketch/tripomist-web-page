@@ -51,7 +51,7 @@ const CustomerSupport = () => {
             <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#136b8a] text-xl">chat</span>
+                  <span className="material-symbols-outlined text-[#01AFD1] text-xl">chat</span>
                   {siteSettings.whatsapp.title || 'WhatsApp'}
                 </h4>
                 {siteSettings.whatsapp.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.whatsapp.value}</p>}
@@ -59,7 +59,7 @@ const CustomerSupport = () => {
               </div>
               <div className="flex items-center gap-2">
                 {siteSettings.whatsapp.value && (
-                  <button onClick={() => navigator.clipboard.writeText(siteSettings.whatsapp.value)} className="text-sm text-[#136b8a] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Copy</button>
+                  <button onClick={() => navigator.clipboard.writeText(siteSettings.whatsapp.value)} className="text-sm text-[#01AFD1] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Copy</button>
                 )}
                 {siteSettings.whatsapp.value && (
                   <a href={`https://wa.me/${siteSettings.whatsapp.value.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm text-white font-bold bg-[#25D366] px-4 py-2 rounded-lg hover:bg-[#1ebd5b] transition-colors">Message</a>
@@ -72,7 +72,7 @@ const CustomerSupport = () => {
             <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#136b8a] text-xl">call</span>
+                  <span className="material-symbols-outlined text-[#01AFD1] text-xl">call</span>
                   {siteSettings.call.title || 'Call Us'}
                 </h4>
                 {siteSettings.call.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.call.value}</p>}
@@ -82,7 +82,7 @@ const CustomerSupport = () => {
                 {siteSettings.call.value && (
                   <>
                     <button onClick={() => navigator.clipboard.writeText(siteSettings.call.value)} className="text-sm text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Copy</button>
-                    <a href={`tel:${siteSettings.call.value}`} className="text-sm text-white font-bold bg-[#136b8a] px-4 py-2 rounded-lg hover:bg-[#0f556e] transition-colors">Call</a>
+                    <a href={`tel:${siteSettings.call.value}`} className="text-sm text-white font-bold bg-[#01AFD1] px-4 py-2 rounded-lg hover:bg-[#0092b3] transition-colors">Call</a>
                   </>
                 )}
               </div>
@@ -93,7 +93,7 @@ const CustomerSupport = () => {
             <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#136b8a] text-xl">mail</span>
+                  <span className="material-symbols-outlined text-[#01AFD1] text-xl">mail</span>
                   {siteSettings.email.title || 'Email'}
                 </h4>
                 {siteSettings.email.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.email.value}</p>}
@@ -103,7 +103,7 @@ const CustomerSupport = () => {
                 {siteSettings.email.value && (
                   <>
                     <button onClick={() => navigator.clipboard.writeText(siteSettings.email.value)} className="text-sm text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Copy</button>
-                    <a href={`mailto:${siteSettings.email.value}`} className="text-sm text-[#136b8a] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Email Us</a>
+                    <a href={`mailto:${siteSettings.email.value}`} className="text-sm text-[#01AFD1] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Email Us</a>
                   </>
                 )}
               </div>
@@ -114,7 +114,7 @@ const CustomerSupport = () => {
             <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#136b8a] text-xl">support_agent</span>
+                  <span className="material-symbols-outlined text-[#01AFD1] text-xl">support_agent</span>
                   {siteSettings.live_chat.title || 'Live Chat'}
                 </h4>
                 {siteSettings.live_chat.description && <p className="text-xs text-gray-500 mt-1">{siteSettings.live_chat.description}</p>}

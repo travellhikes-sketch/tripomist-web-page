@@ -80,7 +80,7 @@ function PromoPage() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Promo Not Found</h1>
         <p className="text-gray-600 mb-8">The promotion you are looking for does not exist or has expired.</p>
-        <Link to="/" className="bg-[#136b8a] text-white px-6 py-3 rounded-full font-semibold hover:bg-opacity-90 transition">
+        <Link to="/" className="bg-[#01AFD1] text-white px-6 py-3 rounded-full font-semibold hover:bg-opacity-90 transition">
           Return Home
         </Link>
       </div>
@@ -117,7 +117,7 @@ function PromoPage() {
 
       {/* Title if no Hero */}
       {!(promo.desktop_image || promo.mobile_image) && (
-        <div className="bg-[#136b8a] py-12 md:py-20 text-center px-4">
+        <div className="bg-[#01AFD1] py-12 md:py-20 text-center px-4">
           <h1 className="text-3xl md:text-5xl font-bold text-white uppercase tracking-wide">
             {promo.page_title || promo.title}
           </h1>
@@ -140,7 +140,7 @@ function PromoPage() {
             {(promo.content || promo.full_description).length > 300 && (
               <button 
                 onClick={() => setShowFullDesc(!showFullDesc)}
-                className="mt-3 text-[#136b8a] font-semibold hover:underline"
+                className="mt-3 text-[#01AFD1] font-semibold hover:underline"
               >
                 {showFullDesc ? 'Read Less' : 'Read More'}
               </button>
@@ -148,7 +148,7 @@ function PromoPage() {
             
             {promo.cta_link && (
                <div className="mt-8">
-                 <a href={promo.cta_link} className="inline-block bg-[#136b8a] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#0f556e] transition shadow-md">
+                 <a href={promo.cta_link} className="inline-block bg-[#01AFD1] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#0092b3] transition shadow-md">
                    {promo.cta_text || 'View Offer'}
                  </a>
                </div>

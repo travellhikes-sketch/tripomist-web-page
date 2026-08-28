@@ -30,7 +30,7 @@ const SquarePackageCard = ({ pkg, showCta = true }) => {
       {/* Top Badges */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
         {pkg.show_primary_badge && pkg.primary_badge_text && (
-          <span className="bg-white/90 backdrop-blur text-[#136b8a] text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider">
+          <span className="bg-white/90 backdrop-blur text-[#01AFD1] text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider">
             {pkg.primary_badge_text}
           </span>
         )}
@@ -59,7 +59,7 @@ const SquarePackageCard = ({ pkg, showCta = true }) => {
           </div>
 
           {showCta && (
-            <div className={`w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center transition-all ${isClickable ? 'group-hover/card:bg-white group-hover/card:text-[#136b8a] text-white' : 'opacity-50 text-white/50'}`}>
+            <div className={`w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center transition-all ${isClickable ? 'group-hover/card:bg-white group-hover/card:text-[#01AFD1] text-white' : 'opacity-50 text-white/50'}`}>
               <span className="material-symbols-outlined text-[18px]">
                  {isClickable ? 'arrow_outward' : 'lock'}
               </span>

@@ -193,7 +193,7 @@ export default function Profile() {
       <div className="min-h-screen bg-slate-50 flex flex-col ">
         <Navbar />
         <div className="flex-1 flex justify-center items-center py-20">
-          <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div>
         </div>
         <Footer />
       </div>
@@ -220,11 +220,11 @@ export default function Profile() {
                   onClick={() => tab.action ? tab.action() : setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-left ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-[#136b8a]'
+                      ? 'bg-blue-50 text-[#01AFD1]'
                       : `text-gray-600 hover:bg-gray-50 ${tab.textClass || ''}`
                   }`}
                 >
-                  <span className={`material-symbols-outlined text-[20px] ${activeTab === tab.id ? 'text-[#136b8a]' : 'text-gray-400'}`}>
+                  <span className={`material-symbols-outlined text-[20px] ${activeTab === tab.id ? 'text-[#01AFD1]' : 'text-gray-400'}`}>
                     {tab.icon}
                   </span>
                   {tab.id}
@@ -251,7 +251,7 @@ export default function Profile() {
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-900">My Profile</h2>
-                    <button onClick={handleUpdateProfile} disabled={saving} className="text-sm font-bold text-[#136b8a] hover:underline flex items-center gap-1">
+                    <button onClick={handleUpdateProfile} disabled={saving} className="text-sm font-bold text-[#01AFD1] hover:underline flex items-center gap-1">
                       {saving ? 'Saving...' : <><span className="material-symbols-outlined text-[16px]">edit</span> Edit</>}
                     </button>
                   </div>
@@ -267,7 +267,7 @@ export default function Profile() {
                           </div>
                         )}
                       </div>
-                      <label className="absolute bottom-0 right-0 bg-[#136b8a] text-white p-1.5 rounded-full shadow-md cursor-pointer hover:bg-[#0f556e] transition-colors">
+                      <label className="absolute bottom-0 right-0 bg-[#01AFD1] text-white p-1.5 rounded-full shadow-md cursor-pointer hover:bg-[#0092b3] transition-colors">
                         <span className="material-symbols-outlined text-[14px]">edit</span>
                         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                       </label>
@@ -281,11 +281,11 @@ export default function Profile() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Full Name</label>
-                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Bio / City</label>
-                      <input type="text" value={editCity} onChange={(e) => setEditCity(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="text" value={editCity} onChange={(e) => setEditCity(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                   </div>
                 </div>
@@ -296,7 +296,7 @@ export default function Profile() {
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Personal Information</h2>
-                    <button onClick={handleUpdateProfile} disabled={saving} className="text-sm font-bold text-[#136b8a] hover:underline flex items-center gap-1">
+                    <button onClick={handleUpdateProfile} disabled={saving} className="text-sm font-bold text-[#01AFD1] hover:underline flex items-center gap-1">
                       {saving ? 'Saving...' : <><span className="material-symbols-outlined text-[16px]">edit</span> Edit</>}
                     </button>
                   </div>
@@ -304,19 +304,19 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">First Name</label>
-                      <input type="text" value={editName.split(' ')[0]} onChange={(e) => setEditName(e.target.value + ' ' + (editName.split(' ')[1] || ''))} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="text" value={editName.split(' ')[0]} onChange={(e) => setEditName(e.target.value + ' ' + (editName.split(' ')[1] || ''))} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Last Name</label>
-                      <input type="text" value={editName.split(' ')[1] || ''} onChange={(e) => setEditName(editName.split(' ')[0] + ' ' + e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="text" value={editName.split(' ')[1] || ''} onChange={(e) => setEditName(editName.split(' ')[0] + ' ' + e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Date of Birth</label>
-                      <input type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Gender</label>
-                      <select value={editGender} onChange={(e) => setEditGender(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent">
+                      <select value={editGender} onChange={(e) => setEditGender(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent">
                         <option value="">Select</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -332,7 +332,7 @@ export default function Profile() {
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Contact Information</h2>
-                    <button onClick={handleUpdateProfile} disabled={saving} className="text-sm font-bold text-[#136b8a] hover:underline flex items-center gap-1">
+                    <button onClick={handleUpdateProfile} disabled={saving} className="text-sm font-bold text-[#01AFD1] hover:underline flex items-center gap-1">
                       {saving ? 'Saving...' : <><span className="material-symbols-outlined text-[16px]">edit</span> Edit</>}
                     </button>
                   </div>
@@ -344,11 +344,11 @@ export default function Profile() {
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Phone Number</label>
-                      <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                     <div className="md:col-span-2">
                       <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Address / City</label>
-                      <input type="text" value={editCity} onChange={(e) => setEditCity(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#136b8a] text-gray-800 font-medium bg-transparent" />
+                      <input type="text" value={editCity} onChange={(e) => setEditCity(e.target.value)} className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#01AFD1] text-gray-800 font-medium bg-transparent" />
                     </div>
                   </div>
                 </div>
@@ -370,7 +370,7 @@ export default function Profile() {
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-900">My Trips</h2>
-                    <Link to="/my-trips" className="text-sm font-bold text-[#136b8a] hover:underline">View All</Link>
+                    <Link to="/my-trips" className="text-sm font-bold text-[#01AFD1] hover:underline">View All</Link>
                   </div>
 
                   {bookings.length > 0 ? (

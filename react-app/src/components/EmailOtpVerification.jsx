@@ -169,13 +169,13 @@ const EmailOtpVerification = ({ email, onVerifySuccess, onBack, shouldCreateUser
             value={inputEmail}
             onChange={e => setInputEmail(e.target.value)}
             placeholder="Email Address"
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70"
+            className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-xl shadow-md hover:bg-[#0092b3] transition-colors disabled:opacity-70"
           >
             {loading ? 'Sending...' : 'Send OTP'}
           </button>
@@ -221,7 +221,7 @@ const EmailOtpVerification = ({ email, onVerifySuccess, onBack, shouldCreateUser
                 value={digit}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                className="w-12 h-14 text-center text-xl font-bold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] focus:border-transparent bg-white"
+                className="w-12 h-14 text-center text-xl font-bold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1] focus:border-transparent bg-white"
               />
             ))}
           </div>
@@ -229,7 +229,7 @@ const EmailOtpVerification = ({ email, onVerifySuccess, onBack, shouldCreateUser
           <button
             onClick={handleVerifyOtp}
             disabled={loading || otp.join('').length !== 6}
-            className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70"
+            className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-xl shadow-md hover:bg-[#0092b3] transition-colors disabled:opacity-70"
           >
             {loading ? 'Verifying...' : 'Verify'}
           </button>
@@ -242,7 +242,7 @@ const EmailOtpVerification = ({ email, onVerifySuccess, onBack, shouldCreateUser
                 type="button"
                 onClick={handleSendOtp}
                 disabled={loading}
-                className="text-sm font-bold text-[#136b8a] hover:underline"
+                className="text-sm font-bold text-[#01AFD1] hover:underline"
               >
                 Resend OTP
               </button>

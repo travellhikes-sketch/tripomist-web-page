@@ -38,7 +38,7 @@ function ForgotPassword() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-64 bg-[#01AFD1] clip-path-slant z-0"></div>
       <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl z-0 pointer-events-none"></div>
       <div className="absolute top-40 left-20 w-48 h-48 bg-teal-400/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
 
@@ -76,7 +76,7 @@ function ForgotPassword() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                  className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                   placeholder="you@example.com"
                   disabled={loading}
                 />
@@ -87,14 +87,14 @@ function ForgotPassword() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#01AFD1] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
               >
                 {loading ? 'Sending link...' : 'Send Reset Link'}
               </button>
             </div>
 
             <div className="text-center">
-              <Link to="/login" className="text-sm font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer transition-colors">
+              <Link to="/login" className="text-sm font-bold text-[#01AFD1] hover:text-[#0092b3] cursor-pointer transition-colors">
                 Back to Sign In
               </Link>
             </div>

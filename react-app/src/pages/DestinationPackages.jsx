@@ -96,7 +96,7 @@ const DestinationPackages = () => {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-              <RefreshCw size={32} className="animate-spin mb-3 text-[#136b8a]" />
+              <RefreshCw size={32} className="animate-spin mb-3 text-[#01AFD1]" />
               <span className="text-sm font-medium">Loading packages...</span>
             </div>
           ) : error ? (
@@ -111,7 +111,7 @@ const DestinationPackages = () => {
               <p className="text-sm text-gray-500 max-w-md text-center">
                 We couldn't find any active packages for {pageTitle} right now. Please check back later or explore other trips.
               </p>
-              <Link to="/all-departures" className="mt-6 px-6 py-2.5 bg-[#136b8a] text-white rounded-lg font-medium hover:bg-[#0f556e] transition-colors">
+              <Link to="/all-departures" className="mt-6 px-6 py-2.5 bg-[#01AFD1] text-white rounded-lg font-medium hover:bg-[#0092b3] transition-colors">
                 View All Departures
               </Link>
             </div>

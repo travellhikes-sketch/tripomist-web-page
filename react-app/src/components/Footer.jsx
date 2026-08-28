@@ -101,8 +101,8 @@ function Footer() {
   const facebook = socialSettings?.facebook || "https://www.facebook.com/share/1BWhe7V5V3/";
   const youtube = socialSettings?.youtube || "";
 
-  const bgColor = '#9fbaf0';
-  const textColor = '#000000';
+  const bgColor = '#01AFD1';
+  const textColor = '#ffffff';
 
   if (footerSettings?.show_footer === false) return null;
 

@@ -32,7 +32,7 @@ export default function Payment() {
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-16 md:py-24 mt-20 text-center">
         {isProcessing ? (
           <div className="flex flex-col items-center justify-center gap-6 animate-pulse">
-            <div className="w-24 h-24 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-24 h-24 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div>
             <h2 className="text-2xl font-bold text-gray-900">Processing Payment...</h2>
             <p className="text-gray-500">Please do not close this window.</p>
           </div>
@@ -43,7 +43,7 @@ export default function Payment() {
             </div>
             <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Payment Successful!</h1>
             <p className="text-gray-600 text-lg">
-              Your booking for <strong className="text-[#136b8a]">{tripTitle}</strong> has been confirmed.
+              Your booking for <strong className="text-[#01AFD1]">{tripTitle}</strong> has been confirmed.
               Amount paid: <strong>₹{Number(price).toLocaleString()}</strong>.
             </p>
             <p className="text-gray-500 mt-2 mb-8">
@@ -51,7 +51,7 @@ export default function Payment() {
             </p>
             <button
               onClick={() => navigate('/')}
-              className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 px-8 rounded-xl shadow-md transition-all active:scale-[0.98] text-lg"
+              className="bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-3.5 px-8 rounded-xl shadow-md transition-all active:scale-[0.98] text-lg"
             >
               Back to Home
             </button>

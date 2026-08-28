@@ -217,7 +217,7 @@ function Login() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
 
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-64 bg-[#01AFD1] clip-path-slant z-0"></div>
       <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl z-0 pointer-events-none"></div>
       <div className="absolute top-40 left-20 w-48 h-48 bg-teal-400/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
 
@@ -266,7 +266,7 @@ function Login() {
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="John Doe"
                   />
                 </div>
@@ -278,7 +278,7 @@ function Login() {
                   <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-24 px-2 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] font-medium text-gray-900 bg-white"
+                    className="w-24 px-2 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] font-medium text-gray-900 bg-white"
                   >
                     {countryCodes.map(c => (
                       <option key={c.code} value={c.code}>{c.country} ({c.code})</option>
@@ -289,7 +289,7 @@ function Login() {
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="9990802608"
                     maxLength={10}
                   />
@@ -305,7 +305,7 @@ function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -320,7 +320,7 @@ function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="••••••••"
                   />
                 </div>
@@ -330,7 +330,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#01AFD1] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   {loading ? 'Processing...' : 'Register'}
                 </button>
@@ -342,7 +342,7 @@ function Login() {
           {authMode === 'register' && step === 2 && (
             <form className="space-y-6" onSubmit={handleOtpSubmit}>
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#eff6f9] text-[#136b8a] mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#eff6f9] text-[#01AFD1] mb-4">
                   <span className="material-symbols-outlined text-3xl">mark_email_read</span>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">Enter OTP</h3>
@@ -356,7 +356,7 @@ function Login() {
                   required
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  className="appearance-none block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm text-center text-2xl tracking-[0.5em] focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-bold text-gray-900"
+                  className="appearance-none block w-full px-4 py-4 border border-gray-300 rounded-xl shadow-sm text-center text-2xl tracking-[0.5em] focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-bold text-gray-900"
                   placeholder="••••"
                   maxLength={4}
                 />
@@ -366,7 +366,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#01AFD1] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   {loading ? 'Verifying...' : 'Verify & Complete'}
                 </button>
@@ -392,7 +392,7 @@ function Login() {
                     required
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -403,7 +403,7 @@ function Login() {
                   <label className="block text-sm font-bold text-gray-700">Password</label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer"
+                    className="text-xs font-bold text-[#01AFD1] hover:text-[#0092b3] cursor-pointer"
                   >
                     Forgot Password?
                   </Link>
@@ -415,7 +415,7 @@ function Login() {
                     required
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="••••••••"
                   />
                 </div>
@@ -425,12 +425,12 @@ function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#01AFD1] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   {loading ? 'Signing In...' : 'Sign In'}
                 </button>
                 <div className="text-center mt-4">
-                  <Link to="/forgot-password" className="text-sm font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer">
+                  <Link to="/forgot-password" className="text-sm font-bold text-[#01AFD1] hover:text-[#0092b3] cursor-pointer">
                     Forgot Password?
                   </Link>
                 </div>
@@ -450,7 +450,7 @@ function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                    className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -460,7 +460,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#01AFD1] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   {loading ? 'Sending link...' : 'Send Reset Link'}
                 </button>
@@ -489,7 +489,7 @@ function Login() {
                 {authMode === 'register' ? "Already have an account? " : "Don't have an account? "}
                 <button
                   onClick={() => setAuthMode(authMode === 'register' ? 'login' : 'register')}
-                  className="font-bold text-[#136b8a] hover:text-[#0f556e] cursor-pointer transition-colors"
+                  className="font-bold text-[#01AFD1] hover:text-[#0092b3] cursor-pointer transition-colors"
                 >
                   {authMode === 'register' ? 'Sign In' : 'Register'}
                 </button>

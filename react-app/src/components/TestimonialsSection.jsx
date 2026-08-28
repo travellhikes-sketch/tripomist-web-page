@@ -103,19 +103,14 @@ export default function TestimonialsSection() {
     >
       <div className="max-w-7xl mx-auto">
 
-        {/* Header row: left heading/subtext, right "See all" link */}
-        {/* Header row: left heading/subtext, right "See all" link */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-10 text-left">
-          <div>
-
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: textColor }}>
-              What Travelers Say
-            </h2>
-          </div>
-
+        {/* Header row */}
+        <div className="text-center mt-6 mb-10 px-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-2 canva-heading flex items-center justify-center" style={{ color: textColor }}>
+            <span className="script-font font-normal">What</span> Travelers Say
+          </h2>
           <Link
             to="/reviews"
-            className="text-sm font-bold text-[#136b8a] hover:underline whitespace-nowrap self-start sm:self-center mt-1"
+            className="text-sm font-bold text-[#01AFD1] hover:underline inline-block"
           >
             See All Testimonials →
           </Link>
@@ -126,7 +121,7 @@ export default function TestimonialsSection() {
 
           {/* LEFT: Trust summary */}
           <div className="flex-shrink-0 flex flex-col items-center justify-center md:items-start gap-2 min-w-[160px] md:min-w-[180px] md:pt-4">
-            <span className="text-lg font-black tracking-widest uppercase" style={{ color: textColor }}>
+            <span className="text-lg font-black tracking-widest uppercase canva-heading" style={{ color: textColor }}>
               {ratingLabel}
             </span>
 
@@ -250,7 +245,7 @@ export default function TestimonialsSection() {
                         href={readMoreLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-[#136b8a] font-semibold mt-2 hover:underline block"
+                        className="text-xs text-[#01AFD1] font-semibold mt-2 hover:underline block"
                       >
                         Read more
                       </a>

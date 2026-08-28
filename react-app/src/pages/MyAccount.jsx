@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
+import { CircleUserRound, ChevronDown } from 'lucide-react';
 
 import { getPackageDuration } from '../utils/formatters';
 
@@ -29,7 +30,9 @@ export default function MyAccount() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [isTripsOpen, setIsTripsOpen] = useState(false);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [siteSettings, setSiteSettings] = useState(null);
+  const [heroImage, setHeroImage] = useState(null);
 
   const [profileEditMode, setProfileEditMode] = useState(false);
   const [profileFormData, setProfileFormData] = useState({ full_name: '', phone: '' });
@@ -115,6 +118,16 @@ export default function MyAccount() {
       const { data: settingsData } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'customer_support').maybeSingle();
       if (settingsData) {
         setSiteSettings(settingsData.setting_value);
+      }
+
+      const { data: heroData } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'customer_account_hero').maybeSingle();
+      if (heroData?.setting_value) {
+        const val = heroData.setting_value;
+        if (typeof val === 'string' && val.startsWith('http')) {
+          setHeroImage(val);
+        } else if (val.hero_image) {
+          setHeroImage(val.hero_image);
+        }
       }
 
       setLoading(false);
@@ -295,7 +308,7 @@ export default function MyAccount() {
       <div className="min-h-screen bg-gray-50 flex flex-col ">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-20 text-gray-500">
-          <div className="w-10 h-10 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div className="w-10 h-10 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="font-semibold text-gray-600">Loading your dashboard...</p>
         </div>
         <Footer />
@@ -313,7 +326,7 @@ export default function MyAccount() {
   const dateObj = new Date(createdDate);
   const joinedDate = `${dateObj.getDate()} ${dateObj.toLocaleDateString('en-US', { month: 'long' })} ${dateObj.getFullYear()}`;
   const photoUrl = profile?.avatar_url || user.user_metadata?.avatar_url;
-  const profilePhone = profile?.phone || user.user_metadata?.phone || 'Not provided';
+  const profilePhone = profile?.phone || user.user_metadata?.phone || 'Not yet provided';
 
   // Calculate statistics
   const today = new Date();
@@ -368,12 +381,16 @@ export default function MyAccount() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-[#136b8a]/95 to-teal-600/90 pt-36 pb-32 relative overflow-hidden">
-        {/* Local styled placeholder background pattern */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 to-slate-950/20 opacity-40 mix-blend-overlay"></div>
+      <section className={`pt-36 pb-32 relative overflow-hidden ${!heroImage ? 'bg-gradient-to-r from-[#01AFD1]/95 to-teal-600/90' : 'bg-gray-900'}`}>
+        {heroImage ? (
+          <img src={heroImage} alt="Account Background" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 to-slate-950/20 opacity-40 mix-blend-overlay"></div>
+        )}
+        {heroImage && <div className="absolute inset-0 bg-black/40"></div>}
         <div className="max-w-5xl mx-auto px-4 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl font-bold text-[#136b8a] shadow-xl overflow-hidden border-4 border-white">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl font-bold text-[#01AFD1] shadow-xl overflow-hidden border-4 border-white">
               {photoUrl ? (
                 <img src={photoUrl} alt={profileName} className="w-full h-full object-cover" />
               ) : (
@@ -389,10 +406,6 @@ export default function MyAccount() {
                   <span className="material-symbols-outlined text-[14px]">calendar_today</span>
                   Member since • {joinedDate}
                 </span>
-                <span className="text-white text-xs bg-[#0f556e] px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 font-bold shadow-sm">
-                  <span className="material-symbols-outlined text-[14px]">explore</span>
-                  {daysLeft !== null ? `Next adventure in ${daysLeft} days` : 'Your next adventure is waiting'}
-                </span>
               </div>
             </div>
           </div>
@@ -407,253 +420,103 @@ export default function MyAccount() {
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 -mt-16 pb-40 relative z-20">
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-              <span className="material-symbols-outlined text-2xl">schedule</span>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Upcoming Trips</p>
-              <h3 className="text-2xl font-bold text-gray-900 mt-0.5">{upcomingTrips}</h3>
-            </div>
+        <div className="bg-white rounded-xl border border-gray-200 flex flex-wrap md:flex-nowrap divide-y md:divide-y-0 md:divide-x divide-gray-200 overflow-hidden mb-8">
+          <div className="flex-1 p-5 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Upcoming Trips</p>
+            <h3 className="text-2xl font-semibold text-gray-900">{upcomingTrips}</h3>
           </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-              <span className="material-symbols-outlined text-2xl">check_circle</span>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Completed Trips</p>
-              <h3 className="text-2xl font-bold text-gray-900 mt-0.5">{completedTrips}</h3>
-            </div>
+          <div className="flex-1 p-5 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Completed Trips</p>
+            <h3 className="text-2xl font-semibold text-gray-900">{completedTrips}</h3>
           </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-              <span className="material-symbols-outlined text-2xl">receipt_long</span>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Bookings</p>
-              <h3 className="text-2xl font-bold text-gray-900 mt-0.5">{totalBookings}</h3>
-            </div>
+          <div className="flex-1 p-5 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Bookings</p>
+            <h3 className="text-2xl font-semibold text-gray-900">{totalBookings}</h3>
           </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600">
-              <span className="material-symbols-outlined text-2xl">payments</span>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Amount Spent</p>
-              <h3 className="text-2xl font-bold text-emerald-700 mt-0.5">₹{amountSpent.toLocaleString('en-IN')}</h3>
-            </div>
+          <div className="flex-1 p-5 text-center">
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Amount Spent</p>
+            <h3 className="text-2xl font-semibold text-gray-900">₹{amountSpent.toLocaleString('en-IN')}</h3>
           </div>
         </div>
 
         {/* Account Management Section */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#136b8a]">manage_accounts</span>
-            Account Management
-          </h2>
-
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Sidebar */}
-            <div className="w-full md:w-64 flex flex-col gap-2 flex-shrink-0">
-              <button
-                onClick={() => setActiveTab('profile')}
-                className={`text-left px-4 py-3 rounded-xl font-bold transition-all shadow-sm ${activeTab === 'profile' ? 'bg-[#136b8a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                My Profile
+          <div className="flex justify-between items-center mb-6 relative">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              My Account
+            </h2>
+            
+            <div className="relative">
+              <button onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold text-gray-700 transition-colors">
+                <CircleUserRound size={20} className="text-gray-600" />
+                Account Menu
+                <ChevronDown size={16} className={`text-gray-500 transition-transform duration-200 ${isSettingsMenuOpen ? 'rotate-180' : ''}`} />
               </button>
-              <button
-                onClick={() => setActiveTab('personal')}
-                className={`text-left px-4 py-3 rounded-xl font-semibold transition-all ${activeTab === 'personal' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
-                My Personal Info
-              </button>
-              <button
-                onClick={() => setActiveTab('security')}
-                className={`text-left px-4 py-3 rounded-xl font-semibold transition-all ${activeTab === 'security' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
-                Security
-              </button>
-              <div>
-                <button
-                  onClick={() => setIsTripsOpen(!isTripsOpen)}
-                  className="w-full flex items-center justify-between text-left px-4 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-all">
-                  <span>My Trips</span>
-                  <span className={`material-symbols-outlined transition-transform ${isTripsOpen ? 'rotate-180' : ''}`}>expand_more</span>
-                </button>
-                {isTripsOpen && (
-                  <div className="flex flex-col gap-1 pl-4 pr-2 mt-1">
-                    <Link to="/my-trips?filter=all" className="text-left px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all">All Trips</Link>
-                    <Link to="/my-trips?filter=upcoming" className="text-left px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all">Upcoming Trips</Link>
-                    <Link to="/my-trips?filter=completed" className="text-left px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all">Completed Trips</Link>
-                    <Link to="/my-trips?filter=cancelled" className="text-left px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all">Cancelled Trips</Link>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => setActiveTab('support')}
-                className={`text-left px-4 py-3 rounded-xl font-semibold transition-all ${activeTab === 'support' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
-                Help & Support
-              </button>
-              <button onClick={handleLogout} className="text-left px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-all mt-4 border border-red-100">Logout</button>
-            </div>
-
-            {/* Content Area */}
-            {activeTab === 'profile' && (
-            <div className="flex-1 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 overflow-hidden">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">My Profile</h3>
-
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8 pb-8 border-b border-gray-100">
-                <div className="relative group flex-shrink-0">
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-gray-50 overflow-hidden bg-gray-100 flex items-center justify-center text-4xl md:text-5xl font-bold text-[#136b8a]">
-                    {photoUrl ? <img src={photoUrl} alt="Avatar" className="w-full h-full object-cover" /> : initial}
-                  </div>
-                  <button
-                    onClick={() => !avatarUploading && fileInputRef.current?.click()}
-                    disabled={avatarUploading}
-                    className="absolute bottom-2 right-2 bg-[#136b8a] text-white p-2.5 rounded-full shadow-lg hover:bg-[#0f556e] transition-colors z-10"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleAvatarChange}
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                  />
-                </div>
-                <div className="flex flex-col justify-center h-full pt-2 md:pt-6 text-center md:text-left">
-                  <h4 className="font-bold text-2xl text-gray-900">{profileName}</h4>
-                  <p className="text-base text-gray-500 font-medium">{userEmail}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 mb-8">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Full Name</label>
-                  <div className="font-bold text-gray-900 text-base">{profileName}</div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Phone Number</label>
-                  <div className="font-bold text-gray-900 text-base">{profilePhone}</div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Email Address</label>
-                  <div className="font-bold text-gray-900 text-base">{userEmail}</div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Member Since</label>
-                  <div className="font-bold text-gray-900 text-base">{joinedDate}</div>
-                </div>
-              </div>
-
-              {profileEditMode ? (
-                <div className="bg-gray-50 p-6 rounded-2xl mb-8 border border-gray-100">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        value={profileFormData.full_name}
-                        onChange={e => setProfileFormData({...profileFormData, full_name: e.target.value})}
-                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
-                      <input
-                        type="text"
-                        value={profileFormData.phone}
-                        onChange={e => setProfileFormData({...profileFormData, phone: e.target.value})}
-                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleProfileSave}
-                      disabled={profileSaving}
-                      className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-50"
-                    >
-                      {profileSaving ? 'Saving...' : 'Save Changes'}
+              {isSettingsMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 flex flex-col p-2">
+                  <button onClick={() => { setActiveTab('profile'); setIsSettingsMenuOpen(false); }} className={`text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'profile' ? 'bg-[#01AFD1] text-white' : 'text-gray-700 hover:bg-gray-50'}`}>My Profile</button>
+                  
+                  <div className="border-t border-gray-100 my-1"></div>
+                  
+                  {/* All Trips Dropdown */}
+                  <div className="flex flex-col">
+                    <button onClick={() => setIsTripsOpen(!isTripsOpen)} className="flex items-center justify-between text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all">
+                      All Trips
+                      <span className={`material-symbols-outlined text-[16px] transition-transform ${isTripsOpen ? 'rotate-180' : ''}`}>expand_more</span>
                     </button>
-                    <button
-                      onClick={() => setProfileEditMode(false)}
-                      disabled={profileSaving}
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-6 py-2.5 rounded-xl transition-all"
-                    >
-                      Cancel
-                    </button>
+                    {isTripsOpen && (
+                      <div className="flex flex-col pl-3 mt-1">
+                        <Link to="/my-trips?filter=upcoming" onClick={() => setIsSettingsMenuOpen(false)} className="text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all">Upcoming Trips</Link>
+                        <Link to="/my-trips?filter=completed" onClick={() => setIsSettingsMenuOpen(false)} className="text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all">Completed Trips</Link>
+                        <Link to="/my-trips?filter=cancelled" onClick={() => setIsSettingsMenuOpen(false)} className="text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all">Cancelled Trips</Link>
+                      </div>
+                    )}
                   </div>
+                  
+                  <div className="border-t border-gray-100 my-1"></div>
+                  
+                  <button onClick={() => { setActiveTab('support'); setIsSettingsMenuOpen(false); }} className={`text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'support' ? 'bg-[#01AFD1] text-white' : 'text-gray-700 hover:bg-gray-50'}`}>Help & Support</button>
+                  <button onClick={() => { setActiveTab('security'); setIsSettingsMenuOpen(false); }} className={`text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'security' ? 'bg-[#01AFD1] text-white' : 'text-gray-700 hover:bg-gray-50'}`}>Change Password</button>
+                  <button onClick={() => { handleLogout(); setIsSettingsMenuOpen(false); }} className="text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 transition-all mt-1">Logout</button>
                 </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setProfileFormData({
-                      full_name: profileName,
-                      phone: profilePhone === 'Not provided' ? '' : profilePhone
-                    });
-                    setProfileEditMode(true);
-                  }}
-                  className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3 rounded-xl transition-all shadow-md w-full sm:w-auto"
-                >
-                  Edit Profile
-                </button>
               )}
             </div>
-            )}
+          </div>
 
-            {activeTab === 'personal' && (
-            <div className="flex-1 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">My Personal Info</h3>
+          <div className="w-full">
+            {/* Content Area */}
+            {activeTab === 'profile' && (
+            <div className="w-full bg-white rounded-sm p-6 md:p-8 border border-gray-100 overflow-hidden">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">My Profile</h3>
 
-              {!personalEditMode ? (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">First Name</label>
-                      <div className="font-bold text-gray-900">{user.user_metadata?.first_name || firstName}</div>
+              <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 mb-8 pb-4">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                  <div className="relative group flex-shrink-0">
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-gray-50 overflow-hidden bg-gray-100 flex items-center justify-center text-3xl md:text-4xl font-bold text-[#01AFD1]">
+                      {photoUrl ? <img src={photoUrl} alt="Avatar" className="w-full h-full object-cover" /> : initial}
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Last Name</label>
-                      <div className="font-bold text-gray-900">{user.user_metadata?.last_name || profileName.split(' ').slice(1).join(' ') || '—'}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Phone Number</label>
-                      <div className="font-bold text-gray-900">{profilePhone}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Date of Birth</label>
-                      <div className="font-bold text-gray-900">{profile?.date_of_birth || '—'}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Address</label>
-                      <div className="font-bold text-gray-900">{profile?.address || '—'}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">City</label>
-                      <div className="font-bold text-gray-900">{profile?.city || '—'}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">State</label>
-                      <div className="font-bold text-gray-900">{profile?.state || '—'}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">PIN Code</label>
-                      <div className="font-bold text-gray-900">{profile?.pin_code || '—'}</div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Email (Readonly)</label>
-                      <div className="font-bold text-gray-900">{userEmail}</div>
-                    </div>
+                    <button
+                      onClick={() => !avatarUploading && fileInputRef.current?.click()}
+                      disabled={avatarUploading}
+                      className="absolute bottom-1 right-1 bg-white/80 hover:bg-white backdrop-blur-sm text-gray-700 p-1.5 rounded-full shadow-sm transition-colors z-10 flex items-center justify-center"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                    </button>
+                    <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/jpeg,image/png,image/webp" className="hidden" />
                   </div>
+                  <div className="flex flex-col justify-center h-full pt-2 md:pt-4 text-center md:text-left">
+                    <h4 className="font-medium text-2xl text-gray-900">{profileName}</h4>
+                    <p className="text-base text-gray-500 font-medium">{userEmail}</p>
+                  </div>
+                </div>
+                
+                {!personalEditMode && (
                   <button
                     onClick={() => {
                       setPersonalFormData({
                         first_name: user.user_metadata?.first_name || firstName,
                         last_name: user.user_metadata?.last_name || profileName.split(' ').slice(1).join(' '),
-                        phone: profilePhone === 'Not provided' ? '' : profilePhone,
+                        phone: profilePhone === 'Not yet provided' ? '' : profilePhone,
                         date_of_birth: profile?.date_of_birth || '',
                         address: profile?.address || '',
                         city: profile?.city || '',
@@ -662,55 +525,89 @@ export default function MyAccount() {
                       });
                       setPersonalEditMode(true);
                     }}
-                    className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3 rounded-xl transition-all shadow-md w-full sm:w-auto"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-bold px-5 py-2.5 rounded-xl transition-all w-full sm:w-auto flex-shrink-0 mt-4 md:mt-0"
                   >
-                    Edit
+                    Edit Profile
                   </button>
-                </>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
-                    <input type="text" value={personalFormData.first_name} onChange={e => setPersonalFormData({...personalFormData, first_name: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
-                    <input type="text" value={personalFormData.last_name} onChange={e => setPersonalFormData({...personalFormData, last_name: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
-                    <input type="text" value={personalFormData.phone} onChange={e => setPersonalFormData({...personalFormData, phone: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Date of Birth</label>
-                    <input type="date" value={personalFormData.date_of_birth} onChange={e => setPersonalFormData({...personalFormData, date_of_birth: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Address</label>
-                    <input type="text" value={personalFormData.address} onChange={e => setPersonalFormData({...personalFormData, address: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">City</label>
-                    <input type="text" value={personalFormData.city} onChange={e => setPersonalFormData({...personalFormData, city: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">State</label>
-                    <input type="text" value={personalFormData.state} onChange={e => setPersonalFormData({...personalFormData, state: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">PIN Code</label>
-                    <input type="text" value={personalFormData.pin_code} onChange={e => setPersonalFormData({...personalFormData, pin_code: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Email</label>
-                    <input type="text" value={userEmail} disabled className="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 outline-none text-gray-500 cursor-not-allowed" />
-                  </div>
+                )}
+              </div>
 
-                  <div className="md:col-span-2 flex gap-3 mt-4">
+              {!personalEditMode ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 mb-8">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Full Name</label>
+                    <div className="font-medium text-gray-900 text-base capitalize">{`${user.user_metadata?.first_name || firstName} ${user.user_metadata?.last_name || profileName.split(' ').slice(1).join(' ')}`.trim() || 'Not yet provided'}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Phone Number</label>
+                    <div className="font-medium text-gray-900 text-base">{profilePhone}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Date of Birth</label>
+                    <div className="font-medium text-gray-900 text-base">
+                      {profile?.date_of_birth ? (() => {
+                        const parts = profile.date_of_birth.split('-');
+                        if (parts.length === 3) {
+                          return `${parseInt(parts[2], 10)}-${parseInt(parts[1], 10)}-${parts[0]}`;
+                        }
+                        return profile.date_of_birth;
+                      })() : 'Not yet provided'}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Address</label>
+                    <div className="font-medium text-gray-900 text-base">{profile?.address || 'Not yet provided'}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">City</label>
+                    <div className="font-medium text-gray-900 text-base">{profile?.city || 'Not yet provided'}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Email Address</label>
+                    <div className="font-medium text-gray-900 text-base">{userEmail}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">Member Since</label>
+                    <div className="font-medium text-gray-900 text-base">{joinedDate}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-transparent mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
+                      <input type="text" value={personalFormData.first_name} onChange={e => setPersonalFormData({...personalFormData, first_name: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
+                      <input type="text" value={personalFormData.last_name} onChange={e => setPersonalFormData({...personalFormData, last_name: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
+                      <input type="text" value={personalFormData.phone} onChange={e => setPersonalFormData({...personalFormData, phone: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Date of Birth</label>
+                      <input type="date" value={personalFormData.date_of_birth} onChange={e => setPersonalFormData({...personalFormData, date_of_birth: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Address</label>
+                      <input type="text" value={personalFormData.address} onChange={e => setPersonalFormData({...personalFormData, address: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">City</label>
+                      <input type="text" value={personalFormData.city} onChange={e => setPersonalFormData({...personalFormData, city: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                      <input type="text" value={userEmail} disabled className="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 outline-none text-gray-500 cursor-not-allowed" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-4">
                     <button
                       onClick={handlePersonalSave}
                       disabled={personalSaving}
-                      className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-50"
+                      className="bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-50"
                     >
                       {personalSaving ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -728,8 +625,8 @@ export default function MyAccount() {
             )}
 
             {activeTab === 'security' && (
-            <div className="flex-1 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Security</h3>
+            <div className="w-full bg-white rounded-sm p-6 md:p-8 border border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Change Password</h3>
 
               <div className="max-w-md">
                 <h4 className="font-bold text-gray-800 mb-4">Change Password</h4>
@@ -751,7 +648,7 @@ export default function MyAccount() {
                     type={showPassword ? "text" : "password"}
                     value={passwordFormData.currentPassword}
                     onChange={e => setPasswordFormData({...passwordFormData, currentPassword: e.target.value})}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]"
                   />
                 </div>
 
@@ -762,7 +659,7 @@ export default function MyAccount() {
                       type={showPassword ? "text" : "password"}
                       value={passwordFormData.newPassword}
                       onChange={e => setPasswordFormData({...passwordFormData, newPassword: e.target.value})}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]"
                     />
                     <button
                       type="button"
@@ -781,7 +678,7 @@ export default function MyAccount() {
                     type={showPassword ? "text" : "password"}
                     value={passwordFormData.confirmPassword}
                     onChange={e => setPasswordFormData({...passwordFormData, confirmPassword: e.target.value})}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#136b8a]"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-[#01AFD1]"
                   />
                 </div>
 
@@ -789,7 +686,7 @@ export default function MyAccount() {
                   <button
                     onClick={handlePasswordSave}
                     disabled={passwordSaving || !passwordFormData.currentPassword || !passwordFormData.newPassword || !passwordFormData.confirmPassword}
-                    className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-50"
+                    className="bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-50"
                   >
                     {passwordSaving ? 'Saving...' : 'Update Password'}
                   </button>
@@ -805,15 +702,15 @@ export default function MyAccount() {
             )}
 
             {activeTab === 'support' && (
-              <div className="flex-1 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Help & Support</h3>
-                <div className="flex flex-col gap-0 divide-y divide-gray-100">
+              <div className="w-full bg-white rounded-sm p-6 md:p-8 border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Help & Support</h3>
+                <div className="flex flex-col gap-4">
 
                   {siteSettings?.whatsapp?.enabled && (
-                    <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#136b8a] text-xl">chat</span>
+                          <span className="material-symbols-outlined text-[#01AFD1] text-xl">chat</span>
                           {siteSettings.whatsapp.title || 'WhatsApp'}
                         </h4>
                         {siteSettings.whatsapp.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.whatsapp.value}</p>}
@@ -821,20 +718,17 @@ export default function MyAccount() {
                       </div>
                       <div className="flex items-center gap-2">
                         {siteSettings.whatsapp.value && (
-                          <button onClick={() => navigator.clipboard.writeText(siteSettings.whatsapp.value)} className="text-sm text-[#136b8a] font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Copy</button>
-                        )}
-                        {siteSettings.whatsapp.value && (
-                          <a href={`https://wa.me/${siteSettings.whatsapp.value.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm text-white font-bold bg-[#25D366] px-4 py-2 rounded-lg hover:bg-[#1ebd5b] transition-colors">Message</a>
+                          <a href={`https://wa.me/${siteSettings.whatsapp.value.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm text-[#01AFD1] font-semibold hover:text-[#0092b3] px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors">Message</a>
                         )}
                       </div>
                     </div>
                   )}
 
                   {siteSettings?.call?.enabled && (
-                    <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#136b8a] text-xl">call</span>
+                          <span className="material-symbols-outlined text-[#01AFD1] text-xl">call</span>
                           {siteSettings.call.title || 'Call Us'}
                         </h4>
                         {siteSettings.call.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.call.value}</p>}
@@ -842,20 +736,17 @@ export default function MyAccount() {
                       </div>
                       <div className="flex items-center gap-2">
                         {siteSettings.call.value && (
-                          <>
-                            <button onClick={() => navigator.clipboard.writeText(siteSettings.call.value)} className="text-sm text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Copy</button>
-                            <a href={`tel:${siteSettings.call.value}`} className="text-sm text-white font-bold bg-[#136b8a] px-4 py-2 rounded-lg hover:bg-[#0f556e] transition-colors">Call</a>
-                          </>
+                          <a href={`tel:${siteSettings.call.value}`} className="text-sm text-[#01AFD1] font-semibold hover:text-[#0092b3] px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors">Call</a>
                         )}
                       </div>
                     </div>
                   )}
 
                   {siteSettings?.email?.enabled && (
-                    <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#136b8a] text-xl">mail</span>
+                          <span className="material-symbols-outlined text-[#01AFD1] text-xl">mail</span>
                           {siteSettings.email.title || 'Email'}
                         </h4>
                         {siteSettings.email.value && <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.email.value}</p>}
@@ -863,26 +754,23 @@ export default function MyAccount() {
                       </div>
                       <div className="flex items-center gap-2">
                         {siteSettings.email.value && (
-                          <>
-                            <button onClick={() => navigator.clipboard.writeText(siteSettings.email.value)} className="text-sm text-gray-600 font-bold bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Copy</button>
-                            <a href={`mailto:${siteSettings.email.value}`} className="text-sm text-white font-bold bg-[#136b8a] px-4 py-2 rounded-lg hover:bg-[#0f556e] transition-colors">Email</a>
-                          </>
+                          <a href={`mailto:${siteSettings.email.value}`} className="text-sm text-[#01AFD1] font-semibold hover:text-[#0092b3] px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors">Email</a>
                         )}
                       </div>
                     </div>
                   )}
 
                   {siteSettings?.live_chat?.enabled && (
-                    <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#136b8a] text-xl">support_agent</span>
+                          <span className="material-symbols-outlined text-[#01AFD1] text-xl">support_agent</span>
                           {siteSettings.live_chat.title || 'Live Chat'}
                         </h4>
                         <p className="text-sm text-gray-800 font-medium mt-1">{siteSettings.live_chat.description || 'Need quick help? You can chat with our support team directly.'}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => window.dispatchEvent(new CustomEvent('tripomist:open-chatbot'))} className="text-sm text-[#136b8a] font-bold bg-teal-50 px-4 py-2 rounded-lg hover:bg-teal-100 transition-colors">Start Chat</button>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('tripomist:open-chatbot'))} className="text-sm text-[#01AFD1] font-semibold hover:text-[#0092b3] px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors">Start Chat</button>
                       </div>
                     </div>
                   )}
@@ -901,7 +789,7 @@ export default function MyAccount() {
         {/* Next Upcoming Trip Section (Moved down) */}
         <section className="mb-8 hidden">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#136b8a]">flight_takeoff</span>
+            <span className="material-symbols-outlined text-[#01AFD1]">flight_takeoff</span>
             Next Upcoming Trip
           </h2>
 
@@ -920,7 +808,7 @@ export default function MyAccount() {
                       <div className="absolute inset-0 bg-black/10"></div>
                     </>
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#136b8a] to-teal-600 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#01AFD1] to-teal-600 flex items-center justify-center">
                       <span className="material-symbols-outlined text-5xl text-white/80">luggage</span>
                     </div>
                   )}
@@ -982,7 +870,7 @@ export default function MyAccount() {
                       </div>
                       <div>
                         <span className="text-gray-400 text-xs font-bold uppercase tracking-wider block">Booking ID</span>
-                        <span className=" font-bold text-[#136b8a] mt-1 block">
+                        <span className=" font-bold text-[#01AFD1] mt-1 block">
                           {nextUpcomingTrip.booking_id || '—'}
                         </span>
                       </div>
@@ -992,7 +880,7 @@ export default function MyAccount() {
                   <div className="flex flex-wrap gap-3 mt-4">
                     <Link
                       to={`/my-trip/${nextUpcomingTrip.id}`}
-                      className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+                      className="bg-[#01AFD1] hover:bg-[#0092b3] text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
                     >
                       View Booking
                     </Link>
@@ -1009,15 +897,14 @@ export default function MyAccount() {
           ) : (
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-outlined text-3xl text-[#136b8a]">explore</span>
+                <span className="material-symbols-outlined text-4xl text-[#01AFD1] font-light">travel_explore</span>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">No upcoming trips yet.</h3>
               <p className="text-gray-500 text-sm mb-5">Start planning your next adventure.</p>
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all text-sm"
+                className="inline-flex items-center justify-center bg-[#01AFD1] hover:bg-cyan-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all text-sm"
               >
-                <span className="material-symbols-outlined text-[18px]">map</span>
                 Explore Trips
               </Link>
             </div>

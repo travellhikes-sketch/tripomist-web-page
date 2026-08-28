@@ -80,7 +80,7 @@ function ExploreDepartment() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Department Not Found</h1>
         <p className="text-gray-600 mb-8">The section you are looking for does not exist or has been removed.</p>
-        <Link to="/" className="bg-[#136b8a] text-white px-6 py-3 rounded-full font-semibold hover:bg-opacity-90 transition">
+        <Link to="/" className="bg-[#01AFD1] text-white px-6 py-3 rounded-full font-semibold hover:bg-opacity-90 transition">
           Return Home
         </Link>
       </div>
@@ -122,7 +122,7 @@ function ExploreDepartment() {
 
       {/* Title if no Hero */}
       {!department.hero_banner_url && (
-        <div className="bg-[#136b8a] py-12 md:py-20 text-center px-4">
+        <div className="bg-[#01AFD1] py-12 md:py-20 text-center px-4">
           <h1 className="text-3xl md:text-5xl font-bold text-white uppercase tracking-wide">
             {department.title}
           </h1>
@@ -145,7 +145,7 @@ function ExploreDepartment() {
             {department.description.length > 300 && (
               <button 
                 onClick={() => setShowFullDesc(!showFullDesc)}
-                className="mt-3 text-[#136b8a] font-semibold hover:underline"
+                className="mt-3 text-[#01AFD1] font-semibold hover:underline"
               >
                 {showFullDesc ? 'Read Less' : 'Read More'}
               </button>

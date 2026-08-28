@@ -64,6 +64,13 @@ export const getStatusBadge = (status) => {
           Confirmed
         </span>
       );
+    case 'completed':
+      return (
+        <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#01AFD1] bg-[#e0faff] px-2 py-1 rounded">
+          <CheckCircle size={14} />
+          Completed
+        </span>
+      );
     case 'cancelled':
       return (
         <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose-700 bg-rose-100 px-2 py-1 rounded">

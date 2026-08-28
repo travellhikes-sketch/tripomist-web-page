@@ -132,7 +132,7 @@ const RecommendedExtraPackages = ({ placementType, placementId, excludePackageId
           <button
             type="button"
             onClick={() => scrollRow('left')}
-            className="flex absolute left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 items-center justify-center text-[#136b8a] transition-all cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex hover:bg-gray-50 hover:scale-105"
+            className="flex absolute left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 items-center justify-center text-[#01AFD1] transition-all cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex hover:bg-gray-50 hover:scale-105"
             aria-label="Scroll left"
           >
             <span className="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -142,7 +142,7 @@ const RecommendedExtraPackages = ({ placementType, placementId, excludePackageId
           <button
             type="button"
             onClick={() => scrollRow('right')}
-            className="flex absolute right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 items-center justify-center text-[#136b8a] transition-all cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex hover:bg-gray-50 hover:scale-105"
+            className="flex absolute right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 items-center justify-center text-[#01AFD1] transition-all cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex hover:bg-gray-50 hover:scale-105"
             aria-label="Scroll right"
           >
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>

@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import { supabase } from '../utils/supabaseClient';
 import { getPackageDuration } from '../utils/formatters';
 import { generatePDFVoucher } from '../utils/pdfGenerator';
+import { Users, Map, CreditCard } from 'lucide-react';
 
 const statusColors = {
   confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -67,7 +68,7 @@ export default function BookingDetail() {
       <div className="min-h-screen bg-gray-50 flex flex-col ">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div>
           <p className="mt-4 text-gray-500 font-medium">Loading booking details...</p>
         </div>
         <Footer />
@@ -85,7 +86,7 @@ export default function BookingDetail() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Booking Unavailable</h2>
           <p className="text-gray-600 mb-8 max-w-md mx-auto">{error}</p>
-          <Link to="/my-trips" className="bg-[#136b8a] text-white px-6 py-3 rounded-xl font-bold inline-block">
+          <Link to="/my-trips" className="bg-[#01AFD1] text-white px-6 py-3 rounded-xl font-bold inline-block">
             Back to My Trips
           </Link>
         </main>
@@ -136,7 +137,7 @@ export default function BookingDetail() {
       <Navbar />
 
       {/* Hero Header */}
-      <section className="bg-gradient-to-r from-[#136b8a] to-teal-600 pt-28 pb-32 relative overflow-hidden">
+      <section className="bg-gradient-to-r from-[#01AFD1] to-teal-600 pt-24 pb-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1400&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
         <div className="max-w-5xl mx-auto px-4 relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
           <div className="text-center md:text-left">
@@ -156,150 +157,55 @@ export default function BookingDetail() {
               <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
                 <button
                   onClick={() => generatePDFVoucher(booking, 'download')}
-                  className="bg-white text-[#136b8a] hover:bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                  className="bg-white text-[#01AFD1] hover:bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">download</span>
                   Download Invoice
                 </button>
-                <button
-                  onClick={() => generatePDFVoucher(booking, 'open')}
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[16px]">visibility</span>
-                  View Invoice
-                </button>
               </div>
-          </div>
-          <div className="flex flex-col gap-2 items-center md:items-end bg-black/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Status Overview</div>
-            <div className="flex gap-2 mt-1">
-              <StatusBadge status={booking.booking_status} colorMap={statusColors} />
-              <StatusBadge status={booking.payment_status} colorMap={paymentColors} />
-            </div>
           </div>
         </div>
       </section>
 
       {/* Main Details Panel */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 -mt-24 pb-20 relative z-20">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 mt-6 pb-20 relative z-20">
 
-        {/* Booking Timeline */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#136b8a]">timeline</span>
-            Your Package Track
-          </h3>
+        {/* Unified Flat Details Page */}
+        <div className="bg-white">
           
-          {isCancelled ? (
-            <div className="flex items-center justify-center py-6 px-4 bg-red-50 rounded-xl border border-red-100">
-              <div className="flex flex-col items-center gap-2 text-red-600">
-                <span className="material-symbols-outlined text-4xl">cancel</span>
-                <span className="font-bold text-lg">Booking Cancelled</span>
+          {/* 1. Traveller Details */}
+          <div className="p-6 md:p-8 pb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <Users size={24} className="text-[#01AFD1]" />
+              Traveller Details
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Full Name</p>
+                <p className="font-semibold text-gray-800 mt-1">{booking.customer_name || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Email Address</p>
+                <p className="font-semibold text-gray-800 mt-1">{booking.customer_email || booking.email || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Phone Number</p>
+                <p className="font-semibold text-gray-800 mt-1">{booking.phone ? `+91 ${booking.phone}` : '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Travellers</p>
+                <p className="font-semibold text-gray-800 mt-1">{booking.travellers || 1} Person(s)</p>
               </div>
             </div>
-          ) : (
-            <div className="relative">
-              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gray-100 -translate-y-1/2 z-0 rounded"></div>
-              <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-0 relative z-10">
-                {trackStages.map((stage, idx) => {
-                  const isCompleted = idx <= currentStageIndex;
-                  return (
-                    <div key={stage.id} className="flex md:flex-col items-center gap-4 md:gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors z-10 ${
-                        isCompleted ? 'bg-[#136b8a] border-[#136b8a] text-white' : 'bg-white border-gray-200 text-gray-300'
-                      }`}>
-                        <span className="material-symbols-outlined text-[16px]">
-                          {isCompleted ? 'check' : 'circle'}
-                        </span>
-                      </div>
-                      <div className="flex-1 md:text-center z-10">
-                        <p className={`text-sm font-bold ${isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
-                          {stage.label}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left Columns: Traveller & Package Details */}
-          <div className="md:col-span-2 space-y-6">
-
-            {/* Traveller Details */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-50 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#136b8a]">group</span>
-                Traveller Details ({booking.booking_travellers?.length || 1})
-              </h3>
-              
-              {booking.booking_travellers && booking.booking_travellers.length > 0 ? (
-                <div className="space-y-4">
-                  {booking.booking_travellers.map((traveller, index) => {
-                     let trStatus = 'Active';
-                     let trColor = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                     if (traveller.status?.toLowerCase() === 'cancelled') {
-                       trStatus = 'Cancelled';
-                       trColor = 'bg-red-50 text-red-700 border-red-100';
-                     } else if (traveller.status?.toLowerCase() === 'completed') {
-                       trStatus = 'Completed';
-                       trColor = 'bg-blue-50 text-blue-700 border-blue-100';
-                     }
-                     
-                     return (
-                       <div key={traveller.id || index} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                         <div>
-                           <div className="flex items-center gap-2 mb-1">
-                             <p className="font-bold text-gray-900">{traveller.name || 'Traveller ' + (index+1)}</p>
-                             {traveller.is_primary && (
-                               <span className="text-[10px] bg-[#136b8a]/10 text-[#136b8a] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Primary</span>
-                             )}
-                           </div>
-                           <p className="text-xs text-gray-500">
-                             {traveller.email || booking.customer_email || booking.email || 'No email'}
-                           </p>
-                         </div>
-                         <div className="flex items-center gap-3">
-                           <span className="text-xs font-semibold text-gray-500 capitalize">{traveller.sharing_type || sharingType}</span>
-                           <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${trColor}`}>
-                             {trStatus}
-                           </span>
-                         </div>
-                       </div>
-                     );
-                  })}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Full Name</p>
-                    <p className="font-semibold text-gray-800 mt-1">{booking.customer_name || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Email Address</p>
-                    <p className="font-semibold text-gray-800 mt-1">{booking.customer_email || booking.email || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Phone Number</p>
-                    <p className="font-semibold text-gray-800 mt-1">{booking.phone ? `+91 ${booking.phone}` : '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Travellers</p>
-                    <p className="font-semibold text-gray-800 mt-1">{booking.travellers || 1} Person(s)</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Package Details */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-50 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#136b8a]">explore</span>
-                Package Details
-              </h3>
+          {/* 2. Package Details */}
+          <div className="p-6 md:p-8 pb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <Map size={24} className="text-[#01AFD1]" />
+              Package Details
+            </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Package Title</p>
@@ -344,19 +250,17 @@ export default function BookingDetail() {
                   <p className="text-gray-700 italic">"{booking.special_request}"</p>
                 </div>
               )}
-            </div>
           </div>
 
-          {/* Right Column: Payment Details & placeholders */}
-          <div className="space-y-6">
-            {/* Payment Details */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#136b8a]">payments</span>
-                Payment Details
-              </h3>
+          {/* 3. Payment Details */}
+          <div className="p-6 md:p-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <CreditCard size={24} className="text-[#01AFD1]" />
+              Payment Details
+            </h3>
+            {/* Unified Booking Status Badge Removed from here */}
 
-              <div className="space-y-3 text-sm pb-4 border-b border-gray-100">
+              <div className="space-y-3 text-sm pb-4">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Total Amount</span>
                   <span className="font-semibold text-gray-800">
@@ -369,7 +273,7 @@ export default function BookingDetail() {
                     <span className="font-bold">-₹{manualDiscount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                <div className="flex justify-between border-t border-gray-50 pt-2">
+                <div className="flex justify-between pt-2">
                   <span className="font-bold text-gray-700">Final Payable</span>
                   <span className="font-bold text-gray-900">
                     ₹{finalPayable.toLocaleString('en-IN')}
@@ -415,7 +319,6 @@ export default function BookingDetail() {
                     {booking.created_at ? new Date(booking.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
                   </span>
                 </div>
-              </div>
             </div>
           </div>
         </div>

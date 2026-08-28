@@ -104,10 +104,10 @@ export default function ResetPassword() {
   if (checkingSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+        <div className="absolute top-0 left-0 w-full h-64 bg-[#01AFD1] clip-path-slant z-0"></div>
         <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative text-center">
           <div className="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-100 flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#136b8a] mb-4"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#01AFD1] mb-4"></div>
             <p className="text-gray-600 font-medium">Verifying reset link...</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function ResetPassword() {
   if (!isRecoverySessionValid) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+        <div className="absolute top-0 left-0 w-full h-64 bg-[#01AFD1] clip-path-slant z-0"></div>
         <div className="sm:mx-auto sm:w-full sm:max-w-md z-10 relative">
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight drop-shadow-sm">
             Invalid Link
@@ -133,7 +133,7 @@ export default function ResetPassword() {
             <div className="mt-6">
               <button
                 onClick={() => navigate('/forgot-password')}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] cursor-pointer"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] cursor-pointer"
               >
                 Request New Link
               </button>
@@ -148,7 +148,7 @@ export default function ResetPassword() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8  relative overflow-hidden">
 
       {/* Slanted Background */}
-      <div className="absolute top-0 left-0 w-full h-64 bg-[#136b8a] clip-path-slant z-0"></div>
+      <div className="absolute top-0 left-0 w-full h-64 bg-[#01AFD1] clip-path-slant z-0"></div>
       <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl z-0 pointer-events-none"></div>
       <div className="absolute top-40 left-20 w-48 h-48 bg-teal-400/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
 
@@ -188,7 +188,7 @@ export default function ResetPassword() {
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                  className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -203,7 +203,7 @@ export default function ResetPassword() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#136b8a] focus:border-[#136b8a] transition-colors font-medium text-gray-900"
+                  className="appearance-none block w-full px-10 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#01AFD1] focus:border-[#01AFD1] transition-colors font-medium text-gray-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -215,7 +215,7 @@ export default function ResetPassword() {
                 type="checkbox"
                 checked={showPassword}
                 onChange={(e) => setShowPassword(e.target.checked)}
-                className="h-4 w-4 text-[#136b8a] focus:ring-[#136b8a] border-gray-300 rounded cursor-pointer"
+                className="h-4 w-4 text-[#01AFD1] focus:ring-[#01AFD1] border-gray-300 rounded cursor-pointer"
               />
               <label htmlFor="show-pass" className="ml-2 block text-sm text-gray-600 font-semibold cursor-pointer">
                 Show Passwords
@@ -226,7 +226,7 @@ export default function ResetPassword() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#136b8a] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
+                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#01AFD1] disabled:opacity-70 transition-all active:scale-[0.98] cursor-pointer"
               >
                 {loading ? 'Updating password...' : 'Update Password'}
               </button>

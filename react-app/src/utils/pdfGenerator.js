@@ -27,9 +27,9 @@ export const generatePDFVoucher = async (booking, action = 'download') => {
       
       <!-- Top header -->
       <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #136b8a; padding-bottom: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #01AFD1; padding-bottom: 20px; margin-bottom: 24px;">
           <div>
-            <div style="font-size: 28px; font-weight: 900; color: #136b8a; letter-spacing: -0.5px;">TripoMist</div>
+            <div style="font-size: 28px; font-weight: 900; color: #01AFD1; letter-spacing: -0.5px;">TripoMist</div>
             <div style="font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 600; uppercase tracking-widest;">Your Safe Travel Partner</div>
           </div>
           <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase;">

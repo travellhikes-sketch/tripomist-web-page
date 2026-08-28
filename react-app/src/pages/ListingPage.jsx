@@ -235,7 +235,7 @@ export default function ListingPage() {
             </div>
             <button 
               onClick={() => setIsAboutExpanded(!isAboutExpanded)} 
-              className="mt-4 text-[#136b8a] font-bold hover:underline text-sm md:text-base cursor-pointer"
+              className="mt-4 text-[#01AFD1] font-bold hover:underline text-sm md:text-base cursor-pointer"
             >
               {isAboutExpanded ? 'Read Less' : 'Read More'}
             </button>
@@ -247,7 +247,7 @@ export default function ListingPage() {
       <main className="w-full max-w-none px-4 md:px-6 xl:px-8 pt-10 pb-36 flex-grow">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <RefreshCw size={32} className="animate-spin mb-3 text-[#136b8a]" />
+            <RefreshCw size={32} className="animate-spin mb-3 text-[#01AFD1]" />
             <span className="text-sm font-medium">Loading packages...</span>
           </div>
         ) : error ? (
@@ -302,7 +302,7 @@ export default function ListingPage() {
                   <div className="mt-8 flex justify-center">
                     <button
                       onClick={() => setVisibleCount(prev => prev + 14)}
-                      className="px-10 py-3.5 bg-white text-[#136b8a] border-2 border-[#136b8a] font-bold rounded-xl hover:bg-[#136b8a] hover:text-white transition-all shadow-sm active:scale-95"
+                      className="px-10 py-3.5 bg-white text-[#01AFD1] border-2 border-[#01AFD1] font-bold rounded-xl hover:bg-[#01AFD1] hover:text-white transition-all shadow-sm active:scale-95"
                     >
                       Load More
                     </button>
@@ -339,7 +339,7 @@ export default function ListingPage() {
                   <div className="mt-8 flex justify-center">
                     <button
                       onClick={() => setVisibleCount(prev => prev + 14)}
-                      className="px-10 py-3.5 bg-white text-[#136b8a] border-2 border-[#136b8a] font-bold rounded-xl hover:bg-[#136b8a] hover:text-white transition-all shadow-sm active:scale-95"
+                      className="px-10 py-3.5 bg-white text-[#01AFD1] border-2 border-[#01AFD1] font-bold rounded-xl hover:bg-[#01AFD1] hover:text-white transition-all shadow-sm active:scale-95"
                     >
                       Load More
                     </button>

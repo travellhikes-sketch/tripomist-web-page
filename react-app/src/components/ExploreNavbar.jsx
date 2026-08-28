@@ -47,7 +47,7 @@ function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, set
         
         {loadingDeptId === dept.id ? (
           <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#136b8a]"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#01AFD1]"></div>
           </div>
         ) : packagesMap[dept.id] && packagesMap[dept.id].length > 0 ? (
           <div 
@@ -71,7 +71,7 @@ function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, set
                     <span className="material-symbols-outlined text-[14px]">location_on</span>
                   </div>
                 )}
-                <span className="text-[13px] font-medium text-gray-700 group-hover/link:text-[#136b8a] transition-colors line-clamp-1 leading-snug">
+                <span className="text-[13px] font-medium text-gray-700 group-hover/link:text-[#01AFD1] transition-colors line-clamp-1 leading-snug">
                   {pkg.title}
                 </span>
               </Link>
@@ -210,7 +210,7 @@ function ExploreNavbar() {
     <div
       id="explore-navbar"
       ref={navRef}
-      className="bg-[#9fbaf0] border-y border-black/10 overflow-x-auto md:overflow-visible scrollbar-hide transition-all duration-200 z-[100] sticky top-0"
+      className="bg-[#01AFD1] border-y border-black/10 overflow-x-auto md:overflow-visible scrollbar-hide transition-all duration-200 z-[100] sticky top-0"
     >
       <div className="flex items-center md:justify-center gap-6 md:gap-8 lg:gap-12 px-4 md:px-12 lg:px-20 min-w-max w-full">
         {topLevel.map(dept => {

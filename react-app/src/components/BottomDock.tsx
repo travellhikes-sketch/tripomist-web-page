@@ -143,7 +143,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.8 }}
                 onClick={scrollToTop}
-                className="w-10 h-10 rounded-full bg-white border border-gray-100 text-[#136b8a] flex items-center justify-center shadow-lg active:scale-95 transition-all hover:bg-gray-50"
+                className="w-10 h-10 rounded-full bg-[#E0FAFF] border border-[#E0FAFF] text-[#01AFD1] flex items-center justify-center shadow-lg active:scale-95 transition-all hover:bg-[#cdefff]"
                 title="Scroll to Top"
               >
                 <span className="material-symbols-outlined text-[20px]">keyboard_arrow_up</span>
@@ -192,7 +192,7 @@ export default function BottomDock({ isChatOpen, onOpenChat, onCloseChat }: Bott
 
             <button
               onClick={() => setIsFabOpen(!isFabOpen)}
-              className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-xl active:scale-95 ${isFabOpen ? 'bg-slate-700 hover:bg-slate-800' : 'bg-[#136b8a] hover:bg-[#0f556e]'}`}
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-xl active:scale-95 ${isFabOpen ? 'bg-slate-700 hover:bg-slate-800' : 'bg-[#01AFD1] hover:bg-[#0092b3]'}`}
               title="Contact Options"
             >
               <motion.span

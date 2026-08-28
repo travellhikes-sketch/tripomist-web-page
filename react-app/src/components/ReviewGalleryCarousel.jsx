@@ -60,7 +60,7 @@ export default function ReviewGalleryCarousel({ media, onMediaClick }) {
             <SwiperSlide key={item.id || idx}>
               <div
                 style={{
-                  aspectRatio: '3 / 4',
+                  aspectRatio: '4 / 5',
                   overflow: 'hidden',
                   position: 'relative',
                   cursor: 'pointer',
@@ -206,7 +206,7 @@ export default function ReviewGalleryCarousel({ media, onMediaClick }) {
           outline: 'none',
         }}
       >
-        <ChevronLeft size={20} style={{ color: '#136b8a' }} />
+        <ChevronLeft size={20} style={{ color: '#01AFD1' }} />
       </button>
 
       {/* RIGHT circular arrow — uses direct swiper ref */}
@@ -234,7 +234,7 @@ export default function ReviewGalleryCarousel({ media, onMediaClick }) {
           outline: 'none',
         }}
       >
-        <ChevronRight size={20} style={{ color: '#136b8a' }} />
+        <ChevronRight size={20} style={{ color: '#01AFD1' }} />
       </button>
     </div>
   );

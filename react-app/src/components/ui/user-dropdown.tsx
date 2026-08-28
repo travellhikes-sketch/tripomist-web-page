@@ -24,29 +24,29 @@ const MENU_ITEMS = {
   ],
   profile: [
     { icon: "solar:user-circle-line-duotone", label: "Dashboard", action: "my-account" },
-    { icon: "solar:sun-line-duotone", label: "My All Trips", action: "my-trips" },
-    { icon: "solar:settings-line-duotone", label: "Settings", action: "my-account-settings" },
+    { icon: "solar:suitcase-tag-line-duotone", label: "My All Trips", action: "my-trips" },
+    { icon: "solar:user-circle-line-duotone", label: "Account Menu", action: "my-account-settings" },
   ],
   premium: [
     { 
       icon: "solar:star-bold", 
       label: "Admin Dashboard", 
       action: "admin",
-      iconClass: "text-amber-600",
-      badge: { text: "Admin", className: "bg-amber-600 text-white text-[11px]" },
+      iconClass: "text-[#01AFD1]",
+      badge: { text: "Admin", className: "bg-[#01AFD1] text-white text-[11px]" },
       showIfAdmin: true
     }
   ],
   support: [
     { 
-      icon: "solar:question-circle-line-duotone", 
+      icon: "solar:headphones-round-sound-line-duotone", 
       label: "Help & Support", 
       action: "support",
     }
   ],
   account: [
     { 
-      icon: "solar:logout-2-bold-duotone", 
+      icon: "solar:logout-3-line-duotone", 
       label: "Log out", 
       action: "logout", 
       iconClass: "text-red-500", 
@@ -122,7 +122,7 @@ export const UserDropdown = ({
       <DropdownMenuTrigger asChild>
         <Avatar className="cursor-pointer size-10 border border-white shadow-sm transition-transform hover:scale-105">
           <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
-          <AvatarFallback className="bg-[#136b8a]/10 text-[#136b8a] font-bold">{user.initials}</AvatarFallback>
+          <AvatarFallback className="bg-[#01AFD1]/10 text-[#01AFD1] font-bold">{user.initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
@@ -132,7 +132,7 @@ export const UserDropdown = ({
             <div className="flex-1 flex items-center gap-3">
               <Avatar className="cursor-pointer size-12 border border-white shadow-sm">
                 <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
-                <AvatarFallback className="bg-[#136b8a]/10 text-[#136b8a] font-bold">{user.initials}</AvatarFallback>
+                <AvatarFallback className="bg-[#01AFD1]/10 text-[#01AFD1] font-bold">{user.initials}</AvatarFallback>
               </Avatar>
               <div className="overflow-hidden">
                 <h3 className="font-semibold text-sm text-gray-900 truncate">{user.name}</h3>

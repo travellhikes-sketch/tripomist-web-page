@@ -38,7 +38,7 @@ const CustomerPayments = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
@@ -102,7 +102,7 @@ const CustomerPayments = () => {
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
                         {b.payment_status?.toLowerCase() !== 'paid' && (
-                          <button disabled title="Online payments coming soon" className="bg-[#136b8a] text-white p-1.5 rounded opacity-50 cursor-not-allowed">
+                          <button disabled title="Online payments coming soon" className="bg-[#01AFD1] text-white p-1.5 rounded opacity-50 cursor-not-allowed">
                             <CreditCard size={14}/>
                           </button>
                         )}

@@ -64,12 +64,12 @@ export default function Checkout() {
                    )}
                    <div className="flex-1">
                      <Link to={`/itinerary/${item.slug || item.title.toLowerCase().replace(/ /g, '-')}`} className="hover:underline">
-                       <h3 className="text-xl font-bold text-[#136b8a] mb-2">{item.title}</h3>
+                       <h3 className="text-xl font-bold text-[#01AFD1] mb-2">{item.title}</h3>
                      </Link>
                      <p className="text-gray-600 text-sm mb-4">Duration: {item.duration}</p>
                      <div className="flex justify-between items-center text-sm font-semibold">
                        <span>{item.travellers} Traveller(s)</span>
-                       <span className="text-[#136b8a] text-lg">₹{item.total.toLocaleString()}</span>
+                       <span className="text-[#01AFD1] text-lg">₹{item.total.toLocaleString()}</span>
                      </div>
                    </div>
                 </div>
@@ -77,7 +77,7 @@ export default function Checkout() {
             ) : (
               <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 text-center">
                 <p className="text-gray-500 mb-4">Your cart is empty.</p>
-                <button onClick={() => navigate('/')} className="bg-[#136b8a] text-white px-6 py-2 rounded-xl">Browse Packages</button>
+                <button onClick={() => navigate('/')} className="bg-[#01AFD1] text-white px-6 py-2 rounded-xl">Browse Packages</button>
               </div>
             )}
           </div>
@@ -105,13 +105,13 @@ export default function Checkout() {
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Trip Total</span>
                 </div>
-                <span className="font-extrabold text-[#136b8a] text-2xl">₹{billTotal.toLocaleString()}</span>
+                <span className="font-extrabold text-[#01AFD1] text-2xl">₹{billTotal.toLocaleString()}</span>
               </div>
 
               <button
                 onClick={handleBookNow}
                 disabled={cartItems.length === 0}
-                className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] text-lg"
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] text-lg"
               >
                 Proceed and check out
               </button>

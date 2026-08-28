@@ -243,7 +243,7 @@ function Navbar() {
               <div className="py-2 px-4 flex flex-col">
                 {children.map(child => (
                   <div key={child.id} className="py-2">
-                    {renderLink(child, `block text-lg transition-colors hover:pl-2 ${isActive(child.route) ? 'font-bold text-[#136b8a]' : 'text-black/70 hover:text-black'}`, () => setIsOpen(false))}
+                    {renderLink(child, `block text-lg transition-colors hover:pl-2 ${isActive(child.route) ? 'font-bold text-[#01AFD1]' : 'text-black/70 hover:text-black'}`, () => setIsOpen(false))}
                   </div>
                 ))}
               </div>
@@ -340,7 +340,7 @@ function Navbar() {
           <div className="flex items-center gap-6 flex-shrink-0">
             <Link className="font-headline-md text-headline-md font-bold tracking-tight text-black flex items-center gap-2 hover:scale-95 duration-150 transition-transform" to="/">
               {settings?.logo_image_url && (
-                <img src={settings.logo_image_url} alt="Logo" className="h-8 rounded-full object-contain w-auto max-w-[120px]" />
+                <img src={settings.logo_image_url} alt="Logo" className="h-[36px] rounded-full object-contain w-auto max-w-[140px]" />
               )}
               <span className="align-middle">{settings?.logo_text || "TripoMist"}</span>
             </Link>
@@ -365,7 +365,7 @@ function Navbar() {
                     handleSearch(searchQuery)
                   }
                 }}
-                className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
+                className="w-full bg-white text-black border-[1.5px] border-[#01AFD1] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
               />
               <button
                 onClick={() => handleSearch(searchQuery)}
@@ -416,7 +416,7 @@ function Navbar() {
                 href={settings.instagram_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-xs sm:text-sm font-semibold text-gray-800 shadow-sm cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-xs sm:text-sm font-semibold text-gray-800 cursor-pointer whitespace-nowrap"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#e1306c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -427,7 +427,7 @@ function Navbar() {
               </a>
             )}
             <button
-              className={`font-semibold px-3 sm:px-4 py-2 rounded-full transition-all text-xs sm:text-sm hover:opacity-90 border flex items-center gap-1.5 sm:gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200 shadow-sm' : 'bg-white text-black border-gray-200 shadow-sm'}`}
+              className={`font-semibold px-3 sm:px-4 py-2 rounded-full transition-all text-xs sm:text-sm hover:opacity-90 border flex items-center gap-1.5 sm:gap-2 ${isOpen ? 'bg-gray-100 text-black border-gray-200' : 'bg-white text-black border-gray-200'}`}
               onClick={() => setIsOpen(!isOpen)}
             >
               <span className="material-symbols-outlined text-[18px] sm:text-[20px]">{isOpen ? 'close' : 'menu'}</span>
@@ -449,7 +449,7 @@ function Navbar() {
                 />
               </div>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="hidden md:flex bg-primary text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-primary/90 items-center gap-1 shadow-sm cursor-pointer">
+              <button onClick={() => setShowAuthModal(true)} className="hidden md:flex bg-[#E0FAFF] text-[#01AFD1] font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-[#cdefff] items-center gap-1 cursor-pointer border border-slate-300">
                 <span className="material-symbols-outlined text-[16px]">login</span> <span className="hidden sm:inline">{settings?.login_button_text || 'Login'}</span>
               </button>
             )}
@@ -471,7 +471,7 @@ function Navbar() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearch(searchQuery)
               }}
-              className="w-full bg-white text-black border-[1.5px] border-[#136b8a] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
+              className="w-full bg-white text-black border-[1.5px] border-[#01AFD1] rounded-full py-1.5 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-[13px] font-medium placeholder-black/50 transition-all shadow-sm"
             />
             <button
               onClick={() => handleSearch(searchQuery)}
@@ -526,7 +526,7 @@ function Navbar() {
                     }
                     return (
                       <div key={item.id} className="border-b border-black/10">
-                        {renderLink(item, `block text-xl md:text-2xl py-4 transition-colors hover:pl-2 flex items-center gap-2 ${isActive(item.route) ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`, () => setIsOpen(false))}
+                        {renderLink(item, `block text-xl md:text-2xl py-4 transition-colors hover:pl-2 flex items-center gap-2 ${isActive(item.route) ? 'font-bold text-[#01AFD1]' : 'text-black/80 hover:text-black'}`, () => setIsOpen(false))}
                       </div>
                     )
                   })}
@@ -544,10 +544,10 @@ function Navbar() {
 
                   {user && (
                     <>
-                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-account') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-account">Dashboard</Link>
-                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-trips') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-trips">My Bookings</Link>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-account') ? 'font-bold text-[#01AFD1]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-account">Dashboard</Link>
+                      <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/my-trips') ? 'font-bold text-[#01AFD1]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/my-trips">My Bookings</Link>
                       {userRole === 'admin' && (
-                        <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/admin') ? 'font-bold text-[#136b8a]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/admin">Admin Dashboard</Link>
+                        <Link className={`text-xl md:text-2xl py-4 border-b border-black/10 transition-colors hover:pl-2 ${isActive('/admin') ? 'font-bold text-[#01AFD1]' : 'text-black/80 hover:text-black'}`} onClick={() => setIsOpen(false)} to="/admin">Admin Dashboard</Link>
                       )}
                       <button
                         onClick={handleLogout}
@@ -560,7 +560,7 @@ function Navbar() {
                   {!user && (
                     <button
                       onClick={() => { setIsOpen(false); setShowAuthModal(true); }}
-                      className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-[#136b8a] font-bold w-full"
+                      className="text-xl md:text-2xl py-4 text-left transition-colors hover:pl-2 text-[#01AFD1] font-bold w-full"
                     >
                       Login / Sign Up
                     </button>

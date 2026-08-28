@@ -24,7 +24,7 @@ const PackageCard = ({
   departureDates = [],
   listingCategories = []
 }) => {
-  const isUpcoming = Array.isArray(listingCategories) && listingCategories.includes('upcoming-trips');
+  const isUpcoming = false; // Standardized layout
   const displayPrice = price ? (typeof price === 'string' && !price.includes('/-') ? `${price}/-` : price) : null;
   const displayOriginalPrice = originalPrice ? (typeof originalPrice === 'string' && !originalPrice.includes('/-') ? `${originalPrice}/-` : originalPrice) : null;
   
@@ -42,7 +42,7 @@ const PackageCard = ({
   const hasValidLink = finalLink && finalLink !== '#';
   const shouldBeClickable = finalIsClickable && hasValidLink;
   
-  let finalSecondaryBadge = (showSecondaryBadge && secondaryBadgeText) ? secondaryBadgeText : null;
+  let finalSecondaryBadge = (showSecondaryBadge && secondaryBadgeText) ? secondaryBadgeText.replace(/saller/i, 'Seller') : null;
 
   const CardWrapper = shouldBeClickable ? Link : 'div';
   const wrapperProps = shouldBeClickable ? { to: finalLink || '#' } : {};
@@ -78,8 +78,7 @@ const PackageCard = ({
     return (
       <CardWrapper
         {...wrapperProps}
-        draggable={false}
-        className={`rounded-[10px] overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300 cursor-pointer' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
+        className={`rounded-xl overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300 cursor-pointer' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
       >
         {/* Full-bleed background image */}
         <div className="absolute inset-0 bg-cover bg-center group-hover:scale-[1.03] transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
@@ -92,11 +91,11 @@ const PackageCard = ({
 
         {/* Bottom: Title + Starting Price */}
         <div className="relative z-10 p-4 pb-5 flex flex-col items-center text-center">
-          <h3 className="text-white text-[16px] md:text-[18px] font-bold leading-[1.2] line-clamp-2 drop-shadow-sm uppercase tracking-wide">
+          <h3 className="text-white text-base md:text-lg font-bold leading-[1.2] line-clamp-2 drop-shadow-sm tracking-wide">
             {tripTitle}
           </h3>
           {displayPrice && (
-            <p className="text-white/80 text-[12px] md:text-[13px] font-medium mt-1.5 drop-shadow-sm">
+            <p className="text-white/80 text-xs md:text-sm font-medium mt-1.5 drop-shadow-sm">
               Starting Price <span className="text-white font-bold">{displayPrice}</span>
             </p>
           )}
@@ -110,7 +109,7 @@ const PackageCard = ({
     <CardWrapper 
       {...wrapperProps}
       draggable={false}
-      className={`rounded-[10px] overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
+      className={`rounded-xl overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
     >
       {/* Full-bleed background image */}
       <div className="absolute inset-0 bg-cover bg-center group-hover:scale-[1.03] transition-transform duration-700" style={{ backgroundImage: `url('${bg}')` }}></div>
@@ -123,7 +122,7 @@ const PackageCard = ({
         {/* Left: Best Seller badge — capsule/pill style */}
         <div className="flex flex-col gap-1.5">
           {bestSeller && (
-            <div className="bg-white/85 backdrop-blur-sm text-[#136b8a] font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider">
+            <div className="bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">
               Best Seller
             </div>
           )}
@@ -134,14 +133,14 @@ const PackageCard = ({
           {finalSecondaryBadge && (
             <div className={
               finalSecondaryBadge.toLowerCase() === 'coming soon' 
-                ? "bg-white/85 backdrop-blur-sm text-gray-800 font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider" 
-                : "bg-white/85 backdrop-blur-sm text-[#136b8a] font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider"
+                ? "bg-white/85 backdrop-blur-sm text-gray-800 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider" 
+                : "bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider"
             }>
               {finalSecondaryBadge}
             </div>
           )}
           {discountText && !finalSecondaryBadge && (
-            <div className="bg-white/85 backdrop-blur-sm text-[#136b8a] font-bold text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider">
+            <div className="bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">
               {discountText}
             </div>
           )}
@@ -154,13 +153,13 @@ const PackageCard = ({
       {/* Bottom content — over image with gradient behind */}
       <div className="relative z-10 flex flex-col p-3.5 pt-2 gap-1.5">
         {/* Title */}
-        <h3 className="text-white text-[15px] md:text-[16px] font-bold leading-[1.25] line-clamp-2 drop-shadow-sm">{tripTitle}</h3>
+        <h3 className="text-white text-base font-bold leading-[1.25] line-clamp-2 drop-shadow-sm">{tripTitle}</h3>
         
         {/* Duration + Dates Row */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* Duration — LEFT */}
           <div className="flex items-center gap-1 text-white/80 shrink-0">
-            <span className="material-symbols-outlined text-[13px]">schedule</span>
+            <span className="material-symbols-outlined text-sm">calendar_month</span>
             <span className="text-[10px] font-semibold tracking-wide">{duration}</span>
           </div>
 

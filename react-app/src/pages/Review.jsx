@@ -70,9 +70,10 @@ export default function Review() {
   const [mediaLoading, setMediaLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState(null);
+  const [modalReview, setModalReview] = useState(null);
 
-  // Pagination
-  const [visibleCount, setVisibleCount] = useState(9);
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 6;
 
   useEffect(() => {
     async function loadData() {
@@ -139,8 +140,18 @@ export default function Review() {
     loadGallery();
   }, []);
 
-  const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 6);
+  const handleNextPage = () => {
+    if (currentPage < Math.ceil(reviews.length / reviewsPerPage)) {
+      setCurrentPage(prev => prev + 1);
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    }
   };
 
   const openLightbox = (index) => {
@@ -153,8 +164,11 @@ export default function Review() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (lightboxIndex !== null) closeLightbox();
+        if (modalReview !== null) setModalReview(null);
+      }
       if (lightboxIndex === null) return;
-      if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') handlePrevMedia(e);
       if (e.key === 'ArrowRight') handleNextMedia(e);
     };
@@ -208,22 +222,8 @@ export default function Review() {
           </div>
         ) : (
           <div className="w-full relative px-2 md:px-6">
-            <Swiper
-              modules={[Autoplay, Navigation, Pagination]}
-              spaceBetween={20}
-              slidesPerView={1}
-              breakpoints={{
-                480: { slidesPerView: 1.1, spaceBetween: 15 },
-                768: { slidesPerView: 2, spaceBetween: 20 },
-                1024: { slidesPerView: 3, spaceBetween: 24 },
-              }}
-              autoplay={{ delay: 2500, disableOnInteraction: false }}
-              loop={reviews.length > 1}
-              navigation
-              pagination={{ clickable: true }}
-              className="!pb-12"
-            >
-              {reviews.map((review) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              {reviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review) => {
                 const name = review.customer_name || 'Customer';
                 const text = review.review_text || '';
                 const rating = review.rating || 5;
@@ -233,8 +233,7 @@ export default function Review() {
                 const readMoreLink = review.read_more_link || '';
 
                 return (
-                  <SwiperSlide key={review.id} className="h-auto">
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between transition-colors h-full">
+                  <div key={review.id} className="bg-white p-5 rounded-xl border border-gray-200 flex flex-col justify-between transition-colors h-full">
                     <div>
                       {/* Customer Row */}
                       <div className="flex items-center gap-3 mb-3">
@@ -268,9 +267,18 @@ export default function Review() {
                       </div>
 
                       {/* Review Text */}
-                      <p className="text-[13px] text-gray-700 leading-relaxed mb-4">
+                      <p className="text-[13px] text-gray-700 leading-relaxed mb-2 line-clamp-3">
                         {text}
                       </p>
+                      
+                      {text && text.length > 100 && (
+                        <button 
+                          onClick={() => setModalReview(review)}
+                          className="text-xs font-semibold text-[#01AFD1] hover:underline mb-4 text-left"
+                        >
+                          Read More
+                        </button>
+                      )}
                     </div>
 
                     {/* Footer Row */}
@@ -287,20 +295,114 @@ export default function Review() {
                           href={readMoreLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-[#136b8a] hover:underline"
+                          className="text-xs font-semibold text-[#01AFD1] hover:underline"
                         >
                           Read More →
                         </a>
                       )}
                     </div>
                   </div>
-                </SwiperSlide>
-              );
-            })}
-            </Swiper>
+                );
+              })}
+            </div>
+
+            {/* Pagination Controls */}
+            {reviews.length > reviewsPerPage && (
+              <div className="flex items-center justify-center gap-4 mt-8 pb-12">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+                    currentPage === 1 
+                      ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                      : 'border-[#01AFD1] text-[#01AFD1] hover:bg-[#01AFD1] hover:text-white'
+                  }`}
+                >
+                  <ChevronLeft size={16} />
+                  Previous
+                </button>
+                
+                <span className="text-sm font-semibold text-gray-700">
+                  Page {currentPage} of {Math.ceil(reviews.length / reviewsPerPage)}
+                </span>
+                
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === Math.ceil(reviews.length / reviewsPerPage)}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+                    currentPage === Math.ceil(reviews.length / reviewsPerPage)
+                      ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                      : 'border-[#01AFD1] text-[#01AFD1] hover:bg-[#01AFD1] hover:text-white'
+                  }`}
+                >
+                  Next
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
+
+      {/* REVIEW MODAL */}
+      {modalReview && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm"
+          onClick={() => setModalReview(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 md:p-8 max-w-lg w-full relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1"
+              onClick={() => setModalReview(null)}
+            >
+              <X size={24} />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-4 pr-8">
+              {modalReview.customer_image_url ? (
+                <img src={modalReview.customer_image_url} alt={modalReview.customer_name || 'Customer'} className="w-12 h-12 rounded-full object-cover border border-gray-100" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-lg">
+                  {(modalReview.customer_name || 'Customer').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <h3 className="font-bold text-gray-900 text-base leading-tight">{modalReview.customer_name || 'Customer'}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm text-gray-500">{modalReview.review_date || 'Recent'}</span>
+                  {modalReview.verified !== false && (
+                    <div className="flex items-center gap-1 text-gray-500 text-sm">
+                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span>Verified</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-0.5 mb-4 text-amber-400">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={16} fill={i < (modalReview.rating || 5) ? "currentColor" : "none"} className={i < (modalReview.rating || 5) ? "" : "text-gray-200"} />
+              ))}
+            </div>
+
+            <p className="text-sm text-gray-700 leading-relaxed mb-6 whitespace-pre-line">
+              {modalReview.review_text}
+            </p>
+
+            {modalReview.destination && (
+              <div className="flex items-center gap-1 text-sm font-medium text-gray-500 pt-4 border-t border-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {modalReview.destination}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* LIGHTBOX OVERLAY */}
       {lightboxIndex !== null && galleryMedia[lightboxIndex] && (

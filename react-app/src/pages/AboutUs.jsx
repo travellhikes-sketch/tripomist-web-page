@@ -8,28 +8,15 @@ import Footer from '../components/Footer'
 
 export default function AboutUs() {
   return (
-    <div className="flex flex-col min-h-screen bg-surface-container-lowest">
+    <div className="flex flex-col min-h-screen bg-white font-sans text-gray-800">
       <Navbar />
 
-      {/* Hero Video/Image Banner */}
-      <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80"
-          alt="TripoMist journey"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        
-        <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
-          <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
-            About TripoMist
-          </h1>
-        </div>
-      </section>
+      <main className="flex-grow max-w-4xl mx-auto w-full px-6 py-16 md:py-24 mt-20">
+        <h1 className="text-4xl md:text-5xl font-bold mb-12 text-gray-900 leading-tight">
+          About Us
+        </h1>
 
-      {/* About Section */}
-      <main className="w-full max-w-4xl mx-auto px-4 pt-12 pb-24">
-        <div className="prose prose-lg text-on-surface-variant">
+        <div className="prose prose-lg text-gray-700 max-w-none leading-relaxed">
           <p className="mb-4">
             TripoMist was created by Amin Khan and Mohd Wasim with a clear mission: to bridge the gaps that often exist in the travel industry and deliver experiences that travelers can truly rely on.
           </p>

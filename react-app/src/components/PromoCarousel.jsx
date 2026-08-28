@@ -17,7 +17,7 @@ const DEFAULT_TRUST_BANNERS = [
 ];
 
 const BANNER_PALETTES = [
-  'from-[#136b8a] to-[#0a3f54]',
+  'from-[#01AFD1] to-[#0a3f54]',
   'from-[#1e3a5f] to-[#2d6a4f]',
   'from-[#4a1c40] to-[#8b1a6b]',
   'from-[#2c3e50] to-[#1a252f]'
@@ -181,16 +181,18 @@ export default function PromoCarousel({ settingKey = "homepage_promo_banners", s
     : "text-white/90 text-[11px] sm:text-xs md:text-sm leading-relaxed mb-3 max-w-md sm:max-w-xl";
 
   const ctaBtnClass = isLarge
-    ? "inline-flex items-center gap-1.5 bg-white text-[#136b8a] font-bold text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-full hover:bg-white/90 transition-colors w-fit shadow-sm"
-    : "inline-flex items-center gap-1.5 bg-white text-[#136b8a] font-bold text-[10px] md:text-xs px-3.5 py-1.5 md:px-4.5 md:py-2 rounded-full hover:bg-white/90 transition-colors w-fit shadow-sm";
+    ? "inline-flex items-center gap-1.5 bg-white text-[#01AFD1] font-bold text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-full hover:bg-white/90 transition-colors w-fit shadow-sm"
+    : "inline-flex items-center gap-1.5 bg-white text-[#01AFD1] font-bold text-[10px] md:text-xs px-3.5 py-1.5 md:px-4.5 md:py-2 rounded-full hover:bg-white/90 transition-colors w-fit shadow-sm";
 
   return (
     <div className="w-full">
       {/* Centered Why Choose Us Title if present */}
       {settingKey === 'why_choose_us_banners' && showTitle && title && (
         <div className="text-center mt-10 mb-4 px-4">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight">
-            {title}
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight canva-heading flex items-center justify-center">
+            {title === 'Why Choose Us' ? (
+              <><span className="script-font font-normal">Why</span> Choose Us</>
+            ) : title}
           </h2>
         </div>
       )}
@@ -298,14 +300,14 @@ export default function PromoCarousel({ settingKey = "homepage_promo_banners", s
             <>
               <button
                 onClick={(e) => { e.preventDefault(); prev(); }}
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
+                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#01AFD1] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
                 aria-label="Previous banner"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); next(); }}
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
+                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#01AFD1] border border-gray-100 flex items-center justify-center transition-colors shadow-sm"
                 aria-label="Next banner"
               >
                 <ChevronRight size={16} />
@@ -321,7 +323,7 @@ export default function PromoCarousel({ settingKey = "homepage_promo_banners", s
               <button
                 key={idx}
                 onClick={() => goTo(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${idx === current ? 'bg-[#136b8a] w-5' : 'bg-gray-200 hover:bg-gray-300 w-1.5'}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${idx === current ? 'bg-[#01AFD1] w-4' : 'bg-gray-300 hover:bg-gray-400 w-1.5'}`}
                 aria-label={`Go to banner ${idx + 1}`}
               />
             ))}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import {
   Map,
   CreditCard,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 const CustomerDashboard = () => {
+  const { heroImage } = useOutletContext() || {};
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -44,6 +45,10 @@ const CustomerDashboard = () => {
   const upcomingTrips = bookings.filter(b => new Date(b.travel_date) >= new Date() && b.booking_status !== 'cancelled');
   const pastTrips = bookings.filter(b => new Date(b.travel_date) < new Date() && b.booking_status !== 'cancelled');
   const latestTrip = upcomingTrips.length > 0 ? upcomingTrips[upcomingTrips.length - 1] : (pastTrips.length > 0 ? pastTrips[0] : null);
+
+  const amountSpent = bookings
+    .filter(b => b.booking_status !== 'cancelled')
+    .reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0);
 
   const handleClaimSubmit = async (e) => {
     e.preventDefault();
@@ -80,54 +85,59 @@ const CustomerDashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
 
   return (
     <div className="animate-fade-in max-w-5xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome Back!</h1>
-        <p className="text-gray-500 mt-1">Manage your trips, payments, and profile from one place.</p>
+      {/* Hero Section */}
+      <div className="relative rounded-2xl overflow-hidden min-h-[160px] flex flex-col justify-center p-8 bg-[#01AFD1]">
+        {heroImage && (
+          <>
+            <img src={heroImage} alt="Dashboard Hero" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40" />
+          </>
+        )}
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white">Welcome Back!</h1>
+          <p className="text-gray-200 mt-2 text-sm">Manage your trips, payments, and profile from one place.</p>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-              <Map size={20} />
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 font-medium">Total Trips</p>
-          <h3 className="text-2xl font-bold text-gray-900">{bookings.length}</h3>
+      {/* Stats Cards (Single segmented container) */}
+      <div className="bg-white rounded-xl border border-gray-200 flex flex-wrap md:flex-nowrap divide-y md:divide-y-0 md:divide-x divide-gray-200 overflow-hidden">
+        <div className="flex-1 p-5 text-center">
+          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Upcoming Trips</p>
+          <h3 className="text-2xl font-black text-gray-900">{upcomingTrips.length}</h3>
         </div>
+        <div className="flex-1 p-5 text-center">
+          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Completed Trips</p>
+          <h3 className="text-2xl font-black text-gray-900">{pastTrips.length}</h3>
+        </div>
+        <div className="flex-1 p-5 text-center">
+          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Bookings</p>
+          <h3 className="text-2xl font-black text-gray-900">{bookings.length}</h3>
+        </div>
+        <div className="flex-1 p-5 text-center">
+          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Amount Spent</p>
+          <h3 className="text-2xl font-black text-gray-900">₹{amountSpent.toLocaleString('en-IN')}</h3>
+        </div>
+      </div>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <CalendarClock size={20} />
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 font-medium">Upcoming</p>
-          <h3 className="text-2xl font-bold text-gray-900">{upcomingTrips.length}</h3>
+      {/* Manual Booking Claim */}
+      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold text-gray-800 mb-1">Booked over Phone/WhatsApp?</p>
+          <p className="text-xs text-gray-500">Link your manual booking to view it here.</p>
         </div>
-
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-bold text-gray-800 mb-1">Booked over Phone/WhatsApp?</p>
-              <p className="text-xs text-gray-500 max-w-[200px]">Link your manual booking to view it here.</p>
-            </div>
-            <button
-              onClick={() => setShowClaimModal(true)}
-              className="bg-[#136b8a] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#0f556e] transition-colors flex items-center gap-1 shrink-0"
-            >
-              <Search size={14} /> Find My Booking
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => setShowClaimModal(true)}
+          className="bg-[#01AFD1] text-white px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-[#0092b3] transition-colors flex items-center gap-2 shrink-0"
+        >
+          <Search size={16} /> Find My Booking
+        </button>
       </div>
 
       {/* Latest Trip */}
@@ -135,7 +145,7 @@ const CustomerDashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-900">Latest Trip</h2>
           {bookings.length > 0 && (
-            <Link to="/account/trips" className="text-sm text-[#136b8a] font-semibold hover:underline flex items-center">
+            <Link to="/account/trips" className="text-sm text-[#01AFD1] font-semibold hover:underline flex items-center">
               View all <ChevronRight size={16} />
             </Link>
           )}
@@ -183,7 +193,7 @@ const CustomerDashboard = () => {
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">No trips yet</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-sm">Looks like you haven't booked any trips with us yet, or they haven't been linked to your account.</p>
-            <Link to="/" className="bg-[#136b8a] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#0f556e] transition-colors">
+            <Link to="/" className="bg-[#01AFD1] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#0092b3] transition-colors">
               Explore Packages
             </Link>
           </div>
@@ -201,7 +211,7 @@ const CustomerDashboard = () => {
               <form onSubmit={handleClaimSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">Booking ID</label>
-                  <input required type="text" placeholder="e.g. MNL123456" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#136b8a] outline-none" value={claimForm.booking_id} onChange={e=>setClaimForm({...claimForm, booking_id: e.target.value})}/>
+                  <input required type="text" placeholder="e.g. MNL123456" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#01AFD1] outline-none" value={claimForm.booking_id} onChange={e=>setClaimForm({...claimForm, booking_id: e.target.value})}/>
                 </div>
 
                 {claimStatus === 'error' && (
@@ -226,7 +236,7 @@ const CustomerDashboard = () => {
 
                 <div className="pt-2 flex gap-3">
                   <button type="button" onClick={() => setShowClaimModal(false)} className="flex-1 px-4 py-2 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm">Cancel</button>
-                  <button type="submit" disabled={claimStatus === 'loading'} className="flex-1 px-4 py-2 font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-lg transition-colors text-sm disabled:opacity-50">
+                  <button type="submit" disabled={claimStatus === 'loading'} className="flex-1 px-4 py-2 font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] rounded-lg transition-colors text-sm disabled:opacity-50">
                     {claimStatus === 'loading' ? 'Searching...' : 'Find Booking'}
                   </button>
                 </div>

@@ -60,7 +60,7 @@ const SquarePackageSlider = ({ packages, showCta, ctaText, hideNavigation }) => 
                 {/* Top Badges */}
                 <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
                   {pkg.show_primary_badge && pkg.primary_badge_text && (
-                    <span className="bg-white/90 backdrop-blur text-[#136b8a] text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider">
+                    <span className="bg-white/90 backdrop-blur text-[#01AFD1] text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-wider">
                       {pkg.primary_badge_text}
                     </span>
                   )}
@@ -89,7 +89,7 @@ const SquarePackageSlider = ({ packages, showCta, ctaText, hideNavigation }) => 
                     </div>
 
                     {displayCta && (
-                      <div className={`w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center transition-all ${isClickable ? 'group-hover/card:bg-white group-hover/card:text-[#136b8a] text-white' : 'opacity-50 text-white/50'}`}>
+                      <div className={`w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center transition-all ${isClickable ? 'group-hover/card:bg-white group-hover/card:text-[#01AFD1] text-white' : 'opacity-50 text-white/50'}`}>
                         <span className="material-symbols-outlined text-[18px]">
                            {isClickable ? 'arrow_outward' : 'lock'}
                         </span>
@@ -106,10 +106,10 @@ const SquarePackageSlider = ({ packages, showCta, ctaText, hideNavigation }) => 
       {/* Custom Navigation Arrows */}
       {!hideNavigation && (
         <>
-          <div className={`sq-prev-${uniqueId} absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex`}>
+          <div className={`sq-prev-${uniqueId} absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#01AFD1] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex`}>
             <span className="material-symbols-outlined text-[16px]">chevron_left</span>
           </div>
-          <div className={`sq-next-${uniqueId} absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex`}>
+          <div className={`sq-next-${uniqueId} absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#01AFD1] cursor-pointer transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-0 hidden md:flex`}>
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </div>
         </>

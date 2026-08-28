@@ -13,6 +13,7 @@ const CustomerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -64,6 +65,7 @@ const CustomerProfile = () => {
       
       if (error) throw error;
       setMessage('Profile updated successfully!');
+      setIsEditing(false);
       
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -77,7 +79,7 @@ const CustomerProfile = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
@@ -102,26 +104,40 @@ const CustomerProfile = () => {
           <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2 flex items-center gap-2"><User size={16}/> Personal Details</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">First Name</label>
-              <input 
-                required 
-                type="text" 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#136b8a] outline-none" 
-                value={profile.first_name} 
-                onChange={e=>setProfile({...profile, first_name: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Last Name</label>
-              <input 
-                required 
-                type="text" 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#136b8a] outline-none" 
-                value={profile.last_name} 
-                onChange={e=>setProfile({...profile, last_name: e.target.value})}
-              />
-            </div>
+            {!isEditing ? (
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
+                <input 
+                  disabled 
+                  type="text" 
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed outline-none" 
+                  value={`${profile.first_name} ${profile.last_name}`.trim()} 
+                />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">First Name</label>
+                  <input 
+                    required 
+                    type="text" 
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none" 
+                    value={profile.first_name} 
+                    onChange={e=>setProfile({...profile, first_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Last Name</label>
+                  <input 
+                    required 
+                    type="text" 
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none" 
+                    value={profile.last_name} 
+                    onChange={e=>setProfile({...profile, last_name: e.target.value})}
+                  />
+                </div>
+              </>
+            )}
           </div>
           
           <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b pb-2 mt-8 flex items-center gap-2"><Phone size={16}/> Contact Details</h3>
@@ -143,8 +159,9 @@ const CustomerProfile = () => {
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
               <input 
+                disabled={!isEditing}
                 type="tel" 
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#136b8a] outline-none" 
+                className={`w-full px-4 py-2 border rounded-lg outline-none ${!isEditing ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed' : 'border-gray-300 focus:border-[#01AFD1]'}`} 
                 value={profile.phone} 
                 onChange={e=>setProfile({...profile, phone: e.target.value})}
               />
@@ -152,9 +169,10 @@ const CustomerProfile = () => {
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-gray-700 mb-1">Emergency Contact (Optional)</label>
               <input 
+                disabled={!isEditing}
                 type="text" 
                 placeholder="Name & Phone Number"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#136b8a] outline-none" 
+                className={`w-full px-4 py-2 border rounded-lg outline-none ${!isEditing ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed' : 'border-gray-300 focus:border-[#01AFD1]'}`} 
                 value={profile.emergency_contact} 
                 onChange={e=>setProfile({...profile, emergency_contact: e.target.value})}
               />
@@ -168,15 +186,34 @@ const CustomerProfile = () => {
             </div>
           )}
 
-          <div className="flex justify-end pt-4">
-            <button 
-              type="submit" 
-              disabled={saving} 
-              className="bg-[#136b8a] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#0f556e] transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              <Save size={18} />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+          <div className="flex justify-end pt-4 gap-3">
+            {!isEditing ? (
+              <button 
+                type="button" 
+                onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                className="bg-[#01AFD1] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#0092b3] transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                Edit Profile
+              </button>
+            ) : (
+              <>
+                <button 
+                  type="button" 
+                  onClick={() => { setIsEditing(false); fetchProfile(); }}
+                  className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={saving} 
+                  className="bg-[#01AFD1] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#0092b3] transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <Save size={18} />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>

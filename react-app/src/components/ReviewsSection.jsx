@@ -82,7 +82,7 @@ const ReviewsSection = ({ packageId = null, featuredOnly = false }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
@@ -150,7 +150,7 @@ const ReviewsSection = ({ packageId = null, featuredOnly = false }) => {
       
       <style dangerouslySetInnerHTML={{__html: `
         .reviews-swiper .swiper-pagination-bullet {
-          background: #136b8a;
+          background: #01AFD1;
           opacity: 0.2;
         }
         .reviews-swiper .swiper-pagination-bullet-active {

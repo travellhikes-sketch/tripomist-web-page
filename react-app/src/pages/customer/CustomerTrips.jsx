@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import {
   MapPin,
   Calendar,
@@ -22,6 +22,7 @@ function formatMoney(value) {
 }
 
 const CustomerTrips = () => {
+  const { heroImage } = useOutletContext() || {};
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming'); // upcoming, completed, cancelled
@@ -61,8 +62,8 @@ const CustomerTrips = () => {
     const isCancelled = b.booking_status === 'cancelled';
     const isPast = new Date(b.travel_date) < now;
 
-    if (activeTab === 'upcoming') return !isCompleted && !isCancelled;
-    if (activeTab === 'completed') return isCompleted;
+    if (activeTab === 'upcoming') return !isPast && !isCancelled;
+    if (activeTab === 'completed') return isPast && !isCancelled;
     if (activeTab === 'cancelled') return isCancelled;
     return true;
   });
@@ -70,35 +71,44 @@ const CustomerTrips = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
 
   return (
     <div className="animate-fade-in max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">My Trips</h1>
-        <p className="text-gray-500 mt-1">View and manage all your past and upcoming travels.</p>
+      {/* Hero Section */}
+      <div className="relative rounded-2xl overflow-hidden min-h-[160px] flex flex-col justify-center p-8 bg-[#01AFD1]">
+        {heroImage && (
+          <>
+            <img src={heroImage} alt="Dashboard Hero" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40" />
+          </>
+        )}
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white">My Trips</h1>
+          <p className="text-gray-200 mt-2 text-sm">View and manage all your past and upcoming travels.</p>
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex space-x-1 bg-white p-1 rounded-xl border border-gray-200 w-fit">
         <button
           onClick={() => setActiveTab('upcoming')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'upcoming' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'upcoming' ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
         >
           Upcoming
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'completed' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'completed' ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
         >
           Completed
         </button>
         <button
           onClick={() => setActiveTab('cancelled')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'cancelled' ? 'bg-[#136b8a] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'cancelled' ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
         >
           Cancelled
         </button>
@@ -125,8 +135,8 @@ const CustomerTrips = () => {
                 <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#136b8a] transition-colors">{trip.package_title}</h3>
-                      {getStatusBadge(trip.booking_status)}
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#01AFD1] transition-colors">{trip.package_title}</h3>
+                      {getStatusBadge(trip.booking_status === 'cancelled' ? 'cancelled' : (new Date(trip.travel_date) < now ? 'completed' : 'confirmed'))}
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
@@ -161,7 +171,7 @@ const CustomerTrips = () => {
                     </div>
                     <Link
                       to={`/account/trips/${trip.id}`}
-                      className="flex items-center gap-1 text-[#136b8a] font-bold text-sm hover:underline"
+                      className="flex items-center gap-1 text-[#01AFD1] font-bold text-sm hover:underline"
                     >
                       View Details <ChevronRight size={16} />
                     </Link>

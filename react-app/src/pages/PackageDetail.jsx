@@ -743,7 +743,7 @@ export default function PackageDetail() {
                 <button
                   type="button"
                   onClick={scrollGalleryLeft}
-                  className="hidden md:flex absolute left-0 -translate-x-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-[#136b8a] items-center justify-center transition-all z-20 shadow-md border border-gray-200 cursor-pointer"
+                  className="hidden md:flex absolute left-0 -translate-x-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-[#01AFD1] items-center justify-center transition-all z-20 shadow-md border border-gray-200 cursor-pointer"
                   title="Previous Images"
                 >
                   <ChevronLeft size={24} />
@@ -751,7 +751,7 @@ export default function PackageDetail() {
                 <button
                   type="button"
                   onClick={scrollGalleryRight}
-                  className="hidden md:flex absolute right-0 translate-x-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-[#136b8a] items-center justify-center transition-all z-20 shadow-md border border-gray-200 cursor-pointer"
+                  className="hidden md:flex absolute right-0 translate-x-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-[#01AFD1] items-center justify-center transition-all z-20 shadow-md border border-gray-200 cursor-pointer"
                   title="Next Images"
                 >
                   <ChevronRight size={24} />
@@ -761,13 +761,13 @@ export default function PackageDetail() {
 
             <div
               ref={galleryContainerRef}
-              className="flex gap-2 sm:gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-smooth px-[5vw] sm:px-[10vw]"
+              className="flex gap-2 sm:gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory scroll-smooth px-6 md:px-8"
             >
               {galleryImages.map((img, idx) => (
                 <div
                   key={idx}
                   onClick={() => openLightbox(idx)}
-                  className="w-[85vw] sm:w-[60vw] md:w-[300px] lg:w-[304px] h-[240px] sm:h-[280px] md:h-[320px] shrink-0 snap-center cursor-pointer group/img relative bg-slate-900 overflow-hidden shadow-sm"
+                  className="w-[85vw] sm:w-[60vw] md:w-[300px] lg:w-[304px] h-[280px] sm:h-[320px] md:h-[380px] shrink-0 snap-center cursor-pointer group/img relative bg-slate-900 overflow-hidden shadow-sm"
                 >
                   <img
                     src={img}
@@ -801,7 +801,7 @@ export default function PackageDetail() {
             <div className="relative flex-grow flex items-center justify-center px-4 sm:px-12 select-none">
               <button
                 onClick={prevImage}
-                className="absolute left-4 sm:left-8 w-12 h-12 rounded-full bg-white/95 hover:bg-white text-[#136b8a] flex items-center justify-center transition-all cursor-pointer z-10 border border-gray-200/50 shadow-md"
+                className="absolute left-4 sm:left-8 w-12 h-12 rounded-full bg-white/95 hover:bg-white text-[#01AFD1] flex items-center justify-center transition-all cursor-pointer z-10 border border-gray-200/50 shadow-md"
               >
                 <ChevronLeft size={28} />
               </button>
@@ -814,7 +814,7 @@ export default function PackageDetail() {
 
               <button
                 onClick={nextImage}
-                className="absolute right-4 sm:right-8 w-12 h-12 rounded-full bg-white/95 hover:bg-white text-[#136b8a] flex items-center justify-center transition-all cursor-pointer z-10 border border-gray-200/50 shadow-md"
+                className="absolute right-4 sm:right-8 w-12 h-12 rounded-full bg-white/95 hover:bg-white text-[#01AFD1] flex items-center justify-center transition-all cursor-pointer z-10 border border-gray-200/50 shadow-md"
               >
                 <ChevronRight size={28} />
               </button>
@@ -827,7 +827,7 @@ export default function PackageDetail() {
                   key={idx}
                   onClick={() => setActiveImageIndex(idx)}
                   className={`w-14 h-14 rounded-none overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
-                    activeImageIndex === idx ? 'border-[#136b8a] scale-105' : 'border-transparent opacity-50 hover:opacity-100'
+                    activeImageIndex === idx ? 'border-[#01AFD1] scale-105' : 'border-transparent opacity-50 hover:opacity-100'
                   }`}
                 >
                   <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
@@ -853,11 +853,10 @@ export default function PackageDetail() {
 
               {/* OUTLINED ROUNDED DURATION PILLS */}
               <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <span className="inline-flex items-center px-3.5 py-1 rounded-full border border-[#136b8a]/40 bg-[#eff6f9] text-[#136b8a] text-xs font-bold tracking-wider uppercase shadow-xs">
-                  {daysVal}
-                </span>
-                <span className="inline-flex items-center px-3.5 py-1 rounded-full border border-gray-300 bg-gray-50 text-gray-700 text-xs font-bold tracking-wider uppercase shadow-xs">
-                  {nightsVal}
+                <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-[#01AFD1]/40 bg-[#eff6f9] text-[#01AFD1] text-xs font-bold tracking-wider uppercase shadow-xs">
+                  <span>{daysVal}</span>
+                  <span className="w-1 h-1 rounded-full bg-[#01AFD1]/50"></span>
+                  <span>{nightsVal}</span>
                 </span>
               </div>
             </div>
@@ -868,7 +867,7 @@ export default function PackageDetail() {
               {trip.itineraryPdfUrl ? (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-[#7f9fd8] hover:bg-[#6f8fc8] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-[#01AFD1] hover:bg-cyan-600 text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
                 >
                   <Download size={16} />
                   <span>Download Itinerary</span>
@@ -881,8 +880,8 @@ export default function PackageDetail() {
                 title={isAddedToCart ? "Remove from Cart" : "Add to Cart"}
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer ${
                   isAddedToCart
-                    ? 'bg-white border-2 border-[#7f9fd8] text-[#7f9fd8]'
-                    : 'bg-[#7f9fd8] hover:bg-[#6f8fc8] text-white'
+                    ? 'bg-white border-2 border-[#01AFD1] text-[#01AFD1]'
+                    : 'bg-[#01AFD1] hover:bg-cyan-600 text-white'
                 }`}
               >
                 <ShoppingCart size={18} />
@@ -905,10 +904,10 @@ export default function PackageDetail() {
             ================================================== */}
             <div
               ref={sectionNavRef}
-              className={`w-full bg-white shadow-sm transition-all ${
+              className={`w-full bg-white shadow-sm border-y border-gray-200 transition-all ${
                 isNavSticky
                   ? 'fixed left-0 right-0 z-[90] py-1.5 px-4 md:px-12 lg:px-20'
-                  : 'relative mb-8 py-1.5'
+                  : 'relative mb-8 py-1.5 lg:-mr-10 lg:pr-10'
               }`}
               style={{
                 top: isNavSticky ? `${exploreNavHeight}px` : undefined
@@ -921,10 +920,10 @@ export default function PackageDetail() {
                     <button
                       key={item.id}
                       onClick={() => scrollToSection(item.id)}
-                      className={`py-2 text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${isActive ? 'text-[#136b8a]' : 'text-[#136b8a]/70 hover:text-[#136b8a]'}`}
+                      className="py-2 text-xs md:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer text-slate-900"
                     >
-                      {getSectionIcon(item.id)}
-                      <span className={isActive ? 'border-b-[1.5px] border-[#136b8a] font-bold' : 'border-b-[1.5px] border-transparent'}>{item.label}</span>
+                      <span className="text-[#01AFD1]">{getSectionIcon(item.id)}</span>
+                      <span className={isActive ? 'border-b-[1.5px] border-[#01AFD1] font-bold' : 'border-b-[1.5px] border-transparent'}>{item.label}</span>
                     </button>
                   );
                 })}
@@ -958,7 +957,7 @@ export default function PackageDetail() {
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                         {(trip.tripInfo || DEFAULT_TRIP_INFO).map((item, idx) => (
                           <div key={idx} className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-[#eff6f9] text-[#136b8a] flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 rounded-sm bg-[#eff6f9] text-[#01AFD1] flex items-center justify-center shrink-0">
                               {renderIcon(item.icon)}
                             </div>
                             <div>
@@ -974,8 +973,8 @@ export default function PackageDetail() {
 
                 if (sec.id === 'trip-cost') {
                   const gstEnabled = siteSettings?.gst_enabled !== undefined ? siteSettings.gst_enabled : true;
-                  const gstText = gstEnabled ? (siteSettings?.gst_label || '+ 5% GST') : '';
-                  const basePriceText = `${trip.price} ${gstText}`.trim();
+                  const gstText = gstEnabled ? (siteSettings?.gst_label?.replace(/gst/i, 'GST') || '+ 5% GST') : '';
+                  const basePriceText = gstText ? `${trip.price} ${gstText.startsWith('+') ? gstText : '+ ' + gstText}`.trim() : trip.price;
 
                   const formatUpgradePrice = (priceVal, baseNumericPrice) => {
                     if (!priceVal) return '';
@@ -1018,16 +1017,16 @@ export default function PackageDetail() {
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Costing Details</h2>
                       <div className="bg-[#eff6f9] border border-[#d2e6ef] rounded-none p-4 md:p-5 space-y-1 shadow-2xs">
                         <div className="flex items-center justify-between py-3 border-b border-[#d2e6ef]/50">
-                          <span className="text-xs md:text-sm font-bold text-slate-800">Per Person / Quad Sharing</span>
-                          <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{basePriceText}</span>
+                          <span className="text-xs md:text-sm font-semibold text-slate-800">Per Person / Quad Sharing</span>
+                          <span className="text-xs md:text-sm font-bold text-slate-900">{basePriceText}</span>
                         </div>
                         <div className="flex items-center justify-between py-3 border-b border-[#d2e6ef]/50">
-                          <span className="text-xs md:text-sm font-bold text-slate-800">Triple Sharing</span>
-                          <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{triplePrice}</span>
+                          <span className="text-xs md:text-sm font-semibold text-slate-800">Triple Sharing</span>
+                          <span className="text-xs md:text-sm font-bold text-slate-900">{triplePrice}</span>
                         </div>
                         <div className="flex items-center justify-between py-3">
-                          <span className="text-xs md:text-sm font-bold text-slate-800">Double Sharing</span>
-                          <span className="text-xs md:text-sm font-extrabold text-[#136b8a]">{doublePrice}</span>
+                          <span className="text-xs md:text-sm font-semibold text-slate-800">Double Sharing</span>
+                          <span className="text-xs md:text-sm font-bold text-slate-900">{doublePrice}</span>
                         </div>
                       </div>
                     </section>
@@ -1046,7 +1045,7 @@ export default function PackageDetail() {
                             type="button"
                             onClick={toggleExpandAll}
                             className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
-                              allExpanded ? 'bg-[#136b8a]' : 'bg-slate-300'
+                              allExpanded ? 'bg-[#01AFD1]' : 'bg-slate-300'
                             }`}
                           >
                             <div
@@ -1068,7 +1067,7 @@ export default function PackageDetail() {
                                 className="w-full px-5 py-4 md:px-6 flex items-center justify-between text-left cursor-pointer hover:bg-[#deedf4] transition-colors"
                               >
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-5 flex-grow pr-4">
-                                  <div className="flex-shrink-0 bg-white border border-[#136b8a] text-gray-900 font-bold px-3.5 py-1 rounded-full text-xs uppercase tracking-wider w-fit">
+                                  <div className="flex-shrink-0 bg-white border border-[#01AFD1] text-gray-900 font-bold px-3.5 py-1 rounded-full text-xs uppercase tracking-wider w-fit">
                                     {day.num}
                                   </div>
                                   <h3 className="font-bold text-gray-900 text-sm md:text-base tracking-tight">{day.title}</h3>
@@ -1098,7 +1097,7 @@ export default function PackageDetail() {
                   return (
                     <section key="download-itinerary" id="download-itinerary" className="scroll-mt-32 border-b border-gray-100 pb-10">
                       <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 tracking-tight">Download Itinerary</h2>
-                      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="bg-white border border-slate-200 rounded-sm p-6 shadow-none flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                           <svg className="w-10 h-12 text-gray-400 shrink-0" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.5 3C1.5 1.34315 2.84315 0 4.5 0H14.25L22.5 8.25V27C22.5 28.6569 21.1569 30 19.5 30H4.5C2.84315 30 1.5 28.6569 1.5 27V3Z" fill="white" stroke="#D1D5DB" strokeWidth="1.5"/>
@@ -1113,7 +1112,7 @@ export default function PackageDetail() {
                         </div>
                         <button
                           onClick={() => setIsModalOpen(true)}
-                          className="bg-[#136b8a] hover:bg-[#0f556e] text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
+                          className="bg-[#01AFD1] hover:bg-cyan-600 text-white text-xs md:text-sm font-bold px-6 py-3 rounded-full transition-all shadow-md active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
                         >
                           Download PDF
                         </button>
@@ -1169,7 +1168,7 @@ export default function PackageDetail() {
                           if (!text) return null;
                           return (
                             <li key={i} className="flex items-start gap-2.5">
-                              <Check size={16} className="text-[#136b8a] shrink-0 mt-0.5" />
+                              <Check size={16} className="text-[#01AFD1] shrink-0 mt-0.5" />
                               <span>{text}</span>
                             </li>
                           );
@@ -1192,7 +1191,7 @@ export default function PackageDetail() {
                         <ul className="space-y-3 text-xs md:text-sm text-slate-700 leading-relaxed">
                           {noteList.map((item, i) => (
                             <li key={i} className="flex items-start gap-2.5 font-medium">
-                              <Info size={16} className="text-[#136b8a] shrink-0 mt-0.5" />
+                              <Info size={16} className="text-[#01AFD1] shrink-0 mt-0.5" />
                               <span dangerouslySetInnerHTML={{ __html: item }} />
                             </li>
                           ))}
@@ -1220,7 +1219,7 @@ export default function PackageDetail() {
                               <button
                                 type="button"
                                 onClick={() => setOpenFaqIndex(isFaqOpen ? null : idx)}
-                                className="w-full text-left py-4.5 font-bold text-slate-900 text-sm md:text-base flex items-center justify-between gap-4 cursor-pointer hover:text-[#136b8a]"
+                                className="w-full text-left py-4.5 font-bold text-slate-900 text-sm md:text-base flex items-center justify-between gap-4 cursor-pointer hover:text-[#01AFD1]"
                               >
                                 <span>{qText}</span>
                                 <span className="text-slate-500 shrink-0 font-bold text-lg select-none">
@@ -1248,33 +1247,29 @@ export default function PackageDetail() {
 
           {/* RIGHT COLUMN: STICKY BOOKING CARD */}
           <div className="lg:col-span-4">
-            <div className="sticky top-28 bg-white rounded-3xl p-6 space-y-6">
+            <div className="sticky top-28 bg-white rounded-sm border border-gray-200 p-6 space-y-6">
 
               {/* Starting Price & GST */}
               <div className="space-y-1 pb-4 border-b border-gray-100">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Starting Price</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl md:text-4xl font-extrabold text-[#136b8a] tracking-tight">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-3xl md:text-4xl font-extrabold text-[#01AFD1] tracking-tight">
                     {trip.price}
                   </span>
-                  {siteSettings?.gst_enabled !== false && (
-                    <span className="text-xs text-gray-500 font-medium">
-                      {siteSettings?.gst_label || '+ 5% GST'}
-                    </span>
-                  )}
                   {trip.originalPrice && (
-                    <span className="text-xs text-gray-400 line-through ml-auto">
+                    <span className="text-sm font-medium text-gray-500 line-through">
                       {trip.originalPrice}
                     </span>
                   )}
                   {trip.discountText && (
-                    <span className="text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+                    <span className="text-sm font-semibold text-red-500">
                       {trip.discountText}
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-gray-400 block font-medium">Per Person / Quad Sharing</span>
-
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-gray-500 font-medium">Per Person / Quad Sharing</span>
+                </div>
               </div>
 
               {/* Sidebar Trust Benefits */}
@@ -1282,7 +1277,7 @@ export default function PackageDetail() {
                 <div className="space-y-2 py-2">
                   {(trip.trustBenefits || DEFAULT_TRUST_BENEFITS).map((benefit, bIdx) => (
                     <div key={bIdx} className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                      <ShieldCheck size={16} className="text-[#136b8a] shrink-0" />
+                      <ShieldCheck size={16} className="text-[#01AFD1] shrink-0" />
                       <span>{benefit}</span>
                     </div>
                   ))}
@@ -1319,9 +1314,9 @@ export default function PackageDetail() {
               </div>
 
               {/* Total Amount */}
-              <div className="bg-[#eff6f9] border border-[#b9dae6] rounded-full px-6 py-4 flex items-center justify-between">
+              <div className="border-t border-b border-gray-200 py-4 flex items-center justify-between">
                 <span className="text-xs md:text-sm font-bold text-gray-700">Total Amount</span>
-                <span className="text-xl md:text-2xl font-extrabold text-[#136b8a]">
+                <span className="text-xl md:text-2xl font-extrabold text-[#01AFD1]">
                   ₹{totalAmount.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -1330,18 +1325,20 @@ export default function PackageDetail() {
               <div className="space-y-3 pt-2">
                 <button
                   onClick={handleBookNow}
-                  className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 btn-shiny"
+                  className="w-full bg-[#01AFD1] hover:bg-cyan-600 text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 btn-shiny"
                 >
                   Book Now
                 </button>
-                <button
-                  onClick={handleSendEnquiry}
-                  className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2 btn-shiny"
-                >
-                  <MessageCircle size={18} />
-                  <span>Send Enquiry</span>
-                </button>
-                <p className="text-[11px] text-slate-400 text-center font-medium">fill the blanks to send enquiry to expert</p>
+                <div className="space-y-1">
+                  <button
+                    onClick={handleSendEnquiry}
+                    className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 flex items-center justify-center gap-2 btn-shiny"
+                  >
+                    <MessageCircle size={18} />
+                    <span>Send Enquiry</span>
+                  </button>
+                  <p className="text-center text-[11px] text-gray-500 font-medium">Send Enquiry To Expert</p>
+                </div>
               </div>
             </div>
           </div>

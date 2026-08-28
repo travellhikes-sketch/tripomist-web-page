@@ -244,12 +244,21 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       setError('Please select a travel date');
       return;
     }
-    if (formData.phone.length !== 10 || !/^\d{10}$/.test(formData.phone)) {
-      setError('Please enter a valid 10-digit phone number');
+    const nameTrimmed = formData.fullName.trim();
+    if (!nameTrimmed) {
+      setError('Please enter your full name.');
       return;
     }
-    if (!formData.fullName || !formData.email) {
-      setError('Please fill in all required fields.');
+    if (!/^[a-zA-Z\s]+$/.test(nameTrimmed)) {
+      setError('Name can only contain alphabets and spaces.');
+      return;
+    }
+    if (!formData.email) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+      setError('Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.');
       return;
     }
 
@@ -423,7 +432,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           <div className="py-4">
             <div className="text-center mb-4">
               <div className="w-12 h-12 rounded-full bg-[#e8f4f8] flex items-center justify-center mx-auto mb-3">
-                <span className="material-symbols-outlined text-[#136b8a] text-2xl">mail_lock</span>
+                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">mail_lock</span>
               </div>
               <h3 className="text-lg font-bold text-gray-900">Verify Your Email</h3>
               <p className="text-sm text-gray-500 mt-1">
@@ -443,14 +452,14 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
                   value={digit}
                   onChange={e => handleOtpChange(index, e.target.value)}
                   onKeyDown={e => handleOtpKeyDown(index, e)}
-                  className="w-10 h-12 text-center text-lg font-bold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] focus:border-transparent bg-white"
+                  className="w-10 h-12 text-center text-lg font-bold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1] focus:border-transparent bg-white"
                 />
               ))}
             </div>
             <button
               onClick={handleVerifyBookingOtp}
               disabled={otpVerifying || otpDigits.join('').length !== 6}
-              className="w-full py-3 bg-[#136b8a] text-white font-bold rounded-xl hover:bg-[#0f556e] transition-colors disabled:opacity-70 mb-2"
+              className="w-full py-3 bg-[#01AFD1] text-white font-bold rounded-xl hover:bg-[#0092b3] transition-colors disabled:opacity-70 mb-2"
             >
               {otpVerifying ? 'Verifying...' : 'Verify & Continue'}
             </button>
@@ -459,7 +468,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
                 <span className="text-xs text-gray-500">Resend in {otpCountdown}s</span>
               ) : (
                 <button type="button" onClick={handleResendBookingOtp} disabled={otpSending}
-                  className="text-sm font-bold text-[#136b8a] hover:underline disabled:opacity-60">
+                  className="text-sm font-bold text-[#01AFD1] hover:underline disabled:opacity-60">
                   {otpSending ? 'Sending...' : 'Resend Code'}
                 </button>
               )}
@@ -473,24 +482,24 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           <form onSubmit={handleContinue} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-            <input required type="text" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700" placeholder="John Doe" />
+            <input required type="text" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value.replace(/[^a-zA-Z\s]/g, '') })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700" placeholder="Aakash" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-            <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700" placeholder="john@example.com" />
+            <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700" placeholder="aakash@gmail.com" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Phone No (WhatsApp)</label>
             <div className="flex">
               <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 text-gray-500 font-semibold">+91</span>
-              <input required type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} maxLength={10} className="w-full border border-gray-200 rounded-r-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700" placeholder="9999999999" />
+              <input required type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })} maxLength={10} className="w-full border border-gray-200 rounded-r-xl px-4 py-2.5 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700" placeholder="9999999999" />
             </div>
           </div>
           <div className="relative">
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-semibold text-gray-700">Select Travel Date</label>
               {validUpcomingDates.length > 3 && (
-                <button type="button" onClick={() => setIsAllDatesModalOpen(true)} className="text-xs font-bold text-[#136b8a] hover:underline">
+                <button type="button" onClick={() => setIsAllDatesModalOpen(true)} className="text-xs font-bold text-[#01AFD1] hover:underline">
                   Expand All
                 </button>
               )}
@@ -506,7 +515,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
                       key={idx}
                       type="button"
                       onClick={() => handleDateSelect(dateStr)}
-                      className={`shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${isSelected ? 'bg-[#136b8a] text-white border-[#136b8a] shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-[#136b8a] hover:text-[#136b8a]'}`}
+                      className={`shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${isSelected ? 'bg-[#01AFD1] text-white border-[#01AFD1] shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-[#01AFD1] hover:text-[#01AFD1]'}`}
                     >
                       <div className="text-[10px] font-bold opacity-80 mb-0.5 tracking-wider">{d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase()}</div>
                       <div className="text-xl leading-none">{d.getDate()}</div>
@@ -523,7 +532,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Where did you hear about us?</label>
-            <select required value={formData.source} onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#136b8a] outline-none bg-white text-gray-700">
+            <select required value={formData.source} onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#01AFD1] outline-none bg-white text-gray-700">
               <option value="" className="text-gray-400">Select source</option>
               <option value="Facebook" className="text-gray-700">Facebook</option>
               <option value="Instagram" className="text-gray-700">Instagram</option>
@@ -537,7 +546,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+            className="w-full bg-[#01AFD1] hover:bg-cyan-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-extrabold py-4 rounded-full shadow-md hover:shadow-lg transition-all text-base tracking-wide cursor-pointer active:scale-98 mt-2 flex items-center justify-center gap-2 btn-shiny"
           >
             {saving ? (
               <>
@@ -572,7 +581,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
           <div className="overflow-y-auto flex-grow space-y-8 pr-2 custom-scrollbar">
             {Object.entries(groupedDates).map(([monthYear, dates]) => (
               <div key={monthYear}>
-                <h4 className="text-sm font-bold text-[#136b8a] mb-4 tracking-widest uppercase border-b border-gray-50 pb-2">{monthYear}</h4>
+                <h4 className="text-sm font-bold text-[#01AFD1] mb-4 tracking-widest uppercase border-b border-gray-50 pb-2">{monthYear}</h4>
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
                   {dates.map((dateStr, idx) => {
                     const d = new Date(dateStr);
@@ -582,7 +591,7 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
                         key={idx}
                         type="button"
                         onClick={() => handleDateSelect(dateStr)}
-                        className={`py-3 rounded-xl text-base font-bold transition-all border ${isSelected ? 'bg-[#136b8a] text-white border-[#136b8a] shadow-md' : 'bg-white text-gray-700 border-gray-200 hover:border-[#136b8a] hover:text-[#136b8a] hover:bg-[#eff6f9]'}`}
+                        className={`py-3 rounded-xl text-base font-bold transition-all border ${isSelected ? 'bg-[#01AFD1] text-white border-[#01AFD1] shadow-md' : 'bg-white text-gray-700 border-gray-200 hover:border-[#01AFD1] hover:text-[#01AFD1] hover:bg-[#eff6f9]'}`}
                       >
                         {d.getDate()}
                         <div className="text-[11px] font-medium opacity-80 leading-none mt-1 uppercase tracking-wider">{d.toLocaleDateString('en-US', { weekday: 'short' })}</div>

@@ -5,33 +5,15 @@ import Footer from '../components/Footer'
 
 function PrivacyPolicy() {
   return (
-    <div className="bg-surface text-on-surface antialiased font-body-md min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen bg-white font-sans text-gray-800">
       <Navbar />
       
-      {/* Hero Video/Image Banner */}
-      <section className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80"
-          alt="Privacy Policy"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        
-        <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-end px-4">
-          <h1 className="text-white text-3xl md:text-5xl font-bold text-center tracking-tight">
-            Privacy Policy
-          </h1>
-        </div>
-      </section>
+      <main className="flex-grow max-w-4xl mx-auto w-full px-6 py-16 md:py-24 mt-20">
+        <h1 className="text-4xl md:text-5xl font-bold mb-12 text-gray-900 leading-tight">
+          Privacy Policy
+        </h1>
 
-      {/* Main Content */}
-      <main className="flex-grow max-w-4xl mx-auto w-full px-6 py-12">
-        <div className="bg-white border border-[#bec8d2]/30 rounded-2xl p-8 md:p-12 relative overflow-hidden shadow-sm">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-[#006591]"></div>
-          
-          <h1 className="text-3xl font-bold mb-8 uppercase text-on-surface">Privacy Policy</h1>
-
-          <div className="space-y-6 text-[#3e4850] leading-relaxed">
+        <div className="prose prose-lg text-gray-700 max-w-none leading-relaxed space-y-6">
             <p>The terms “We” / “Us” / “Our” / “Company” individually and collectively refer to <strong>TripoMist</strong>, and the terms “You” / “Your” / “Yourself” refer to the users of our services and website.</p>
             <p className="mt-2">This Privacy Policy is an electronic record in the form of an electronic contract formed under the provisions of the Information Technology Act, 2000 and the applicable rules thereunder, including the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011. This Privacy Policy does not require any physical, electronic, or digital signature.</p>
             <p className="mt-2">This Privacy Policy is a legally binding document between You and <strong>TripoMist</strong>. By accessing or using the website <strong><a href="http://www.tripomist.com" className="text-primary hover:underline">www.tripomist.com</a></strong> or any other affiliated platform, you signify your agreement to the terms of this policy. If you do not agree with the terms herein, please do not use or access our website or services.</p>

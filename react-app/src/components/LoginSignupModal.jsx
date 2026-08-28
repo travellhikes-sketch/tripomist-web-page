@@ -309,31 +309,31 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             <form className="space-y-4" onSubmit={handleRegisterSubmit}>
               <div className="flex gap-4">
                 <div className="w-1/2">
-                  <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                  <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
                 </div>
                 <div className="w-1/2">
-                  <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                  <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
                 </div>
               </div>
               <div>
-                <input type="tel" required value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="Phone Number" maxLength={10} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <input type="tel" required value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="Phone Number" maxLength={10} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
               </div>
               <div>
-                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
               </div>
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#136b8a] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
+                <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#01AFD1] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
               <div className="relative">
-                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#136b8a] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
+                <input type={showConfirmPassword ? "text" : "password"} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#01AFD1] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
                   {showConfirmPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70 mt-4">
+              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-xl shadow-md hover:bg-[#0092b3] transition-colors disabled:opacity-70 mt-4">
                 {loading ? 'Processing...' : 'Create Account'}
               </button>
             </form>
@@ -396,7 +396,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
                </p>
                <button
                  onClick={() => { setAuthMode('login'); setErrorMsg(''); setSuccessMsg(''); }}
-                 className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors"
+                 className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-xl shadow-md hover:bg-[#0092b3] transition-colors"
                >
                  Sign In
                </button>
@@ -405,17 +405,17 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
           {authMode === 'login' && (
             <form className="space-y-4" onSubmit={handleLoginSubmit}>
-              <input type="email" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
+              <input type="email" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#136b8a] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
+                <input type={showPassword ? "text" : "password"} required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" className="w-full pl-4 pr-16 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#01AFD1] font-semibold px-2 py-1 bg-transparent hover:bg-gray-50 rounded transition-colors z-10 select-none">
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
               <div className="flex justify-end">
-                <button type="button" onClick={() => { setAuthMode('forgot'); setErrorMsg(''); setSuccessMsg(''); }} className="text-sm font-bold text-[#136b8a]">Forgot Password?</button>
+                <button type="button" onClick={() => { setAuthMode('forgot'); setErrorMsg(''); setSuccessMsg(''); }} className="text-sm font-bold text-[#01AFD1]">Forgot Password?</button>
               </div>
-              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70 mt-2">
+              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-xl shadow-md hover:bg-[#0092b3] transition-colors disabled:opacity-70 mt-2">
                 {loading ? 'Signing In...' : 'Sign In'}
               </button>
               <div className="relative flex items-center py-2">
@@ -423,7 +423,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
                 <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">OR</span>
                 <div className="flex-grow border-t border-gray-200"></div>
               </div>
-              <button type="button" onClick={() => { setAuthMode('login-otp'); setErrorMsg(''); setSuccessMsg(''); }} className="w-full py-3.5 bg-white border border-gray-200 text-[#136b8a] font-bold rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+              <button type="button" onClick={() => { setAuthMode('login-otp'); setErrorMsg(''); setSuccessMsg(''); }} className="w-full py-3.5 bg-white border border-gray-200 text-[#01AFD1] font-bold rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
                 Login with Email OTP
               </button>
             </form>
@@ -442,8 +442,8 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
           {authMode === 'forgot' && (
             <form className="space-y-4" onSubmit={handleForgotPasswordSubmit}>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a]" />
-              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70">
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1]" />
+              <button type="submit" disabled={loading} className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-xl shadow-md hover:bg-[#0092b3] transition-colors disabled:opacity-70">
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
               <button type="button" onClick={() => { setAuthMode('login'); setErrorMsg(''); setSuccessMsg(''); }} className="w-full mt-2 text-sm text-gray-500 hover:text-gray-700">Back to Sign In</button>
@@ -458,7 +458,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
                   setAuthMode(['register', 'register-otp'].includes(authMode) ? 'login' : 'register');
                   setErrorMsg('');
                   setSuccessMsg('');
-                }} className="font-bold text-[#136b8a] hover:underline">
+                }} className="font-bold text-[#01AFD1] hover:underline">
                   {['register', 'register-otp'].includes(authMode) ? 'Sign In' : 'Create Account'}
                 </button>
               </p>
@@ -514,7 +514,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
               <div className="hidden md:flex w-full h-[600px]">
                 {/* Carousel */}
                 <div
-                  className="w-1/2 relative bg-[#136b8a] overflow-hidden group"
+                  className="w-1/2 relative bg-[#01AFD1] overflow-hidden group"
                   onMouseEnter={() => setIsPaused(true)}
                   onMouseLeave={() => setIsPaused(false)}
                 >
@@ -544,7 +544,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
                       </motion.div>
                     </AnimatePresence>
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#136b8a] to-teal-600 flex flex-col justify-center p-10 text-white">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#01AFD1] to-teal-600 flex flex-col justify-center p-10 text-white">
                       <h2 className="text-4xl font-bold mb-4">Start Your Journey</h2>
                       <p className="text-lg text-teal-100">Join TripoMist and explore the world with premium travel experiences.</p>
                     </div>

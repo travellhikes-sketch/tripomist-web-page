@@ -175,7 +175,7 @@ function Home() {
       return (
         <section key={sec.id} className="w-full py-6 px-4 md:px-8 lg:px-10 xl:px-12 bg-surface-container-lowest">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
+            <h2 className="font-headline-md text-headline-md text-on-surface font-bold canva-heading">
               {sec.title || 'Destinations'}
             </h2>
           </div>
@@ -200,7 +200,7 @@ function Home() {
       return (
         <section key={sec.id} className="w-full py-6 px-4 md:px-8 lg:px-10 xl:px-12 bg-surface-container-lowest">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
+            <h2 className="font-headline-md text-headline-md text-on-surface font-bold canva-heading">
               {sec.title || 'Destination According To Interest'}
             </h2>
           </div>
@@ -238,13 +238,13 @@ function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
           <div>
 
-            <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg">
-              {sec.title}
+            <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface font-bold font-headline-lg canva-heading">
+              {sec.title?.replace(/Pakage/gi, 'Package')}
             </h2>
           </div>
           {sec.view_all_route && (
-            <Link className="inline-flex items-center text-[#136b8a] font-button text-button hover:text-[#0f556e] font-bold transition-colors" to={sec.view_all_route}>
-              {sec.view_all_text || 'View All'} <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+            <Link className="inline-flex items-center text-[#01AFD1] font-button text-button hover:text-[#0092b3] font-bold transition-colors" to={sec.view_all_route}>
+              {sec.view_all_text ? sec.view_all_text.replace(/\s+S\s*$/i, '') : 'View All'} <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
             </Link>
           )}
         </div>
@@ -268,7 +268,7 @@ function Home() {
               showCaption
               showNavigation
               showPagination
-              loop={false}
+              loop={true}
               slides={sec.packagesData.slice(0, sec.max_cards || 10).map((pkg) => ({
                 src: pkg.image_url || pkg.banner_image || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
                 alt: pkg.title || pkg.destination || 'Package Image',
@@ -296,7 +296,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'left')}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#01AFD1] border border-gray-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex"
               aria-label="Scroll left"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_left</span>
@@ -305,7 +305,7 @@ function Home() {
             <button
               type="button"
               onClick={() => scrollRow(rowKey, 'right')}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#136b8a] border border-gray-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#01AFD1] border border-gray-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer opacity-0 group-hover/row:opacity-100 disabled:opacity-0 hidden md:flex"
               aria-label="Scroll right"
             >
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
@@ -348,7 +348,7 @@ function Home() {
         {/* Hero Section */}
         {(!heroSettings || heroSettings.is_active !== false) && (
         <div className="px-2 md:px-6 lg:px-8 pt-6">
-          <section className="relative w-full min-h-[300px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-8 rounded-[28px] overflow-hidden shadow-lg">
+          <section className="relative w-full min-h-[300px] md:min-h-[585px] flex flex-col justify-end pt-24 pb-8 rounded-3xl overflow-hidden">
             <div className="absolute inset-0 w-full h-full -z-10 bg-black">
               {(() => {
                 const mediaUrl = heroSettings?.desktop_media_url || "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260629_032424_3c9c2a9d-807b-4482-80e6-dd6d9dfd4545.mp4";
@@ -398,12 +398,12 @@ function Home() {
 
                     return (
                       <>
-                        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white block">
+                        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white block canva-heading">
                           {line1}
                         </h1>
-                        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary-container block">
+                        <span className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary-container block canva-heading">
                           {line2}
-                        </h1>
+                        </span>
                       </>
                     );
                   })()}
@@ -435,7 +435,7 @@ function Home() {
         {/* Dynamic Sections */}
         {pageLoading ? (
           <div className="flex justify-center items-center py-20 text-gray-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a] mb-3"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1] mb-3"></div>
             <span className="text-sm font-medium ml-3">Loading sections...</span>
           </div>
         ) : (() => {
@@ -475,7 +475,7 @@ function Home() {
                       </p>
                     )}
                     {staticBanner.cta_text && staticBanner.clickable && (
-                      <span className="inline-flex items-center gap-1.5 bg-white text-[#136b8a] font-bold text-[10px] md:text-xs px-3.5 py-1.5 md:px-4.5 md:py-2 rounded-full w-fit shadow-sm">
+                      <span className="inline-flex items-center gap-1.5 bg-white text-[#01AFD1] font-bold text-[10px] md:text-xs px-3.5 py-1.5 md:px-4.5 md:py-2 rounded-full w-fit shadow-sm">
                         {staticBanner.cta_text}
                         <span className="material-symbols-outlined text-[13px] md:text-[15px]">arrow_outward</span>
                       </span>
@@ -505,9 +505,11 @@ function Home() {
               );
             })(),
             why_choose_us: (
-              <div key="why-choose-us-heading" className="text-center mt-10 mb-4 px-4">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-550">
-                  {whyChooseUsHeading}
+              <div key="why-choose-us-heading" className="text-center mt-6 mb-2 px-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-550 canva-heading flex items-center justify-center">
+                  {whyChooseUsHeading === 'Why Choose Us' ? (
+                    <><span className="script-font font-normal">Why</span> Choose Us</>
+                  ) : whyChooseUsHeading}
                 </h2>
                 {whyChooseUsSubheading && (
                   <p className="text-sm sm:text-base text-gray-500 mt-2 max-w-xl mx-auto font-medium">

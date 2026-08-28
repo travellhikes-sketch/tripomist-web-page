@@ -13,11 +13,24 @@ import {
 
 const CustomerLayout = () => {
   const [profile, setProfile] = useState(null);
+  const [heroImage, setHeroImage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfile();
+    fetchHeroSetting();
   }, []);
+
+  const fetchHeroSetting = async () => {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('setting_value')
+      .eq('setting_key', 'customer_account_hero')
+      .single();
+    if (data?.setting_value?.hero_image) {
+      setHeroImage(data.setting_value.hero_image);
+    }
+  };
 
   const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -62,8 +75,8 @@ const CustomerLayout = () => {
       <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20">
         <div className="p-6">
           <NavLink to="/" className="flex items-center gap-2 group mb-8">
-            <ArrowLeft size={16} className="text-gray-400 group-hover:text-[#136b8a] transition-colors" />
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-500 group-hover:text-[#136b8a] transition-colors">Back to Website</span>
+            <ArrowLeft size={16} className="text-gray-400 group-hover:text-[#01AFD1] transition-colors" />
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500 group-hover:text-[#01AFD1] transition-colors">Back to Website</span>
           </NavLink>
           
           <div className="flex items-center gap-3 mb-8">
@@ -85,7 +98,7 @@ const CustomerLayout = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                     isActive
-                      ? 'bg-[#136b8a] text-white shadow-md'
+                      ? 'bg-[#01AFD1] text-white shadow-md'
                       : 'text-gray-600 hover:bg-slate-100 hover:text-gray-900'
                   }`
                 }
@@ -111,7 +124,7 @@ const CustomerLayout = () => {
       {/* Main Content Area */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
         <div className="flex-1 p-4 md:p-8 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
-          <Outlet />
+          <Outlet context={{ heroImage }} />
         </div>
       </div>
 
@@ -125,7 +138,7 @@ const CustomerLayout = () => {
               end={item.exact}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center w-16 h-12 transition-colors ${
-                  isActive ? 'text-[#136b8a]' : 'text-gray-400 hover:text-gray-600'
+                  isActive ? 'text-[#01AFD1]' : 'text-gray-400 hover:text-gray-600'
                 }`
               }
             >

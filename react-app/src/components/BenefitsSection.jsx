@@ -60,7 +60,7 @@ const isExternal = (url) => {
 
 // ─── Promo Banner Gradient Palettes (fallback when no image) ─────────────────
 const BANNER_PALETTES = [
-  'from-[#136b8a] to-[#0a3f54]',
+  'from-[#01AFD1] to-[#0a3f54]',
   'from-[#1e3a5f] to-[#2d6a4f]',
   'from-[#4a1c40] to-[#8b1a6b]',
   'from-[#2c3e50] to-[#1a252f]',
@@ -183,7 +183,7 @@ function PromoBannerCarousel({ banners }) {
                 )}
                 {banner.cta_text && (
                   <span
-                    className="inline-flex items-center gap-1.5 bg-white text-[#136b8a] font-bold text-xs px-4 py-2 rounded-full hover:bg-white/90 transition-colors w-fit shadow"
+                    className="inline-flex items-center gap-1.5 bg-white text-[#01AFD1] font-bold text-xs px-4 py-2 rounded-full hover:bg-white/90 transition-colors w-fit shadow"
                   >
                     {banner.cta_text}
                     <span className="material-symbols-outlined text-[14px]">arrow_outward</span>
@@ -360,7 +360,7 @@ export default function BenefitsSection() {
                   key={card.id || idx}
                   className="bg-white border border-gray-100 rounded-2xl p-6 sm:p-7 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-300 flex flex-col items-start"
                 >
-                  <div className="w-11 h-11 rounded-full bg-[#e8f4f8] text-[#136b8a] flex items-center justify-center mb-5 shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-[#e8f4f8] text-[#01AFD1] flex items-center justify-center mb-5 shrink-0">
                     <IconComponent className="w-5.5 h-5.5" />
                   </div>
                   <h3 className="text-base md:text-lg font-bold text-gray-900 mb-2 leading-snug">

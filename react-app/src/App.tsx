@@ -122,26 +122,26 @@ function App() {
         <Routes>
           {/* Admin Routes */}
           <Route path="/admin/login" element={
-            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}>
               <AdminLogin />
             </React.Suspense>
           } />
           <Route path="/admin" element={
-            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}>
               <AdminRoute />
             </React.Suspense>
           }>
             <Route element={
-              <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+              <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}>
                 <AdminLayout />
               </React.Suspense>
             }>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="packages" element={<AdminPackages />} />
-              <Route path="bookings" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminBookings /></React.Suspense>} />
-              <Route path="bookings/cancelled" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminCancelledBookings /></React.Suspense>} />
-              <Route path="service-recovery" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceRecovery /></React.Suspense>} />
+              <Route path="bookings" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminBookings /></React.Suspense>} />
+              <Route path="bookings/cancelled" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminCancelledBookings /></React.Suspense>} />
+              <Route path="service-recovery" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceRecovery /></React.Suspense>} />
 
               <Route path="manual-bookings" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
@@ -196,12 +196,12 @@ function App() {
 
           {/* Customer Portal Routes */}
           <Route path="/account" element={
-            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}>
               <CustomerRoute />
             </React.Suspense>
           }>
             <Route element={
-              <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+              <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}>
                 <CustomerLayout />
               </React.Suspense>
             }>
@@ -240,23 +240,23 @@ function App() {
 
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/trips/:categorySlug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/group-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/weekend-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/treks" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/family-tours" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/honeymoon-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/all-departures" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/upcoming-departures" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/trips/upcoming-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/trips/recommended" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/trips/best-seller" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
-          <Route path="/international" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/trips/:categorySlug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/group-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/weekend-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/treks" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/family-tours" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/honeymoon-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/all-departures" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/upcoming-departures" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/trips/upcoming-trips" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/trips/recommended" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/trips/best-seller" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/international" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/reviews" element={<Review />} />
           <Route path="/review" element={<Navigate to="/reviews" replace />} />
-          <Route path="/domestic" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
+          <Route path="/domestic" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ListingPage /></React.Suspense>} />
           <Route path="/destinations/:destinationSlug" element={
-            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}>
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}>
               <ListingPage />
             </React.Suspense>
           } />
@@ -274,9 +274,9 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/featured-group-trips" element={<FeaturedGroupTrip />} />
           <Route path="/most-popular-packages" element={<MostPopularPackages />} />
-          <Route path="/explore/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><ExploreDepartment /></React.Suspense>} />
-          <Route path="/promo/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
-          <Route path="/offers/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
+          <Route path="/explore/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><ExploreDepartment /></React.Suspense>} />
+          <Route path="/promo/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
+          <Route path="/offers/:slug" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><PromoPage /></React.Suspense>} />
           <Route path="/itinerary/:slug" element={<PackageDetail />} />
           <Route path="/banner/:slug" element={<PackageDetail />} />
           <Route path="/checkout" element={<Checkout />} />

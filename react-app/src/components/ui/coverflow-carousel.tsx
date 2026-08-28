@@ -226,6 +226,7 @@ export function CoverflowCarousel({
       navigate(`/itinerary/${slug}`);
     } else {
       goTo(index);
+      startAutoplay();
     }
   };
 
@@ -289,10 +290,6 @@ export function CoverflowCarousel({
       role="region"
       aria-roledescription="carousel"
       aria-label={label}
-      onMouseEnter={stopAutoplay}
-      onMouseLeave={startAutoplay}
-      onTouchStart={stopAutoplay}
-      onTouchEnd={startAutoplay}
     >
       <div className="relative">
         <div
@@ -391,16 +388,16 @@ export function CoverflowCarousel({
             <button
               type="button"
               aria-label="Previous slide"
-              onClick={() => nudge(-1)}
-              className="absolute left-2 md:left-4 top-1/2 z-[200] -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] transition-colors hover:bg-white"
+              onClick={() => { nudge(-1); startAutoplay(); }}
+              className="absolute left-2 md:left-4 top-1/2 z-[200] -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-[#01AFD1] transition-colors hover:bg-white"
             >
               <ChevronLeft size={16} />
             </button>
             <button
               type="button"
               aria-label="Next slide"
-              onClick={() => nudge(1)}
-              className="absolute right-2 md:right-4 top-1/2 z-[200] -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-[#136b8a] transition-colors hover:bg-white"
+              onClick={() => { nudge(1); startAutoplay(); }}
+              className="absolute right-2 md:right-4 top-1/2 z-[200] -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-[#01AFD1] transition-colors hover:bg-white"
             >
               <ChevronRight size={16} />
             </button>
@@ -409,17 +406,17 @@ export function CoverflowCarousel({
       </div>
 
       {showPagination && (
-        <div className="mt-8 flex items-center justify-center gap-2">
+        <div className="mt-8 flex items-center justify-center gap-1.5">
           {slides.map((_, index) => (
             <button
               key={index}
               type="button"
               aria-label={`Go to slide ${index + 1}`}
               aria-current={index === selected}
-              onClick={() => goTo(index)}
+              onClick={() => { goTo(index); startAutoplay(); }}
               className={cn(
-                "size-2.5 rounded-full transition-all duration-300",
-                index === selected ? "bg-[#136b8a] w-6" : "bg-slate-300 hover:bg-slate-400",
+                "h-1.5 rounded-full transition-all duration-300",
+                index === selected ? "bg-[#01AFD1] w-4" : "bg-slate-300 hover:bg-slate-400 w-1.5",
               )}
             />
           ))}

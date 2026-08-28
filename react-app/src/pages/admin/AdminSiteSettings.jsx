@@ -57,6 +57,7 @@ const AdminSiteSettings = () => {
     customer_support: {},
     homepage_static_banner: {},
     search_page_hero: {},
+    customer_account_hero: {},
     homepage_section_order: [],
     typography: {}
   });
@@ -66,6 +67,7 @@ const AdminSiteSettings = () => {
   const TABS = [
     { id: 'hero', label: 'Hero Section', icon: Monitor },
     { id: 'search_page_hero', label: 'Search Page Hero', icon: Monitor },
+    { id: 'customer_account_hero', label: 'Customer Account Hero', icon: Monitor },
     { id: 'navbar', label: 'Navbar & IG Badge', icon: LayoutTemplate },
     { id: 'footer', label: 'Footer & Contact', icon: LayoutTemplate },
     { id: 'social_links', label: 'Social Media', icon: LinkIcon },
@@ -182,6 +184,11 @@ const AdminSiteSettings = () => {
             hero_image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1',
             title: 'Find Your Next Adventure',
             subtitle: ''
+          };
+        }
+        if (!newSettings.customer_account_hero) {
+          newSettings.customer_account_hero = {
+            hero_image: ''
           };
         }
         if (!newSettings.explore_more_settings || Object.keys(newSettings.explore_more_settings).length === 0) {
@@ -569,6 +576,28 @@ const AdminSiteSettings = () => {
               <div className="pt-4 flex justify-end">
                 <button onClick={() => handleSave('search_page_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Search Hero
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* CUSTOMER ACCOUNT HERO TAB */}
+          {activeTab === 'customer_account_hero' && (
+            <div className="space-y-6 animate-in">
+              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Customer Account Hero</h2>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <MediaUploader
+                    url={settings.customer_account_hero?.hero_image || ''}
+                    onUrlChange={(url) => handleChange('customer_account_hero', 'hero_image', url)}
+                    label="Customer Account Hero Image"
+                    hint="This image will be used as the background hero for My Account and My Trips pages."
+                  />
+                </div>
+              </div>
+              <div className="pt-4 flex justify-end">
+                <button onClick={() => handleSave('customer_account_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                  <Save size={16} /> Save Customer Hero
                 </button>
               </div>
             </div>

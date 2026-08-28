@@ -77,7 +77,7 @@ export default function StatsStrip() {
             return (
               <div key={card.id || idx} className="flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] md:min-w-[100px]">
                 {IconComponent && (
-                  <div className={`mb-0.5 md:mb-1 ${settings.background_image ? 'text-white' : 'text-[#136b8a]'}`}>
+                  <div className={`mb-0.5 md:mb-1 ${settings.background_image ? 'text-white' : 'text-[#01AFD1]'}`}>
                     <IconComponent size={16} className="sm:w-5 sm:h-5" />
                   </div>
                 )}

@@ -46,18 +46,8 @@ function Cart() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="w-full max-w-6xl mx-auto px-4 pt-12 pb-6">
-        <h2 className="font-headline-md text-headline-md text-on-surface font-bold mb-4">
-          Review Your Trip Packages
-        </h2>
-        <p className="text-on-surface-variant font-body-md text-body-md leading-relaxed">
-          You are one step closer to your dream destination. Review the packages you've selected and proceed to checkout when you are ready. We ensure a seamless booking experience.
-        </p>
-      </section>
-
       {/* Cart Content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 pb-36 pt-4">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 pb-36 pt-4">
         
         <div className="flex justify-end mb-4">
           <button 
@@ -69,7 +59,7 @@ function Cart() {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-outline-variant/30 p-6 flex flex-col gap-6">
+        <div className="bg-white rounded-xl border border-outline-variant/30 p-4 flex flex-col gap-4">
           
           {viewHistory ? (
             <div className="text-center py-10">
@@ -110,7 +100,7 @@ function Cart() {
                       </div>
                       <div>
                         <Link to={`/itinerary/${item.slug || item.title.toLowerCase().replace(/ /g, '-')}`} className="hover:underline">
-                          <h3 className="font-bold text-lg text-[#136b8a]">{item.title}</h3>
+                          <h3 className="font-bold text-lg text-[#01AFD1]">{item.title}</h3>
                         </Link>
                         <p className="text-on-surface-variant text-sm">{item.duration} • {item.travellers} {item.travellers > 1 ? 'Travellers' : 'Traveller'}</p>
                       </div>
@@ -146,7 +136,7 @@ function Cart() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 mt-8">
+              <div className="flex gap-4 mt-4">
                 <button 
                   onClick={() => navigate('/')}
                   className="flex-1 py-3 px-4 rounded-xl border border-outline-variant text-on-surface font-semibold hover:bg-surface-container transition-colors"

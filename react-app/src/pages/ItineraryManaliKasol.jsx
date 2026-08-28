@@ -202,7 +202,7 @@ export default function ItineraryManaliKasol() {
               <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-2">
                 {isReadMore ? trip.description : `${trip.description.slice(0, 80)}...`}
               </p>
-              <button onClick={() => setIsReadMore(!isReadMore)} className="text-[#136b8a] font-bold hover:underline text-sm md:text-base cursor-pointer">
+              <button onClick={() => setIsReadMore(!isReadMore)} className="text-[#01AFD1] font-bold hover:underline text-sm md:text-base cursor-pointer">
                 {isReadMore ? 'Read Less' : 'Read More'}
               </button>
             </div>
@@ -215,7 +215,7 @@ export default function ItineraryManaliKasol() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-2 rounded-full whitespace-nowrap font-bold text-sm transition-all border cursor-pointer
                     ${activeTab === tab
-                      ? 'bg-[#eff6f9] text-[#136b8a] border-[#136b8a]'
+                      ? 'bg-[#eff6f9] text-[#01AFD1] border-[#01AFD1]'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
                     }`}
                 >
@@ -234,7 +234,7 @@ export default function ItineraryManaliKasol() {
                     <button
                       onClick={handleAddToCart}
                       title="Add to Cart"
-                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-sm border cursor-pointer ${isAddedToCart ? 'bg-white text-[#136b8a] border-[#136b8a]' : 'bg-[#136b8a] text-white border-transparent hover:bg-[#0f556e]'}`}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-sm border cursor-pointer ${isAddedToCart ? 'bg-white text-[#01AFD1] border-[#01AFD1]' : 'bg-[#01AFD1] text-white border-transparent hover:bg-[#0092b3]'}`}
                     >
                       <span className="material-symbols-outlined text-[20px]">
                         {isAddedToCart ? 'check' : 'shopping_cart'}
@@ -243,7 +243,7 @@ export default function ItineraryManaliKasol() {
 
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="btn-shiny bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
+                      className="btn-shiny bg-[#01AFD1] hover:bg-[#0092b3] text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
                     >
                       <span className="relative z-10 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px]">download</span>
@@ -261,7 +261,7 @@ export default function ItineraryManaliKasol() {
                         className="w-full px-5 py-4 md:px-6 md:py-5 flex items-center justify-between text-left cursor-pointer hover:bg-[#deedf4] transition-colors"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-5 flex-grow pr-4">
-                          <div className="flex-shrink-0 bg-white border border-[#136b8a] text-gray-900 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wide w-fit">
+                          <div className="flex-shrink-0 bg-white border border-[#01AFD1] text-gray-900 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wide w-fit">
                             Day {day.num}
                           </div>
                           <h3 className="font-bold text-gray-900 text-base md:text-lg uppercase tracking-tight">{day.title}</h3>
@@ -293,7 +293,7 @@ export default function ItineraryManaliKasol() {
               <section className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm mb-10">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">What included in package and what not ??</h2>
 
-                <h3 className="text-lg font-bold text-[#136b8a] mb-4">Included</h3>
+                <h3 className="text-lg font-bold text-[#01AFD1] mb-4">Included</h3>
                 <ul className="space-y-4 text-gray-700 font-medium">
                   <li className="flex gap-3 items-start">
                     <span className="material-symbols-outlined text-[#25D366] mt-0.5 text-[20px]">check_circle</span>
@@ -350,7 +350,7 @@ export default function ItineraryManaliKasol() {
               <div className="mb-6 border-b border-gray-100 pb-5">
                 <span className="font-semibold text-gray-900 text-sm block mb-1">Starting Price</span>
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="text-[#136b8a] text-3xl font-bold">{trip.price} <span className="text-sm text-gray-500 font-medium">+ 5% GST</span></span>
+                  <span className="text-[#01AFD1] text-3xl font-bold">{trip.price} <span className="text-sm text-gray-500 font-medium">+ 5% GST</span></span>
                   <div className="flex items-center gap-1 text-xs font-semibold">
                     <span className="line-through text-gray-500 font-normal">₹{strikePrice.toLocaleString()}</span>
                     <span className="text-red-500 font-bold">₹3,000 Off</span>
@@ -375,13 +375,13 @@ export default function ItineraryManaliKasol() {
               {/* Total Amount */}
               <div className="flex items-center justify-between mb-8 bg-[#eff6f9] px-4 py-3 rounded-xl border border-[#cde5ef]">
                 <span className="font-bold text-gray-800 text-sm">Total Amount</span>
-                <span className="font-extrabold text-[#136b8a] text-xl">₹{totalAmount.toLocaleString()}</span>
+                <span className="font-extrabold text-[#01AFD1] text-xl">₹{totalAmount.toLocaleString()}</span>
               </div>
 
               {/* Action Buttons */}
               <button
                 onClick={handleBookNow}
-                className="btn-shiny w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mb-4 text-lg cursor-pointer"
+                className="btn-shiny w-full bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98] mb-4 text-lg cursor-pointer"
               >
                 <span className="relative z-10">Book Now</span>
               </button>

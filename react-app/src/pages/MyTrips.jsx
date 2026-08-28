@@ -17,6 +17,7 @@ export default function MyTrips() {
   const [user, setUser] = useState(null);
   const filterParam = searchParams.get('filter') || 'all';
   const [activeTab, setActiveTab] = useState(filterParam);
+  const [heroImage, setHeroImage] = useState(null);
 
   useEffect(() => {
     setActiveTab(searchParams.get('filter') || 'all');
@@ -76,6 +77,15 @@ export default function MyTrips() {
 
         setBookings(bookingsWithImages);
       }
+      const { data: heroData } = await supabase.from('site_settings').select('setting_value').eq('setting_key', 'customer_account_hero').maybeSingle();
+      if (heroData?.setting_value) {
+        const val = heroData.setting_value;
+        if (typeof val === 'string' && val.startsWith('http')) {
+          setHeroImage(val);
+        } else if (val.hero_image) {
+          setHeroImage(val.hero_image);
+        }
+      }
       setLoading(false);
     }
     loadBookings();
@@ -106,8 +116,13 @@ export default function MyTrips() {
       <Navbar />
 
       {/* Hero Header */}
-      <section className="relative w-full bg-[#136b8a] pt-28 pb-14 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 to-slate-950/20 opacity-30 mix-blend-overlay" />
+      <section className={`relative w-full pt-28 pb-14 overflow-hidden ${!heroImage ? 'bg-[#01AFD1]' : 'bg-gray-900'}`}>
+        {heroImage ? (
+          <img src={heroImage} alt="Hero Background" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 to-slate-950/20 opacity-30 mix-blend-overlay" />
+        )}
+        {heroImage && <div className="absolute inset-0 bg-black/40" />}
         <div className="relative max-w-5xl mx-auto px-4 text-center">
           <span className="material-symbols-outlined text-white/80 text-5xl mb-4 block">luggage</span>
           <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-3">My Trips</h1>
@@ -126,7 +141,7 @@ export default function MyTrips() {
               onClick={() => handleTabClick(tab)}
               className={`py-4 px-1 text-sm font-bold border-b-2 uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === tab
-                  ? 'border-[#136b8a] text-[#136b8a]'
+                  ? 'border-[#01AFD1] text-[#01AFD1]'
                   : 'border-transparent text-gray-400 hover:text-gray-600'
               }`}
             >
@@ -183,7 +198,7 @@ export default function MyTrips() {
         {!loading && !error && filteredBookings.length === 0 && (
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 py-20 px-4 text-center">
             <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <span className="material-symbols-outlined text-4xl text-[#136b8a]">explore</span>
+              <span className="material-symbols-outlined text-4xl text-[#01AFD1] font-light">travel_explore</span>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">No {activeTab} trips found</h2>
             <p className="text-gray-500 text-lg mb-8 max-w-sm mx-auto">
@@ -196,9 +211,8 @@ export default function MyTrips() {
             {activeTab === 'upcoming' && (
               <Link
                 to="/"
-                className="inline-flex items-center gap-2 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold px-8 py-3.5 rounded-xl shadow-md transition-all"
+                className="inline-flex items-center justify-center bg-[#01AFD1] hover:bg-cyan-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-md transition-all"
               >
-                <span className="material-symbols-outlined text-lg">map</span>
                 Explore Trips
               </Link>
             )}
@@ -234,7 +248,7 @@ export default function MyTrips() {
               return (
                 <div
                   key={booking.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all"
+                  className="bg-white rounded-sm border border-gray-200 overflow-hidden transition-all"
                 >
                   <div className="flex flex-col md:flex-row">
                     {/* Left: package image */}
@@ -249,7 +263,7 @@ export default function MyTrips() {
                           <div className="absolute inset-0 bg-black/10"></div>
                         </>
                       ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#136b8a] to-teal-600 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#01AFD1] to-teal-600 flex items-center justify-center">
                           <span className="material-symbols-outlined text-4xl text-white/80">luggage</span>
                         </div>
                       )}
@@ -286,7 +300,7 @@ export default function MyTrips() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-xs md:text-sm mb-3">
                         <div className="flex flex-col">
                           <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Booking ID</span>
-                          <span className="font-bold text-[#136b8a]">{booking.booking_id || '—'}</span>
+                          <span className="font-bold text-[#01AFD1]">{booking.booking_id || '—'}</span>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-gray-400 text-[10px] md:text-xs font-semibold uppercase tracking-wide mb-0.5">Travel Date</span>
@@ -358,7 +372,7 @@ export default function MyTrips() {
                       <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-3">
                         <Link
                           to={`/my-trip/${booking.id}`}
-                          className="bg-[#136b8a] text-white px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-[#0f556e] transition-colors"
+                          className="bg-[#01AFD1] text-white px-4 py-1.5 rounded-lg text-xs md:text-sm font-bold hover:bg-[#0092b3] transition-colors"
                         >
                           View Details
                         </Link>

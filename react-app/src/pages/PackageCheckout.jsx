@@ -285,7 +285,7 @@ export default function PackageCheckout() {
       <div className="flex flex-col min-h-screen bg-surface-container-lowest ">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full"></div>
+          <div className="animate-spin w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full"></div>
         </main>
         <Footer />
       </div>
@@ -302,7 +302,7 @@ export default function PackageCheckout() {
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Package Configuration Error</h2>
           <p className="text-gray-600 text-lg mb-8">{error || 'Package occupancy/sharing prices could not be loaded.'}</p>
-          <Link to="/" className="bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 px-8 rounded-xl shadow-md transition-all">
+          <Link to="/" className="bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-4 px-8 rounded-xl shadow-md transition-all">
             Back to Home
           </Link>
         </main>
@@ -548,7 +548,7 @@ export default function PackageCheckout() {
           contact: `+91${formData.phone}`
         },
         theme: {
-          color: '#136b8a'
+          color: '#01AFD1'
         },
         // 9. Razorpay success handler must call verify
         handler: function (response) {
@@ -619,7 +619,7 @@ export default function PackageCheckout() {
           {/* Confirmation card */}
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-6">
             {/* Card header */}
-            <div className="bg-gradient-to-r from-[#136b8a] to-teal-600 px-6 py-5 flex items-center gap-4">
+            <div className="bg-gradient-to-r from-[#01AFD1] to-teal-600 px-6 py-5 flex items-center gap-4">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-2xl">luggage</span>
               </div>
@@ -643,8 +643,8 @@ export default function PackageCheckout() {
                   { icon: 'task_alt', label: 'Booking Status', value: 'Confirmed', badge: 'confirmed' },
                 ].map(({ icon, label, value, mono, highlight, badge }) => (
                   <div key={label} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                     <div className="w-8 h-8 bg-[#136b8a]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                       <span className="material-symbols-outlined text-[#136b8a] text-[18px]">{icon}</span>
+                     <div className="w-8 h-8 bg-[#01AFD1]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                       <span className="material-symbols-outlined text-[#01AFD1] text-[18px]">{icon}</span>
                      </div>
                      <div className="min-w-0">
                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{label}</p>
@@ -676,7 +676,7 @@ export default function PackageCheckout() {
                       final_amount: safeFinalPayable,
                       total_amount: parsePriceString(tripDetails.price)
                     }, 'download')}
-                    className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                    className="bg-[#01AFD1] hover:bg-[#0092b3] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[16px]">download</span>
                     Download PDF
@@ -715,7 +715,7 @@ export default function PackageCheckout() {
             {user ? (
               <Link
                 to="/my-trips"
-                className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                className="flex-1 bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-lg">luggage</span>
                 View My Trips
@@ -754,7 +754,7 @@ export default function PackageCheckout() {
                       sessionStorage.setItem('pending_claim', JSON.stringify({ id: bookingId, razorpay_payment_id: paymentId }));
                       navigate('/login');
                     }}
-                    className="flex-1 bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-lg">lock_open</span>
                     Login & Save Booking
@@ -800,14 +800,14 @@ export default function PackageCheckout() {
             {paymentId && (
               <Link
                 to="/my-trips"
-                className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
                 Check My Trips
                 <span className="material-symbols-outlined text-lg">luggage</span>
               </Link>
             )}
             {!paymentId && (
-              <button onClick={() => { setStep('checkout'); setError(null); }} className="w-full bg-[#136b8a] hover:bg-[#0f556e] text-white font-bold py-4 rounded-xl shadow-md transition-all">
+              <button onClick={() => { setStep('checkout'); setError(null); }} className="w-full bg-[#01AFD1] hover:bg-[#0092b3] text-white font-bold py-4 rounded-xl shadow-md transition-all">
                 Retry Payment
               </button>
             )}
@@ -827,7 +827,7 @@ export default function PackageCheckout() {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8 md:py-12 mt-20">
 
         <div className="mb-8">
-          <Link to={packageSlug && packageSlug !== 'custom-package' ? `/itinerary/${packageSlug}` : '/'} className="inline-flex items-center gap-2 text-[#136b8a] hover:text-[#0f556e] font-semibold mb-4 transition-colors">
+          <Link to={packageSlug && packageSlug !== 'custom-package' ? `/itinerary/${packageSlug}` : '/'} className="inline-flex items-center gap-2 text-[#01AFD1] hover:text-[#0092b3] font-semibold mb-4 transition-colors">
             <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Package
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Complete your booking</h1>
@@ -847,7 +847,7 @@ export default function PackageCheckout() {
             {/* Section 1: Traveller Details */}
             <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                <span className="material-symbols-outlined text-[#136b8a] text-2xl">person</span>
+                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">person</span>
                 <h2 className="text-2xl font-bold text-gray-900">Traveller Details</h2>
               </div>
 
@@ -860,7 +860,7 @@ export default function PackageCheckout() {
                     disabled={!!bookingId}
                     readOnly={profileLocked.name}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.name ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.name ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -874,7 +874,7 @@ export default function PackageCheckout() {
                         setFormData({...formData, date: e.target.value});
                       }
                     }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -885,7 +885,7 @@ export default function PackageCheckout() {
                     disabled={!!bookingId}
                     readOnly={profileLocked.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -896,7 +896,7 @@ export default function PackageCheckout() {
                     disabled={!!bookingId}
                     readOnly={profileLocked.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
                   />
                 </div>
                 <div>
@@ -913,7 +913,7 @@ export default function PackageCheckout() {
                       const opt = sharingOptions.find(o => o.type === selectedSharing);
                       if (opt) setComputedPrice(opt.pricePerPerson * val);
                     }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -922,7 +922,7 @@ export default function PackageCheckout() {
                     value={formData.source}
                     disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, source: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                   >
                     <option value="">Select source</option>
                     <option value="Facebook">Facebook</option>
@@ -940,7 +940,7 @@ export default function PackageCheckout() {
                     value={formData.specialRequest || ''}
                     disabled={!!bookingId}
                     onChange={(e) => setFormData({...formData, specialRequest: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#136b8a] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                     rows="3"
                     placeholder="Any dietary requirements or special requests..."
                   ></textarea>
@@ -951,7 +951,7 @@ export default function PackageCheckout() {
             {/* Section 2: Occupancy */}
             <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-2">
-                <span className="material-symbols-outlined text-[#136b8a] text-2xl">bed</span>
+                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">bed</span>
                 <h2 className="text-2xl font-bold text-gray-900">Occupancy</h2>
               </div>
               <p className="text-gray-500 mb-6 border-b border-gray-100 pb-4">Select room sharing type</p>
@@ -972,17 +972,17 @@ export default function PackageCheckout() {
                           : 'cursor-pointer'
                       } ${
                         isActive
-                          ? 'border-[#136b8a] bg-[#eff6f9] shadow-md scale-[1.02]'
-                          : 'border-gray-200 bg-white hover:border-[#136b8a]/50 hover:bg-gray-50'
+                          ? 'border-[#01AFD1] bg-[#eff6f9] shadow-md scale-[1.02]'
+                          : 'border-gray-200 bg-white hover:border-[#01AFD1]/50 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#136b8a]' : 'border-gray-300'}`}>
-                          {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#136b8a]"></div>}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#01AFD1]' : 'border-gray-300'}`}>
+                          {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#01AFD1]"></div>}
                         </div>
-                        {isActive && <span className="bg-[#136b8a] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Selected</span>}
+                        {isActive && <span className="bg-[#01AFD1] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Selected</span>}
                       </div>
-                      <h3 className={`font-bold text-lg ${isActive ? 'text-[#136b8a]' : 'text-gray-800'}`}>{option.label}</h3>
+                      <h3 className={`font-bold text-lg ${isActive ? 'text-[#01AFD1]' : 'text-gray-800'}`}>{option.label}</h3>
                       <div className="mt-auto">
                         <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{formatMoney(pricePerPerson)}</span>
                         <span className="text-xs text-gray-500 font-medium ml-1">/ person</span>
@@ -1031,13 +1031,13 @@ export default function PackageCheckout() {
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
                 </div>
-                <span className="font-extrabold text-[#136b8a] text-2xl">₹{formatMoney(safeFinalPayable)}</span>
+                <span className="font-extrabold text-[#01AFD1] text-2xl">₹{formatMoney(safeFinalPayable)}</span>
               </div>
 
               <button
                 onClick={handleProceedToPayment}
                 disabled={loading || !selectedSharing || checkoutBlocked}
-                className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-[#136b8a]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-[#01AFD1]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
               >
                 {loading ? (
                   <>

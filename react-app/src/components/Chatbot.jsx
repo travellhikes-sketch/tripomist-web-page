@@ -159,12 +159,12 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
           <div className="bg-[#f8f9fa] p-4 text-gray-800 flex items-center justify-between border-b border-gray-200 shadow-sm relative z-10 shrink-0">
             <div className="flex items-center gap-3">
               <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf4iPOLD4TW-emcX7qi8W7qPZhFbm5OzAQitvDsMARyOfBuAo9ztt29roRULWmZnSZXWDU9C66-5CEUsII9ClNmyCllVfZSQsk_Zh8SNMinjoMc_fWjzIKKChJB0UTFRB6QTigHPgLb0E2DZsOlp_JhvJp0lXnbSsTzGVqfLBMNk-0_rDP3tmtkhWYAQN9_F1nRcn8PpFGemDTJHOLelhxsCRyeTqUu0-JvD0GzZAkXaVLereGaQFPqUxJgRLojmOnEGYfiVmgV8Js0WY" alt="TripoMist Logo" className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200" />
-              <h3 className="font-extrabold text-[22px] text-[#136b8a] tracking-tight m-0">{botName}</h3>
+              <h3 className="font-extrabold text-[22px] text-[#01AFD1] tracking-tight m-0">{botName}</h3>
             </div>
             <div className="flex items-center gap-3">
               <a
                 href="tel:+919990802608"
-                className="w-11 h-11 rounded-full bg-[#eff6f9] text-[#136b8a] flex items-center justify-center hover:bg-[#136b8a] hover:text-white transition-colors shadow-sm cursor-pointer"
+                className="w-11 h-11 rounded-full bg-[#eff6f9] text-[#01AFD1] flex items-center justify-center hover:bg-[#01AFD1] hover:text-white transition-colors shadow-sm cursor-pointer"
                 title="Call TripoMist"
               >
                 <span className="material-symbols-outlined text-[22px] font-bold">call</span>
@@ -196,7 +196,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
                 <div
                   className={`px-6 py-4 rounded-[1.5rem] text-base leading-relaxed shadow-sm ${
                     msg.role === 'user'
-                      ? 'bg-[#136b8a] text-white rounded-tr-sm'
+                      ? 'bg-[#01AFD1] text-white rounded-tr-sm'
                       : 'bg-[#f3f4f6] text-gray-800 rounded-tl-sm border border-gray-100'
                   }`}
                 >
@@ -255,7 +255,7 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
                   onClick={() => {
                     setInput(txt)
                   }}
-                  className="text-[14px] font-semibold bg-white text-[#136b8a] border border-[#136b8a]/30 hover:bg-[#eff6f9] transition-all px-4 py-2 rounded-full cursor-pointer shadow-sm"
+                  className="text-[14px] font-semibold bg-white text-[#01AFD1] border border-[#01AFD1]/30 hover:bg-[#eff6f9] transition-all px-4 py-2 rounded-full cursor-pointer shadow-sm"
                 >
                   {txt}
                 </button>
@@ -275,12 +275,12 @@ function Chatbot({ isOpenExternal, onExternalClose } = {}) {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={isActive ? "Type your message here..." : "Chat is unavailable"}
                 disabled={isLoading || !isActive}
-                className="flex-1 bg-white border border-gray-300 rounded-full px-6 py-4 text-base focus:outline-none focus:border-[#136b8a] focus:ring-2 focus:ring-[#136b8a]/20 transition-all disabled:opacity-50 disabled:bg-gray-100 shadow-sm"
+                className="flex-1 bg-white border border-gray-300 rounded-full px-6 py-4 text-base focus:outline-none focus:border-[#01AFD1] focus:ring-2 focus:ring-[#01AFD1]/20 transition-all disabled:opacity-50 disabled:bg-gray-100 shadow-sm"
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim() || !isActive}
-                className="w-14 h-14 rounded-full bg-[#136b8a] hover:bg-[#0f556e] text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md"
+                className="w-14 h-14 rounded-full bg-[#01AFD1] hover:bg-[#0092b3] text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none shadow-md"
               >
                 <span className="material-symbols-outlined text-[24px]">send</span>
               </button>

@@ -321,7 +321,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
         {/* ── Loading splash (session reuse auto-submitting) ── */}
         {!sessionChecked && !downloadSuccess ? (
           <div className="py-12 flex flex-col items-center justify-center">
-            <div className="w-10 h-10 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin" />
             <p className="mt-4 text-gray-500 font-medium">Preparing download...</p>
           </div>
 
@@ -342,7 +342,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
         ) : showOtp ? (
           <div className="w-full flex flex-col items-center">
             <div className="w-12 h-12 rounded-full bg-[#e8f4f8] flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined text-[#136b8a] text-2xl">mail_lock</span>
+              <span className="material-symbols-outlined text-[#01AFD1] text-2xl">mail_lock</span>
             </div>
             <h2 className="text-[22px] font-bold text-gray-900 mb-1 tracking-tight text-center">Verify Your Email</h2>
             <p className="text-gray-500 text-sm mb-6 text-center">
@@ -369,7 +369,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
                   value={digit}
                   onChange={e => handleOtpChange(index, e.target.value)}
                   onKeyDown={e => handleOtpKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-xl font-bold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] focus:border-transparent bg-white"
+                  className="w-12 h-14 text-center text-xl font-bold border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1] focus:border-transparent bg-white"
                 />
               ))}
             </div>
@@ -377,7 +377,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
             <button
               onClick={handleVerifyOtp}
               disabled={otpVerifying || otpDigits.join('').length !== 6}
-              className="w-full py-3.5 bg-[#136b8a] text-white font-bold rounded-2xl shadow-md hover:bg-[#0f556e] transition-colors disabled:opacity-70 mb-3"
+              className="w-full py-3.5 bg-[#01AFD1] text-white font-bold rounded-2xl shadow-md hover:bg-[#0092b3] transition-colors disabled:opacity-70 mb-3"
             >
               {otpVerifying ? 'Verifying...' : 'Verify & Download'}
             </button>
@@ -390,7 +390,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
                   type="button"
                   onClick={handleResendOtp}
                   disabled={otpSending}
-                  className="text-sm font-bold text-[#136b8a] hover:underline disabled:opacity-60"
+                  className="text-sm font-bold text-[#01AFD1] hover:underline disabled:opacity-60"
                 >
                   {otpSending ? 'Sending...' : 'Resend Code'}
                 </button>
@@ -478,7 +478,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
                   type="checkbox"
                   checked={callback}
                   onChange={e => setCallback(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a] cursor-pointer"
+                  className="w-4 h-4 rounded border-gray-300 text-[#01AFD1] focus:ring-[#01AFD1] cursor-pointer"
                 />
                 <label className="text-gray-500 text-sm cursor-pointer font-medium" htmlFor="callback-checkbox">
                   Expecting a callback?
@@ -487,7 +487,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
 
               <button
                 disabled={isSubmitting}
-                className="w-full bg-[#136b8a] hover:bg-[#0f556e] disabled:opacity-70 text-white font-bold py-4 rounded-2xl shadow-md transition-all mt-4 cursor-pointer text-base active:scale-[0.98]"
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:opacity-70 text-white font-bold py-4 rounded-2xl shadow-md transition-all mt-4 cursor-pointer text-base active:scale-[0.98]"
                 type="submit"
               >
                 {isSubmitting ? 'Processing...' : 'Submit & Download'}
