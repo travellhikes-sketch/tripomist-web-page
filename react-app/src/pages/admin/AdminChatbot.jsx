@@ -233,10 +233,9 @@ const AdminChatbot = () => {
   return (
     <div className="flex-1 overflow-auto bg-slate-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">AI Chatbot</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage AI assistant settings and knowledge base</p>
+            <h1 className="text-xl font-semibold text-slate-900 tracking-tight">AI Chatbot</h1>
           </div>
         </div>
 
@@ -281,9 +280,9 @@ const AdminChatbot = () => {
         </div>
 
         {activeTab === 'settings' ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-slate-800 mb-6 border-b pb-4">Chatbot Configuration</h2>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800 mb-6 border-b border-gray-200 pb-2">Chatbot Configuration</h2>
 
               {loading ? (
                 <div className="flex justify-center p-8">
@@ -342,13 +341,13 @@ const AdminChatbot = () => {
                     </label>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-100 flex justify-end">
+                  <div className="pt-4 border-t border-gray-200 flex justify-start">
                     <button
                       type="submit"
                       disabled={saving}
-                      className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 text-sm font-medium shadow-sm"
+                      className="flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2 rounded-md hover:bg-[#0092b3] transition-colors disabled:opacity-50 text-sm font-medium"
                     >
-                      <Save size={18} />
+                      <Save size={16} />
                       {saving ? 'Saving...' : 'Save Settings'}
                     </button>
                   </div>
@@ -357,8 +356,8 @@ const AdminChatbot = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+          <div className="space-y-6">
+            <div className="border-b border-gray-200 pb-2 flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-slate-800">Knowledge Base</h2>
               <button
                 onClick={() => {
@@ -367,14 +366,14 @@ const AdminChatbot = () => {
                   setIsEditingKnowledge(true);
                   setError(null);
                 }}
-                className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-md hover:bg-slate-800 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-md hover:bg-[#0092b3] transition-colors text-sm font-medium"
               >
                 <Plus size={16} />
                 Add Knowledge
               </button>
             </div>
 
-            <div className="p-6">
+            <div>
               {loading && !isEditingKnowledge ? (
                  <div className="flex justify-center p-8">
                    <div className="w-8 h-8 border-4 border-slate-300 border-t-slate-800 rounded-full animate-spin"></div>
@@ -447,18 +446,18 @@ const AdminChatbot = () => {
                       </div>
                     </div>
 
-                    <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 mt-6">
+                    <div className="flex gap-3 justify-start pt-4 border-t border-gray-200 mt-6">
                       <button
                         type="button"
                         onClick={handleCancelKnowledge}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={saving}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50"
+                        className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#01AFD1] rounded-md hover:bg-[#0092b3] disabled:opacity-50"
                       >
                         <Save size={16} />
                         {saving ? 'Saving...' : 'Save Knowledge'}

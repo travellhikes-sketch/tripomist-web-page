@@ -243,7 +243,7 @@ export default function ItineraryMadhyameshwar() {
 
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="btn-shiny bg-[#01AFD1] hover:bg-[#0092b3] text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
+                      className="btn-shiny bg-[#01AFD1] hover:bg-[#0092b3] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
                     >
                       <span className="relative z-10 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px]">download</span>

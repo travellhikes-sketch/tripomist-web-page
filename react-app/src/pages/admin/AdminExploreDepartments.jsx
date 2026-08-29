@@ -181,14 +181,14 @@ export default function AdminExploreDepartments() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 pb-12 animate-fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Explore Navigation</h1>
-          <p className="text-gray-600 text-sm mt-1">Manage the dynamic navigation bar below the main search</p>
+          <h1 className="text-xl font-bold text-gray-900">Explore Navigation</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage the dynamic navigation bar below the main search.</p>
         </div>
-        <button onClick={() => openModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-          <Plus size={18} /> Add New Item
+        <button onClick={() => openModal()} className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-lg hover:bg-[#0092b3] transition-colors shadow-sm font-semibold text-sm">
+          <Plus size={16} /> Add New Item
         </button>
       </div>
 
@@ -214,9 +214,9 @@ export default function AdminExploreDepartments() {
                 <tr key={dept.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="p-4">
                     <div className="flex flex-col items-center">
-                      <button onClick={() => moveOrder(index, 'up')} disabled={index === 0} className="text-gray-400 hover:text-blue-600 disabled:opacity-30"><ArrowUp size={16} /></button>
+                      <button onClick={() => moveOrder(index, 'up')} disabled={index === 0} className="text-gray-400 hover:text-[#01AFD1] disabled:opacity-30"><ArrowUp size={16} /></button>
                       <span className="text-xs font-medium my-1 text-gray-500">{dept.display_order}</span>
-                      <button onClick={() => moveOrder(index, 'down')} disabled={index === departments.length - 1} className="text-gray-400 hover:text-blue-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+                      <button onClick={() => moveOrder(index, 'down')} disabled={index === departments.length - 1} className="text-gray-400 hover:text-[#01AFD1] disabled:opacity-30"><ArrowDown size={16} /></button>
                     </div>
                   </td>
                   <td className="p-4">
@@ -232,24 +232,24 @@ export default function AdminExploreDepartments() {
                     {dept.parent_id ? 'Child Menu' : 'Top Level'}
                   </td>
                   <td className="p-4 text-center">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${dept.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${dept.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-800'}`}>
                       {dept.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="p-4 text-center">
                     {dept.allow_package_placement ? (
-                      <Check size={16} className="text-green-500 mx-auto" />
+                      <Check size={16} className="text-emerald-500 mx-auto" />
                     ) : (
                       <X size={16} className="text-red-500 mx-auto" />
                     )}
                   </td>
                   <td className="p-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => openModal(dept)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                        <Edit2 size={16} />
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => openModal(dept)} className="p-1.5 text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded-md border border-transparent hover:border-[#01AFD1]/30 transition-colors" title="Edit">
+                        <Edit2 size={14} />
                       </button>
-                      <button onClick={() => handleDelete(dept.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                        <Trash2 size={16} />
+                      <button onClick={() => handleDelete(dept.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md border border-transparent hover:border-red-200 transition-colors" title="Delete">
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -263,43 +263,43 @@ export default function AdminExploreDepartments() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-10">
+            <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
               <h2 className="text-lg font-bold text-gray-900">{editingId ? 'Edit Item' : 'Add New Item'}</h2>
-              <button onClick={closeModal} className="text-gray-500 hover:bg-gray-100 p-2 rounded-lg transition-colors"><X size={20}/></button>
+              <button onClick={closeModal} className="text-gray-500 hover:text-gray-800 transition-colors"><X size={20}/></button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                  <input type="text" value={title} onChange={handleTitleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Sales Offers" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Title *</label>
+                  <input type="text" value={title} onChange={handleTitleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="Sales Offers" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-                  <input type="text" value={subtitle} onChange={e=>setSubtitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Limited Time Only" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Subtitle</label>
+                  <input type="text" value={subtitle} onChange={e=>setSubtitle(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="Limited Time Only" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
-                  <input type="text" value={slug} onChange={e=>setSlug(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="sales-offers" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Slug *</label>
+                  <input type="text" value={slug} onChange={e=>setSlug(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="sales-offers" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Material Icon (optional)</label>
-                  <input type="text" value={icon} onChange={e=>setIcon(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="local_offer" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Material Icon (optional)</label>
+                  <input type="text" value={icon} onChange={e=>setIcon(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="local_offer" />
                   <p className="text-xs text-gray-500 mt-1">Google Material Symbols name</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Custom Route (optional)</label>
-                  <input type="text" value={route} onChange={e=>setRoute(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="/explore/sales-offers" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Custom Route (optional)</label>
+                  <input type="text" value={route} onChange={e=>setRoute(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="/explore/sales-offers" />
                   <p className="text-xs text-gray-500 mt-1">Leave blank to use /explore/slug</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Menu (for dropdowns)</label>
-                <select value={parentId} onChange={e=>setParentId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Parent Menu (for dropdowns)</label>
+                <select value={parentId} onChange={e=>setParentId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm">
                   <option value="">None (Top Level)</option>
                   {topLevel.filter(d => d.id !== editingId).map(t => (
                     <option key={t.id} value={t.id}>{t.title}</option>
@@ -314,13 +314,13 @@ export default function AdminExploreDepartments() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">About / Description</label>
-                <textarea value={description} onChange={e=>setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Text for the About section on the dynamic page..."></textarea>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">About / Description</label>
+                <textarea value={description} onChange={e=>setDescription(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="Text for the About section on the dynamic page..."></textarea>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+              <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 flex items-center justify-center rounded border transition-colors ${isActive ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`}>
+                  <div className={`w-5 h-5 flex items-center justify-center rounded border transition-colors ${isActive ? 'bg-[#01AFD1] border-[#01AFD1]' : 'bg-white border-gray-300'}`}>
                     {isActive && <Check size={14} className="text-white" />}
                   </div>
                   <input type="checkbox" className="hidden" checked={isActive} onChange={e=>setIsActive(e.target.checked)} />
@@ -328,7 +328,7 @@ export default function AdminExploreDepartments() {
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className={`w-5 h-5 flex items-center justify-center rounded border transition-colors ${allowPackagePlacement ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300'}`}>
+                  <div className={`w-5 h-5 flex items-center justify-center rounded border transition-colors ${allowPackagePlacement ? 'bg-[#01AFD1] border-[#01AFD1]' : 'bg-white border-gray-300'}`}>
                     {allowPackagePlacement && <Check size={14} className="text-white" />}
                   </div>
                   <input type="checkbox" className="hidden" checked={allowPackagePlacement} onChange={e=>setAllowPackagePlacement(e.target.checked)} />
@@ -336,10 +336,10 @@ export default function AdminExploreDepartments() {
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={closeModal} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2">
-                  <Check size={18} /> {editingId ? 'Save Changes' : 'Create Item'}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" onClick={closeModal} className="px-5 py-2 border border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-2 text-sm font-semibold text-white bg-[#01AFD1] hover:bg-[#0092b3] rounded-lg transition-colors flex items-center gap-2">
+                  <Check size={16} /> {editingId ? 'Save Changes' : 'Create Item'}
                 </button>
               </div>
             </form>

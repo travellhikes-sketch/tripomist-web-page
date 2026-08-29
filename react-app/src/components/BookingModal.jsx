@@ -196,7 +196,8 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       p_selected_sharing: null,
       p_estimated_amount: price || 0,
       p_source: formData.source || null,
-      p_special_request: null
+      p_special_request: null,
+      p_verification_id: otpVerificationId || null
     });
 
     if (rpcError) {

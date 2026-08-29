@@ -508,7 +508,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     onSubmit(pkg);
   };
 
-  const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors";
+  const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#01AFD1] focus:border-[#01AFD1] outline-none transition-colors";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 
   return (
@@ -607,7 +607,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   <label key={day} className="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm cursor-pointer hover:bg-slate-50 transition-colors">
                     <input
                       type="checkbox"
-                      className="rounded border-slate-300 text-[#136b8a] focus:ring-[#136b8a]"
+                      className="rounded border-slate-300 text-[#01AFD1] focus:ring-[#01AFD1]"
                       checked={availableWeekdays.includes(day)}
                       onChange={(e) => {
                         if (e.target.checked) setAvailableWeekdays(prev => [...prev, day]);
@@ -641,7 +641,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                     setDepartureDates(prev => [...prev, newDepartureDate].sort());
                     setNewDepartureDate('');
                   }}
-                  className="px-3.5 py-2 bg-[#136b8a] text-white rounded-lg text-sm font-bold hover:bg-[#0f556e] whitespace-nowrap flex items-center gap-1"
+                  className="px-3.5 py-2 bg-[#01AFD1] text-white rounded-lg text-sm font-bold hover:bg-[#0092b3] whitespace-nowrap flex items-center gap-1"
                 >
                   <Plus size={16} /> Add Date
                 </button>
@@ -733,7 +733,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   <div key={idx} className="relative group bg-white border border-slate-200 rounded-xl p-2 flex flex-col items-center shadow-2xs">
                     <img src={img} alt={`Gallery ${idx}`} className="w-full h-24 object-cover rounded-lg mb-2" />
                     {idx === 0 && (
-                      <span className="absolute top-3 left-3 bg-[#136b8a] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
+                      <span className="absolute top-3 left-3 bg-[#01AFD1] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
                         Cover
                       </span>
                     )}
@@ -792,7 +792,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
           <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-3">
             <div className="flex items-center justify-between">
               <label className={`${labelClass} text-slate-900 font-bold mb-0 flex items-center gap-2`}>
-                <FileText size={18} className="text-[#136b8a]" />
+                <FileText size={18} className="text-[#01AFD1]" />
                 <span>Downloadable Itinerary PDF</span>
               </label>
               <div className="text-xs text-slate-500">
@@ -804,7 +804,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs">
                 <div className="flex items-center gap-2 truncate pr-2">
                   <FileText size={16} className="text-rose-600 shrink-0" />
-                  <a href={itineraryPdfUrl} target="_blank" rel="noopener noreferrer" className="text-[#136b8a] font-bold hover:underline truncate">
+                  <a href={itineraryPdfUrl} target="_blank" rel="noopener noreferrer" className="text-[#01AFD1] font-bold hover:underline truncate">
                     {itineraryPdfUrl.split('/').pop()}
                   </a>
                 </div>
@@ -839,7 +839,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <button
                 type="button"
                 onClick={resetSectionSettings}
-                className="text-xs text-[#136b8a] hover:underline font-semibold"
+                className="text-xs text-[#01AFD1] hover:underline font-semibold"
               >
                 Reset Default Order
               </button>
@@ -944,7 +944,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   type="checkbox"
                   checked={isClickable}
                   onChange={e => setIsClickable(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-2"
+                  className="w-4 h-4 text-[#01AFD1] rounded border-gray-300 focus:ring-[#01AFD1] mr-2"
                 />
                 <span className="text-sm text-gray-700 font-medium">
                   {isClickable ? 'ON (Normal Package)' : 'OFF (Card Only, Non-clickable)'}
@@ -1009,7 +1009,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   type="checkbox"
                   checked={isExploreAll}
                   onChange={(e) => setIsExploreAll(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-[#01AFD1] focus:ring-[#01AFD1]"
                 />
                 <span className="text-sm font-medium text-gray-700">Explore All Departures</span>
               </label>
@@ -1018,7 +1018,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   type="checkbox"
                   checked={isUpcoming}
                   onChange={(e) => setIsUpcoming(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-[#01AFD1] focus:ring-[#01AFD1]"
                 />
                 <span className="text-sm font-medium text-gray-700">Upcoming Trips</span>
               </label>
@@ -1034,7 +1034,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-gray-700">Homepage Sections</h4>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => selectAllPlacements('homepage_section', dynamicSections, 'section_key')} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => selectAllPlacements('homepage_section', dynamicSections, 'section_key')} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                   <button type="button" onClick={() => clearAllPlacements('homepage_section')} className="text-xs text-red-600 hover:underline">Clear All</button>
                 </div>
               </div>
@@ -1046,7 +1046,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   return (
                     <label key={sec.id} className="flex items-center gap-3 cursor-pointer group relative">
                       <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('homepage_section', sec.id, sec.section_key)} />
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                         {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <span className="text-sm text-gray-700 select-none">{sec.title}</span>
@@ -1061,7 +1061,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-gray-700">Interests</h4>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => selectAllPlacements('interest', dynamicInterests)} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => selectAllPlacements('interest', dynamicInterests)} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                   <button type="button" onClick={() => clearAllPlacements('interest')} className="text-xs text-red-600 hover:underline">Clear All</button>
                 </div>
               </div>
@@ -1072,7 +1072,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   return (
                     <label key={int.id} className="flex items-center gap-3 cursor-pointer group relative">
                       <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('interest', int.id, int.slug)} />
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                         {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <span className="text-sm text-gray-700 select-none">{int.name}</span>
@@ -1087,7 +1087,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-gray-700">Destinations</h4>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => selectAllPlacements('destination', dynamicDestinations)} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => selectAllPlacements('destination', dynamicDestinations)} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                   <button type="button" onClick={() => clearAllPlacements('destination')} className="text-xs text-red-600 hover:underline">Clear All</button>
                 </div>
               </div>
@@ -1098,7 +1098,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   return (
                     <label key={dest.id} className="flex items-center gap-3 cursor-pointer group relative">
                       <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('destination', dest.id, dest.slug)} />
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                         {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <span className="text-sm text-gray-700 select-none">{dest.name}</span>
@@ -1113,7 +1113,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-gray-700">Explore Departments</h4>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => selectAllPlacements('explore_department', exploreDepartments)} className="text-xs text-blue-600 hover:underline">Select All</button>
+                  <button type="button" onClick={() => selectAllPlacements('explore_department', exploreDepartments)} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                   <button type="button" onClick={() => clearAllPlacements('explore_department')} className="text-xs text-red-600 hover:underline">Clear All</button>
                 </div>
               </div>
@@ -1124,7 +1124,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   return (
                     <label key={dept.id} className="flex items-center gap-3 cursor-pointer group relative">
                       <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('explore_department', dept.id, dept.slug)} />
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-500'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                         {isChecked && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <span className="text-sm text-gray-700 select-none">{dept.title}</span>
@@ -1146,7 +1146,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="text-xs font-semibold text-gray-600 uppercase">Destinations (Explore More)</h5>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => selectAllPlacements('recommendation_destination', dynamicDestinations)} className="text-xs text-[#136b8a] hover:underline">Select All</button>
+                      <button type="button" onClick={() => selectAllPlacements('recommendation_destination', dynamicDestinations)} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                       <button type="button" onClick={() => clearAllPlacements('recommendation_destination')} className="text-xs text-red-600 hover:underline">Clear All</button>
                     </div>
                   </div>
@@ -1157,7 +1157,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                       return (
                         <label key={`rec-dest-${dest.id}`} className="flex items-center gap-3 cursor-pointer group relative">
                           <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('recommendation_destination', dest.id, dest.slug)} />
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                             {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                           </div>
                           <span className="text-sm text-gray-700 select-none">{dest.name}</span>
@@ -1171,7 +1171,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="text-xs font-semibold text-gray-600 uppercase">Interests (Explore More)</h5>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => selectAllPlacements('recommendation_interest', dynamicInterests)} className="text-xs text-[#136b8a] hover:underline">Select All</button>
+                      <button type="button" onClick={() => selectAllPlacements('recommendation_interest', dynamicInterests)} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                       <button type="button" onClick={() => clearAllPlacements('recommendation_interest')} className="text-xs text-red-600 hover:underline">Clear All</button>
                     </div>
                   </div>
@@ -1182,7 +1182,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                       return (
                         <label key={`rec-int-${int.id}`} className="flex items-center gap-3 cursor-pointer group relative">
                           <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('recommendation_interest', int.id, int.slug)} />
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                             {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                           </div>
                           <span className="text-sm text-gray-700 select-none">{int.name}</span>
@@ -1196,7 +1196,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="text-xs font-semibold text-gray-600 uppercase">Dynamic Listing Sections (Explore More)</h5>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => selectAllPlacements('recommendation_listing', dynamicSections, 'section_key')} className="text-xs text-[#136b8a] hover:underline">Select All</button>
+                      <button type="button" onClick={() => selectAllPlacements('recommendation_listing', dynamicSections, 'section_key')} className="text-xs text-[#01AFD1] hover:underline">Select All</button>
                       <button type="button" onClick={() => clearAllPlacements('recommendation_listing')} className="text-xs text-red-600 hover:underline">Clear All</button>
                     </div>
                   </div>
@@ -1207,7 +1207,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                       return (
                         <label key={`rec-listing-${sec.id}`} className="flex items-center gap-3 cursor-pointer group relative">
                           <input type="checkbox" className="absolute opacity-0 w-0 h-0" checked={isChecked} onChange={() => togglePlacement('recommendation_listing', sec.id, sec.section_key)} />
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                             {isChecked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                           </div>
                           <span className="text-sm text-gray-700 select-none">{sec.title}</span>
@@ -1227,7 +1227,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                         checked={selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff')} 
                         onChange={() => togglePlacement('recommendation_listing', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'Search Results Page')} 
                       />
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff') ? 'bg-[#136b8a] border-[#136b8a]' : 'border-gray-300 group-hover:border-[#136b8a]'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff') ? 'bg-[#01AFD1] border-[#01AFD1]' : 'border-gray-300 group-hover:border-[#01AFD1]'}`}>
                         {selectedPlacements.some(p => p.type === 'recommendation_listing' && p.id === 'ffffffff-ffff-ffff-ffff-ffffffffffff') && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <span className="text-sm text-gray-700 select-none">Search Results Page</span>
@@ -1264,7 +1264,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 <button
                   type="button"
                   onClick={handleAddThingToCarry}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  className="text-xs font-bold text-[#01AFD1] hover:text-blue-800 flex items-center gap-1 bg-white border border-[#01AFD1]/30 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
                 >
                   <Plus size={14} /> Add Item
                 </button>
@@ -1280,7 +1280,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                         type="text"
                         value={item}
                         onChange={e => handleUpdateThingToCarry(idx, e.target.value)}
-                        className="flex-grow border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="flex-grow border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-[#01AFD1] outline-none"
                         placeholder="e.g. Warm Clothes & Layering"
                       />
                       <div className="flex items-center gap-1 shrink-0">
@@ -1327,7 +1327,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 <button
                   type="button"
                   onClick={handleAddTripInfo}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  className="text-xs font-bold text-[#01AFD1] hover:text-blue-800 flex items-center gap-1 bg-white border border-[#01AFD1]/30 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
                 >
                   <Plus size={14} /> Add Info Item
                 </button>
@@ -1341,7 +1341,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                       <select
                         value={item.icon || 'Bus'}
                         onChange={e => handleUpdateTripInfo(idx, 'icon', e.target.value)}
-                        className="border border-gray-200 rounded-md px-2 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="border border-gray-200 rounded-md px-2 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-[#01AFD1] outline-none"
                       >
                         <option value="Bus">Bus / Transport</option>
                         <option value="Users">Users / Group</option>
@@ -1357,14 +1357,14 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                         type="text"
                         value={item.label || ''}
                         onChange={e => handleUpdateTripInfo(idx, 'label', e.target.value)}
-                        className="w-full sm:w-1/3 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full sm:w-1/3 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-[#01AFD1] outline-none"
                         placeholder="Label (e.g. Group Size)"
                       />
                       <input
                         type="text"
                         value={item.value || ''}
                         onChange={e => handleUpdateTripInfo(idx, 'value', e.target.value)}
-                        className="w-full sm:w-1/2 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full sm:w-1/2 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-[#01AFD1] outline-none"
                         placeholder="Value (e.g. 12 - 15)"
                       />
                       <div className="flex items-center justify-end gap-1 shrink-0">
@@ -1405,7 +1405,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 <button
                   type="button"
                   onClick={handleAddTrustBenefit}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  className="text-xs font-bold text-[#01AFD1] hover:text-blue-800 flex items-center gap-1 bg-white border border-[#01AFD1]/30 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
                 >
                   <Plus size={14} /> Add Benefit
                 </button>
@@ -1421,7 +1421,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                         type="text"
                         value={benefit}
                         onChange={e => handleUpdateTrustBenefit(idx, e.target.value)}
-                        className="flex-grow border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="flex-grow border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-[#01AFD1] outline-none"
                         placeholder="e.g. Best for Solo Travelers"
                       />
                       <div className="flex items-center gap-1 shrink-0">
@@ -1462,7 +1462,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                 <button
                   type="button"
                   onClick={handleAddFaq}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-white border border-blue-200 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  className="text-xs font-bold text-[#01AFD1] hover:text-blue-800 flex items-center gap-1 bg-white border border-[#01AFD1]/30 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
                 >
                   <Plus size={14} /> Add FAQ
                 </button>
@@ -1505,7 +1505,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                         type="text"
                         value={faq.question || ''}
                         onChange={e => handleUpdateFaq(idx, 'question', e.target.value)}
-                        className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-blue-500 outline-none"
+                        className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-[#01AFD1] outline-none"
                         placeholder="Question (e.g. Is this trip suitable for beginners?)"
                       />
                       <RichTextEditor
@@ -1570,7 +1570,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#01AFD1] text-white rounded-lg hover:bg-[#0092b3] font-medium text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {saving && (
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

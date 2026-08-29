@@ -406,7 +406,7 @@ const AdminSiteSettings = () => {
   };
 
 
-  const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors";
+  const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#01AFD1] focus:border-[#01AFD1] outline-none transition-colors";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
 
   if (loading) {
@@ -462,11 +462,11 @@ const AdminSiteSettings = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                     isActive
-                      ? 'bg-blue-50 text-blue-700'
+                      ? 'bg-[#01AFD1]/10 text-[#0092b3]'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
-                  <Icon size={18} className={isActive ? 'text-blue-600' : 'text-gray-400'} />
+                  <Icon size={18} className={isActive ? 'text-[#01AFD1]' : 'text-gray-400'} />
                   {tab.label}
                 </button>
               );
@@ -544,7 +544,7 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('hero')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Hero Settings
                 </button>
               </div>
@@ -574,7 +574,7 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('search_page_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('search_page_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Search Hero
                 </button>
               </div>
@@ -596,7 +596,7 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('customer_account_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('customer_account_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Customer Hero
                 </button>
               </div>
@@ -625,7 +625,7 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('typography')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('typography')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Typography
                 </button>
               </div>
@@ -681,7 +681,7 @@ const AdminSiteSettings = () => {
 
               </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('navbar')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('navbar')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Navbar Settings
                 </button>
               </div>
@@ -729,7 +729,7 @@ const AdminSiteSettings = () => {
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-md font-bold text-gray-800">Company Column Links</h3>
-                  <button onClick={addFooterLink} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                  <button onClick={addFooterLink} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#01AFD1]/10 text-[#0092b3] hover:bg-[#01AFD1]/20 rounded-lg text-xs font-semibold">
                     <Plus size={14} /> Add Link
                   </button>
                 </div>
@@ -781,7 +781,7 @@ const AdminSiteSettings = () => {
               )}
 
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('footer')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('footer')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Footer & Contact Settings
                 </button>
               </div>
@@ -811,7 +811,7 @@ const AdminSiteSettings = () => {
                 </div>
               </div>
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('social_links')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('social_links')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Social Links
                 </button>
               </div>
@@ -894,7 +894,7 @@ const AdminSiteSettings = () => {
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button onClick={() => { handleSave('package_detail_settings'); handleSave('explore_more_settings'); }} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => { handleSave('package_detail_settings'); handleSave('explore_more_settings'); }} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Package Defaults
                 </button>
               </div>
@@ -931,7 +931,7 @@ const AdminSiteSettings = () => {
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-md font-bold text-gray-800">Feature Cards</h3>
-                  <button onClick={() => addCard('trust_benefits', { icon: 'Sparkles', heading: 'New Feature', description: 'Feature description', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                  <button onClick={() => addCard('trust_benefits', { icon: 'Sparkles', heading: 'New Feature', description: 'Feature description', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#01AFD1]/10 text-[#0092b3] hover:bg-[#01AFD1]/20 rounded-lg text-xs font-semibold">
                     <Plus size={14} /> Add Feature Card
                   </button>
                 </div>
@@ -987,7 +987,7 @@ const AdminSiteSettings = () => {
               </div>
 
               <div className="pt-4 flex justify-end border-t mt-4">
-                <button onClick={() => handleSave('trust_benefits')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('trust_benefits')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Experience Section Settings
                 </button>
               </div>
@@ -1185,7 +1185,7 @@ const AdminSiteSettings = () => {
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('why_choose_us_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('why_choose_us_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Why Choose Us Settings
                 </button>
               </div>
@@ -1225,7 +1225,7 @@ const AdminSiteSettings = () => {
               <div className="border-t pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-md font-bold text-gray-800">Stats Items</h3>
-                  <button onClick={() => addCard('stats_strip', { value: '100+', label: 'COMPLETED TRIPS', icon: 'Map', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold">
+                  <button onClick={() => addCard('stats_strip', { value: '100+', label: 'COMPLETED TRIPS', icon: 'Map', is_active: true })} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#01AFD1]/10 text-[#0092b3] hover:bg-[#01AFD1]/20 rounded-lg text-xs font-semibold">
                     <Plus size={14} /> Add Stat Item
                   </button>
                 </div>
@@ -1278,7 +1278,7 @@ const AdminSiteSettings = () => {
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('stats_strip')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('stats_strip')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Stats Settings
                 </button>
               </div>
@@ -1381,7 +1381,7 @@ const AdminSiteSettings = () => {
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('customer_support')} disabled={saving} className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50">
+                <button onClick={() => handleSave('customer_support')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Support Settings
                 </button>
               </div>
@@ -1479,10 +1479,10 @@ const AdminSiteSettings = () => {
                         if (isNaN(fromIndex) || fromIndex === index) return;
                         moveSection(fromIndex, index);
                       }}
-                      className="flex items-center justify-between p-3.5 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group"
+                      className="flex items-center justify-between p-3.5 bg-white border border-gray-200 rounded-xl hover:border-[#01AFD1]/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                        <div className="text-gray-400 group-hover:text-[#01AFD1] transition-colors">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
                           </svg>
@@ -1533,7 +1533,7 @@ const AdminSiteSettings = () => {
                       handleSaveLayoutOrder();
                     }}
                     disabled={saving}
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                    className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50"
                   >
                     <Save size={16} /> Save Homepage Section Order
                   </button>

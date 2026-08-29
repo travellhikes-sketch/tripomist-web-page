@@ -52,15 +52,15 @@ export default function MediaUploader({
       <label className="block text-sm font-medium text-gray-900 mb-2">{label}</label>
       {hint && <p className="text-xs text-gray-500 mb-3">{hint}</p>}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <input 
           type="text" 
           value={url} 
           onChange={e => onUrlChange(e.target.value)} 
           placeholder="Paste URL (https://...)" 
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" 
+          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#01AFD1] outline-none" 
         />
-        <label className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 text-sm font-medium transition-colors">
+        <label className="bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 text-sm font-medium transition-colors shrink-0">
           {uploading ? (
             <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
           ) : (
@@ -79,10 +79,10 @@ export default function MediaUploader({
           <button 
             type="button" 
             onClick={() => onUrlChange('')}
-            className="px-3 py-2 text-red-600 hover:bg-red-50 border border-transparent rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
+            className="px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium shrink-0"
             title="Remove Media"
           >
-            <X size={18} />
+            <X size={16} />
             Remove
           </button>
         )}

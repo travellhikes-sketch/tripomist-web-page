@@ -94,13 +94,13 @@ const AdminCancelledBookings = () => {
               placeholder="Search ID, customer, phone..." 
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a]"
+              className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1]"
             />
           </div>
           <select 
             value={monthFilter}
             onChange={(e) => { setMonthFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a]"
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1]"
           >
             <option value="all">All Time</option>
             <option value="this">This Month</option>

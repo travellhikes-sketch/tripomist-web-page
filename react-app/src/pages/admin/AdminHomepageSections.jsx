@@ -275,22 +275,22 @@ const AdminHomepageSections = () => {
     setFormData(initialFormState);
   };
 
-  const inputClass = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm";
+  const inputClass = "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#01AFD1] focus:border-[#01AFD1] outline-none text-sm";
   const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Homepage Sections</h1>
-          <p className="text-gray-500 mt-1">Manage all homepage content layouts, banners, and package rails.</p>
+          <h1 className="text-xl font-bold text-gray-900">Homepage Sections</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage all homepage content layouts, banners, and package rails.</p>
         </div>
         {!activeFormType && !showTypeChooser && (
           <button
             onClick={() => setShowTypeChooser(true)}
-            className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium"
+            className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-lg hover:bg-[#0092b3] transition-colors shadow-sm font-semibold text-sm"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Add Section
           </button>
         )}
@@ -310,83 +310,78 @@ const AdminHomepageSections = () => {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div></div>
+        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div></div>
       ) : showTypeChooser ? (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md mx-auto">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">What do you want to add?</h2>
-          <div className="space-y-4">
-            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('normal'); }} className="w-full p-4 border rounded-xl hover:border-[#136b8a] hover:bg-blue-50 transition-colors text-left font-medium text-gray-800 flex flex-col">
-              <span>Normal Packages Section</span>
-              <span className="text-xs text-gray-500 font-normal mt-1">e.g. Recommended, Best Seller, Upcoming Trips</span>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 max-w-md mx-auto">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">What do you want to add?</h2>
+          <div className="space-y-3">
+            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('normal'); }} className="w-full p-3 border rounded-lg hover:border-[#01AFD1] hover:bg-[#01AFD1]/10 transition-colors text-left font-medium text-gray-800 flex flex-col">
+              <span className="text-sm">Normal Packages Section</span>
+              <span className="text-xs text-gray-500 font-normal mt-0.5">e.g. Recommended, Best Seller, Upcoming Trips</span>
             </button>
-            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('promo'); }} className="w-full p-4 border rounded-xl hover:border-[#136b8a] hover:bg-blue-50 transition-colors text-left font-medium text-gray-800 flex flex-col">
-              <span>Big Promo Banner</span>
-              <span className="text-xs text-gray-500 font-normal mt-1">Large image carousel for main promotions</span>
+            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('promo'); }} className="w-full p-3 border rounded-lg hover:border-[#01AFD1] hover:bg-[#01AFD1]/10 transition-colors text-left font-medium text-gray-800 flex flex-col">
+              <span className="text-sm">Big Promo Banner</span>
+              <span className="text-xs text-gray-500 font-normal mt-0.5">Large image carousel for main promotions</span>
             </button>
-            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('static'); }} className="w-full p-4 border rounded-xl hover:border-[#136b8a] hover:bg-blue-50 transition-colors text-left font-medium text-gray-800 flex flex-col">
-              <span>Short Banner</span>
-              <span className="text-xs text-gray-500 font-normal mt-1">Single wide static banner (e.g. Ongoing Trips)</span>
+            <button onClick={() => { setShowTypeChooser(false); setActiveFormType('static'); }} className="w-full p-3 border rounded-lg hover:border-[#01AFD1] hover:bg-[#01AFD1]/10 transition-colors text-left font-medium text-gray-800 flex flex-col">
+              <span className="text-sm">Short Banner</span>
+              <span className="text-xs text-gray-500 font-normal mt-0.5">Single wide static banner (e.g. Ongoing Trips)</span>
             </button>
           </div>
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <button onClick={() => setShowTypeChooser(false)} className="text-sm text-gray-500 hover:text-gray-800 font-medium">Cancel</button>
           </div>
         </div>
       ) : activeFormType === 'normal' ? (
-        <form onSubmit={handleSaveNormal} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-          <div className="flex justify-between items-center border-b pb-4">
-             <h2 className="text-xl font-bold">{currentItem ? 'Edit Normal Packages Section' : 'New Packages Section'}</h2>
+        <form onSubmit={handleSaveNormal} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
+          <div className="flex justify-between items-center border-b pb-3">
+             <h2 className="text-lg font-bold text-gray-900">{currentItem ? 'Edit Normal Packages Section' : 'New Packages Section'}</h2>
              <button type="button" onClick={handleCancel} className="text-gray-500 hover:text-gray-700 font-medium text-sm">Cancel</button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Section Title</label>
               <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} className={inputClass} required placeholder="e.g. Best Seller" />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">View All Button Text</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">View All Button Text</label>
               <input type="text" name="view_all_text" value={formData.view_all_text || ''} onChange={handleInputChange} className={inputClass} placeholder="e.g. View All" required />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Packages Shown</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Max Packages Shown</label>
               <input type="number" name="max_cards" value={formData.max_cards} onChange={handleInputChange} className={inputClass} required />
             </div>
 
             <div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Display Style</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Display Style</label>
                 <select name="display_style" value={formData.display_style || 'simple'} onChange={handleInputChange} className={inputClass}>
                   <option value="simple">Simple (Standard Carousel)</option>
                   <option value="advanced">Advanced (3D Coverflow)</option>
                   <option value="advanced_1_1">Advanced (1:1 Card Slider)</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">Advanced styles use premium interactive layouts.</p>
-              </div>
-
-              <div>
-                <label className={labelClass}>Section Width</label>  <p className="text-xs text-gray-500 mt-1">Style for "Explore More Trips" shown when "View All" is clicked.</p>
               </div>
             </div>
 
             {formData.display_style?.startsWith('advanced') && (
               <>
-                <div className="flex items-center mt-6">
-                  <input type="checkbox" name="advanced_cta_enabled" checked={formData.advanced_cta_enabled !== false} onChange={handleInputChange} className="w-5 h-5 mr-3 text-[#136b8a] rounded focus:ring-[#136b8a]" />
-                  <label className="text-sm font-medium text-gray-700">Show CTA Button in Advanced Style</label>
+                <div className="flex items-center mt-4">
+                  <input type="checkbox" name="advanced_cta_enabled" checked={formData.advanced_cta_enabled !== false} onChange={handleInputChange} className="w-4 h-4 mr-2 text-[#01AFD1] rounded focus:ring-[#01AFD1]" />
+                  <label className="text-sm font-semibold text-gray-700">Show CTA Button in Advanced Style</label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Advanced CTA Text</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Advanced CTA Text</label>
                   <input type="text" name="advanced_cta_text" value={formData.advanced_cta_text || ''} onChange={handleInputChange} className={inputClass} placeholder="e.g. View Trip" />
                 </div>
               </>
             )}
 
-            <div className="flex items-center mt-6">
-              <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-5 h-5 mr-3 text-[#136b8a] rounded focus:ring-[#136b8a]" />
-              <label className="text-sm font-medium text-gray-700">Section is Active</label>
+            <div className="flex items-center mt-4">
+              <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-4 h-4 mr-2 text-[#01AFD1] rounded focus:ring-[#01AFD1]" />
+              <label className="text-sm font-semibold text-gray-700">Section is Active</label>
             </div>
           </div>
 
@@ -395,21 +390,21 @@ const AdminHomepageSections = () => {
                currentImage={formData.hero_image}
                onImageUploaded={(url) => setFormData({ ...formData, hero_image: url })}
                label="Listing Page Hero Image"
-               hint="Optional. This image will appear at the top of the 'View All' listing page for this section. Use a wide banner image (e.g. 1920x600)."
+               hint="Optional. This image will appear at the top of the 'View All' listing page."
              />
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-gray-100">
-            <button type="submit" disabled={saving} className="bg-[#136b8a] text-white px-6 py-2.5 rounded-lg hover:bg-[#0f556e] font-medium disabled:opacity-50 inline-flex gap-2 items-center">
-               <Save size={18} /> Save Section
+            <button type="submit" disabled={saving} className="bg-[#01AFD1] text-white px-5 py-2 rounded-lg hover:bg-[#0092b3] font-semibold text-sm disabled:opacity-50 inline-flex gap-2 items-center">
+               <Save size={16} /> Save Section
             </button>
-            <button type="button" onClick={handleCancel} disabled={saving} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium">Cancel</button>
+            <button type="button" onClick={handleCancel} disabled={saving} className="border border-gray-300 bg-white text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm">Cancel</button>
           </div>
         </form>
       ) : activeFormType === 'promo' ? (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-          <div className="flex justify-between items-center border-b pb-4">
-             <h2 className="text-xl font-bold">Manage Big Promo Banner</h2>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
+          <div className="flex justify-between items-center border-b pb-3">
+             <h2 className="text-lg font-bold text-gray-900">Manage Big Promo Banner</h2>
              <button type="button" onClick={handleCancel} className="text-gray-500 hover:text-gray-700 font-medium text-sm">Cancel</button>
           </div>
 
@@ -434,17 +429,17 @@ const AdminHomepageSections = () => {
                 };
                 handleSettingsChange('homepage_promo_banners', 'banners', [...banners, newBanner]);
               }}
-              className="flex items-center gap-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+              className="flex items-center gap-1.5 bg-[#01AFD1] text-white hover:bg-[#0092b3] px-3 py-1.5 rounded-md text-xs font-semibold transition-colors shadow-sm"
             >
-              <Plus size={16} /> Add Carousel Item
+              <Plus size={14} /> Add Carousel Item
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {(siteSettings.homepage_promo_banners?.banners || []).map((banner, idx) => (
-              <div key={banner.id} className="border border-gray-200 rounded-xl bg-gray-50 p-6 relative">
+              <div key={banner.id} className="border border-gray-200 rounded-lg bg-gray-50 p-4 relative">
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <div className="flex gap-1 border rounded-lg bg-white overflow-hidden shadow-sm mr-2">
+                  <div className="flex gap-1 border rounded-md bg-white overflow-hidden shadow-sm mr-2">
                     <button
                       onClick={() => {
                         if (idx === 0) return;
@@ -455,7 +450,7 @@ const AdminHomepageSections = () => {
                         handleSettingsChange('homepage_promo_banners', 'banners', updatedList);
                       }}
                       disabled={idx === 0}
-                      className="p-1.5 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                      className="p-1 hover:bg-gray-100 disabled:opacity-30 transition-colors"
                     >
                       <ArrowUp size={14} />
                     </button>
@@ -471,7 +466,7 @@ const AdminHomepageSections = () => {
                         handleSettingsChange('homepage_promo_banners', 'banners', updatedList);
                       }}
                       disabled={idx === (siteSettings.homepage_promo_banners?.banners || []).length - 1}
-                      className="p-1.5 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                      className="p-1 hover:bg-gray-100 disabled:opacity-30 transition-colors"
                     >
                       <ArrowDown size={14} />
                     </button>
@@ -483,13 +478,13 @@ const AdminHomepageSections = () => {
                         handleSettingsChange('homepage_promo_banners', 'banners', list);
                       }
                     }}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors bg-white shadow-sm border border-red-100"
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors bg-white shadow-sm border border-red-200"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
                     <label className={labelClass}>Banner Title</label>
                     <input
@@ -502,33 +497,7 @@ const AdminHomepageSections = () => {
                       className={inputClass}
                     />
                   </div>
-                  <div>
-                    <label className={labelClass}>Status</label>
-                    <select
-                      value={banner.active !== false ? 'true' : 'false'}
-                      onChange={e => {
-                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, active: e.target.value === 'true', is_active: e.target.value === 'true' } : b);
-                        handleSettingsChange('homepage_promo_banners', 'banners', list);
-                      }}
-                      className={inputClass}
-                    >
-                      <option value="true">Active (Show)</option>
-                      <option value="false">Inactive (Hide)</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className={labelClass}>Subtitle / Description</label>
-                    <input
-                      type="text"
-                      value={banner.subtitle || ''}
-                      onChange={e => {
-                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, subtitle: e.target.value } : b);
-                        handleSettingsChange('homepage_promo_banners', 'banners', list);
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div className="md:col-span-2 border rounded-xl p-4 bg-white">
+                  <div className="md:col-span-2 border border-gray-200 rounded-lg p-3 bg-white">
                     <MediaUploader
                       url={banner.image || banner.image_url || ''}
                       onUrlChange={url => {
@@ -537,79 +506,28 @@ const AdminHomepageSections = () => {
                       }}
                       folder="promo_banners"
                       label="Banner Image"
-                      hint="Recommended: Wide ratio (e.g. 1200x500px). Supports images/videos."
                     />
-                  </div>
-                  <div>
-                    <label className={labelClass}>CTA Button Text</label>
-                    <input
-                      type="text"
-                      value={banner.cta_text || banner.cta_label || ''}
-                      onChange={e => {
-                        const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_text: e.target.value, cta_label: e.target.value } : b);
-                        handleSettingsChange('homepage_promo_banners', 'banners', list);
-                      }}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <div>
-                      <WebsiteLinkPicker
-                        label="CTA Destination (Route or URL)"
-                        value={banner.cta_link || banner.cta_url || ''}
-                        onChange={val => {
-                          if (val.startsWith('CREATE_PACKAGE:')) {
-                            const term = val.replace('CREATE_PACKAGE:', '');
-                            setCreatePageModalOpen(true);
-                            setCreatePageData({ title: term, route: `/trips/${term.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, hero_image: '', explore_more_style: 'normal', target_field: 'homepage_promo_banners', target_index: idx });
-                          } else {
-                            const list = (siteSettings.homepage_promo_banners?.banners || []).map(b => b.id === banner.id ? { ...b, cta_link: val, cta_url: val } : b);
-                            handleSettingsChange('homepage_promo_banners', 'banners', list);
-                          }
-                        }}
-                      />
-                      {(() => {
-                        const link = banner.cta_link || banner.cta_url || '';
-                        const linkedSection = sections.find(s => (s.view_all_route || `/trips/${s.section_key}`) === link);
-                        if (!linkedSection) return null;
-                        return (
-                          <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                            <h4 className="text-sm font-semibold text-gray-800 mb-1">Linked Package Page</h4>
-                            <p className="text-xs text-gray-500 mb-3">Page: {linkedSection.title} | Route: {link}</p>
-                            <MediaUploader
-                              url={linkedSection.hero_image || ''}
-                              onUrlChange={async (url) => {
-                                const { error } = await supabase.from('homepage_sections').update({ hero_image: url }).eq('id', linkedSection.id);
-                                if (!error) setSections(sections.map(s => s.id === linkedSection.id ? { ...s, hero_image: url } : s));
-                              }}
-                              folder="homepage_sections"
-                              label="Listing Page Hero Image"
-                            />
-                          </div>
-                        );
-                      })()}
-                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="pt-4 flex gap-3 border-t mt-6">
-            <button onClick={() => handleSaveSettings('homepage_promo_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-[#136b8a] text-white px-6 py-2.5 rounded-lg hover:bg-[#0f556e] transition-colors font-medium disabled:opacity-50">
-              <Save size={18} /> Save Promo Banners
+          <div className="pt-4 flex gap-3 border-t border-gray-200 mt-4">
+            <button onClick={() => handleSaveSettings('homepage_promo_banners')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2 rounded-lg hover:bg-[#0092b3] transition-colors font-semibold text-sm disabled:opacity-50">
+              <Save size={16} /> Save Promo Banners
             </button>
-            <button type="button" onClick={handleCancel} disabled={saving} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium">Cancel</button>
+            <button type="button" onClick={handleCancel} disabled={saving} className="border border-gray-300 bg-white text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm">Cancel</button>
           </div>
         </div>
       ) : activeFormType === 'static' ? (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-          <div className="flex justify-between items-center border-b pb-4">
-             <h2 className="text-xl font-bold">Edit Short Banner</h2>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
+          <div className="flex justify-between items-center border-b pb-3">
+             <h2 className="text-lg font-bold text-gray-900">Edit Short Banner</h2>
              <button type="button" onClick={handleCancel} className="text-gray-500 hover:text-gray-700 font-medium text-sm">Cancel</button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Status</label>
               <select
@@ -630,7 +548,7 @@ const AdminHomepageSections = () => {
                 className={inputClass}
               >
                 <option value="true">YES (Navigates to Link/URL on click)</option>
-                <option value="false">NO (Display Only - No Navigation)</option>
+                <option value="false">NO (Display Only)</option>
               </select>
             </div>
 
@@ -682,29 +600,9 @@ const AdminHomepageSections = () => {
                 }}
                 placeholder="e.g. /trips/ongoing_packages"
               />
-              {(() => {
-                const link = siteSettings.homepage_static_banner?.cta_link || '';
-                const linkedSection = sections.find(s => (s.view_all_route || `/trips/${s.section_key}`) === link);
-                if (!linkedSection) return null;
-                return (
-                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-1">Linked Package Page</h4>
-                    <p className="text-xs text-gray-500 mb-3">Page: {linkedSection.title} | Route: {link}</p>
-                    <MediaUploader
-                      url={linkedSection.hero_image || ''}
-                      onUrlChange={async (url) => {
-                        const { error } = await supabase.from('homepage_sections').update({ hero_image: url }).eq('id', linkedSection.id);
-                        if (!error) setSections(sections.map(s => s.id === linkedSection.id ? { ...s, hero_image: url } : s));
-                      }}
-                      folder="homepage_sections"
-                      label="Listing Page Hero Image"
-                    />
-                  </div>
-                );
-              })()}
             </div>
 
-            <div className="md:col-span-2 border rounded-xl p-4 bg-white">
+            <div className="md:col-span-2 border border-gray-200 rounded-lg p-3 bg-white">
               <MediaUploader
                 url={siteSettings.homepage_static_banner?.image || ''}
                 onUrlChange={url => handleSettingsChange('homepage_static_banner', 'image', url)}
@@ -715,161 +613,156 @@ const AdminHomepageSections = () => {
             </div>
           </div>
 
-          <div className="pt-4 flex gap-3 border-t mt-6">
+          <div className="pt-4 flex gap-3 border-t border-gray-200 mt-4">
             <button
               onClick={() => handleSaveSettings('homepage_static_banner')}
               disabled={saving}
-              className="inline-flex items-center gap-2 bg-[#136b8a] text-white px-6 py-2.5 rounded-lg hover:bg-[#0f556e] font-medium transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2 rounded-lg hover:bg-[#0092b3] font-semibold text-sm transition-colors disabled:opacity-50"
             >
-              <Save size={18} /> Save Short Banner
+              <Save size={16} /> Save Short Banner
             </button>
-            <button type="button" onClick={handleCancel} disabled={saving} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-200 font-medium">Cancel</button>
+            <button type="button" onClick={handleCancel} disabled={saving} className="border border-gray-300 bg-white text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm">Cancel</button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Normal Sections */}
-          {sections.map((item) => (
-            <div key={item.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded uppercase">Normal Package Section</span>
-                  <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {item.is_active ? 'ACTIVE' : 'HIDDEN'}
-                  </span>
-                </div>
-                <h3 className="font-bold text-gray-900 text-lg">{item.title}</h3>
+        <div className="flex flex-col gap-4">
+          
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 font-semibold text-xs">
+                <tr>
+                  <th className="py-3 px-4">Section Name / Type</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Order / Properties</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {/* Big Promo Banner Row */}
+                <tr className="hover:bg-gray-50/50">
+                  <td className="py-3 px-4">
+                    <div className="font-semibold text-gray-900 text-sm">Big Promo Banner</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{(siteSettings.homepage_promo_banners?.banners || []).length} Carousel Banners</div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 font-semibold rounded text-xs">Active</span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="text-xs text-gray-500">Fixed Top</span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <button onClick={() => setActiveFormType('promo')} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#01AFD1] text-white hover:bg-[#0092b3] rounded-md text-xs font-semibold transition-colors shadow-sm">
+                      <Edit3 size={14} /> Manage
+                    </button>
+                  </td>
+                </tr>
 
-                <div className="mt-4 pt-4 border-t border-gray-50 space-y-2">
-                  <p className="text-xs text-gray-600"><strong>View All:</strong> {item.view_all_text}</p>
-                  <p className="text-xs text-gray-600"><strong>Route:</strong> {item.view_all_route || 'None'}</p>
-                  <p className="text-xs text-gray-600"><strong>Max Cards:</strong> {item.max_cards}</p>
-                  <p className="text-xs text-gray-600"><strong>Style:</strong> {item.display_style === 'advanced' ? 'Advanced (3D)' : item.display_style === 'advanced_1_1' ? 'Advanced (1:1)' : 'Simple'}</p>
-                </div>
-              </div>
+                {/* Normal Sections Rows */}
+                {sections.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50/50">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-gray-900 text-sm">{item.title}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Route: {item.view_all_route || '—'}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 font-semibold rounded text-xs ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {item.is_active ? 'Active' : 'Hidden'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs text-gray-600">Order: <span className="font-semibold">{item.display_order}</span></div>
+                      <div className="text-xs text-gray-500 mt-0.5">Cards: {item.max_cards} | {item.display_style === 'advanced' ? '3D' : item.display_style === 'advanced_1_1' ? '1:1' : 'Simple'}</div>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => handleToggleActiveNormal(item.id, item.is_active)} className={`p-1.5 rounded-md border ${item.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-200' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-200'}`} title="Toggle Visibility">
+                          {item.is_active ? <XCircle size={14} /> : <CheckCircle size={14} />}
+                        </button>
+                        <button onClick={() => handleEditNormal(item)} className="p-1.5 text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded-md border border-[#01AFD1]/30" title="Edit">
+                          <Edit3 size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteNormal(item.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md border border-red-200" title="Delete">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
 
-              <div className="flex justify-between items-center w-full mt-4 pt-4 border-t border-gray-50">
-                <span className="text-xs text-gray-400">Order: {item.display_order}</span>
-                <div className="flex gap-2">
-                  <button onClick={() => handleToggleActiveNormal(item.id, item.is_active)} className={`p-1.5 rounded-lg border ${item.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-100' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-100'}`} title="Toggle Visibility">
-                    {item.is_active ? <XCircle size={16} /> : <CheckCircle size={16} />}
-                  </button>
-                  <button onClick={() => handleEditNormal(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-100" title="Edit">
-                    <Edit3 size={16} />
-                  </button>
-                  <button onClick={() => handleDeleteNormal(item.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-red-100" title="Delete">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Big Promo Banner */}
-          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded uppercase">Big Promo Banner</span>
-                <span className="text-[10px] px-2 py-1 rounded-full font-bold bg-emerald-100 text-emerald-700">ACTIVE</span>
-              </div>
-              <h3 className="font-bold text-gray-900 text-lg">{(siteSettings.homepage_promo_banners?.banners || []).length} Banners</h3>
-            </div>
-            <div className="flex justify-end items-center w-full mt-4 pt-4 border-t border-gray-50">
-              <button onClick={() => setActiveFormType('promo')} className="flex items-center gap-2 px-3 py-1.5 bg-[#136b8a] text-white hover:bg-[#0f556e] rounded-lg text-sm font-medium transition-colors">
-                <Edit3 size={14} /> Manage Banners
-              </button>
-            </div>
+                {/* Short Banner Row */}
+                <tr className="hover:bg-gray-50/50">
+                  <td className="py-3 px-4">
+                    <div className="font-semibold text-gray-900 text-sm">{siteSettings.homepage_static_banner?.title || 'Short Banner'}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">Static Wide Banner</div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`px-2 py-1 font-semibold rounded text-xs ${siteSettings.homepage_static_banner?.active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {siteSettings.homepage_static_banner?.active !== false ? 'Active' : 'Hidden'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="text-xs text-gray-500">Fixed Bottom</span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <button onClick={() => setActiveFormType('static')} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#01AFD1] text-white hover:bg-[#0092b3] rounded-md text-xs font-semibold transition-colors shadow-sm">
+                      <Edit3 size={14} /> Edit
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-
-          {/* Short Banner */}
-          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-1 rounded uppercase">Short Banner</span>
-                <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${siteSettings.homepage_static_banner?.active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-                  {siteSettings.homepage_static_banner?.active !== false ? 'ACTIVE' : 'HIDDEN'}
-                </span>
-              </div>
-              <h3 className="font-bold text-gray-900 text-lg">{siteSettings.homepage_static_banner?.title || 'Static Banner'}</h3>
-            </div>
-            <div className="flex justify-end items-center w-full mt-4 pt-4 border-t border-gray-50">
-              <button onClick={() => setActiveFormType('static')} className="flex items-center gap-2 px-3 py-1.5 bg-[#136b8a] text-white hover:bg-[#0f556e] rounded-lg text-sm font-medium transition-colors">
-                <Edit3 size={14} /> Edit Banner
-              </button>
-            </div>
-          </div>
-
         </div>
       )}
 
-      {/* Create Linked Package Page Modal */}
+      {/* Linked Page Creation Modal */}
       {createPageModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Create Package Page</h2>
-                <p className="text-sm text-gray-500 mt-1">Generate a new listing page and automatically link it to this banner.</p>
-              </div>
-              <button 
-                onClick={() => setCreatePageModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-full transition-colors"
-              >
-                <XCircle size={24} />
-              </button>
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="font-bold text-gray-900 text-lg">Create New Linked Page</h3>
+              <button onClick={() => setCreatePageModalOpen(false)} className="text-gray-500 hover:text-gray-800"><XCircle size={20} /></button>
             </div>
-            
-            <form onSubmit={handleCreatePackagePage} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Page Title</label>
-                <input
-                  type="text"
-                  required
-                  value={createPageData.title}
-                  onChange={e => setCreatePageData({...createPageData, title: e.target.value})}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a] outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Route</label>
-                <input
-                  type="text"
-                  required
-                  value={createPageData.route}
-                  onChange={e => setCreatePageData({...createPageData, route: e.target.value})}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#136b8a] focus:ring-1 focus:ring-[#136b8a] outline-none transition-all"
-                />
-              </div>
-
-              <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
-                <MediaUploader
-                  url={createPageData.hero_image}
-                  onUrlChange={url => setCreatePageData({...createPageData, hero_image: url})}
-                  folder="homepage_sections"
-                  label="Listing Page Hero Image"
-                  hint="Recommended: Wide landscape image for the top of the package page."
-                />
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-                <button 
-                  type="button" 
-                  onClick={() => setCreatePageModalOpen(false)}
-                  disabled={createPageLoading}
-                  className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={createPageLoading || !createPageData.title || !createPageData.route}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-xl transition-colors disabled:opacity-50"
-                >
-                  {createPageLoading ? 'Creating...' : 'Create & Link Page'}
-                </button>
-              </div>
-            </form>
+            <div className="p-5">
+              <p className="text-sm text-gray-600 mb-4">
+                You are linking to <strong>{createPageData.title}</strong>, but a dedicated package listing page doesn't exist for it yet.
+              </p>
+              <form onSubmit={handleCreatePackagePage} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Page Title</label>
+                  <input
+                    type="text"
+                    value={createPageData.title}
+                    onChange={e => setCreatePageData(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#01AFD1] outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Generated Route</label>
+                  <input
+                    type="text"
+                    value={createPageData.route}
+                    onChange={e => setCreatePageData(prev => ({ ...prev, route: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#01AFD1] outline-none font-mono text-gray-500"
+                    required
+                  />
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3 bg-white">
+                  <MediaUploader
+                    url={createPageData.hero_image}
+                    onUrlChange={url => setCreatePageData(prev => ({ ...prev, hero_image: url }))}
+                    label="Hero Image (Optional)"
+                  />
+                </div>
+                <div className="pt-3 border-t border-gray-200 flex gap-2 justify-end">
+                  <button type="button" onClick={() => setCreatePageModalOpen(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-50">Cancel</button>
+                  <button type="submit" disabled={createPageLoading} className="px-4 py-2 bg-[#01AFD1] text-white font-semibold rounded-lg text-sm hover:bg-[#0092b3]">
+                    {createPageLoading ? 'Creating...' : 'Create & Link'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

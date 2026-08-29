@@ -487,7 +487,7 @@ function DownloadItineraryModal({ isOpen, onClose, tripTitle, pdfUrl, packageSlu
 
               <button
                 disabled={isSubmitting}
-                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:opacity-70 text-white font-bold py-4 rounded-2xl shadow-md transition-all mt-4 cursor-pointer text-base active:scale-[0.98]"
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:opacity-70 text-white font-extrabold tracking-wide py-4 rounded-full transition-all mt-4 cursor-pointer text-base active:scale-[0.98]"
                 type="submit"
               >
                 {isSubmitting ? 'Processing...' : 'Submit & Download'}

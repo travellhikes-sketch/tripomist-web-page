@@ -225,10 +225,9 @@ const AdminWebsitePages = () => {
 
   return (
     <div className="max-w-4xl mx-auto pb-12 animate-fade-in text-left">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 capitalize">{pageKey.replace('-', ' ')} Page</h1>
-          <p className="text-gray-500 mt-1">Manage content, media, and SEO settings for this page.</p>
+          <h1 className="text-xl font-semibold text-gray-900 capitalize">Website Pages / {pageKey.replace(/-/g, ' ')}</h1>
         </div>
         <div className="flex gap-2">
           <button
@@ -297,16 +296,16 @@ const AdminWebsitePages = () => {
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
-            <h2 className="font-bold text-lg text-gray-800 border-b pb-2">Header Information</h2>
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg text-gray-800 border-b border-gray-200 pb-2">Header Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Page Title / Main Heading</label>
-                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" />
+                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#01AFD1] outline-none text-sm font-normal" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle (Optional)</label>
-                <input type="text" value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" />
+                <input type="text" value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#01AFD1] outline-none text-sm font-normal" />
               </div>
 
               <div className="md:col-span-2 space-y-4">
@@ -341,31 +340,31 @@ const AdminWebsitePages = () => {
           </div>
 
           {/* SEO Settings */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
-            <h2 className="font-bold text-lg text-gray-800 border-b pb-2">SEO Settings</h2>
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg text-gray-800 border-b border-gray-200 pb-2">SEO Settings</h2>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">SEO Title (Optional)</label>
-              <input type="text" value={formData.seo_title} onChange={e => setFormData({...formData, seo_title: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" placeholder="Defaults to Page Title if empty" />
+              <input type="text" value={formData.seo_title} onChange={e => setFormData({...formData, seo_title: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#01AFD1] outline-none text-sm font-normal" placeholder="Defaults to Page Title if empty" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">SEO Description</label>
-              <textarea value={formData.seo_description} onChange={e => setFormData({...formData, seo_description: e.target.value})} className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#136b8a] outline-none" rows={2} />
+              <textarea value={formData.seo_description} onChange={e => setFormData({...formData, seo_description: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-[#01AFD1] outline-none text-sm font-normal" rows={2} />
             </div>
           </div>
 
           {/* Premium Rich Content Editor */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
-            <h2 className="font-bold text-lg text-gray-800 border-b pb-2">Page Content</h2>
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg text-gray-800 border-b border-gray-200 pb-2">Page Content</h2>
             <RichTextEditor
               value={formData.content}
               onChange={(newHtml) => setFormData(prev => ({ ...prev, content: newHtml }))}
             />
           </div>
 
-          <div className="flex justify-end gap-3 sticky bottom-4 bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm z-10">
-            <button type="button" onClick={fetchPage} className="px-6 py-2.5 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 font-medium">Reset</button>
-            <button type="submit" disabled={saving} className="px-6 py-2.5 text-white bg-[#136b8a] rounded-xl hover:bg-[#0f556e] font-medium flex items-center gap-2 disabled:opacity-50">
-              <Save size={18} /> {saving ? 'Saving...' : 'Save Page'}
+          <div className="flex justify-start gap-3 pt-4 border-t border-gray-200 mt-6">
+            <button type="button" onClick={fetchPage} className="px-5 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 font-medium">Cancel</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 text-sm text-white bg-[#01AFD1] rounded-md hover:bg-[#0092b3] font-medium flex items-center gap-2 disabled:opacity-50">
+              <Save size={16} /> {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>

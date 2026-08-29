@@ -286,7 +286,7 @@ const AdminPackages = () => {
         </div>
         <button
           onClick={() => { setEditingPkg(null); setShowForm(true); }}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+          className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors font-medium text-sm shadow-sm"
         >
           <Plus size={18} />
           Create Package
@@ -296,7 +296,7 @@ const AdminPackages = () => {
       {/* Global Recommendation Settings Card */}
       {/* Global Recommendation Settings Card - Collapsible */}
       {!showForm && (
-        <div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
           <button 
             onClick={() => setShowAdvancedDisplay(!showAdvancedDisplay)}
             className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
@@ -322,7 +322,7 @@ const AdminPackages = () => {
                       value={recommendedHeading}
                       onChange={(e) => setRecommendedHeading(e.target.value)}
                       placeholder="Explore More Trips"
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#01AFD1]"
                     />
                   </div>
                   <div>
@@ -330,7 +330,7 @@ const AdminPackages = () => {
                     <select
                       value={recommendedDisplay}
                       onChange={(e) => setRecommendedDisplay(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#01AFD1]"
                     >
                       <option value="normal">Normal</option>
                       <option value="advanced_1_1">Advanced 1:1 Card Slider</option>
@@ -345,7 +345,7 @@ const AdminPackages = () => {
                   <select
                     value={seasonalDropdownColumns}
                     onChange={(e) => setSeasonalDropdownColumns(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#01AFD1]"
                   >
                     {[2,3,4,5,6,7,8,9,10].map(num => <option key={num} value={num}>{num}</option>)}
                   </select>
@@ -357,7 +357,7 @@ const AdminPackages = () => {
                   <select
                     value={viewAllDisplay}
                     onChange={(e) => setViewAllDisplay(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#01AFD1]"
                   >
                     <option value="normal">Normal</option>
                     <option value="advanced_1_1">Advanced 1:1 Card Slider</option>
@@ -369,7 +369,7 @@ const AdminPackages = () => {
                 <button
                   onClick={handleSaveDisplaySettings}
                   disabled={savingDisplay}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-70"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#01AFD1] text-white rounded-lg text-sm font-medium hover:bg-[#0092b3] transition-colors shadow-sm disabled:opacity-70"
                 >
                   {savingDisplay ? <RefreshCw size={14} className="animate-spin" /> : null}
                   {savingDisplay ? 'Saving...' : 'Save Settings'}
@@ -408,7 +408,7 @@ const AdminPackages = () => {
             placeholder="Search by title, destination, state, category..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#01AFD1] focus:border-[#01AFD1] outline-none transition-colors"
           />
         </div>
         <button
@@ -422,7 +422,7 @@ const AdminPackages = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <RefreshCw size={32} className="animate-spin mb-3" />
@@ -437,7 +437,7 @@ const AdminPackages = () => {
             {!searchQuery && (
               <button
                 onClick={() => { setEditingPkg(null); setShowForm(true); }}
-                className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="mt-3 text-sm text-[#01AFD1] hover:text-[#0092b3] font-medium"
               >
                 Create your first package →
               </button>
@@ -492,7 +492,7 @@ const AdminPackages = () => {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => { setEditingPkg(pkg); setShowForm(true); }}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded-lg transition-colors"
                             title="Edit"
                           >
                             <Pencil size={16} />
@@ -532,7 +532,7 @@ const AdminPackages = () => {
                       onClick={() => setCurrentPage(page)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         page === safePage
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-[#01AFD1] text-white'
                           : 'text-gray-600 hover:bg-gray-100'
                       }`}
                     >

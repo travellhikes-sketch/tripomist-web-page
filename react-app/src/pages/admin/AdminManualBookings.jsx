@@ -199,7 +199,7 @@ const AdminManualBookings = () => {
     pending: 'bg-amber-100 text-amber-800',
     confirmed: 'bg-emerald-100 text-emerald-800',
     cancelled: 'bg-red-100 text-red-800',
-    enquiry: 'bg-blue-100 text-blue-800',
+    enquiry: 'bg-[#01AFD1]/20 text-blue-800',
     completed: 'bg-gray-100 text-gray-800'
   };
 
@@ -220,7 +220,7 @@ const AdminManualBookings = () => {
           <button onClick={exportToCSV} className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm">
             <Download size={16} /> Export
           </button>
-          <button onClick={() => openModal()} className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors font-medium text-sm">
+          <button onClick={() => openModal()} className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-xl hover:bg-[#0092b3] transition-colors font-medium text-sm">
             <Plus size={16} /> New Booking
           </button>
         </div>
@@ -230,7 +230,7 @@ const AdminManualBookings = () => {
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="relative col-span-1 md:col-span-2">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search by name, ref or package..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+          <input type="text" placeholder="Search by name, ref or package..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
         </div>
         <div>
           <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm outline-none" title="Filter by Travel Date" />
@@ -300,7 +300,7 @@ const AdminManualBookings = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => openModal(booking)} className="text-blue-600 hover:text-blue-800 p-1 bg-blue-50 hover:bg-blue-100 rounded inline-block"><Edit size={16} /></button>
+                      <button onClick={() => openModal(booking)} className="text-[#01AFD1] hover:text-blue-800 p-1 bg-[#01AFD1]/10 hover:bg-[#01AFD1]/20 rounded inline-block"><Edit size={16} /></button>
                       <button onClick={() => handleDelete(booking.id)} className="text-red-600 hover:text-red-800 p-1 bg-red-50 hover:bg-red-100 rounded inline-block"><Trash2 size={16} /></button>
                     </td>
                   </tr>

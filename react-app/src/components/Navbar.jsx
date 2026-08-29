@@ -449,7 +449,7 @@ function Navbar() {
                 />
               </div>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="hidden md:flex bg-[#E0FAFF] text-[#01AFD1] font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-[#cdefff] items-center gap-1 cursor-pointer border border-slate-300">
+              <button onClick={() => setShowAuthModal(true)} className="hidden md:flex bg-[#01AFD1] text-white font-semibold px-5 py-2 rounded-full transition-all text-sm hover:bg-cyan-600 items-center gap-1 cursor-pointer border border-slate-300">
                 <span className="material-symbols-outlined text-[16px]">login</span> <span className="hidden sm:inline">{settings?.login_button_text || 'Login'}</span>
               </button>
             )}

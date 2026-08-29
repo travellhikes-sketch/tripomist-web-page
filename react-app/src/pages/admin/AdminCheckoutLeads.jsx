@@ -18,7 +18,7 @@ import {
 const LEADS_PER_PAGE = 15;
 
 const STATUS_COLORS = {
-  checkout_started: 'bg-blue-100 text-blue-700',
+  checkout_started: 'bg-[#01AFD1]/20 text-[#0092b3]',
   payment_pending: 'bg-yellow-100 text-yellow-700',
   converted: 'bg-emerald-100 text-emerald-700',
   contacted: 'bg-purple-100 text-purple-700',
@@ -140,7 +140,7 @@ const AdminCheckoutLeads = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
@@ -186,7 +186,7 @@ const AdminCheckoutLeads = () => {
             onClick={() => { setStatusFilter(f.key); setCurrentPage(1); }}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
               statusFilter === f.key
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#01AFD1] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -204,7 +204,7 @@ const AdminCheckoutLeads = () => {
             placeholder="Search by name, phone, email, package..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#01AFD1] outline-none bg-white"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ const AdminCheckoutLeads = () => {
             type="date"
             value={dateFilter}
             onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#01AFD1] outline-none bg-white"
           />
           {dateFilter && (
             <button
@@ -325,7 +325,7 @@ const AdminCheckoutLeads = () => {
                         {/* Call */}
                         <a
                           href={`tel:+${formatPhone(lead.phone)}`}
-                          className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-[#01AFD1]/10 text-[#01AFD1] transition-colors"
                           title="Call"
                         >
                           <Phone size={14} />

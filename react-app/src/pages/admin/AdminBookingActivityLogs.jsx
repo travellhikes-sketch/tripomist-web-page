@@ -49,7 +49,7 @@ const AdminBookingActivityLogs = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Activity className="text-[#136b8a]" /> Booking Activity Logs
+            <Activity className="text-[#01AFD1]" /> Booking Activity Logs
           </h1>
           <p className="text-gray-500 mt-1">Audit trail of all modifications made to bookings.</p>
         </div>
@@ -61,7 +61,7 @@ const AdminBookingActivityLogs = () => {
               placeholder="Search Booking Ref..."
               value={searchRef}
               onChange={(e) => setSearchRef(e.target.value)}
-              className="w-full sm:w-48 pl-9 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#136b8a]/20 focus:border-[#136b8a] outline-none text-sm"
+              className="w-full sm:w-48 pl-9 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#01AFD1]/20 focus:border-[#01AFD1] outline-none text-sm"
             />
             <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
           </div>
@@ -69,7 +69,7 @@ const AdminBookingActivityLogs = () => {
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              className="w-full sm:w-40 pl-9 pr-8 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#136b8a]/20 focus:border-[#136b8a] outline-none appearance-none text-sm bg-white"
+              className="w-full sm:w-40 pl-9 pr-8 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#01AFD1]/20 focus:border-[#01AFD1] outline-none appearance-none text-sm bg-white"
             >
               <option value="">All Actions</option>
               {uniqueActions.map(action => (
@@ -89,7 +89,7 @@ const AdminBookingActivityLogs = () => {
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -119,7 +119,7 @@ const AdminBookingActivityLogs = () => {
                         })}
                       </td>
                       <td className="p-4">
-                        <div className="font-bold text-[#136b8a]">{log.bookings?.booking_reference || 'Unknown'}</div>
+                        <div className="font-bold text-[#01AFD1]">{log.bookings?.booking_reference || 'Unknown'}</div>
                         <div className="text-xs text-gray-400 line-clamp-1 max-w-[150px]">{log.bookings?.package_title}</div>
                       </td>
                       <td className="p-4">

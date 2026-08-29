@@ -226,7 +226,7 @@ export default function WebsiteLinkPicker({ value, onChange, label = "CTA Link /
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onFocus={() => setIsOpen(true)}
-            className="w-full pl-10 p-2.5 border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm shadow-sm"
+            className="w-full pl-10 p-2.5 border border-blue-400 rounded-lg focus:ring-2 focus:ring-[#01AFD1] focus:border-[#01AFD1] outline-none text-sm shadow-sm"
             placeholder={placeholder}
             autoFocus={isOpen && !value}
           />
@@ -283,7 +283,7 @@ export default function WebsiteLinkPicker({ value, onChange, label = "CTA Link /
                     setIsOpen(false);
                     setSearchTerm('');
                   }}
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex flex-col transition-colors border-b border-gray-50 last:border-0"
+                  className="px-4 py-2 hover:bg-[#01AFD1]/10 cursor-pointer flex flex-col transition-colors border-b border-gray-50 last:border-0"
                 >
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-800">
                     <span className="text-gray-400">{opt.icon}</span>

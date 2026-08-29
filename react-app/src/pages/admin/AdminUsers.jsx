@@ -206,7 +206,7 @@ const AdminUsers = () => {
             placeholder="Search customers by name, email, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#136b8a] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#01AFD1] transition-all"
           />
         </div>
       </div>
@@ -214,7 +214,7 @@ const AdminUsers = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div>
           </div>
         ) : filteredCustomers.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
@@ -266,14 +266,14 @@ const AdminUsers = () => {
                       <div className="font-semibold text-gray-800 text-sm">{customer.totalBookings} Total</div>
                       <div className="text-[10px] text-gray-500 uppercase flex gap-2 mt-1">
                         <span title="Completed" className="text-emerald-600">{customer.completedTrips}C</span>
-                        <span title="Upcoming" className="text-blue-600">{customer.upcomingTrips}U</span>
+                        <span title="Upcoming" className="text-[#01AFD1]">{customer.upcomingTrips}U</span>
                         <span title="Cancelled" className="text-rose-600">{customer.cancelledTrips}X</span>
                       </div>
                     </td>
                     <td className="py-3 px-6 text-right">
                       <button
                         onClick={() => handleViewHistory(customer)}
-                        className="bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#136b8a] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                        className="bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#01AFD1] hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
                       >
                         View Details
                       </button>
@@ -290,7 +290,7 @@ const AdminUsers = () => {
         <div className="fixed inset-0 z-[80] overflow-hidden flex justify-end">
           <div className="absolute inset-0 bg-black/45" onClick={() => setSelectedCustomer(null)} />
           <div className="relative w-full max-w-lg bg-slate-50 h-full shadow-2xl flex flex-col z-50 animate-slide-in">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-[#136b8a] text-white">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-[#01AFD1] text-white">
               <div>
                 <h3 className="text-lg font-bold">{selectedCustomer.full_name || 'Customer Profile'}</h3>
                 <p className="text-xs text-teal-100 mt-1">{selectedCustomer.customerType}</p>
@@ -328,7 +328,7 @@ const AdminUsers = () => {
 
                 {loadingHistory ? (
                   <div className="flex items-center justify-center py-10">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#136b8a]"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#01AFD1]"></div>
                   </div>
                 ) : customerBookings.length === 0 ? (
                   <div className="text-center py-10 text-gray-400 text-sm">
@@ -355,7 +355,7 @@ const AdminUsers = () => {
                         </div>
                         <button
                           onClick={() => setEditBookingId(b.id)}
-                          className="w-full text-center text-xs font-bold text-[#136b8a] bg-[#136b8a]/10 hover:bg-[#136b8a]/20 py-2 rounded-lg transition-colors"
+                          className="w-full text-center text-xs font-bold text-[#01AFD1] bg-[#01AFD1]/10 hover:bg-[#01AFD1]/20 py-2 rounded-lg transition-colors"
                         >
                           Open Booking
                         </button>

@@ -248,7 +248,7 @@ export default function ListingPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <RefreshCw size={32} className="animate-spin mb-3 text-[#01AFD1]" />
-            <span className="text-sm font-medium">Loading packages...</span>
+            <p className="text-sm font-medium">Loading packages...</p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-red-500">
@@ -256,8 +256,10 @@ export default function ListingPage() {
             <p className="text-sm font-medium">{error}</p>
           </div>
         ) : packages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <PackageIcon size={48} className="mb-4 text-gray-300" />
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <PackageIcon size={48} className="text-gray-400" />
+            </div>
             <h3 className="text-lg font-bold text-gray-700 mb-2">No Packages Found</h3>
             <p className="text-sm text-gray-500 max-w-md text-center">
               We couldn't find any active packages right now. Please check back later.

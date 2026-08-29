@@ -138,19 +138,18 @@ const AdminBanners = () => {
     }
   };
 
-  const inputClass = "w-full p-2 border border-gray-300 rounded focus:border-[#136b8a] outline-none text-sm";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
+  const inputClass = "w-full p-2.5 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm";
+  const labelClass = "block text-sm font-semibold text-gray-700 mb-1";
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Promotional Banners</h1>
-          <p className="text-gray-500 mt-1">Manage sliding banners and banner detail pages.</p>
+          <h1 className="text-xl font-semibold text-gray-900">Banners</h1>
         </div>
         {!isEditing && (
-          <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium">
-            <Plus size={18} /> Add Banner
+          <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-lg hover:bg-[#0092b3] transition-colors shadow-sm font-semibold text-sm">
+            <Plus size={16} /> Add Banner
           </button>
         )}
       </div>
@@ -162,8 +161,8 @@ const AdminBanners = () => {
       )}
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-          <h2 className="text-lg font-bold">{currentBanner ? 'Edit Banner' : 'New Banner'}</h2>
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
+          <h2 className="text-lg font-bold text-gray-900">{currentBanner ? 'Edit Banner' : 'New Banner'}</h2>
 
           {jsonError && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200">{jsonError}</div>}
 
@@ -240,41 +239,48 @@ const AdminBanners = () => {
             <div><label className={labelClass}>Costings JSON</label><textarea name="costings" value={formData.costings || ''} onChange={handleInputChange} className={`${inputClass} `} rows={3} /></div>
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <button type="submit" className="bg-[#136b8a] text-white px-6 py-2 rounded-lg hover:bg-[#0f556e]">Save Banner</button>
-            <button type="button" onClick={handleCancel} className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200">Cancel</button>
+          <div className="flex gap-3 pt-4 border-t border-gray-200 mt-4">
+            <button type="submit" className="bg-[#01AFD1] text-white px-5 py-2 rounded-lg hover:bg-[#0092b3] font-semibold text-sm transition-colors">Save Banner</button>
+            <button type="button" onClick={handleCancel} className="border border-gray-300 bg-white text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm">Cancel</button>
           </div>
         </form>
       ) : loading ? (
-        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div></div>
+        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div></div>
+      ) : banners.length === 0 ? (
+        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+          <p className="text-gray-500 font-medium mb-4">No banners added yet.</p>
+          <button onClick={() => setIsEditing(true)} className="inline-flex items-center gap-2 bg-white border border-[#01AFD1] text-[#01AFD1] px-4 py-2 rounded-lg hover:bg-[#01AFD1]/5 transition-colors font-semibold text-sm">
+            <Plus size={16} /> Add Banner
+          </button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {banners.map((banner) => (
-            <div key={banner.id} className="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div key={banner.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
               <div>
-                <img src={banner.desktop_image} alt={banner.title} className="w-full h-40 object-cover rounded-xl mb-4" />
+                <img src={banner.desktop_image} alt={banner.title} className="w-full h-32 object-cover rounded-md mb-3" />
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-gray-900">{banner.title} <span className="text-[#136b8a]">{banner.highlighted_text}</span></h3>
-                    <p className="text-xs text-gray-500 mt-1">{banner.label} • {banner.price_text}</p>
-                    {banner.is_clickable && banner.slug && <p className="text-xs text-blue-500 mt-1 hover:underline cursor-pointer">/banner/{banner.slug}</p>}
+                    <h3 className="font-semibold text-gray-900 text-sm">{banner.title} <span className="text-[#01AFD1]">{banner.highlighted_text}</span></h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{banner.label} • {banner.price_text}</p>
+                    {banner.is_clickable && banner.slug && <p className="text-xs text-[#01AFD1] mt-0.5 hover:underline cursor-pointer">/banner/{banner.slug}</p>}
                   </div>
-                  <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${banner.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {banner.is_active ? 'ACTIVE' : 'INACTIVE'}
+                  <span className={`text-[10px] px-2 py-1 rounded-full font-semibold ${banner.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {banner.is_active ? 'Active' : 'Hidden'}
                   </span>
                 </div>
               </div>
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-50">
-                <span className="text-xs text-gray-400 ">Order: {banner.display_order}</span>
+              <div className="flex justify-between items-center w-full mt-3 pt-3 border-t border-gray-100">
+                <span className="text-xs text-gray-400">Order: <span className="font-semibold">{banner.display_order}</span></span>
                 <div className="flex gap-2">
-                  <button onClick={() => handleToggleActive(banner.id, banner.is_active)} className={`p-1.5 rounded-lg border ${banner.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-100' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-100'}`} title="Toggle Status">
-                    {banner.is_active ? <XCircle size={16} /> : <CheckCircle size={16} />}
+                  <button onClick={() => handleToggleActive(banner.id, banner.is_active)} className={`p-1.5 rounded-md border ${banner.is_active ? 'text-amber-600 hover:bg-amber-50 border-amber-200' : 'text-emerald-600 hover:bg-emerald-50 border-emerald-200'}`} title="Toggle Status">
+                    {banner.is_active ? <XCircle size={14} /> : <CheckCircle size={14} />}
                   </button>
-                  <button onClick={() => handleEdit(banner)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-100" title="Edit">
-                    <Edit3 size={16} />
+                  <button onClick={() => handleEdit(banner)} className="p-1.5 text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded-md border border-[#01AFD1]/30" title="Edit">
+                    <Edit3 size={14} />
                   </button>
-                  <button onClick={() => handleDelete(banner.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-red-100" title="Delete">
-                    <Trash2 size={16} />
+                  <button onClick={() => handleDelete(banner.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md border border-red-200" title="Delete">
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

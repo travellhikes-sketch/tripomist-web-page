@@ -66,25 +66,25 @@ const ServiceRecoveryCreationModal = ({ isOpen, onClose, onSuccess, booking }) =
 
           <div className="bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
             <div className="text-xs uppercase font-bold text-gray-500 mb-1">Booking Reference</div>
-            <div className=" text-[#136b8a] font-bold">{booking.booking_id || booking.id}</div>
+            <div className=" text-[#01AFD1] font-bold">{booking.booking_id || booking.id}</div>
             <div className="text-sm font-semibold text-gray-900 mt-1">{booking.customer_name} - {booking.package_title}</div>
           </div>
 
           <form id="srForm" onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Issue Title *</label>
-              <input type="text" required value={formData.issue_title} onChange={e => setFormData({...formData, issue_title: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#136b8a] outline-none text-sm" placeholder="Brief title of the issue" />
+              <input type="text" required value={formData.issue_title} onChange={e => setFormData({...formData, issue_title: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="Brief title of the issue" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Detailed Description *</label>
-              <textarea required value={formData.issue_description} onChange={e => setFormData({...formData, issue_description: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#136b8a] outline-none text-sm min-h-[100px]" placeholder="What happened?" />
+              <textarea required value={formData.issue_description} onChange={e => setFormData({...formData, issue_description: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#01AFD1] outline-none text-sm min-h-[100px]" placeholder="What happened?" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
-                <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#136b8a] outline-none text-sm">
+                <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#01AFD1] outline-none text-sm">
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
@@ -93,13 +93,13 @@ const ServiceRecoveryCreationModal = ({ isOpen, onClose, onSuccess, booking }) =
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Incident Date *</label>
-                <input type="date" required value={formData.incident_date} onChange={e => setFormData({...formData, incident_date: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#136b8a] outline-none text-sm" />
+                <input type="date" required value={formData.incident_date} onChange={e => setFormData({...formData, incident_date: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#01AFD1] outline-none text-sm" />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Internal Notes</label>
-              <input type="text" value={formData.internal_notes} onChange={e => setFormData({...formData, internal_notes: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#136b8a] outline-none text-sm" placeholder="For admin view only" />
+              <input type="text" value={formData.internal_notes} onChange={e => setFormData({...formData, internal_notes: e.target.value})} className="w-full p-2.5 border rounded-lg focus:border-[#01AFD1] outline-none text-sm" placeholder="For admin view only" />
             </div>
 
 

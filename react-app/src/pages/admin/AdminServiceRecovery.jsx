@@ -158,7 +158,7 @@ const AdminServiceRecovery = () => {
                   </td>
                   <td className="py-2 px-4">
                     <div className="font-semibold text-gray-900">{c.bookings?.customer_name || 'Unknown'}</div>
-                    <div className="text-xs text-[#136b8a] ">{c.bookings?.booking_id || 'N/A'}</div>
+                    <div className="text-xs text-[#01AFD1] ">{c.bookings?.booking_id || 'N/A'}</div>
                   </td>
                   <td className="py-2 px-4">
                     <div className="text-gray-800 truncate max-w-[250px]">{c.issue_description}</div>
@@ -217,7 +217,7 @@ const AdminServiceRecovery = () => {
               </div>
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <span className="text-gray-500 block text-xs uppercase font-bold mb-1">Booking Info</span>
-                <span className=" text-[#136b8a] font-bold">{selectedCase.bookings?.booking_id}</span>
+                <span className=" text-[#01AFD1] font-bold">{selectedCase.bookings?.booking_id}</span>
                 <div className="text-gray-600 truncate mt-1">{selectedCase.bookings?.package_title}</div>
               </div>
             </div>

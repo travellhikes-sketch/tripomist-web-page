@@ -1,3 +1,8 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -149,7 +154,6 @@ input[type="button"] {
   font-family: var(--heading-font, 'Ranchers', sans-serif) !important;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
 
 /* Canva-style Headings */
 .canva-heading {
@@ -187,3 +191,5 @@ input[type="button"] {
 .admin-layout div {
   font-family: 'Inter', sans-serif !important;
 }
+
+

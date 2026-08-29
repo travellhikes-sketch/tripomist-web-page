@@ -123,18 +123,17 @@ const AdminDestinations = () => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Destination Circles</h1>
-          <p className="text-gray-500 mt-1">Manage the destination circle cards on the homepage.</p>
+          <h1 className="text-xl font-bold text-gray-900">Destination Circles</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage the destination circle cards on the homepage.</p>
         </div>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 bg-[#136b8a] text-white px-4 py-2 rounded-xl hover:bg-[#0f556e] transition-colors shadow-sm font-medium"
+            className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-lg hover:bg-[#0092b3] transition-colors shadow-sm font-semibold text-sm"
           >
-            <Plus size={18} />
-            Add Destination
+            <Plus size={16} /> Add Destination
           </button>
         )}
       </div>
@@ -147,17 +146,17 @@ const AdminDestinations = () => {
       )}
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-          <h2 className="text-lg font-bold">{currentItem ? 'Edit Destination' : 'New Destination'}</h2>
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-5">
+          <h2 className="text-lg font-bold text-gray-900">{currentItem ? 'Edit Destination' : 'New Destination'}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input type="text" name="name" value={formData.name || ''} onChange={handleInputChange} className="w-full p-2 border rounded" required placeholder="e.g. Ladakh" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+              <input type="text" name="name" value={formData.name || ''} onChange={handleInputChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" required placeholder="e.g. Ladakh" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL path)</label>
-              <input type="text" name="slug" value={formData.slug || ''} onChange={handleInputChange} className="w-full p-2 border rounded" required placeholder="e.g. ladakh" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Slug (URL path)</label>
+              <input type="text" name="slug" value={formData.slug || ''} onChange={handleInputChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" required placeholder="e.g. ladakh" />
             </div>
             <div className="md:col-span-2">
               <MediaUploader
@@ -177,49 +176,51 @@ const AdminDestinations = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Region (Optional)</label>
-              <input type="text" name="region" value={formData.region || ''} onChange={handleInputChange} className="w-full p-2 border rounded" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Region (Optional)</label>
+              <input type="text" name="region" value={formData.region || ''} onChange={handleInputChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description (About Section)</label>
-              <textarea name="description" value={formData.description || ''} onChange={handleInputChange} className="w-full p-2 border rounded h-24" placeholder="Enter description for the about section..." />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Description (About Section)</label>
+              <textarea name="description" value={formData.description || ''} onChange={handleInputChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm h-24" placeholder="Enter description for the about section..." />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
-              <input type="number" name="display_order" value={formData.display_order} onChange={handleInputChange} className="w-full p-2 border rounded" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Display Order</label>
+              <input type="number" name="display_order" value={formData.display_order} onChange={handleInputChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:border-[#01AFD1] outline-none text-sm" />
             </div>
             <div className="flex items-center mt-6">
-              <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-4 h-4 mr-2" />
-              <label className="text-sm font-medium text-gray-700">Active</label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} className="w-4 h-4" />
+                <span className="text-sm font-medium text-gray-700">Active</span>
+              </label>
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <button type="submit" className="bg-[#136b8a] text-white px-6 py-2 rounded-lg hover:bg-[#0f556e]">Save Destination</button>
-            <button type="button" onClick={handleCancel} className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200">Cancel</button>
+          <div className="flex gap-3 pt-4 border-t border-gray-200 mt-4">
+            <button type="submit" className="bg-[#01AFD1] text-white px-5 py-2 rounded-lg hover:bg-[#0092b3] font-semibold text-sm transition-colors">Save Destination</button>
+            <button type="button" onClick={handleCancel} className="border border-gray-300 bg-white text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm">Cancel</button>
           </div>
         </form>
       ) : loading ? (
-        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#136b8a]"></div></div>
+        <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1]"></div></div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {destinations.map((item) => (
-            <div key={item.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-gray-100">
+            <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+              <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border border-gray-200">
                 <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
               </div>
-              <h3 className="font-bold text-gray-900 text-sm mb-1">{item.name}</h3>
-              <p className="text-[10px] text-gray-500 mb-3 ">/{item.slug}</p>
+              <h3 className="font-semibold text-gray-900 text-sm mb-0.5">{item.name}</h3>
+              <p className="text-[10px] text-gray-500 mb-3 font-mono">/{item.slug}</p>
 
-              <div className="flex justify-between items-center w-full mt-auto pt-3 border-t border-gray-50">
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-                  {item.is_active ? 'ON' : 'OFF'}
+              <div className="flex justify-between items-center w-full mt-auto pt-3 border-t border-gray-100">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                  {item.is_active ? 'Active' : 'Hidden'}
                 </span>
                 <div className="flex gap-1">
-                  <button onClick={() => handleEdit(item)} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Edit">
+                  <button onClick={() => handleEdit(item)} className="p-1.5 text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded-md border border-transparent hover:border-[#01AFD1]/30 transition-colors" title="Edit">
                     <Edit3 size={14} />
                   </button>
-                  <button onClick={() => handleDelete(item.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Delete">
+                  <button onClick={() => handleDelete(item.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md border border-transparent hover:border-red-200 transition-colors" title="Delete">
                     <Trash2 size={14} />
                   </button>
                 </div>

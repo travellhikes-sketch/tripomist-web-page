@@ -53,10 +53,10 @@ const AdminSettings = () => {
   return (
     <div className="space-y-4 animate-fade-in pb-12 flex flex-col h-full text-sm">
       {/* Header */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500 mt-1 text-xs">Configure global application variables and configurations.</p>
+          <p className="text-sm text-gray-500 mt-1">Configure global application variables and configurations.</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ const AdminSettings = () => {
                 onClick={() => setActiveTab(tab.key)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === tab.key
-                    ? 'bg-[#136b8a] text-white'
+                    ? 'bg-[#01AFD1] text-white'
                     : 'text-gray-600 hover:bg-slate-50 hover:text-gray-950'
                 }`}
               >
@@ -110,7 +110,7 @@ const AdminSettings = () => {
                         type="text"
                         value={company.name}
                         onChange={e => setCompany({...company, name: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                     <div>
@@ -119,7 +119,7 @@ const AdminSettings = () => {
                         type="email"
                         value={company.email}
                         onChange={e => setCompany({...company, email: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                     <div>
@@ -128,7 +128,7 @@ const AdminSettings = () => {
                         type="text"
                         value={company.phone}
                         onChange={e => setCompany({...company, phone: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                     <div>
@@ -137,7 +137,7 @@ const AdminSettings = () => {
                         type="text"
                         value={company.gstin}
                         onChange={e => setCompany({...company, gstin: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                   </div>
@@ -147,7 +147,7 @@ const AdminSettings = () => {
                       value={company.address}
                       onChange={e => setCompany({...company, address: e.target.value})}
                       rows={2}
-                      className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                      className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                     />
                   </div>
                 </div>
@@ -164,7 +164,7 @@ const AdminSettings = () => {
                         type="text"
                         value={payment.razorpayKey}
                         onChange={e => setPayment({...payment, razorpayKey: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a]  text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1]  text-sm"
                       />
                     </div>
                     <div>
@@ -173,7 +173,7 @@ const AdminSettings = () => {
                         type="text"
                         value={payment.currency}
                         onChange={e => setPayment({...payment, currency: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a]  text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1]  text-sm"
                       />
                     </div>
                   </div>
@@ -186,7 +186,7 @@ const AdminSettings = () => {
                       type="checkbox"
                       checked={payment.testMode}
                       onChange={e => setPayment({...payment, testMode: e.target.checked})}
-                      className="w-4 h-4 accent-[#136b8a]"
+                      className="w-4 h-4 accent-[#01AFD1]"
                     />
                   </div>
                 </div>
@@ -203,7 +203,7 @@ const AdminSettings = () => {
                         type="url"
                         value={social.instagram}
                         onChange={e => setSocial({...social, instagram: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                     <div>
@@ -212,7 +212,7 @@ const AdminSettings = () => {
                         type="text"
                         value={social.whatsapp}
                         onChange={e => setSocial({...social, whatsapp: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                     <div>
@@ -221,7 +221,7 @@ const AdminSettings = () => {
                         type="url"
                         value={social.facebook}
                         onChange={e => setSocial({...social, facebook: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                     <div>
@@ -230,7 +230,7 @@ const AdminSettings = () => {
                         type="url"
                         value={social.twitter}
                         onChange={e => setSocial({...social, twitter: e.target.value})}
-                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#136b8a] text-sm"
+                        className="w-full px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:border-[#01AFD1] text-sm"
                       />
                     </div>
                   </div>
@@ -251,7 +251,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={website.maintenanceMode}
                         onChange={e => setWebsite({...website, maintenanceMode: e.target.checked})}
-                        className="w-4 h-4 accent-[#136b8a]"
+                        className="w-4 h-4 accent-[#01AFD1]"
                       />
                     </div>
                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -263,7 +263,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={website.showPopups}
                         onChange={e => setWebsite({...website, showPopups: e.target.checked})}
-                        className="w-4 h-4 accent-[#136b8a]"
+                        className="w-4 h-4 accent-[#01AFD1]"
                       />
                     </div>
                   </div>
@@ -276,7 +276,7 @@ const AdminSettings = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-[#136b8a] hover:bg-[#0f556e] text-white px-5 py-2 rounded-md text-sm font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                className="bg-[#01AFD1] hover:bg-[#0092b3] text-white px-5 py-2 rounded-md text-sm font-semibold flex items-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-50"
               >
                 <Save size={16} />
                 {saving ? 'Saving...' : 'Save Settings'}

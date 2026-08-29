@@ -18,7 +18,10 @@ import {
   Phone,
   MessageCircle,
   AlertCircle,
-  X
+  X,
+  Check,
+  Building,
+  HandCoins
 } from 'lucide-react';
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
 
@@ -33,11 +36,9 @@ const AdminDashboard = () => {
     pendingPayments: 0,
     confirmedBookings: 0,
     cancelledBookings: 0,
-    b2bCount: 0,
-    b2cCount: 0,
-    unclassifiedCount: 0,
-    b2bValue: 0,
-    b2cValue: 0
+    contributionThisMonth: 0,
+    contributionUnpaid: 0,
+    unclassifiedCount: 0
   });
   
   const [recentBookings, setRecentBookings] = useState([]);
@@ -61,18 +62,34 @@ const AdminDashboard = () => {
       const todayStr = today.toISOString().split('T')[0];
       const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
 
-      // Fetch bookings, leads, customers
-      const [bookingsRes, leadsRes, usersRes] = await Promise.all([
+      // Fetch bookings, leads, customers, and contributions
+      const [bookingsRes, leadsRes, usersRes, contributionsRes] = await Promise.all([
         supabase.from('bookings').select('*'),
         supabase.from('checkout_leads').select('*').order('created_at', { ascending: false }).limit(100),
-        supabase.from('profiles').select('*', { count: 'exact', head: true })
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('booking_contributions').select('*')
       ]);
 
       const bookingsData = bookingsRes.data || [];
       const leadsData = leadsRes.data || [];
+      const contributionsData = contributionsRes.data || [];
       
       let totalRevenue = 0, thisMonthRevenue = 0, todayBookings = 0;
       let upcomingTrips = 0, pendingPayments = 0, confirmedBookings = 0, cancelledBookings = 0;
+      let contributionThisMonth = 0, contributionUnpaid = 0, unclassifiedCount = 0;
+
+      const thisMonth = new Date().getMonth();
+      const thisYear = new Date().getFullYear();
+
+      contributionsData.forEach(c => {
+        const cDate = new Date(c.accrued_at);
+        if (cDate.getMonth() === thisMonth && cDate.getFullYear() === thisYear) {
+          contributionThisMonth += Number(c.contribution_amount || 0);
+        }
+        if (c.status === 'unpaid') {
+          contributionUnpaid += Number(c.contribution_amount || 0);
+        }
+      });
       const departuresMap = {};
       const generatedTasks = [];
 
@@ -131,6 +148,10 @@ const AdminDashboard = () => {
             actionData: b
           });
         }
+        
+        if (!b.sales_channel || b.sales_channel === 'unclassified') {
+          unclassifiedCount++;
+        }
       });
 
       // Process Leads for tasks
@@ -186,7 +207,10 @@ const AdminDashboard = () => {
         upcomingTrips,
         pendingPayments,
         confirmedBookings,
-        cancelledBookings
+        cancelledBookings,
+        contributionThisMonth,
+        contributionUnpaid,
+        unclassifiedCount
       });
     } catch (err) {
       console.error('Error loading dashboard stats:', err);
@@ -252,12 +276,10 @@ const AdminDashboard = () => {
     );
   }
 
-  const currentDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' });
-
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Quick Actions Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             {getGreeting()}, Admin 👋
@@ -268,7 +290,7 @@ const AdminDashboard = () => {
           <Link to="/admin/packages" className="px-3 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-1.5 transition-colors text-gray-700">
             <Plus size={16}/> Add Package
           </Link>
-          <button onClick={() => setShowManualBooking(true)} className="px-3 py-2 text-sm font-semibold bg-[#136b8a] text-white rounded-lg hover:bg-[#0f556e] flex items-center gap-1.5 transition-colors">
+          <button onClick={() => setShowManualBooking(true)} className="px-3 py-2 text-sm font-semibold bg-[#01AFD1] text-white rounded-lg hover:bg-[#0092b3] flex items-center gap-1.5 transition-colors">
             <Plus size={16}/> New Booking
           </button>
           <Link to="/admin/bookings" className="px-3 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-1.5 transition-colors text-gray-700">
@@ -279,30 +301,32 @@ const AdminDashboard = () => {
 
       {/* Primary Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-          <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Revenue</span>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Sale</span>
           <h3 className="text-xl font-bold text-gray-900 mt-1">₹{stats.totalRevenue.toLocaleString('en-IN')}</h3>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">This Month</span>
-          <h3 className="text-xl font-bold text-[#136b8a] mt-1">₹{stats.thisMonthRevenue.toLocaleString('en-IN')}</h3>
+          <h3 className="text-xl font-bold text-[#01AFD1] mt-1">₹{stats.thisMonthRevenue.toLocaleString('en-IN')}</h3>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Bookings</span>
           <h3 className="text-xl font-bold text-gray-900 mt-1">{stats.totalBookings}</h3>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Customers</span>
           <h3 className="text-xl font-bold text-gray-900 mt-1">{stats.totalCustomers}</h3>
         </div>
       </div>
+
+
 
       {/* Main Content Split */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
         {/* Left Column: Daily Task Queue (Priority) */}
         <div className="xl:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-red-50/30 rounded-t-xl">
               <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="text-red-500"/> Action Required Queue
@@ -322,7 +346,7 @@ const AdminDashboard = () => {
                             task.priority === 1 ? 'bg-red-100 text-red-700' :
                             task.priority === 2 ? 'bg-orange-100 text-orange-700' :
                             task.priority === 3 ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-blue-100 text-blue-700'
+                            'bg-[#01AFD1]/20 text-[#0092b3]'
                           }`}>P{task.priority}</span>
                           <h4 className="font-semibold text-gray-900 text-sm">{task.title}</h4>
                         </div>
@@ -345,7 +369,7 @@ const AdminDashboard = () => {
                           <button onClick={() => handleAction(task, 'mark_contacted')} className="text-xs font-bold px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md border border-indigo-200 transition-colors">Mark Contacted</button>
                         )}
                         {task.type === 'upcoming_trip' && (
-                          <button onClick={() => exportTripCSV(task.actionData)} className="text-xs font-bold px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors">Export CSV</button>
+                          <button onClick={() => exportTripCSV(task.actionData)} className="text-xs font-bold px-3 py-1.5 bg-[#01AFD1]/10 text-[#0092b3] hover:bg-[#01AFD1]/20 rounded-md border border-[#01AFD1]/30 transition-colors">Export CSV</button>
                         )}
                       </div>
                     </div>
@@ -356,7 +380,7 @@ const AdminDashboard = () => {
           </div>
           
           {/* Upcoming Departures Module */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="font-bold text-gray-900 text-sm">Upcoming Departures</h3>
             </div>
@@ -394,7 +418,7 @@ const AdminDashboard = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Today's Bookings", val: stats.todayBookings, color: "text-[#136b8a] bg-blue-50 border-blue-100" },
+              { label: "Today's Bookings", val: stats.todayBookings, color: "text-[#01AFD1] bg-cyan-50 border-cyan-100" },
               { label: "Pending Payments", val: stats.pendingPayments, color: "text-amber-600 bg-amber-50 border-amber-100" },
               { label: "Confirmed", val: stats.confirmedBookings, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
               { label: "Cancelled", val: stats.cancelledBookings, color: "text-rose-600 bg-rose-50 border-rose-100" }
@@ -406,7 +430,7 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="p-4 border-b border-gray-100">
               <h3 className="font-bold text-gray-900 text-sm">Recent Bookings</h3>
             </div>

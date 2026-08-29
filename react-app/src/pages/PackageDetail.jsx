@@ -867,7 +867,7 @@ export default function PackageDetail() {
               {trip.itineraryPdfUrl ? (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-[#01AFD1] hover:bg-cyan-600 text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all shadow-sm active:scale-95 whitespace-nowrap cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-[#01AFD1] hover:bg-cyan-600 text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-full transition-all active:scale-95 whitespace-nowrap cursor-pointer"
                 >
                   <Download size={16} />
                   <span>Download Itinerary</span>

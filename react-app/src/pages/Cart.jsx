@@ -80,7 +80,7 @@ function Cart() {
               <p className="text-gray-500 mb-6">Looks like you haven't added any trips yet.</p>
               <button 
                 onClick={() => navigate('/')}
-                className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:opacity-90 transition-opacity"
+                className="bg-[#01AFD1] text-white px-6 py-2.5 rounded-full font-bold hover:opacity-90 transition-opacity"
               >
                 Explore Packages
               </button>
@@ -145,7 +145,7 @@ function Cart() {
                 </button>
                 <button 
                   onClick={() => navigate('/checkout')}
-                  className="flex-1 py-3 px-4 rounded-xl bg-primary text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
+                  className="flex-1 py-3 px-4 rounded-xl bg-[#01AFD1] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
                 >
                   Proceed to Checkout
                 </button>

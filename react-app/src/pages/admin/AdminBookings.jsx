@@ -11,6 +11,7 @@ import {
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 import ServiceRecoveryCreationModal from '../../components/admin/ServiceRecoveryCreationModal';
+import AdminSecurityModal from '../../components/admin/AdminSecurityModal';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -18,9 +19,13 @@ const AdminBookings = () => {
   const [error, setError] = useState(null);
   const [showManualBooking, setShowManualBooking] = useState(false);
   const [editBookingId, setEditBookingId] = useState(null);
+  
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
 
   // Cancellation Modal State
   const [cancelModal, setCancelModal] = useState({ isOpen: false, booking: null });
+  // Deletion Modal State
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, booking: null, password: '', error: '', loading: false });
   const [cancelReason, setCancelReason] = useState('');
   const [cancelNotes, setCancelNotes] = useState('');
   const [cancelResolution, setCancelResolution] = useState('Cancel Without Refund');
@@ -31,9 +36,12 @@ const AdminBookings = () => {
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [salesChannelFilter, setSalesChannelFilter] = useState('all');
 
-  const [monthFilter, setMonthFilter] = useState('all'); // all | this | last | custom
-  const [customMonth, setCustomMonth] = useState(''); // format YYYY-MM
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [packageFilter, setPackageFilter] = useState('all');
+
+  // Bulk Delete Modal State
+  const [bulkDeleteModal, setBulkDeleteModal] = useState({ isOpen: false, password: '', error: '', loading: false, successCount: 0, failCount: 0 });
 
   // Drawer state
   const [selectedBooking, setSelectedBooking] = useState(null); // preserved for legacy logic if needed
@@ -81,32 +89,13 @@ const AdminBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, [monthFilter, customMonth]);
+  }, []);
 
   const fetchBookings = async () => {
     setLoading(true);
     setError(null);
     try {
       let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
-
-      if (monthFilter !== 'all') {
-        const now = new Date();
-        let startDate, endDate;
-        if (monthFilter === 'this') {
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        } else if (monthFilter === 'last') {
-          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          endDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        } else if (monthFilter === 'custom' && customMonth) {
-          const [year, month] = customMonth.split('-').map(Number);
-          startDate = new Date(year, month - 1, 1);
-          endDate = new Date(year, month, 1);
-        }
-        if (startDate && endDate) {
-          query = query.gte('created_at', startDate.toISOString()).lt('created_at', endDate.toISOString());
-        }
-      }
 
       const { data, error } = await query;
       if (error) throw error;
@@ -229,15 +218,122 @@ const AdminBookings = () => {
     }
   };
 
+  const submitDelete = async () => {
+    if (!deleteModal.password) {
+      setDeleteModal(prev => ({ ...prev, error: 'Password required' }));
+      return;
+    }
+    setDeleteModal(prev => ({ ...prev, loading: true, error: '' }));
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        throw new Error("Your admin session has expired. Please sign in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('secure-delete-booking', {
+        body: {
+          booking_id: deleteModal.booking.id,
+          current_password: deleteModal.password
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        let message = "Unable to delete booking.";
+        try {
+          if (error.context) {
+            const payload = await error.context.json();
+            if (payload?.error) {
+              message = payload.error;
+            }
+          }
+        } catch (_) {
+          // fallback
+        }
+        throw new Error(message);
+      }
+
+      setBookings(prev => prev.filter(b => b.id !== deleteModal.booking.id));
+      setViewDetailsBooking(null);
+      setDeleteModal({ isOpen: false, booking: null, password: '', error: '', loading: false });
+      fetchBookings();
+      alert("Booking deleted successfully.");
+    } catch (err) {
+      setDeleteModal(prev => ({ ...prev, error: err.message, loading: false }));
+    }
+  };
+
+  const submitBulkDelete = async () => {
+    if (!bulkDeleteModal.password) {
+      setBulkDeleteModal(prev => ({ ...prev, error: 'Password required' }));
+      return;
+    }
+    setBulkDeleteModal(prev => ({ ...prev, loading: true, error: '' }));
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error("Your admin session has expired. Please sign in again.");
+      }
+
+      const idsToDelete = Array.from(selectedRowIds);
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const id of idsToDelete) {
+        const { data, error } = await supabase.functions.invoke('secure-delete-booking', {
+          body: {
+            booking_id: id,
+            current_password: bulkDeleteModal.password
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+        
+        if (error) {
+          let message = "Unable to delete booking.";
+          try { if (error.context) { const payload = await error.context.json(); if (payload?.error) message = payload.error; } } catch (_) {}
+          
+          if (message === "Incorrect delete password." || message === "Booking Delete Password has not been configured yet." || message.includes("session has expired") || message.includes("Admin access required")) {
+            if (successCount === 0 && failCount === 0) {
+              throw new Error(message);
+            }
+          }
+          failCount++;
+        } else {
+          successCount++;
+        }
+      }
+
+      setBulkDeleteModal({ isOpen: false, password: '', error: '', loading: false, successCount: 0, failCount: 0 });
+      setSelectedRowIds(new Set());
+      fetchBookings();
+      
+      if (failCount === 0) {
+        alert(`${successCount} bookings deleted successfully.`);
+      } else {
+        alert(`${successCount} bookings deleted. ${failCount} could not be deleted.`);
+      }
+
+    } catch (err) {
+      setBulkDeleteModal(prev => ({ ...prev, error: err.message, loading: false }));
+    }
+  };
+
 const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user?.id) { alert(`Auth error: ${userError?.message || 'Admin session not found'}`); return; }
+    
     const payload = {
       sales_channel: newChannel,
       classified_by: user ? user.id : null,
       classified_at: new Date().toISOString()
     };
+    
     if (newChannel === 'b2b') {
       const company = (companyArg || '').trim();
       if (!company) { alert('Partner/Company name required for B2B classification.'); return; }
@@ -247,12 +343,40 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       payload.b2b_partner_company = null;
       payload.b2b_notes = null;
     }
+    
     if (newChannel === 'unclassified') {
       payload.classified_by = null;
       payload.classified_at = null;
     }
-    const { error } = await supabase.from('bookings').update(payload).eq('id', booking.id);
-    if (error) throw error;
+    
+    const { error: bookingError } = await supabase.from('bookings').update(payload).eq('id', booking.id);
+    if (bookingError) throw bookingError;
+
+    // Handle Contribution Ledger
+    if (newChannel === 'unclassified') {
+      await supabase.from('booking_contributions').delete().eq('booking_id', booking.id);
+    } else {
+      // Find latest rate for this channel
+      const channelLabel = newChannel === 'b2b' ? 'B2B' : 'B2C';
+      const { data: rates } = await supabase
+        .from('business_contribution_rates')
+        .select('*')
+        .eq('sales_channel', channelLabel)
+        .order('effective_from', { ascending: false })
+        .limit(1);
+        
+      if (rates && rates.length > 0) {
+        const activeRate = rates[0];
+        
+        await supabase.from('booking_contributions').upsert({
+          booking_id: booking.id,
+          sales_channel: channelLabel,
+          rate_id: activeRate.id,
+          contribution_amount: activeRate.amount,
+        }, { onConflict: 'booking_id' });
+      }
+    }
+
     await fetchBookings();
 
     // Update viewDetailsBooking state so drawer displays updated details
@@ -403,7 +527,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
 
   // Filtering
   const filteredBookings = useMemo(() => {
-    return bookings.filter(b => {
+    let results = bookings.filter(b => {
       const term = searchTerm.toLowerCase();
       const matchesSearch =
         (b.booking_id?.toLowerCase() || '').includes(term) ||
@@ -418,7 +542,36 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
 
       return matchesSearch && matchesStatus && matchesPayment && matchesPackage && matchesSales;
     });
-  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter, salesChannelFilter]);
+
+    if (fromDate) {
+      const from = new Date(fromDate);
+      from.setHours(0, 0, 0, 0);
+      results = results.filter(b => {
+        const bDate = new Date(b.created_at);
+        bDate.setHours(0, 0, 0, 0);
+        return bDate >= from;
+      });
+    }
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      results = results.filter(b => {
+        const bDate = new Date(b.created_at);
+        return bDate <= to;
+      });
+    }
+    return results;
+  }, [bookings, searchTerm, statusFilter, paymentFilter, packageFilter, salesChannelFilter, fromDate, toDate]);
+
+  useEffect(() => {
+    if (selectedRowIds.size > 0) {
+      const filteredIds = new Set(filteredBookings.map(b => b.id));
+      const newSelected = new Set([...selectedRowIds].filter(id => filteredIds.has(id)));
+      if (newSelected.size !== selectedRowIds.size) {
+        setSelectedRowIds(newSelected);
+      }
+    }
+  }, [filteredBookings, selectedRowIds]);
 
   // Summary Stats
   const summaryStats = useMemo(() => {
@@ -464,7 +617,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
 
   const getStatusBadge = (status) => {
     const colors = {
-      new: 'bg-blue-100 text-blue-700',
+      new: 'bg-[#01AFD1]/20 text-[#0092b3]',
       confirmed: 'bg-emerald-100 text-emerald-700',
       cancelled: 'bg-rose-100 text-rose-700',
       completed: 'bg-slate-100 text-slate-700'
@@ -494,7 +647,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowManualBooking(true)}
-              className="flex items-center gap-1.5 bg-[#136b8a] border border-[#136b8a] text-white px-3 py-1.5 rounded-md hover:bg-[#0f556e] transition-colors shadow-sm text-sm font-semibold"
+              className="flex items-center gap-1.5 bg-[#01AFD1] border border-[#01AFD1] text-white px-3 py-1.5 rounded-md hover:bg-[#0092b3] transition-colors shadow-sm text-sm font-semibold"
             >
               New Booking
             </button>
@@ -521,7 +674,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
         )}
 
         {/* Compact Filters Grid */}
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
+        <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
           <div className="relative lg:col-span-2">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
@@ -529,14 +682,14 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
               placeholder="Search ID, customer, phone..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] transition-all"
+              className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1] transition-all"
             />
           </div>
 
           <select
             value={salesChannelFilter}
             onChange={(e) => { setSalesChannelFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1] cursor-pointer"
           >
             <option value="all">All Sales Types</option>
             <option value="unclassified">Unclassified</option>
@@ -547,7 +700,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           <select
             value={packageFilter}
             onChange={(e) => { setPackageFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1] cursor-pointer"
           >
             <option value="all">All Packages</option>
             {uniquePackages.map((pkg, idx) => (
@@ -558,7 +711,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1] cursor-pointer"
           >
             <option value="all">All Status</option>
             <option value="new">New</option>
@@ -570,7 +723,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
+            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1] cursor-pointer"
           >
             <option value="all">All Payments</option>
             <option value="pending">Pending</option>
@@ -579,22 +732,30 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
             <option value="failed">Failed</option>
           </select>
 
-          <select
-            value={monthFilter}
-            onChange={(e) => { setMonthFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#136b8a] cursor-pointer"
-          >
-            <option value="all">All Time</option>
-            <option value="this">This Month</option>
-            <option value="last">Last Month</option>
-          </select>
+          <div className="flex gap-2 lg:col-span-6 items-center flex-wrap">
+            <div className="flex items-center gap-2">
+              <label className="text-gray-500 font-medium text-xs">From Date</label>
+              <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-[#01AFD1]"/>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-gray-500 font-medium text-xs">To Date</label>
+              <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-[#01AFD1]"/>
+            </div>
+            {(fromDate || toDate) && (
+              <button onClick={() => { setFromDate(''); setToDate(''); }} className="text-sm font-semibold text-[#01AFD1] hover:text-[#0092b3] ml-2">Clear Dates</button>
+            )}
+            {fromDate && toDate && new Date(fromDate) > new Date(toDate) && (
+              <span className="text-red-500 text-xs ml-2 font-semibold">From date cannot be after To date.</span>
+            )}
+          </div>
         </div>
 
         {selectedRowIds.size > 0 && (
-          <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-2 px-4 flex items-center justify-between text-sm animate-fade-in">
+          <div className="mt-3 bg-[#01AFD1]/10 border border-[#01AFD1]/30 rounded-lg p-2 px-4 flex items-center justify-between text-sm animate-fade-in">
             <span className="font-semibold text-blue-800">{selectedRowIds.size} bookings selected</span>
             <div className="flex gap-2">
                <button onClick={() => handleBulkAction('confirmed')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold transition-colors">Confirm Selected</button>
+               <button onClick={() => setBulkDeleteModal({ isOpen: true, password: '', error: '', loading: false })} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold transition-colors">Delete Selected</button>
                <button onClick={() => handleBulkAction('cancelled')} className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded text-xs font-bold transition-colors">Cancel Selected</button>
             </div>
           </div>
@@ -612,7 +773,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
             <p className="text-xs text-gray-500 font-semibold uppercase">B2B Sales Value</p>
-             <p className="text-lg font-bold text-[#136b8a]">₹{Number(summaryStats.b2bValue ?? 0).toLocaleString()}</p>
+             <p className="text-lg font-bold text-[#01AFD1]">₹{Number(summaryStats.b2bValue ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
             <p className="text-xs text-gray-500 font-semibold uppercase">B2C Sales Value</p>
@@ -622,11 +783,11 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       </div>
 
       {/* Table Data */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 flex flex-col min-h-0">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 flex flex-col min-h-0">
         <div className="flex-1 overflow-auto">
           {loading ? (
-            <div className="flex flex-col items-center justify-center h-full py-12 text-[#136b8a]">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#136b8a] mb-3"></div>
+            <div className="flex flex-col items-center justify-center h-full py-12 text-[#01AFD1]">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#01AFD1] mb-3"></div>
               <p className="text-sm font-medium text-gray-500">Loading bookings...</p>
             </div>
           ) : filteredBookings.length === 0 ? (
@@ -640,7 +801,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
 <tr>
   <th className="py-2.5 px-4 w-10 text-center">
     <input type="checkbox"
-      className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
+      className="rounded border-gray-300 text-[#01AFD1] focus:ring-[#01AFD1]"
       checked={currentBookings.length > 0 && selectedRowIds.size === currentBookings.length}
       onChange={toggleSelectAll}
     />
@@ -656,16 +817,16 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
               </thead>
               <tbody className="divide-y divide-gray-100">
 {currentBookings.map((booking) => (
-  <tr key={booking.id} className={`hover:bg-slate-50/70 transition-colors ${selectedRowIds.has(booking.id) ? 'bg-blue-50/30' : ''}`}>
+  <tr key={booking.id} className={`hover:bg-slate-50/70 transition-colors ${selectedRowIds.has(booking.id) ? 'bg-[#01AFD1]/10/30' : ''}`}>
     <td className="py-2 px-4 text-center">
       <input type="checkbox"
-        className="rounded border-gray-300 text-[#136b8a] focus:ring-[#136b8a]"
+        className="rounded border-gray-300 text-[#01AFD1] focus:ring-[#01AFD1]"
         checked={selectedRowIds.has(booking.id)}
         onChange={() => toggleSelectRow(booking.id)}
       />
     </td>
     <td className="py-2 px-4">
-      <div className="font-bold text-[#136b8a] text-xs">{booking.booking_id}</div>
+      <div className="font-bold text-[#01AFD1] text-xs">{booking.booking_id}</div>
       <div className="text-[11px] text-gray-500 mt-0.5">
         {new Date(booking.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
       </div>
@@ -705,7 +866,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           e.stopPropagation();
           setViewDetailsBooking(booking);
         }}
-        className="text-[#136b8a] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
+        className="text-[#01AFD1] hover:bg-slate-100 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border border-gray-200"
       >
         View Details
       </button>
@@ -766,147 +927,120 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       {/* Booking Details Drawer */}
       {viewDetailsBooking && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setViewDetailsBooking(null)} />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-slate-50 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-200 border-l border-gray-200 text-sm">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
+          <div className="fixed inset-0 bg-black/60 z-[80]" onClick={() => setViewDetailsBooking(null)} />
+          <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[90] overflow-y-auto transform transition-transform duration-200 border-l border-gray-200 text-sm">
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-5 flex justify-between items-center z-10">
               <div>
-                <h2 className="text-base font-bold text-gray-900">Booking Details</h2>
-                <p className="text-xs text-gray-500  mt-0.5">{viewDetailsBooking.booking_reference || viewDetailsBooking.booking_id}</p>
+                <h2 className="text-lg font-bold text-gray-900">Booking Details</h2>
+                <p className="text-sm text-gray-500">{viewDetailsBooking.booking_reference || viewDetailsBooking.booking_id}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     setEditBookingId(viewDetailsBooking.id);
                   }}
-                  className="p-2 text-[#136b8a] bg-[#136b8a]/10 hover:bg-[#136b8a]/20 rounded-full transition-colors"
+                  className="p-2 text-[#01AFD1] hover:bg-gray-50 rounded-full transition-colors"
                   title="Edit Booking"
                 >
-                  <Edit size={16} />
+                  <Edit size={18} />
                 </button>
-                <button onClick={() => setViewDetailsBooking(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><X size={20} /></button>
+                <button onClick={() => setViewDetailsBooking(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"><X size={20} /></button>
               </div>
             </div>
 
-            <div className="p-5 space-y-6">
+            <div className="p-6 space-y-8">
 
-              {/* Core Booking Info */}
+              {/* BOOKING */}
               <div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Core Information</h3>
-                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
-                  <div className="flex justify-between items-start border-b border-gray-100 pb-3">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Package</p>
-                      <p className="font-semibold text-gray-900">{viewDetailsBooking.package_title}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500 mb-1">Travel Date</p>
-                      <p className="font-medium text-gray-900 flex items-center justify-end gap-1"><Calendar size={12} className="text-[#136b8a]"/> {viewDetailsBooking.travel_date ? new Date(viewDetailsBooking.travel_date).toLocaleDateString() : 'N/A'}</p>
-                    </div>
+                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">BOOKING</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Package</span>
+                    <span className="font-medium text-gray-900 text-right max-w-[200px] truncate">{viewDetailsBooking.package_title}</span>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4 border-b border-gray-100 pb-3">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Booking Source</p>
-                      <p className="font-medium text-gray-900 capitalize flex items-center gap-1">
-                        {viewDetailsBooking.booking_source === 'website' ? <Globe size={12} className="text-blue-500"/> :
-                         viewDetailsBooking.booking_source === 'whatsapp' ? <MessageCircle size={12} className="text-green-500"/> :
-                         <Phone size={12} className="text-amber-500"/>}
-                        {viewDetailsBooking.booking_source || 'Unknown'}
-                      </p>
-                    </div>
-                    <div>
-                       <p className="text-xs text-gray-500 mb-1">Sales Channel</p>
-                       <div className="font-medium text-gray-900">
-                          {viewDetailsBooking.sales_channel === 'b2b' ? (
-                            <div className="flex flex-col gap-1">
-                              <span className="flex items-center gap-1 text-purple-700 bg-purple-50 px-2 py-0.5 rounded w-max"><Building size={12}/> B2B – Transferred/Sold</span>
-                              {viewDetailsBooking.b2b_partner_company && <span className="text-xs text-gray-700 font-bold">Agency: {viewDetailsBooking.b2b_partner_company}</span>}
-                              {viewDetailsBooking.b2b_notes && <span className="text-[11px] text-gray-500 italic break-words max-w-[200px]">Notes: {viewDetailsBooking.b2b_notes}</span>}
-                            </div>
-                          ) : viewDetailsBooking.sales_channel === 'b2c' ? (
-                            <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded w-max"><User size={12}/> B2C</span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-gray-700 bg-gray-100 px-2 py-0.5 rounded w-max">Unclassified</span>
-                          )}
-                       </div>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Travel Date</span>
+                    <span className="font-medium text-gray-900">{viewDetailsBooking.travel_date ? new Date(viewDetailsBooking.travel_date).toLocaleDateString() : 'N/A'}</span>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Booking Status</p>
-                      {getStatusBadge(viewDetailsBooking.booking_status)}
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Payment Status</p>
-                      <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${viewDetailsBooking.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : viewDetailsBooking.payment_status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}`}>
-                        {viewDetailsBooking.payment_status === 'paid' ? 'Full Payment Done' : viewDetailsBooking.payment_status === 'pending' ? 'Half Paid' : viewDetailsBooking.payment_status?.replace('_', ' ')}
-                      </span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Booking Source</span>
+                    <span className="font-medium text-gray-900 capitalize">{viewDetailsBooking.booking_source || 'Unknown'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Sales Channel</span>
+                    <span className="font-medium text-gray-900 capitalize flex items-center gap-2">
+                      {viewDetailsBooking.sales_channel === 'b2b' ? (
+                        <span>B2B {viewDetailsBooking.b2b_partner_company ? `(${viewDetailsBooking.b2b_partner_company})` : ''}</span>
+                      ) : viewDetailsBooking.sales_channel === 'b2c' ? (
+                        <span>B2C</span>
+                      ) : (
+                        <span>Unclassified</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-gray-500">Booking Status</span>
+                    {getStatusBadge(viewDetailsBooking.booking_status)}
+                  </div>
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-gray-500">Payment Status</span>
+                    {getPaymentBadge(viewDetailsBooking.payment_status)}
                   </div>
                 </div>
               </div>
 
-              {/* Financials */}
+              {/* PAYMENT */}
               <div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1"><CreditCard size={14}/> Financials</h3>
-                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Total Price</span>
-                      <span className="font-semibold text-gray-900">₹{Number(viewDetailsBooking.total_amount || 0).toLocaleString()}</span>
+                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">PAYMENT</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Total Price</span>
+                    <span className="font-medium text-gray-900">₹{Number(viewDetailsBooking.total_amount || 0).toLocaleString()}</span>
+                  </div>
+                  {Number(viewDetailsBooking.manual_discount_amount || 0) > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Discount</span>
+                      <span className="font-medium text-emerald-600">-₹{Number(viewDetailsBooking.manual_discount_amount || 0).toLocaleString()}</span>
                     </div>
-                    {Number(viewDetailsBooking.manual_discount_amount || 0) > 0 && (
-                      <div className="flex justify-between items-center text-sm text-emerald-600">
-                        <span>Discount Allowed ({Number(viewDetailsBooking.total_amount || 0) > 0 ? ((Number(viewDetailsBooking.manual_discount_amount || 0) / Number(viewDetailsBooking.total_amount || 0)) * 100).toFixed(2) : 0}%)</span>
-                        <span className="font-bold">-₹{Number(viewDetailsBooking.manual_discount_amount || 0).toLocaleString()}</span>
-                      </div>
-                    )}
-                    {Number(viewDetailsBooking.manual_discount_amount || 0) > 0 && (
-                      <div className="flex justify-between items-center text-sm pt-1 border-t border-gray-100">
-                        <span className="font-semibold text-gray-700">Final Payable</span>
-                        <span className="font-semibold text-gray-900">₹{Number(viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0).toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center text-sm mt-2">
-                      <span className="text-gray-500">Amount Paid</span>
-                      <span className="font-semibold text-emerald-600">₹{Number(viewDetailsBooking.payment_status === 'paid' ? (viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) : (viewDetailsBooking.advance_payment || 0)).toLocaleString()}</span>
+                  )}
+                  {Number(viewDetailsBooking.manual_discount_amount || 0) > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Final Payable</span>
+                      <span className="font-medium text-gray-900">₹{Number(viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0).toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
-                      <span className="text-gray-500 font-medium">Remaining Due</span>
-                      <span className="font-bold text-amber-600">₹{Math.max(0, Number(viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) - Number(viewDetailsBooking.payment_status === 'paid' ? (viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) : (viewDetailsBooking.advance_payment || 0))).toLocaleString()}</span>
-                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Amount Paid</span>
+                    <span className="font-medium text-emerald-600">₹{Number(viewDetailsBooking.payment_status === 'paid' ? (viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) : (viewDetailsBooking.advance_payment || 0)).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-gray-50 pt-2">
+                    <span className="text-gray-500 font-semibold">Remaining Due</span>
+                    <span className="font-bold text-amber-600">₹{Math.max(0, Number(viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) - Number(viewDetailsBooking.payment_status === 'paid' ? (viewDetailsBooking.final_amount || viewDetailsBooking.total_amount || 0) : (viewDetailsBooking.advance_payment || 0))).toLocaleString()}</span>
                   </div>
                   {viewDetailsBooking.payment_method && (
-                    <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                      Method: <span className="font-medium text-gray-900 uppercase">{viewDetailsBooking.payment_method}</span>
-                    </div>
-                  )}
-                  {viewDetailsBooking.notes && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-xs text-gray-500 mb-1">Notes</p>
-                      <p className="text-sm text-gray-800 italic bg-gray-50 p-2 rounded">"{viewDetailsBooking.notes}"</p>
+                    <div className="flex justify-between border-t border-gray-50 pt-2">
+                      <span className="text-gray-500">Payment Method</span>
+                      <span className="font-medium text-gray-900 uppercase">{viewDetailsBooking.payment_method}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Primary Customer */}
+              {/* CUSTOMER */}
               <div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Primary Customer (Lead)</h3>
-                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#136b8a]/10 rounded-full flex items-center justify-center text-[#136b8a] font-bold">
-                      {viewDetailsBooking.customer_name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900">{viewDetailsBooking.customer_name}</p>
-                      <p className="text-xs text-gray-500">Primary Contact</p>
-                    </div>
+                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-3">CUSTOMER</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Name</span>
+                    <span className="font-medium text-gray-900">{viewDetailsBooking.customer_name || 'N/A'}</span>
                   </div>
-                  <div className="space-y-2 pt-2 border-t border-gray-100">
-                    <p className="text-sm text-gray-700 flex items-center gap-2"><Phone size={14} className="text-gray-400"/> {viewDetailsBooking.customer_phone || viewDetailsBooking.phone || 'N/A'}</p>
-                    <p className="text-sm text-gray-700 flex items-center gap-2"><Mail size={14} className="text-gray-400"/> {viewDetailsBooking.customer_email || viewDetailsBooking.email || 'N/A'}</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Phone</span>
+                    <span className="font-medium text-gray-900">{viewDetailsBooking.customer_phone || viewDetailsBooking.phone || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Email</span>
+                    <span className="font-medium text-gray-900">{viewDetailsBooking.customer_email || viewDetailsBooking.email || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -919,9 +1053,9 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                 ) : selectedTravellers.length > 0 ? (
                   <div className="space-y-3">
                     {selectedTravellers.map((t, idx) => (
-                      <div key={t.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm relative overflow-hidden">
+                      <div key={t.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative overflow-hidden">
                         {t.is_primary && (
-                          <div className="absolute top-0 right-0 bg-[#136b8a] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">PRIMARY</div>
+                          <div className="absolute top-0 right-0 bg-[#01AFD1] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">PRIMARY</div>
                         )}
                         <p className="font-bold text-gray-900 mb-1">{t.full_name} <span className="text-gray-400 font-normal text-xs ml-1">({t.age} yrs, {t.gender})</span></p>
 
@@ -957,7 +1091,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 border-dashed rounded-xl p-6 text-center text-gray-500 text-sm">
+                  <div className="bg-gray-50 border border-gray-200 border-dashed rounded-lg p-6 text-center text-gray-500 text-sm">
                     No individual traveller records found.
                   </div>
                 )}
@@ -968,43 +1102,48 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
               </div>
 
               {/* BOOKING CONTROLS */}
-              <div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Booking Controls</h3>
-                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
-                  <div className="flex flex-col gap-2">
-                    {viewDetailsBooking.payment_status !== 'paid' && (
-                      <button
-                        onClick={handleDrawerConfirmPayment}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold transition-colors text-sm"
-                      >
-                        Confirm Payment
-                      </button>
-                    )}
+              <div className="border-t border-gray-100 pt-6">
+                <div className="flex flex-col gap-2">
+                  {viewDetailsBooking.payment_status !== 'paid' && (
                     <button
-                      onClick={() => {
-                        setCancelModal({ isOpen: true, booking: viewDetailsBooking });
-                        setCancelReason('');
-                        setCancelNotes('');
-                        setCancelResolution('Cancel Without Refund');
-                      }}
-                      className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-lg font-bold transition-colors text-sm"
+                      onClick={handleDrawerConfirmPayment}
+                      className="w-full bg-[#01AFD1]/10 hover:bg-[#01AFD1]/20 text-[#01AFD1] py-2.5 rounded-lg font-bold transition-colors text-sm"
                     >
-                      Cancel Booking
+                      Confirm Payment
                     </button>
-                    <button
-                      onClick={() => {
-                        setClassificationModal({
-                          isOpen: true,
-                          channel: viewDetailsBooking.sales_channel || 'unclassified',
-                          company: viewDetailsBooking.b2b_partner_company || '',
-                          notes: viewDetailsBooking.b2b_notes || ''
-                        });
-                      }}
-                      className="w-full bg-slate-100 hover:bg-slate-200 text-gray-800 py-2 rounded-lg font-bold transition-colors text-sm border border-gray-300"
-                    >
-                      Change Classification
-                    </button>
-                  </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      setCancelModal({ isOpen: true, booking: viewDetailsBooking });
+                      setCancelReason('');
+                      setCancelNotes('');
+                      setCancelResolution('Cancel Without Refund');
+                    }}
+                    className="w-full text-rose-600 hover:bg-rose-50 py-2.5 rounded-lg font-bold transition-colors text-sm border border-rose-100"
+                  >
+                    Cancel Booking
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteModal({ isOpen: true, booking: viewDetailsBooking, password: '', error: '', loading: false });
+                    }}
+                    className="w-full text-gray-500 hover:text-red-600 py-2 text-xs font-semibold underline transition-colors"
+                  >
+                    Delete Booking (Admin Only)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setClassificationModal({
+                        isOpen: true,
+                        channel: viewDetailsBooking.sales_channel || 'unclassified',
+                        company: viewDetailsBooking.b2b_partner_company || '',
+                        notes: viewDetailsBooking.b2b_notes || ''
+                      });
+                    }}
+                    className="w-full bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-lg font-bold transition-colors text-sm border border-gray-300 mt-2"
+                  >
+                    Change Classification
+                  </button>
                 </div>
               </div>
 
@@ -1025,7 +1164,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       {/* Cancel Modal */}
       {cancelModal.isOpen && cancelModal.booking && (
         <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-rose-600 px-6 py-4 flex justify-between items-center text-white">
                <h3 className="text-lg font-bold">Cancel Booking</h3>
                <button onClick={() => setCancelModal({ isOpen: false, booking: null })} className="text-rose-100 hover:text-white"><X size={20} /></button>
@@ -1052,7 +1191,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       <textarea
         value={cancelReason}
         onChange={e => setCancelReason(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm"
+        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#01AFD1] outline-none shadow-sm"
         rows="3"
         required
         placeholder="Why is this booking being cancelled?"
@@ -1063,7 +1202,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       <textarea
         value={cancelNotes}
         onChange={e => setCancelNotes(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#136b8a] outline-none shadow-sm"
+        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#01AFD1] outline-none shadow-sm"
         rows="2"
         placeholder="Visible only to admins"
       />
@@ -1076,7 +1215,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       <select
         value={cancelResolution}
         onChange={e => setCancelResolution(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none font-medium text-gray-800"
+        className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#01AFD1] outline-none font-medium text-gray-800"
       >
         <option value="Cancel Without Refund">Cancel Without Refund</option>
         <option value="Refund Pending">Refund Pending</option>
@@ -1096,6 +1235,125 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Delete Booking Modal */}
+      {deleteModal.isOpen && deleteModal.booking && (
+        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-red-700 px-6 py-4 flex justify-between items-center text-white">
+               <h3 className="text-lg font-bold">Secure Delete Booking</h3>
+               <button onClick={() => setDeleteModal({ isOpen: false, booking: null, password: '', error: '', loading: false })} className="text-red-100 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-sm">
+                <strong>WARNING:</strong> This action permanently removes this booking and cannot be undone.
+              </div>
+              <div className="text-sm text-gray-700">
+                <p><strong>Booking ID:</strong> {deleteModal.booking.booking_id || deleteModal.booking.booking_reference || deleteModal.booking.id}</p>
+                <p><strong>Package:</strong> {deleteModal.booking.package_title || 'N/A'}</p>
+                <p><strong>Customer:</strong> {deleteModal.booking.customer_name || 'N/A'}</p>
+              </div>
+              {deleteModal.error === "Booking Delete Password has not been configured yet." ? (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-lg text-sm flex flex-col gap-3">
+                  <p className="font-medium">{deleteModal.error}</p>
+                  <button 
+                    onClick={() => {
+                      setDeleteModal({ isOpen: false, booking: null, password: '', error: '', loading: false });
+                      setShowSecurityModal(true);
+                    }}
+                    className="bg-white border border-amber-300 text-amber-800 px-4 py-2 rounded-lg font-bold hover:bg-amber-100 transition-colors w-max"
+                  >
+                    Set Password
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Booking Delete Password *</label>
+                    <input 
+                      type="password"
+                      value={deleteModal.password}
+                      onChange={e => setDeleteModal(prev => ({ ...prev, password: e.target.value, error: '' }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-red-700 outline-none"
+                      placeholder="Enter delete password"
+                    />
+                    {deleteModal.error && <p className="text-red-600 text-xs mt-1 font-semibold">{deleteModal.error}</p>}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="bg-gray-100 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button disabled={deleteModal.loading} onClick={() => setDeleteModal({ isOpen: false, booking: null, password: '', error: '', loading: false })} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+              {deleteModal.error !== "Booking Delete Password has not been configured yet." && (
+                <button disabled={deleteModal.loading} onClick={submitDelete} className="px-5 py-2 text-sm font-bold text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors shadow-sm disabled:opacity-50">
+                  {deleteModal.loading ? 'Deleting...' : 'Delete Booking'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Booking Modal */}
+      {bulkDeleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-red-700 px-6 py-4 flex justify-between items-center text-white">
+               <h3 className="text-lg font-bold">Delete Selected Bookings</h3>
+               <button disabled={bulkDeleteModal.loading} onClick={() => setBulkDeleteModal({ isOpen: false, password: '', error: '', loading: false })} className="text-red-100 hover:text-white disabled:opacity-50"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-sm">
+                <strong>WARNING:</strong> You are about to permanently delete {selectedRowIds.size} selected bookings. This action cannot be undone.
+              </div>
+              
+              {bulkDeleteModal.error === "Booking Delete Password has not been configured yet." ? (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-lg text-sm flex flex-col gap-3">
+                  <p className="font-medium">{bulkDeleteModal.error}</p>
+                  <button 
+                    onClick={() => {
+                      setBulkDeleteModal({ isOpen: false, password: '', error: '', loading: false });
+                      setShowSecurityModal(true);
+                    }}
+                    className="bg-white border border-amber-300 text-amber-800 px-4 py-2 rounded-lg font-bold hover:bg-amber-100 transition-colors w-max"
+                  >
+                    Set Password
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Booking Delete Password *</label>
+                    <input 
+                      type="password"
+                      value={bulkDeleteModal.password}
+                      onChange={e => setBulkDeleteModal(prev => ({ ...prev, password: e.target.value, error: '' }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-red-700 outline-none"
+                      placeholder="Enter delete password"
+                      disabled={bulkDeleteModal.loading}
+                    />
+                    {bulkDeleteModal.error && <p className="text-red-600 text-xs mt-1 font-semibold">{bulkDeleteModal.error}</p>}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="bg-gray-100 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button disabled={bulkDeleteModal.loading} onClick={() => setBulkDeleteModal({ isOpen: false, password: '', error: '', loading: false })} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50">Cancel</button>
+              {bulkDeleteModal.error !== "Booking Delete Password has not been configured yet." && (
+                <button disabled={bulkDeleteModal.loading || selectedRowIds.size === 0} onClick={submitBulkDelete} className="px-5 py-2 text-sm font-bold text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors shadow-sm disabled:opacity-50">
+                  {bulkDeleteModal.loading ? 'Deleting...' : `Delete ${selectedRowIds.size} Bookings`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSecurityModal && (
+        <AdminSecurityModal
+          onClose={() => setShowSecurityModal(false)}
+        />
       )}
 
       {/* Modals outside sticky header to prevent stacking context overlap */}
@@ -1132,8 +1390,8 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
       {/* Classification Modal */}
       {classificationModal.isOpen && (
         <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
-            <div className="bg-[#136b8a] px-6 py-4 flex justify-between items-center text-white">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-[#01AFD1] px-6 py-4 flex justify-between items-center text-white">
                <h3 className="text-lg font-bold">Change Classification</h3>
                <button onClick={() => setClassificationModal({ isOpen: false })} className="text-white/80 hover:text-white"><X size={20} /></button>
             </div>
@@ -1143,7 +1401,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                  <select
                    value={classificationModal.channel}
                    onChange={e => setClassificationModal(prev => ({ ...prev, channel: e.target.value }))}
-                   className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none"
+                   className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#01AFD1] outline-none"
                  >
                    <option value="unclassified">Unclassified</option>
                    <option value="b2c">B2C – Service Provided by TripoMist</option>
@@ -1158,7 +1416,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                        type="text"
                        value={classificationModal.company}
                        onChange={e => setClassificationModal(prev => ({ ...prev, company: e.target.value }))}
-                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none"
+                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#01AFD1] outline-none"
                        placeholder="Partner Company Name"
                      />
                    </div>
@@ -1167,7 +1425,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                      <textarea
                        value={classificationModal.notes}
                        onChange={e => setClassificationModal(prev => ({ ...prev, notes: e.target.value }))}
-                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#136b8a] outline-none"
+                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-[#01AFD1] outline-none"
                        placeholder="Additional details..."
                        rows="2"
                      />
@@ -1186,7 +1444,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                   await classifyBooking(viewDetailsBooking, classificationModal.channel, classificationModal.company, classificationModal.notes);
                   setClassificationModal({ isOpen: false });
                 }}
-                className="px-5 py-2 text-sm font-bold text-white bg-[#136b8a] rounded-lg hover:bg-[#0f556e] transition-colors shadow-sm"
+                className="px-5 py-2 text-sm font-bold text-white bg-[#01AFD1] rounded-lg hover:bg-[#0092b3] transition-colors shadow-sm"
               >
                 Save
               </button>

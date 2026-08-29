@@ -129,10 +129,23 @@ export default function PackageCheckout() {
       const lead = JSON.parse(leadStr);
       if (!lead.id) return;
 
-      await invokeBookingCheckout({
-        action: 'update_guest_lead',
-        leadId: lead.id,
-        ...updates,
+      const headers = {};
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      if (lead.id && lead.token) {
+        headers['x-checkout-lead-id'] = lead.id;
+        headers['x-checkout-lead-token'] = lead.token;
+      }
+
+      await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'update_guest_lead',
+          leadId: lead.id,
+          ...updates,
+        },
+        headers
       });
     } catch (e) {
       // Non-critical — don't block user flow
@@ -369,7 +382,19 @@ export default function PackageCheckout() {
       });
 
       if (verifyErr || !verifyData || !verifyData.success) {
-        throw new Error(verifyErr?.message || 'Payment verification failed on the server.');
+        let actualError = 'Payment verification failed on the server.';
+        if (verifyErr && verifyErr.context && typeof verifyErr.context.clone === 'function') {
+          try {
+            const errBody = await verifyErr.context.clone().json();
+            actualError = errBody.error || actualError;
+            console.error("Checkout Edge Function verify response:", errBody);
+          } catch (e) {}
+        } else if (verifyErr) {
+          actualError = verifyErr.message;
+        } else if (verifyData && verifyData.error) {
+          actualError = verifyData.error;
+        }
+        throw new Error(actualError);
       }
 
       setPaymentId(razorpayPaymentId);
@@ -377,12 +402,8 @@ export default function PackageCheckout() {
       sessionStorage.removeItem('checkoutData');
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('cartUpdated'));
-
       updateLead({
-        p_current_step: 'payment_success',
-        p_lead_status: 'converted',
-        p_payment_status: 'paid',
-        p_razorpay_payment_id: razorpayPaymentId,
+        p_current_step: 'payment_success'
       });
 
       setLoading(false);
@@ -491,8 +512,24 @@ export default function PackageCheckout() {
           headers
         });
 
-        if (initErr || !initData || !initData.success) {
-          throw new Error('Failed to initialize booking transaction.');
+          if (initErr || !initData || !initData.success) {
+          let actualError = 'Unknown initialize error';
+          if (initErr && initErr.context && typeof initErr.context.clone === 'function') {
+            try {
+              const errBody = await initErr.context.clone().json();
+              actualError = errBody.error || actualError;
+              console.error("Checkout Edge Function response:", errBody);
+            } catch (e) {}
+          } else if (initErr) {
+            actualError = initErr.message;
+          } else if (initData && initData.error) {
+            actualError = initData.error;
+          }
+          console.error("Initialize failed:", {initErr, initData});
+          if (actualError === 'Unauthorized: missing token session or active lead authentication') {
+            throw new Error('Your booking session has expired. Please verify your details again.');
+          }
+          throw new Error(`Failed to initialize booking transaction. Reason: ${actualError}`);
         }
 
         currentBookingId = initData.bookingId;
@@ -514,16 +551,24 @@ export default function PackageCheckout() {
       });
 
       if (prepareErr || !prepareData || !prepareData.success) {
-        throw new Error(prepareErr?.message || 'Failed to prepare payment transaction order.');
+        let actualError = 'Unknown prepare error';
+        if (prepareErr && prepareErr.context && typeof prepareErr.context.clone === 'function') {
+          try {
+            const errBody = await prepareErr.context.clone().json();
+            actualError = errBody.error || actualError;
+            console.error("Checkout Edge Function prepare response:", errBody);
+          } catch (e) {}
+        } else if (prepareErr) {
+          actualError = prepareErr.message;
+        } else if (prepareData && prepareData.error) {
+          actualError = prepareData.error;
+        }
+        console.error("Prepare failed:", {prepareErr, prepareData});
+        throw new Error(`Failed to prepare payment transaction order. Reason: ${actualError}`);
       }
-
-      // 6. Set paymentStarted state variable to true upon successful prepare response
-      setPaymentStarted(true);
 
       updateLead({
         p_current_step: 'razorpay_opened',
-        p_lead_status: 'payment_pending',
-        p_payment_status: 'pending',
         p_selected_sharing: selectedSharing,
         p_estimated_amount: finalAmount,
       });
@@ -571,11 +616,21 @@ export default function PackageCheckout() {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
         setLoading(false);
+        console.error('Razorpay payment.failed:', {
+          code: response.error?.code,
+          description: response.error?.description,
+          source: response.error?.source,
+          step: response.error?.step,
+          reason: response.error?.reason,
+          metadata: response.error?.metadata
+        });
         // 12. Razorpay close/failure par reservation release mat karo; retry message dikhao
-        setError('Payment failed: ' + (response.error?.description || 'Please try again. If money was debited, it will reflect within 24 hours.'));
+        const errorDesc = response.error?.description || 'Please try again.';
+        const errorReason = response.error?.reason ? ` Reason: ${response.error.reason}` : '';
+        const errorCode = response.error?.code ? ` (${response.error.code})` : '';
+        setError(`Payment failed: ${errorDesc}${errorReason}${errorCode}`);
         updateLead({
-          p_current_step: 'payment_failed',
-          p_payment_status: 'failed',
+          p_current_step: 'payment_failed'
         });
       });
       rzp.open();

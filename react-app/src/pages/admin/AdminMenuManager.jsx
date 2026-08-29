@@ -246,7 +246,7 @@ const AdminMenuManager = () => {
       <div className="col-span-2">
         <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold ${
           item.item_type === 'dropdown' ? 'bg-purple-100 text-purple-700' :
-          item.item_type === 'button' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+          item.item_type === 'button' ? 'bg-[#01AFD1]/20 text-[#0092b3]' : 'bg-gray-100 text-gray-700'
         }`}>
           {item.item_type}
         </span>
@@ -257,7 +257,7 @@ const AdminMenuManager = () => {
           <span className="text-gray-400 italic">Has children</span>
         ) : (
           <>
-            {item.route && <span className="text-blue-600 flex items-center gap-1 truncate" title={item.route}><LinkIcon size={12} className="shrink-0"/> {item.route}</span>}
+            {item.route && <span className="text-[#01AFD1] flex items-center gap-1 truncate" title={item.route}><LinkIcon size={12} className="shrink-0"/> {item.route}</span>}
             {item.external_url && <span className="text-green-600 flex items-center gap-1 truncate" title={item.external_url}><ExternalLink size={12} className="shrink-0"/> {item.external_url}</span>}
             {!item.route && !item.external_url && <span className="text-gray-400">None</span>}
           </>
@@ -278,7 +278,7 @@ const AdminMenuManager = () => {
       </div>
 
       <div className="col-span-1 flex justify-end gap-1">
-        <button onClick={() => handleOpenModal(item)} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded" title="Edit"><Edit2 size={14} /></button>
+        <button onClick={() => handleOpenModal(item)} className="p-1.5 text-gray-500 hover:text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded" title="Edit"><Edit2 size={14} /></button>
         <button onClick={() => handleDelete(item.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 size={14} /></button>
       </div>
     </div>
@@ -293,10 +293,9 @@ const AdminMenuManager = () => {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Menu Manager</h1>
-          <p className="text-gray-500 mt-1 text-sm">Manage dynamic navigation, badges, and device visibility.</p>
+          <h1 className="text-xl font-semibold text-gray-900">Website Pages / Menu Manager</h1>
         </div>
         <div className="flex gap-2">
           <button onClick={fetchItems} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 bg-white text-sm font-medium">
@@ -328,7 +327,7 @@ const AdminMenuManager = () => {
         </div>
 
         {isDragDisabled && (
-          <div className="px-4 py-2 bg-blue-50/50 text-blue-700 text-xs border-b border-blue-100 flex items-center gap-2">
+          <div className="px-4 py-2 bg-[#01AFD1]/10/50 text-[#0092b3] text-xs border-b border-blue-100 flex items-center gap-2">
             <AlertCircle size={14} /> Drag-and-drop sorting is disabled while filters are active.
           </div>
         )}
@@ -471,7 +470,7 @@ const AdminMenuManager = () => {
                   </div>
                 </div>
 
-                <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-[#01AFD1]/10/50 border border-blue-100 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="col-span-1 flex items-center">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input type="checkbox" checked={formData.badge_is_active} onChange={e => setFormData({...formData, badge_is_active: e.target.checked})} className="w-4 h-4 text-primary rounded border-gray-300" />
@@ -482,11 +481,11 @@ const AdminMenuManager = () => {
                     <>
                       <div>
                         <label className="block text-xs font-medium text-blue-800 mb-1">Badge Text</label>
-                        <input type="text" value={formData.badge_text} onChange={e => setFormData({...formData, badge_text: e.target.value})} maxLength={15} className="w-full border border-blue-200 rounded-md px-2 py-1 text-sm outline-none" placeholder="e.g. 50% OFF" />
+                        <input type="text" value={formData.badge_text} onChange={e => setFormData({...formData, badge_text: e.target.value})} maxLength={15} className="w-full border border-[#01AFD1]/30 rounded-md px-2 py-1 text-sm outline-none" placeholder="e.g. 50% OFF" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-blue-800 mb-1">Badge Style</label>
-                        <select value={formData.badge_type} onChange={e => setFormData({...formData, badge_type: e.target.value})} className="w-full border border-blue-200 rounded-md px-2 py-1 text-sm outline-none">
+                        <select value={formData.badge_type} onChange={e => setFormData({...formData, badge_type: e.target.value})} className="w-full border border-[#01AFD1]/30 rounded-md px-2 py-1 text-sm outline-none">
                           <option value="new">New (Green)</option>
                           <option value="hot">Hot (Red)</option>
                           <option value="sale">Sale (Orange)</option>

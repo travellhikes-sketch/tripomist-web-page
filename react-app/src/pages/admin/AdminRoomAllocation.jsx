@@ -92,7 +92,7 @@ const AdminRoomAllocation = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Bed className="text-[#136b8a]" /> Room Allocation Manager
+            <Bed className="text-[#01AFD1]" /> Room Allocation Manager
           </h1>
           <p className="text-gray-500 mt-1">Manage and track room assignments for all bookings.</p>
         </div>
@@ -102,7 +102,7 @@ const AdminRoomAllocation = () => {
             placeholder="Search reference or package..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#136b8a]/20 focus:border-[#136b8a] outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#01AFD1]/20 focus:border-[#01AFD1] outline-none transition-all"
           />
           <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
         </div>
@@ -117,7 +117,7 @@ const AdminRoomAllocation = () => {
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-8 h-8 border-4 border-[#136b8a] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -159,7 +159,7 @@ const AdminRoomAllocation = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-4 text-sm">
                           <div className="flex items-center gap-1 font-bold text-gray-800" title="Total Travellers">
-                            <Users size={14} className="text-[#136b8a]" /> {booking.stats.total}
+                            <Users size={14} className="text-[#01AFD1]" /> {booking.stats.total}
                           </div>
                           <div className="flex gap-2 text-xs text-gray-500">
                             <span title="Double">D:{booking.stats.double}</span>
@@ -193,7 +193,7 @@ const AdminRoomAllocation = () => {
                       <td className="p-4 text-right">
                         <button
                           onClick={() => handleOpenModal(booking.id)}
-                          className="px-4 py-2 bg-[#136b8a] text-white text-sm font-semibold rounded-lg hover:bg-[#0f556e] transition-colors"
+                          className="px-4 py-2 bg-[#01AFD1] text-white text-sm font-semibold rounded-lg hover:bg-[#0092b3] transition-colors"
                         >
                           Manage Rooms
                         </button>

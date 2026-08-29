@@ -40,6 +40,7 @@ const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
 const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'))
+const AdminBusinessContribution = React.lazy(() => import('./pages/admin/AdminBusinessContribution'))
 const AdminCancelledBookings = React.lazy(() => import('./pages/admin/AdminCancelledBookings'))
 const AdminServiceRecovery = React.lazy(() => import('./pages/admin/AdminServiceRecovery'))
 
@@ -151,6 +152,9 @@ function App() {
 
               <Route path="booking-activity-logs" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminBookingActivityLogs /></React.Suspense>
+              } />
+              <Route path="business-contribution" element={
+                <React.Suspense fallback={<div>Loading...</div>}><AdminBusinessContribution /></React.Suspense>
               } />
               <Route path="users" element={<AdminUsers />} />
               <Route path="settings" element={

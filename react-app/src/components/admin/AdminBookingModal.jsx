@@ -460,12 +460,12 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
 
         {/* Tabs */}
         <div className="flex border-b border-gray-100 px-6 pt-2 shrink-0 bg-gray-50">
-          <button onClick={() => setActiveTab('details')} className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'details' ? 'border-[#136b8a] text-[#136b8a]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Primary Details</button>
-          <button onClick={() => setActiveTab('travellers')} className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'travellers' ? 'border-[#136b8a] text-[#136b8a]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+          <button onClick={() => setActiveTab('details')} className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'details' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Primary Details</button>
+          <button onClick={() => setActiveTab('travellers')} className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'travellers' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
             Travellers <span className="bg-gray-200 text-gray-700 py-0.5 px-2 rounded-full text-xs">{travellers.length}</span>
           </button>
           {bookingId && (
-            <button onClick={() => setActiveTab('activity')} className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'activity' ? 'border-[#136b8a] text-[#136b8a]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Activity Logs</button>
+            <button onClick={() => setActiveTab('activity')} className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'activity' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Activity Logs</button>
           )}
         </div>
 
@@ -484,15 +484,15 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name *</label>
-                      <input type="text" name="customer_name" required value={formData.customer_name || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="text" name="customer_name" required value={formData.customer_name || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label>
-                      <input type="text" name="customer_phone" required value={formData.customer_phone || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="text" name="customer_phone" required value={formData.customer_phone || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                      <input type="email" name="customer_email" value={formData.customer_email || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="email" name="customer_email" value={formData.customer_email || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2 italic">Note: True traveller details are now managed in the Travellers tab. This section remains for summary and backwards compatibility.</p>
@@ -503,14 +503,14 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Select Package</label>
-                      <select name="package_id" value={formData.package_id || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                      <select name="package_id" value={formData.package_id || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm">
                         <option value="">-- Custom Package / None --</option>
                         {packages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                       </select>
                     </div>
                     <div className="md:col-span-2 relative">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Package Title (Editable) *</label>
-                      <input type="text" name="package_title" required value={formData.package_title || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="text" name="package_title" required value={formData.package_title || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       {/* Autocomplete suggestions */}
                       {formData.package_title && packages.filter(p => {
                         const lower = formData.package_title.toLowerCase();
@@ -537,7 +537,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Travel Date *</label>
-                      <input type="date" name="travel_date" required value={formData.travel_date || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="date" name="travel_date" required value={formData.travel_date || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div className="md:col-span-2 bg-white p-3 rounded border border-gray-200 shadow-sm">
                       <div className="text-xs font-bold text-gray-500 mb-2 uppercase">Booking Summary</div>
@@ -562,7 +562,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Booking Source</label>
-                      <select name="booking_source" value={formData.booking_source || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                      <select name="booking_source" value={formData.booking_source || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm">
                         <option value="manual">Manual / Offline</option>
                         <option value="website">Website</option>
                         <option value="whatsapp">WhatsApp</option>
@@ -576,7 +576,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Per Person Price (₹) *</label>
-                      <input type="number" step="0.01" min="0" required value={perPersonPrice} onChange={(e) => setPerPersonPrice(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="number" step="0.01" min="0" required value={perPersonPrice} onChange={(e) => setPerPersonPrice(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Total Amount (₹)</label>
@@ -586,7 +586,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Discount Allowed (₹)</label>
-                      <input type="number" step="0.01" min="0" name="manual_discount_amount" value={formData.manual_discount_amount} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="number" step="0.01" min="0" name="manual_discount_amount" value={formData.manual_discount_amount} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Discount %</label>
@@ -602,7 +602,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Advance (₹)</label>
-                      <input type="number" step="0.01" min="0" name="advance_payment" value={formData.advance_payment} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="number" step="0.01" min="0" name="advance_payment" value={formData.advance_payment} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Remaining (₹)</label>
@@ -612,18 +612,18 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Payment Method</label>
-                      <input type="text" name="payment_method" placeholder="e.g. UPI, Cash" value={formData.payment_method || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="text" name="payment_method" placeholder="e.g. UPI, Cash" value={formData.payment_method || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
-                      <select name="payment_status" value={formData.payment_status} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                      <select name="payment_status" value={formData.payment_status} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm">
                         <option value="pending">Half Paid – Remaining on Board</option>
                         <option value="paid">Full Payment Done</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Booking Status</label>
-                      <select name="booking_status" value={formData.booking_status} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                      <select name="booking_status" value={formData.booking_status} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm">
                         <option value="enquiry">Enquiry</option>
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
@@ -633,7 +633,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
-                      <input type="text" name="notes" value={formData.notes || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                      <input type="text" name="notes" value={formData.notes || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                     </div>
                   </div>
                 </div>
@@ -650,7 +650,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                           name="primary_traveller"
                           checked={traveller.is_primary}
                           onChange={() => handleTravellerChange(idx, 'is_primary', true)}
-                          className="w-4 h-4 text-[#136b8a]"
+                          className="w-4 h-4 text-[#01AFD1]"
                         />
                         Primary Traveller
                       </label>
@@ -665,23 +665,23 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Full Name *</label>
-                        <input type="text" required value={traveller.full_name} onChange={e=>handleTravellerChange(idx, 'full_name', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                        <input type="text" required value={traveller.full_name} onChange={e=>handleTravellerChange(idx, 'full_name', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                        <input type="text" value={traveller.phone || ''} onChange={e=>handleTravellerChange(idx, 'phone', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                        <input type="text" value={traveller.phone || ''} onChange={e=>handleTravellerChange(idx, 'phone', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                        <input type="email" value={traveller.email || ''} onChange={e=>handleTravellerChange(idx, 'email', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                        <input type="email" value={traveller.email || ''} onChange={e=>handleTravellerChange(idx, 'email', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Age</label>
-                        <input type="number" min="0" max="120" value={traveller.age || ''} onChange={e=>handleTravellerChange(idx, 'age', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                        <input type="number" min="0" max="120" value={traveller.age || ''} onChange={e=>handleTravellerChange(idx, 'age', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Gender</label>
-                        <select value={traveller.gender || ''} onChange={e=>handleTravellerChange(idx, 'gender', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                        <select value={traveller.gender || ''} onChange={e=>handleTravellerChange(idx, 'gender', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm">
                           <option value="">Select...</option>
                           <option value="male">Male</option>
                           <option value="female">Female</option>
@@ -692,13 +692,13 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">ID Document (Type & Number)</label>
                         <div className="flex gap-2">
-                          <input type="text" placeholder="e.g. Aadhar" value={traveller.id_type || ''} onChange={e=>handleTravellerChange(idx, 'id_type', e.target.value)} className="w-1/3 p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
-                          <input type="text" placeholder="Number" value={traveller.id_number || ''} onChange={e=>handleTravellerChange(idx, 'id_number', e.target.value)} className="w-2/3 p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                          <input type="text" placeholder="e.g. Aadhar" value={traveller.id_type || ''} onChange={e=>handleTravellerChange(idx, 'id_type', e.target.value)} className="w-1/3 p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
+                          <input type="text" placeholder="Number" value={traveller.id_number || ''} onChange={e=>handleTravellerChange(idx, 'id_number', e.target.value)} className="w-2/3 p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Sharing Type</label>
-                        <select value={traveller.sharing_type || 'Double'} onChange={e=>handleTravellerChange(idx, 'sharing_type', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm">
+                        <select value={traveller.sharing_type || 'Double'} onChange={e=>handleTravellerChange(idx, 'sharing_type', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm">
                           <option value="Double">Double</option>
                           <option value="Triple">Triple</option>
                           <option value="Quad">Quad</option>
@@ -706,19 +706,19 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Pickup Point</label>
-                        <input type="text" placeholder="Pickup Point" value={traveller.pickup_point || ''} onChange={e=>handleTravellerChange(idx, 'pickup_point', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                        <input type="text" placeholder="Pickup Point" value={traveller.pickup_point || ''} onChange={e=>handleTravellerChange(idx, 'pickup_point', e.target.value)} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-xs font-medium text-gray-600 mb-1">Emergency Contact (Name & Phone)</label>
                         <div className="flex gap-2">
-                          <input type="text" placeholder="Name" value={traveller.emergency_contact_name || ''} onChange={e=>handleTravellerChange(idx, 'emergency_contact_name', e.target.value)} className="w-1/2 p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
-                          <input type="text" placeholder="Phone" value={traveller.emergency_contact_phone || ''} onChange={e=>handleTravellerChange(idx, 'emergency_contact_phone', e.target.value)} className="w-1/2 p-2 border rounded-lg outline-none focus:border-[#136b8a] text-sm" />
+                          <input type="text" placeholder="Name" value={traveller.emergency_contact_name || ''} onChange={e=>handleTravellerChange(idx, 'emergency_contact_name', e.target.value)} className="w-1/2 p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
+                          <input type="text" placeholder="Phone" value={traveller.emergency_contact_phone || ''} onChange={e=>handleTravellerChange(idx, 'emergency_contact_phone', e.target.value)} className="w-1/2 p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={addTraveller} className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium text-sm flex items-center justify-center gap-2 hover:bg-gray-50 hover:text-[#136b8a] hover:border-[#136b8a] transition-all">
+                <button type="button" onClick={addTraveller} className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium text-sm flex items-center justify-center gap-2 hover:bg-gray-50 hover:text-[#01AFD1] hover:border-[#01AFD1] transition-all">
                   <Plus size={16} /> Add Another Traveller
                 </button>
               </div>
@@ -731,7 +731,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                   <div className="space-y-4">
                     {activityLogs.map(log => (
                       <div key={log.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-start gap-3 text-sm">
-                        <div className="bg-[#136b8a]/10 p-2 rounded-full text-[#136b8a] shrink-0">
+                        <div className="bg-[#01AFD1]/10 p-2 rounded-full text-[#01AFD1] shrink-0">
                           <Check size={16} />
                         </div>
                         <div>
@@ -755,7 +755,7 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
 
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-2xl">
           <button type="button" onClick={onClose} className="px-5 py-2 font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors text-sm">Cancel</button>
-          <button type="submit" form="bookingForm" disabled={submitting || loading} className="px-6 py-2 font-bold text-white bg-[#136b8a] hover:bg-[#0f556e] rounded-xl transition-colors text-sm disabled:opacity-50 flex items-center gap-2">
+          <button type="submit" form="bookingForm" disabled={submitting || loading} className="px-6 py-2 font-bold text-white bg-[#01AFD1] hover:bg-[#0092b3] rounded-xl transition-colors text-sm disabled:opacity-50 flex items-center gap-2">
             {submitting ? 'Saving...' : (bookingId ? 'Save Changes' : 'Create Booking')}
           </button>
         </div>

@@ -473,48 +473,47 @@ const AdminReviews = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reviews & Gallery Management</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage customer reviews, testimonials, trust-summary stats, and the media gallery.</p>
+          <h1 className="text-xl font-bold text-gray-900">Reviews & Gallery Management</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage customer reviews, testimonials, trust-summary stats, and the media gallery.</p>
         </div>
         {activeTab === 'list' && (
           <button
             onClick={() => openModal()}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 bg-[#01AFD1] text-white px-4 py-2 rounded-lg hover:bg-[#0092b3] transition-colors shadow-sm font-semibold text-sm"
           >
-            <Plus size={18} />
-            Add Review
+            <Plus size={16} /> Add Review
           </button>
         )}
       </div>
 
       {/* Tabs Menu */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-4">
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="flex space-x-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('list')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'list' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`pb-3 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'list' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
           >
-            <List size={18} /> Customer Reviews
+            <List size={16} /> Customer Reviews
           </button>
           <button
             onClick={() => setActiveTab('homepage_settings')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'homepage_settings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`pb-3 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'homepage_settings' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
           >
-            <Settings size={18} /> Homepage Testimonials Settings
+            <Settings size={16} /> Homepage Testimonials
           </button>
           <button
             onClick={() => setActiveTab('page_settings')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'page_settings' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`pb-3 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'page_settings' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
           >
-            <ImageIcon size={18} /> Reviews Page Banner
+            <ImageIcon size={16} /> Reviews Page Banner
           </button>
           <button
             onClick={() => setActiveTab('gallery')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === 'gallery' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`pb-3 px-1 border-b-2 font-semibold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'gallery' ? 'border-[#01AFD1] text-[#01AFD1]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
           >
-            <Play size={18} /> Photos & Videos Gallery
+            <Play size={16} /> Photos & Videos
           </button>
         </nav>
       </div>
@@ -535,7 +534,7 @@ const AdminReviews = () => {
               <input
                 type="text"
                 placeholder="Search by customer, package, or destination..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-[#01AFD1] outline-none"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -629,12 +628,14 @@ const AdminReviews = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => openModal(review)} className="text-blue-600 hover:text-blue-900 mx-2 p-1 bg-blue-50 rounded">
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => handleDelete(review.id)} className="text-red-600 hover:text-red-900 mx-2 p-1 bg-red-50 rounded">
-                            <Trash2 size={16} />
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            <button onClick={() => openModal(review)} className="p-1.5 text-[#01AFD1] hover:bg-[#01AFD1]/10 rounded-md border border-transparent hover:border-[#01AFD1]/30 transition-colors">
+                              <Edit2 size={14} />
+                            </button>
+                            <button onClick={() => handleDelete(review.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md border border-transparent hover:border-red-200 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -688,7 +689,7 @@ const AdminReviews = () => {
                 id="show_banner"
                 checked={pageSettings.show_banner}
                 onChange={e => setPageSettings({...pageSettings, show_banner: e.target.checked})}
-                className="h-4 w-4 text-blue-600 rounded"
+                className="h-4 w-4 text-[#01AFD1] rounded"
               />
               <label htmlFor="show_banner" className="ml-2 text-sm font-medium text-gray-900">Show Header Banner</label>
             </div>
@@ -714,7 +715,7 @@ const AdminReviews = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-[#01AFD1] hover:bg-[#0092b3] text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
             >
               <Save size={16} /> {saving ? 'Saving...' : 'Save Banner Settings'}
             </button>
@@ -741,7 +742,7 @@ const AdminReviews = () => {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
+              className="px-6 py-2 bg-[#01AFD1] text-white rounded-lg text-sm font-semibold hover:bg-[#0092b3] flex items-center gap-2 transition-colors"
             >
               <Save size={16} /> {saving ? 'Saving...' : 'Save Title'}
             </button>
@@ -793,7 +794,7 @@ const AdminReviews = () => {
                       id="new_media_active"
                       checked={newMedia.is_active}
                       onChange={e => setNewMedia({...newMedia, is_active: e.target.checked})}
-                      className="h-4 w-4 text-blue-600 rounded"
+                      className="h-4 w-4 text-[#01AFD1] rounded"
                     />
                     <label htmlFor="new_media_active" className="ml-2 text-sm font-medium text-gray-900">Active (Visible)</label>
                   </div>
@@ -878,7 +879,7 @@ const AdminReviews = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleEditMedia(item)}
-                              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1 rounded font-medium flex items-center gap-1 text-xs"
+                              className="text-[#01AFD1] hover:text-blue-800 hover:bg-[#01AFD1]/10 p-1 rounded font-medium flex items-center gap-1 text-xs"
                             >
                               <Edit2 size={14} /> Edit
                             </button>
@@ -914,7 +915,7 @@ const AdminReviews = () => {
                   id="show_summary"
                   checked={testimonialsSettings.show_summary !== false}
                   onChange={e => setTestimonialsSettings({...testimonialsSettings, show_summary: e.target.checked})}
-                  className="h-4 w-4 text-blue-600 rounded"
+                  className="h-4 w-4 text-[#01AFD1] rounded"
                 />
                 <label htmlFor="show_summary" className="ml-2 text-sm font-medium text-gray-900">Show Google Trust Summary Block</label>
               </div>
@@ -970,7 +971,7 @@ const AdminReviews = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-[#01AFD1] hover:bg-[#0092b3] text-white font-medium py-2 rounded-lg text-sm transition-colors"
               >
                 <Save size={16} /> {saving ? 'Saving...' : 'Save Trust Summary'}
               </button>
@@ -988,7 +989,7 @@ const AdminReviews = () => {
                   id="testimonials_is_active"
                   checked={testimonialsSettings.is_active !== false}
                   onChange={e => setTestimonialsSettings({...testimonialsSettings, is_active: e.target.checked})}
-                  className="h-4 w-4 text-blue-600 rounded"
+                  className="h-4 w-4 text-[#01AFD1] rounded"
                 />
                 <label htmlFor="testimonials_is_active" className="ml-2 text-sm font-medium text-gray-900">Show Testimonials Carousel on Homepage</label>
               </div>
@@ -1042,7 +1043,7 @@ const AdminReviews = () => {
                     id="enable_autoscroll"
                     checked={testimonialsSettings.enable_autoscroll !== false}
                     onChange={e => setTestimonialsSettings({...testimonialsSettings, enable_autoscroll: e.target.checked})}
-                    className="h-4 w-4 text-blue-600 rounded"
+                    className="h-4 w-4 text-[#01AFD1] rounded"
                   />
                   <label htmlFor="enable_autoscroll" className="ml-2 text-sm font-medium text-gray-900">Enable Autoscroll</label>
                 </div>
@@ -1087,7 +1088,7 @@ const AdminReviews = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-[#01AFD1] hover:bg-[#0092b3] text-white font-medium py-2 rounded-lg text-sm transition-colors"
               >
                 <Save size={16} /> {saving ? 'Saving...' : 'Save Slider Config'}
               </button>
@@ -1140,7 +1141,7 @@ const AdminReviews = () => {
                     <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm" value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})} placeholder="Google" />
                   </div>
                   <div className="flex items-center pt-6">
-                    <input type="checkbox" id="modal_verified" className="h-4 w-4 text-blue-600 rounded" checked={formData.verified} onChange={e => setFormData({...formData, verified: e.target.checked})} />
+                    <input type="checkbox" id="modal_verified" className="h-4 w-4 text-[#01AFD1] rounded" checked={formData.verified} onChange={e => setFormData({...formData, verified: e.target.checked})} />
                     <label htmlFor="modal_verified" className="ml-2 block text-sm text-gray-900">Verified Review</label>
                   </div>
                 </div>
@@ -1173,11 +1174,11 @@ const AdminReviews = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
                   <div className="flex items-center">
-                    <input type="checkbox" id="is_approved" className="h-4 w-4 text-blue-600 rounded" checked={formData.is_approved} onChange={e => setFormData({...formData, is_approved: e.target.checked})} />
+                    <input type="checkbox" id="is_approved" className="h-4 w-4 text-[#01AFD1] rounded" checked={formData.is_approved} onChange={e => setFormData({...formData, is_approved: e.target.checked})} />
                     <label htmlFor="is_approved" className="ml-2 block text-sm text-gray-900">Approved (Public)</label>
                   </div>
                   <div className="flex items-center">
-                    <input type="checkbox" id="is_featured" className="h-4 w-4 text-blue-600 rounded" checked={formData.is_featured} onChange={e => setFormData({...formData, is_featured: e.target.checked})} />
+                    <input type="checkbox" id="is_featured" className="h-4 w-4 text-[#01AFD1] rounded" checked={formData.is_featured} onChange={e => setFormData({...formData, is_featured: e.target.checked})} />
                     <label htmlFor="is_featured" className="ml-2 block text-sm text-gray-900">Featured (Homepage)</label>
                   </div>
                   <div>
@@ -1188,7 +1189,7 @@ const AdminReviews = () => {
 
                 <div className="flex justify-end gap-3 pt-4 border-t mt-6">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                  <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                  <button type="submit" disabled={saving} className="px-4 py-2 bg-[#01AFD1] text-white rounded-lg text-sm font-medium hover:bg-[#0092b3] flex items-center gap-2">
                     <Save size={16} /> {saving ? 'Saving...' : 'Save Review'}
                   </button>
                 </div>
@@ -1253,7 +1254,7 @@ const AdminReviews = () => {
                     id="edit_media_active"
                     checked={editingMediaItem.is_active}
                     onChange={e => setEditingMediaItem({...editingMediaItem, is_active: e.target.checked})}
-                    className="h-4 w-4 text-blue-600 rounded"
+                    className="h-4 w-4 text-[#01AFD1] rounded"
                   />
                   <label htmlFor="edit_media_active" className="ml-2 text-sm font-medium text-gray-900">Active (Visible)</label>
                 </div>
@@ -1280,7 +1281,7 @@ const AdminReviews = () => {
 
                 <div className="flex justify-end gap-3 pt-4 border-t mt-6">
                   <button type="button" onClick={() => setIsMediaModalOpen(false)} className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                  <button type="submit" disabled={mediaSaving} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                  <button type="submit" disabled={mediaSaving} className="px-4 py-2 bg-[#01AFD1] text-white rounded-lg text-sm font-medium hover:bg-[#0092b3] flex items-center gap-2">
                     <Save size={16} /> {mediaSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>

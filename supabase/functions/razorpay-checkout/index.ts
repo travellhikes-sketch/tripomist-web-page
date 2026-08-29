@@ -8,7 +8,7 @@ const corsHeaders = {
 }
 
 interface CheckoutRequest {
-  action: 'initialize' | 'prepare' | 'verify' | 'checkout_status'
+  action: 'create_guest_lead' | 'initialize' | 'prepare' | 'verify' | 'checkout_status' | 'update_guest_lead'
   packageId?: number
   travelDate?: string
   travellers?: number
@@ -127,24 +127,25 @@ serve(async (req) => {
     let guestName = null
     let guestPhone = null
     let guestEmail = null
+    let clientTokenHash: string | null = null
 
     if (leadIdHeader && leadTokenHeader) {
       // Look up and verify checkout lead token
       const { data: leadData } = await adminClient
         .from('checkout_leads')
-        .select('id, lead_token, customer_name, phone, email, lead_status, created_at')
+        .select('id, lead_token_hash, customer_name, phone, email, lead_status, created_at')
         .eq('id', leadIdHeader)
         .maybeSingle()
 
-      if (leadData && leadData.lead_token) {
+      if (leadData && leadData.lead_token_hash) {
         // Enforce token hash equality check
         const textEncoder = new TextEncoder()
         const tokenBytes = textEncoder.encode(leadTokenHeader)
         const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
         const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+        clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 
-        if (leadData.lead_token === clientTokenHash) {
+        if (leadData.lead_token_hash === clientTokenHash) {
           const now = new Date()
           // Expiry limit: 24 hours
           const createdAt = new Date(leadData.created_at)
@@ -162,7 +163,7 @@ serve(async (req) => {
       }
     }
 
-    if (!user && !guestAuthorized) {
+    if (action !== 'create_guest_lead' && !user && !guestAuthorized) {
       return new Response(JSON.stringify({ error: 'Unauthorized: missing token session or active lead authentication' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -281,6 +282,24 @@ serve(async (req) => {
         })
       }
 
+      // Guest OTP Verification Enforcement
+      let pVerificationId = (body as any).p_verification_id ?? null;
+      if (!user) {
+        if (!pVerificationId) {
+          return new Response(JSON.stringify({ error: 'Please verify your email before continuing.' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+        // OTP validation will be handled atomically inside the create_verified_checkout_lead RPC
+      } else {
+        // Authenticated user checkout
+        if (user.email !== normEmail) {
+          return new Response(JSON.stringify({ error: 'Email mismatch for authenticated user.' }), {
+            status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }
+
       // Fetch salt
       const leadRateLimitSalt = Deno.env.get('LEAD_RATE_LIMIT_SALT') ?? ''
       if (!leadRateLimitSalt) {
@@ -347,7 +366,7 @@ serve(async (req) => {
       const tokenBytes = textEncoder.encode(rawToken)
       const hashBuffer = await crypto.subtle.digest('SHA-256', tokenBytes)
       const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const clientTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      const newLeadTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 
       // Safe metadata logging before RPC
       console.info('Creating checkout lead', {
@@ -356,7 +375,9 @@ serve(async (req) => {
       });
 
       // Call service-role create_checkout_lead RPC
-      const { data: leadData, error: leadError } = await adminClient.rpc('create_checkout_lead', {
+      // Use atomic wrapper for guests to prevent concurrent replay races
+      const rpcName = (!user && pVerificationId) ? 'create_verified_checkout_lead' : 'create_checkout_lead'
+      const rpcArgs: any = {
         p_customer_name: normName,
         p_phone: normalizedPhone,
         p_email: normEmail,
@@ -369,8 +390,23 @@ serve(async (req) => {
         p_estimated_amount: pEstimatedAmt,
         p_source: pSource,
         p_special_request: pSpecialRequest,
-        p_lead_token_hash: clientTokenHash,
-      })
+        p_lead_token_hash: newLeadTokenHash,
+      }
+      
+      if (!user && pVerificationId) {
+        rpcArgs.p_verification_id = pVerificationId
+      }
+
+      const { data: leadData, error: leadError } = await adminClient.rpc(rpcName, rpcArgs)
+
+      if (leadError) {
+        const errStr = String(leadError.message || '')
+        if (errStr.includes('Verification record not found') || errStr.includes('Email is not verified') || errStr.includes('Verification has already been used') || errStr.includes('Verification has expired') || errStr.includes('does not match')) {
+          return new Response(JSON.stringify({ error: leadError.message }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }
 
       const rawLeadToken = rawToken;
       const lead = Array.isArray(leadData) ? leadData[0] : leadData;
@@ -385,7 +421,7 @@ serve(async (req) => {
           authenticated: !!user,
           leadIdPresent: !!leadIdHeader,
           tokenPresent: !!leadTokenHeader,
-          rpcName: 'create_checkout_lead',
+          rpcName: rpcName,
           errorCode: leadError.code,
           errorMessage: leadError.message,
           errorDetails: leadError.details,
@@ -502,32 +538,7 @@ serve(async (req) => {
         })
       }
 
-      // Fetch active/recent reservation details
-      const { data: reservations, error: reservationErr } = await adminClient
-        .from('voucher_reservations')
-        .select(`
-          id,
-          reserved_amount,
-          status,
-          expires_at,
-          vouchers (
-            code
-          )
-        `)
-        .eq('booking_id', booking.id)
-        .in('status', ['pending', 'payment_pending'])
-        .order('created_at', { ascending: false })
-        .limit(1)
 
-      if (reservationErr) {
-        return new Response(JSON.stringify({ error: 'Database error fetching coupon status' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-
-      const activeReservation = reservations && reservations.length > 0 ? reservations[0] : null;
-      const isExpired = activeReservation ? (new Date(activeReservation.expires_at) <= new Date()) : false;
 
       // Fetch latest payment-attempt status
       const { data: paymentAttempts, error: paymentAttemptErr } = await adminClient
@@ -562,14 +573,6 @@ serve(async (req) => {
           phone: guestPhone,
           email: guestEmail
         } : null,
-        activeReservation: activeReservation ? {
-          reservationId: activeReservation.id,
-          reservedAmount: activeReservation.reserved_amount,
-          status: activeReservation.status,
-          expiresAt: activeReservation.expires_at,
-          code: activeReservation.vouchers?.code,
-          isExpired
-        } : null,
         latestPaymentAttempt: latestPaymentAttempt ? {
           status: latestPaymentAttempt.status
         } : null
@@ -579,46 +582,7 @@ serve(async (req) => {
       })
     }
 
-    if (action === 'create_test_admin') {
-      try {
-        const { data: userObj, error: createErr } = await adminClient.auth.admin.createUser({
-          email: 'testadmin@tripomist.com',
-          password: 'Password123!',
-          email_confirm: true
-        });
 
-        // Handle if user already exists
-        let userId = userObj?.user?.id;
-        if (createErr) {
-          if (createErr.message.includes('already exists') || createErr.status === 422) {
-            const { data: usersList } = await adminClient.auth.admin.listUsers();
-            const existing = usersList?.users?.find(u => u.email === 'testadmin@tripomist.com');
-            if (existing) userId = existing.id;
-          } else {
-            throw createErr;
-          }
-        }
-
-        if (userId) {
-          await adminClient.from('profiles').upsert({
-            id: userId,
-            role: 'admin',
-            full_name: 'Test Admin',
-            updated_at: new Date().toISOString()
-          });
-        }
-
-        return new Response(JSON.stringify({ success: true, message: 'Test admin created or already exists' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
 
     if (action === 'initialize') {
       const { packageId, travelDate, travellers, selectedSharing, idempotencyKey, specialRequest, source } = body
@@ -646,7 +610,10 @@ serve(async (req) => {
       })
 
       if (initError || !initData || !initData.success) {
-        return new Response(JSON.stringify({ error: 'Failed to initialize booking transaction' }), {
+        console.error('Initialize RPC error:', initError);
+        return new Response(JSON.stringify({ 
+          error: initError?.message || 'Failed to initialize booking transaction' 
+        }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -712,7 +679,18 @@ serve(async (req) => {
       })
 
       if (prepareError || !prepareData || !prepareData.success) {
-        return new Response(JSON.stringify({ error: 'Failed to prepare payment transaction' }), {
+        if (prepareError) {
+          console.error('prepare_payment_attempt RPC failed', {
+            errorCode: prepareError.code,
+            errorMessage: prepareError.message,
+            errorDetails: prepareError.details,
+            errorHint: prepareError.hint,
+            bookingId: bookingId,
+            authenticated: !!user,
+          });
+        }
+        const errorMsg = prepareError?.message || 'Failed to prepare payment transaction';
+        return new Response(JSON.stringify({ error: errorMsg }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -829,6 +807,12 @@ serve(async (req) => {
     if (action === 'verify') {
       const { paymentAttemptId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body
       if (!paymentAttemptId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        console.error('Verify failed: Missing required metadata parameters', {
+          hasAttemptId: !!paymentAttemptId,
+          hasOrderId: !!razorpayOrderId,
+          hasPaymentId: !!razorpayPaymentId,
+          hasSignature: !!razorpaySignature,
+        })
         return new Response(JSON.stringify({ error: 'Verification metadata missing' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -843,6 +827,10 @@ serve(async (req) => {
         .single()
 
       if (attemptErr || !attempt) {
+        console.error('Verify failed: Payment attempt record not found', {
+          paymentAttemptId,
+          dbError: attemptErr?.message,
+        })
         return new Response(JSON.stringify({ error: 'Payment attempt record not found' }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -852,6 +840,10 @@ serve(async (req) => {
       // 2. Verify se pehle payment_attempt ownership verify karo
       if (attempt.user_id !== null) {
         if (!user || attempt.user_id !== user.id) {
+          console.error('Verify failed: Ownership mismatch for user', {
+            attemptUserId: attempt.user_id,
+            requestUserId: user?.id,
+          })
           return new Response(JSON.stringify({ error: 'Access forbidden: ownership mismatch' }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -859,6 +851,11 @@ serve(async (req) => {
         }
       } else {
         if (!guestAuthorized || attempt.checkout_lead_id !== currentLeadId) {
+          console.error('Verify failed: Guest ownership mismatch', {
+            attemptLeadId: attempt.checkout_lead_id,
+            requestLeadId: currentLeadId,
+            guestAuthorized,
+          })
           return new Response(JSON.stringify({ error: 'Access forbidden: guest verification authorization mismatch' }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -868,6 +865,7 @@ serve(async (req) => {
 
       const dbOrderId = attempt.razorpay_order_id
       if (!dbOrderId) {
+        console.error('Verify failed: No db order ID in attempt record', { paymentAttemptId })
         return new Response(JSON.stringify({ error: 'No order registration exists for this checkout' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -878,6 +876,7 @@ serve(async (req) => {
       const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? ''
 
       if (!razorpayKeyId || !razorpayKeySecret) {
+        console.error('Verify failed: Gateway config missing')
         return new Response(JSON.stringify({ error: 'Payment gateway configuration missing' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -893,6 +892,7 @@ serve(async (req) => {
       )
 
       if (!isSignatureValid) {
+        console.error('Verify failed: Invalid signature')
         return new Response(JSON.stringify({ error: 'Verification failed: invalid signature' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -907,6 +907,7 @@ serve(async (req) => {
       })
 
       if (!orderResponse.ok) {
+        console.error('Verify failed: Unable to fetch order from Razorpay', { status: orderResponse.status })
         return new Response(JSON.stringify({ error: 'Unable to verify order details with gateway API' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -915,6 +916,7 @@ serve(async (req) => {
 
       const orderInfo = await orderResponse.json()
       if (orderInfo.status !== 'paid') {
+        console.error('Verify failed: Razorpay order status is not paid', { status: orderInfo.status })
         return new Response(JSON.stringify({ error: 'Checkout order has not been completed' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -922,6 +924,11 @@ serve(async (req) => {
       }
 
       if (orderInfo.amount !== attempt.expected_amount_paise || orderInfo.currency !== 'INR') {
+        console.error('Verify failed: Order amount/currency mismatch', {
+          orderAmount: orderInfo.amount,
+          expectedAmount: attempt.expected_amount_paise,
+          currency: orderInfo.currency
+        })
         return new Response(JSON.stringify({ error: 'Order financial metadata mismatch' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -936,6 +943,7 @@ serve(async (req) => {
       })
 
       if (!verifyResponse.ok) {
+        console.error('Verify failed: Unable to fetch payment from Razorpay', { status: verifyResponse.status })
         return new Response(JSON.stringify({ error: 'Unable to verify payment status with gateway API' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -945,6 +953,7 @@ serve(async (req) => {
       const paymentInfo = await verifyResponse.json()
 
       if (paymentInfo.status !== 'captured') {
+        console.error('Verify failed: Razorpay payment status is not captured', { status: paymentInfo.status })
         return new Response(JSON.stringify({ error: 'Payment status verification failed' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -952,6 +961,10 @@ serve(async (req) => {
       }
 
       if (paymentInfo.order_id !== dbOrderId) {
+        console.error('Verify failed: Payment order_id mismatch', {
+          paymentOrderId: paymentInfo.order_id,
+          expectedOrderId: dbOrderId
+        })
         return new Response(JSON.stringify({ error: 'Payment order alignment mismatch' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -959,6 +972,11 @@ serve(async (req) => {
       }
 
       if (paymentInfo.amount !== attempt.expected_amount_paise || paymentInfo.currency !== 'INR') {
+        console.error('Verify failed: Payment amount/currency mismatch', {
+          paymentAmount: paymentInfo.amount,
+          expectedAmount: attempt.expected_amount_paise,
+          currency: paymentInfo.currency
+        })
         return new Response(JSON.stringify({ error: 'Payment financial metadata mismatch' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -975,6 +993,10 @@ serve(async (req) => {
       })
 
       if (finalizeError || !finalizeData || !finalizeData.success) {
+        console.error('Verify failed: finalize_verified_payment RPC failed', {
+          error: finalizeError?.message,
+          data: finalizeData
+        })
         return new Response(JSON.stringify({ error: 'Failed to record finalized transaction' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1028,7 +1050,7 @@ serve(async (req) => {
 
       const { data: updateData, error: updateError } = await adminClient.rpc('update_checkout_lead', {
         p_lead_id: currentLeadId,
-        p_lead_token: clientTokenHash,
+        p_lead_token: leadTokenHeader,
         p_current_step: pCurrentStep,
         p_selected_sharing: pSelectedSharing,
         p_estimated_amount: pEstimatedAmount,

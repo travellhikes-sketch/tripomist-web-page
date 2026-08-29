@@ -71,7 +71,7 @@ const AdminRoute = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#01AFD1]"></div>
       </div>
     );
   }
@@ -89,7 +89,7 @@ const AdminRoute = () => {
         </p>
         <button 
           onClick={() => supabase.auth.signOut()}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-6 py-2 bg-[#01AFD1] text-white rounded-lg hover:bg-[#0092b3] transition-colors"
         >
           Logout
         </button>
