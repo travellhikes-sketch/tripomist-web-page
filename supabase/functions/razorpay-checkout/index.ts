@@ -29,7 +29,7 @@ async function verifyHmacSha256(secret: string, data: string, signature: string)
   const encoder = new TextEncoder()
   const keyBuf = encoder.encode(secret)
   const dataBuf = encoder.encode(data)
-  
+
   const key = await crypto.subtle.importKey(
     'raw',
     keyBuf,
@@ -37,12 +37,12 @@ async function verifyHmacSha256(secret: string, data: string, signature: string)
     false,
     ['verify']
   )
-  
+
   // Convert hex signature to ArrayBuffer
   const sigBuf = new Uint8Array(
     signature.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
   )
-  
+
   return await crypto.subtle.verify('HMAC', key, sigBuf, dataBuf)
 }
 
@@ -50,7 +50,7 @@ async function computeHmacSha256(secret: string, message: string): Promise<strin
   const encoder = new TextEncoder()
   const keyBuf = encoder.encode(secret)
   const msgBuf = encoder.encode(message)
-  
+
   const key = await crypto.subtle.importKey(
     'raw',
     keyBuf,
@@ -58,7 +58,7 @@ async function computeHmacSha256(secret: string, message: string): Promise<strin
     false,
     ['sign']
   )
-  
+
   const sigBuf = await crypto.subtle.sign('HMAC', key, msgBuf)
   return Array.from(new Uint8Array(sigBuf))
     .map(b => b.toString(16).padStart(2, '0'))
@@ -246,7 +246,7 @@ serve(async (req) => {
       // Normalize
       const normName  = String(rawName).trim()
       const normEmail = String(rawEmail).trim().toLowerCase()
-      
+
       const rawPhone = String(body.p_phone ?? '');
       const phoneDigits = rawPhone.replace(/\D/g, '');
 
@@ -392,7 +392,7 @@ serve(async (req) => {
         p_special_request: pSpecialRequest,
         p_lead_token_hash: newLeadTokenHash,
       }
-      
+
       if (!user && pVerificationId) {
         rpcArgs.p_verification_id = pVerificationId
       }
@@ -585,7 +585,7 @@ serve(async (req) => {
 
 
     if (action === 'initialize') {
-      const { packageId, travelDate, travellers, selectedSharing, idempotencyKey, specialRequest, source } = body
+      const { packageId, travelDate, travellers, selectedSharing, sharingAllocation, additionalTravellers, primaryTravellerSharing, idempotencyKey, specialRequest, source } = body
       if (!packageId || !travelDate || !travellers || !selectedSharing || !idempotencyKey) {
         return new Response(JSON.stringify({ error: 'Required payload arguments missing' }), {
           status: 400,
@@ -593,14 +593,15 @@ serve(async (req) => {
         })
       }
 
-      // Invoke create_checkout_booking RPC
-      const { data: initData, error: initError } = await adminClient.rpc('create_checkout_booking', {
+      // Invoke create_or_update_checkout_booking_mixed RPC
+      const { data: initData, error: initError } = await adminClient.rpc('create_or_update_checkout_booking_mixed', {
         p_user_id: user ? user.id : null,
         p_package_id: packageId,
         p_travel_date: travelDate,
         p_travellers: travellers,
         p_selected_sharing: selectedSharing,
         p_checkout_idempotency_key: idempotencyKey,
+        p_sharing_allocation: sharingAllocation || null,
         p_special_request: specialRequest || null,
         p_source: source || null,
         p_guest_name: !user ? guestName : null,
@@ -611,18 +612,88 @@ serve(async (req) => {
 
       if (initError || !initData || !initData.success) {
         console.error('Initialize RPC error:', initError);
-        return new Response(JSON.stringify({ 
-          error: initError?.message || 'Failed to initialize booking transaction' 
+        return new Response(JSON.stringify({
+          error: initError?.message || 'Failed to initialize booking transaction'
         }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
 
+      const bookingId = initData.booking_id;
+      let finalPayableAmount = initData.final_payable_amount;
+
+      // Handle mixed sharing and additional travellers logic
+      if (sharingAllocation || (additionalTravellers && additionalTravellers.length > 0) || primaryTravellerSharing) {
+
+        // Strict Validation
+        if (travellers < 1 || travellers > 15) {
+          return new Response(JSON.stringify({ error: 'Travellers must be between 1 and 15.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+        }
+
+        let totalAllocated = 0;
+        const allowedKeys = ['Quad Sharing', 'Triple Sharing', 'Double Sharing'];
+
+        if (sharingAllocation) {
+          for (const type of Object.keys(sharingAllocation)) {
+            if (!allowedKeys.includes(type)) {
+              return new Response(JSON.stringify({ error: `Unknown sharing type: ${type}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+            }
+            const count = sharingAllocation[type];
+            if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
+              return new Response(JSON.stringify({ error: `Allocation for ${type} must be a positive integer.` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+            }
+            totalAllocated += count;
+          }
+          if (totalAllocated !== travellers) {
+            return new Response(JSON.stringify({ error: 'Sharing allocation must exactly match the total number of travellers.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+          }
+        }
+
+        if (additionalTravellers) {
+          if (additionalTravellers.length !== travellers - 1) {
+            return new Response(JSON.stringify({ error: 'Invalid number of additional travellers provided.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+          }
+        }
+
+        // Validate traveller-level sharing against booking sharingAllocation
+        if (sharingAllocation && primaryTravellerSharing) {
+          const sharingCounts: Record<string, number> = { ...sharingAllocation };
+          sharingCounts[primaryTravellerSharing] = (sharingCounts[primaryTravellerSharing] || 0) - 1;
+
+          if (additionalTravellers) {
+            for (const t of additionalTravellers) {
+              if (t.sharingType) {
+                sharingCounts[t.sharingType] = (sharingCounts[t.sharingType] || 0) - 1;
+              }
+            }
+          }
+
+          for (const key of Object.keys(sharingCounts)) {
+            if (sharingCounts[key] !== 0) {
+              return new Response(JSON.stringify({ error: 'Traveller-level sharing assignments do not match booking allocation.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+            }
+          }
+        }
+
+        // 2. Insert additional travellers atomically (idempotent)
+        if ((additionalTravellers && additionalTravellers.length > 0) || primaryTravellerSharing) {
+          const { error: syncErr } = await adminClient.rpc('sync_booking_travellers', {
+            p_booking_id: bookingId,
+            p_travellers: additionalTravellers || [],
+            p_primary_sharing_type: primaryTravellerSharing || null
+          });
+          if (syncErr) {
+            console.error('Failed to sync additional travellers', syncErr);
+            return new Response(JSON.stringify({ error: 'Failed to save additional traveller details' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+          }
+        }
+
+      }
       return new Response(JSON.stringify({
         success: true,
-        bookingId: initData.booking_id,
-        finalPayableAmount: initData.final_payable_amount
+        bookingId: bookingId,
+        finalPayableAmount: finalPayableAmount
       }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

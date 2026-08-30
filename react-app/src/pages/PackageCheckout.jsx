@@ -351,11 +351,22 @@ export default function PackageCheckout() {
     const newAmount = option.pricePerPerson * (tripDetails.travellers || 1);
     setComputedPrice(newAmount);
   };
-
   const travellerCount = Math.max(1, Number(tripDetails?.travellers) || 1);
-  const subTotal = Number(computedPrice) || 0;
+  let mixedSubTotal = 0;
+  if (sharingOptions && sharingOptions.length > 0 && Object.keys(sharingAllocation).length > 0) {
+    for (const [key, count] of Object.entries(sharingAllocation)) {
+      if (count > 0) {
+        const opt = sharingOptions.find(o => (o.label || o.type) === key);
+        if (opt) mixedSubTotal += count * opt.pricePerPerson;
+      }
+    }
+  }
+  const subTotal = (mixedSubTotal > 0 && Object.values(sharingAllocation).reduce((a, b) => a + b, 0) === travellerCount)
+    ? mixedSubTotal
+    : (Number(computedPrice) || 0);
+
   const gstEnabled = siteSettings?.package_detail_settings?.gst_enabled !== undefined ? siteSettings.package_detail_settings.gst_enabled : true;
-  const gst = gstEnabled ? Math.round(subTotal * 0.05) : 0;
+  const gst = gstEnabled ? Math.round(subTotal * 0.05 * 100) / 100 : 0;
   const finalPayable = subTotal + gst;
 
   const safeFinalPayable = (
