@@ -500,8 +500,20 @@ export default function PackageCheckout() {
           }
         }
       }
+      const currentPayload = JSON.stringify({
+        travelDate: formData?.date,
+        travellers: tripDetails?.travellers,
+        selectedSharing,
+        sharingAllocation,
+        additionalTravellers,
+        primaryTravellerSharing,
+        specialRequest: formData?.specialRequest
+      });
+      sessionStorage.setItem('tripomist_last_payload', currentPayload);
       
       let currentBookingId = bookingId;
+      let currentIdempotencyKey = idempotencyKey;
+
       let finalAmount = safeFinalPayable;
 
       const leadStr = sessionStorage.getItem('tripomist_checkout_lead');
@@ -520,83 +532,81 @@ export default function PackageCheckout() {
         headers['x-checkout-lead-token'] = leadToken;
       }
 
-      // 3. On checkout call Edge action initialize
-      if (!currentBookingId) {
-        let travelDate = '';
-        try {
-          const raw = formData.date;
-          if (typeof raw === 'string') {
-            travelDate = raw.split('T')[0];
-          } else if (raw instanceof Date) {
-            travelDate = raw.toISOString().split('T')[0];
-          } else {
-            travelDate = String(raw).split('T')[0];
-          }
-        } catch (e) {
-          travelDate = '';
+      // 3. On checkout always call Edge action initialize to ensure backend price calculates correctly
+      let travelDate = '';
+      try {
+        const raw = formData.date;
+        if (typeof raw === 'string') {
+          travelDate = raw.split('T')[0];
+        } else if (raw instanceof Date) {
+          travelDate = raw.toISOString().split('T')[0];
+        } else {
+          travelDate = String(raw).split('T')[0];
         }
-
-        // 4. Send no customer details or price to initialize except when guest checkout
-        const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
-          body: {
-            action: 'initialize',
-            packageId: parseInt(tripDetails.packageId),
-            travelDate,
-            travellers: tripDetails.travellers,
-            selectedSharing,
-            sharingAllocation,
-            additionalTravellers,
-            primaryTravellerSharing,
-            idempotencyKey,
-            specialRequest: formData.specialRequest || null,
-            source: formData.source || null,
-            // Include guest identity fields if session is missing
-            guestName: !session ? formData.fullName.trim() : null,
-            guestPhone: !session ? formData.phone.trim() : null,
-            guestEmail: !session ? formData.email.trim() : null
-          },
-          headers
-        });
-
-          if (initErr || !initData || !initData.success) {
-          let actualError = 'Unknown initialize error';
-          if (initErr && initErr.context && typeof initErr.context.clone === 'function') {
-            try {
-              const errBody = await initErr.context.clone().json();
-              actualError = errBody.error || actualError;
-              console.error("Checkout Edge Function response:", errBody);
-            } catch (e) {}
-          } else if (initErr) {
-            actualError = initErr.message;
-          } else if (initData && initData.error) {
-            actualError = initData.error;
-          }
-          console.error("Initialize failed:", {initErr, initData});
-          if (actualError === 'Unauthorized: missing token session or active lead authentication') {
-            throw new Error('Your booking session has expired. Please verify your details again.');
-          }
-          if (actualError.includes('Idempotency conflict')) {
-            const newKey = crypto.randomUUID();
-            setIdempotencyKey(newKey);
-            setBookingId('');
-            try {
-              const storedData = sessionStorage.getItem('checkoutData');
-              if (storedData) {
-                const parsed = JSON.parse(storedData);
-                parsed.idempotencyKey = newKey;
-                sessionStorage.setItem('checkoutData', JSON.stringify(parsed));
-              }
-            } catch (e) {}
-            throw new Error('Your booking details changed. Please try payment again.');
-          }
-          throw new Error(`Failed to initialize booking transaction. Reason: ${actualError}`);
-        }
-
-        currentBookingId = initData.bookingId;
-        setBookingId(initData.bookingId);
-        setServerFinalPayable(initData.finalPayableAmount);
-        finalAmount = initData.finalPayableAmount;
+      } catch (e) {
+        travelDate = '';
       }
+
+      // 4. Send no customer details or price to initialize except when guest checkout
+      const { data: initData, error: initErr } = await supabase.functions.invoke('razorpay-checkout', {
+        body: {
+          action: 'initialize',
+          packageId: parseInt(tripDetails.packageId),
+          travelDate,
+          travellers: tripDetails.travellers,
+          selectedSharing,
+          sharingAllocation,
+          additionalTravellers,
+          primaryTravellerSharing,
+          idempotencyKey,
+          specialRequest: formData.specialRequest || null,
+          source: formData.source || null,
+          // Include guest identity fields if session is missing
+          guestName: !session ? formData.fullName.trim() : null,
+          guestPhone: !session ? formData.phone.trim() : null,
+          guestEmail: !session ? formData.email.trim() : null
+        },
+        headers
+      });
+
+      if (initErr || !initData || !initData.success) {
+        let actualError = 'Unknown initialize error';
+        if (initErr && initErr.context && typeof initErr.context.clone === 'function') {
+          try {
+            const errBody = await initErr.context.clone().json();
+            actualError = errBody.error || actualError;
+            console.error("Checkout Edge Function response:", errBody);
+          } catch (e) {}
+        } else if (initErr) {
+          actualError = initErr.message;
+        } else if (initData && initData.error) {
+          actualError = initData.error;
+        }
+        console.error("Initialize failed:", {initErr, initData});
+        if (actualError === 'Unauthorized: missing token session or active lead authentication') {
+          throw new Error('Your booking session has expired. Please verify your details again.');
+        }
+        if (actualError.includes('Idempotency conflict')) {
+          const newKey = crypto.randomUUID();
+          setIdempotencyKey(newKey);
+          setBookingId('');
+          try {
+            const storedData = sessionStorage.getItem('checkoutData');
+            if (storedData) {
+              const parsed = JSON.parse(storedData);
+              parsed.idempotencyKey = newKey;
+              sessionStorage.setItem('checkoutData', JSON.stringify(parsed));
+            }
+          } catch (e) {}
+          throw new Error('Your booking details changed. Please try payment again.');
+        }
+        throw new Error(`Failed to initialize booking transaction. Reason: ${actualError}`);
+      }
+
+      currentBookingId = initData.bookingId;
+      setBookingId(initData.bookingId);
+      setServerFinalPayable(initData.finalPayableAmount);
+      finalAmount = initData.finalPayableAmount;
 
 
 
@@ -605,7 +615,7 @@ export default function PackageCheckout() {
         body: {
           action: 'prepare',
           bookingId: currentBookingId,
-          idempotencyKey
+          idempotencyKey: currentIdempotencyKey
         },
         headers
       });
