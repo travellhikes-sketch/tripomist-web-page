@@ -493,18 +493,18 @@ export default function PackageCheckout() {
         if (!primaryTravellerSharing) {
           throw new Error('Please select Room Sharing for the Primary Traveller.');
         }
-        
+
         // Strict frontend validation of total room sharing
         const sharingCounts = { ...sharingAllocation };
         sharingCounts[primaryTravellerSharing] = (sharingCounts[primaryTravellerSharing] || 0) - 1;
-        
+
         for (const t of additionalTravellers) {
           if (!t.gender || !t.sharingType) {
             throw new Error('Please select Gender and Room Sharing for all additional travellers.');
           }
           sharingCounts[t.sharingType] = (sharingCounts[t.sharingType] || 0) - 1;
         }
-        
+
         for (const key of Object.keys(sharingCounts)) {
           if (sharingCounts[key] !== 0) {
             throw new Error('Traveller-level sharing assignments do not match the Overall Room Sharing count.');
@@ -521,7 +521,7 @@ export default function PackageCheckout() {
         specialRequest: formData?.specialRequest
       });
       sessionStorage.setItem('tripomist_last_payload', currentPayload);
-      
+
       let currentBookingId = bookingId;
       let currentIdempotencyKey = idempotencyKey;
 
@@ -711,19 +711,27 @@ export default function PackageCheckout() {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
         setLoading(false);
-        console.error('Razorpay payment.failed:', {
+        const safeError = {
           code: response.error?.code,
           description: response.error?.description,
           source: response.error?.source,
           step: response.error?.step,
           reason: response.error?.reason,
-          metadata: response.error?.metadata
-        });
-        // 12. Razorpay close/failure par reservation release mat karo; retry message dikhao
-        const errorDesc = response.error?.description || 'Please try again.';
-        const errorReason = response.error?.reason ? ` Reason: ${response.error.reason}` : '';
-        const errorCode = response.error?.code ? ` (${response.error.code})` : '';
-        setError(`Payment failed: ${errorDesc}${errorReason}${errorCode}`);
+          metadata: {
+            order_id: response.error?.metadata?.order_id,
+            payment_id: response.error?.metadata?.payment_id
+          }
+        };
+        console.error('Razorpay payment.failed:', safeError);
+
+        const errorCode = safeError.code ? `\nCode: ${safeError.code}` : '';
+        const errorDesc = safeError.description ? `\nDescription: ${safeError.description}` : '\nDescription: Please try again.';
+        const errorReason = safeError.reason ? `\nReason: ${safeError.reason}` : '';
+
+        alert(`Payment Failed:${errorCode}${errorDesc}${errorReason}`);
+
+        // Keep the UI error state as well
+        setError(`Payment failed. ${safeError.description || 'Please try again.'}`);
         updateLead({
           p_current_step: 'payment_failed'
         });
@@ -1086,8 +1094,8 @@ export default function PackageCheckout() {
                             }
                           }}
                           className={`w-6 h-6 flex items-center justify-center font-bold rounded-full transition-colors ${
-                            tripDetails.travellers >= 15 
-                              ? 'text-gray-300 cursor-not-allowed' 
+                            tripDetails.travellers >= 15
+                              ? 'text-gray-300 cursor-not-allowed'
                               : 'text-gray-600 hover:text-[#01AFD1] hover:bg-gray-50'
                           }`}
                         >+</button>
@@ -1327,14 +1335,14 @@ export default function PackageCheckout() {
                     const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
                     if (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0) return null;
                     const isOccupancyDisabled = !!bookingId;
-                    
+
                     return (
                       <div key={option.type} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border border-gray-100 rounded-sm bg-gray-50 hover:bg-white transition-colors gap-4">
                         <div>
                           <h3 className="font-bold text-gray-900">{option.label}</h3>
                           <p className="text-sm font-semibold text-[#01AFD1]">₹{formatMoney(pricePerPerson)} <span className="text-gray-500 font-normal">/ person</span></p>
                         </div>
-                        
+
                         {!isOccupancyDisabled && (
                           <div className="flex items-center gap-4 bg-white rounded-full border border-gray-200 px-3 py-1">
                             <button
@@ -1418,19 +1426,19 @@ export default function PackageCheckout() {
                   const validAdditional = additionalTravellers.filter(t => t.fullName && t.phone && t.email).length;
                   const totalAssigned = Object.values(sharingAllocation).reduce((a,b) => a+b, 0);
                   const targetAssigned = tripDetails?.travellers || 1;
-                  
+
                   if (neededAdditional > 0 && validAdditional !== neededAdditional) {
                     setError('Please add the remaining traveller details before payment.');
                     window.scrollTo({ top: 300, behavior: 'smooth' });
                     return;
                   }
-                  
+
                   if (totalAssigned !== targetAssigned) {
                     setError('Please assign room sharing for all travellers.');
                     window.scrollTo({ top: 500, behavior: 'smooth' });
                     return;
                   }
-                  
+
                   handleProceedToPayment(e);
                 }}
                 disabled={loading || checkoutBlocked || (tripDetails?.travellers > 15)}
