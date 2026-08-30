@@ -59,7 +59,7 @@ const AdminBookings = () => {
     }
     let isMounted = true;
     setLoadingTravellers(true);
-    supabase.from('booking_travellers').select('*').eq('booking_id', viewDetailsBooking.id)
+    supabase.from('booking_travellers').select('*').eq('booking_id', viewDetailsBooking.id).order('is_primary', { ascending: false })
       .then(({ data, error }) => {
         if (isMounted) {
           if (!error) setSelectedTravellers(data || []);
@@ -963,6 +963,15 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                     <span className="font-medium text-gray-900">{viewDetailsBooking.travel_date ? new Date(viewDetailsBooking.travel_date).toLocaleDateString() : 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-500">Overall Sharing</span>
+                    <span className="font-medium text-gray-900 capitalize">
+                      {viewDetailsBooking.sharing_allocation 
+                        ? Object.entries(typeof viewDetailsBooking.sharing_allocation === 'string' ? JSON.parse(viewDetailsBooking.sharing_allocation) : viewDetailsBooking.sharing_allocation).filter(([k, v]) => v > 0).map(([k, v]) => `${k} (${v})`).join(', ')
+                        : viewDetailsBooking.selected_sharing || 'N/A'
+                      }
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Booking Source</span>
                     <span className="font-medium text-gray-900 capitalize">{viewDetailsBooking.booking_source || 'Unknown'}</span>
                   </div>
@@ -1047,7 +1056,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
 
               {/* Travellers List */}
               <div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1"><Users size={14}/> All Travellers ({viewDetailsBooking.travellers_count || selectedTravellers.length})</h3>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1"><Users size={14}/> All Travellers ({selectedTravellers.length})</h3>
                 {loadingTravellers ? (
                   <div className="p-4 text-center text-gray-500 text-sm animate-pulse">Loading travellers...</div>
                 ) : selectedTravellers.length > 0 ? (
@@ -1057,7 +1066,7 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                         {t.is_primary && (
                           <div className="absolute top-0 right-0 bg-[#01AFD1] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">PRIMARY</div>
                         )}
-                        <p className="font-bold text-gray-900 mb-1">{t.full_name} <span className="text-gray-400 font-normal text-xs ml-1">({t.age} yrs, {t.gender})</span></p>
+                        <p className="font-bold text-gray-900 mb-1">{t.full_name} {t.age || t.gender ? <span className="text-gray-400 font-normal text-xs ml-1">({[t.age ? `${t.age} yrs` : '', t.gender].filter(Boolean).join(', ')})</span> : null}</p>
 
                         <div className="grid grid-cols-2 gap-y-2 mt-3 text-xs">
                            <div>

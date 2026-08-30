@@ -72,11 +72,31 @@ export default function PackageCheckout() {
   // State to block proceed payment button
   const [checkoutBlocked, setCheckoutBlocked] = useState(false);
 
+  // Additional Checkout Data
+  const [additionalTravellers, setAdditionalTravellers] = useState([]);
+  const [primaryTravellerSharing, setPrimaryTravellerSharing] = useState('');
+  const [sharingAllocation, setSharingAllocation] = useState({});
+
+  const handleAllocationChange = (type, delta) => {
+    setSharingAllocation(prev => {
+      const current = prev[type] || 0;
+      const currentTotal = Object.values(prev).reduce((a, b) => a + b, 0);
+      const targetTotal = tripDetails?.travellers || 1;
+
+      if (delta > 0 && currentTotal >= targetTotal) {
+        return prev;
+      }
+
+      const newVal = Math.max(0, current + delta);
+      return { ...prev, [type]: newVal };
+    });
+  };
+
   // Lock status of individual profile details
   const [profileLocked, setProfileLocked] = useState({ name: false, phone: false, email: false });
 
   // 8. Restore or persist idempotencyKey inside checkoutData/sessionStorage
-  const [idempotencyKey] = useState(() => {
+  const [idempotencyKey, setIdempotencyKey] = useState(() => {
     try {
       const storedData = sessionStorage.getItem('checkoutData');
       if (storedData) {
@@ -458,6 +478,29 @@ export default function PackageCheckout() {
 
 
 
+      if (tripDetails.travellers > 1) {
+        if (!primaryTravellerSharing) {
+          throw new Error('Please select Room Sharing for the Primary Traveller.');
+        }
+        
+        // Strict frontend validation of total room sharing
+        const sharingCounts = { ...sharingAllocation };
+        sharingCounts[primaryTravellerSharing] = (sharingCounts[primaryTravellerSharing] || 0) - 1;
+        
+        for (const t of additionalTravellers) {
+          if (!t.gender || !t.sharingType) {
+            throw new Error('Please select Gender and Room Sharing for all additional travellers.');
+          }
+          sharingCounts[t.sharingType] = (sharingCounts[t.sharingType] || 0) - 1;
+        }
+        
+        for (const key of Object.keys(sharingCounts)) {
+          if (sharingCounts[key] !== 0) {
+            throw new Error('Traveller-level sharing assignments do not match the Overall Room Sharing count.');
+          }
+        }
+      }
+      
       let currentBookingId = bookingId;
       let finalAmount = safeFinalPayable;
 
@@ -501,6 +544,9 @@ export default function PackageCheckout() {
             travelDate,
             travellers: tripDetails.travellers,
             selectedSharing,
+            sharingAllocation,
+            additionalTravellers,
+            primaryTravellerSharing,
             idempotencyKey,
             specialRequest: formData.specialRequest || null,
             source: formData.source || null,
@@ -528,6 +574,20 @@ export default function PackageCheckout() {
           console.error("Initialize failed:", {initErr, initData});
           if (actualError === 'Unauthorized: missing token session or active lead authentication') {
             throw new Error('Your booking session has expired. Please verify your details again.');
+          }
+          if (actualError.includes('Idempotency conflict')) {
+            const newKey = crypto.randomUUID();
+            setIdempotencyKey(newKey);
+            setBookingId('');
+            try {
+              const storedData = sessionStorage.getItem('checkoutData');
+              if (storedData) {
+                const parsed = JSON.parse(storedData);
+                parsed.idempotencyKey = newKey;
+                sessionStorage.setItem('checkoutData', JSON.stringify(parsed));
+              }
+            } catch (e) {}
+            throw new Error('Your booking details changed. Please try payment again.');
           }
           throw new Error(`Failed to initialize booking transaction. Reason: ${actualError}`);
         }
@@ -564,6 +624,20 @@ export default function PackageCheckout() {
           actualError = prepareData.error;
         }
         console.error("Prepare failed:", {prepareErr, prepareData});
+        if (actualError.includes('Idempotency conflict')) {
+          const newKey = crypto.randomUUID();
+          setIdempotencyKey(newKey);
+          setBookingId('');
+          try {
+            const storedData = sessionStorage.getItem('checkoutData');
+            if (storedData) {
+              const parsed = JSON.parse(storedData);
+              parsed.idempotencyKey = newKey;
+              sessionStorage.setItem('checkoutData', JSON.stringify(parsed));
+            }
+          } catch (e) {}
+          throw new Error('Your booking details changed. Please try payment again.');
+        }
         throw new Error(`Failed to prepare payment transaction order. Reason: ${actualError}`);
       }
 
@@ -897,164 +971,391 @@ export default function PackageCheckout() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* Left Column (70%) */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
+          {/* Left Column (70%) */}
+          <div className="lg:col-span-8">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              {/* Section 1: Primary Traveller Details */}
+              <section className="p-6 md:p-8 border-b border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="material-symbols-outlined text-[#01AFD1] text-2xl">person</span>
+                  <h2 className="text-xl font-bold text-gray-900">Primary Traveller Details</h2>
+                </div>
 
-            {/* Section 1: Traveller Details */}
-            <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">person</span>
-                <h2 className="text-2xl font-bold text-gray-900">Traveller Details</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    value={formData.fullName}
-                    disabled={!!bookingId}
-                    readOnly={profileLocked.name}
-                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.name ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Travel Date</label>
-                  <input
-                    type="date"
-                    value={formData.date ? formData.date.split('T')[0] : ''}
-                    disabled={!!bookingId}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setFormData({...formData, date: e.target.value});
-                      }
-                    }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    disabled={!!bookingId}
-                    readOnly={profileLocked.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    disabled={!!bookingId}
-                    readOnly={profileLocked.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Number of Travellers</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={tripDetails.travellers}
-                    disabled={!!bookingId}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      setTripDetails({...tripDetails, travellers: val});
-                      // Update computed price based on new travellers
-                      const opt = sharingOptions.find(o => o.type === selectedSharing);
-                      if (opt) setComputedPrice(opt.pricePerPerson * val);
-                    }}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Source</label>
-                  <select
-                    value={formData.source}
-                    disabled={!!bookingId}
-                    onChange={(e) => setFormData({...formData, source: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  >
-                    <option value="">Select source</option>
-                    <option value="Facebook">Facebook</option>
-                    <option value="Instagram">Instagram</option>
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="Google">Google</option>
-                    <option value="Friend and Family">Friend and Family</option>
-                    <option value="I'm already travel with you">I'm already travel with you</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Special Request (Optional)</label>
-                  <textarea
-                    value={formData.specialRequest || ''}
-                    disabled={!!bookingId}
-                    onChange={(e) => setFormData({...formData, specialRequest: e.target.value})}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-                    rows="3"
-                    placeholder="Any dietary requirements or special requests..."
-                  ></textarea>
-                </div>
-              </div>
-            </section>
-
-            {/* Section 2: Occupancy */}
-            <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">bed</span>
-                <h2 className="text-2xl font-bold text-gray-900">Occupancy</h2>
-              </div>
-              <p className="text-gray-500 mb-6 border-b border-gray-100 pb-4">Select room sharing type</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sharingOptions.map((option) => {
-                  const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
-                  if (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0) return null;
-                  const isActive = selectedSharing === option.type;
-                  const isOccupancyDisabled = !!bookingId;
-                  return (
-                    <div
-                      key={option.type}
-                      onClick={() => !isOccupancyDisabled && handleSharingSelect(option)}
-                      className={`rounded-2xl p-5 border-2 transition-all flex flex-col gap-2 ${
-                        isOccupancyDisabled
-                          ? 'cursor-not-allowed opacity-60'
-                          : 'cursor-pointer'
-                      } ${
-                        isActive
-                          ? 'border-[#01AFD1] bg-[#eff6f9] shadow-md scale-[1.02]'
-                          : 'border-gray-200 bg-white hover:border-[#01AFD1]/50 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#01AFD1]' : 'border-gray-300'}`}>
-                          {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#01AFD1]"></div>}
-                        </div>
-                        {isActive && <span className="bg-[#01AFD1] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Selected</span>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      readOnly={true}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Travel Date</label>
+                    <input
+                      type="date"
+                      value={formData.date ? formData.date.split('T')[0] : ''}
+                      onChange={(e) => {
+                        if (e.target.value && !bookingId) {
+                          setFormData({...formData, date: e.target.value});
+                        }
+                      }}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                      readOnly={!!bookingId}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      readOnly={true}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      readOnly={true}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Number of Travellers</label>
+                    {!bookingId ? (
+                      <div className="flex items-center gap-4 bg-white rounded-full border border-gray-200 px-4 py-2 w-max">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const val = Math.max(1, (tripDetails.travellers || 1) - 1);
+                            setTripDetails(prev => ({...prev, travellers: val}));
+                            const opt = sharingOptions.find(o => o.type === selectedSharing);
+                            if (opt) setComputedPrice(opt.pricePerPerson * val);
+                            setAdditionalTravellers(prev => prev.slice(0, Math.max(0, val - 1)));
+                            setSharingAllocation(prev => {
+                              let totalAssigned = Object.values(prev).reduce((a, b) => a + b, 0);
+                              if (totalAssigned <= val) return prev;
+                              let next = { ...prev };
+                              for (let key of Object.keys(next)) {
+                                while (next[key] > 0 && totalAssigned > val) {
+                                  next[key] -= 1;
+                                  totalAssigned -= 1;
+                                }
+                              }
+                              return next;
+                            });
+                          }}
+                          className="w-6 h-6 flex items-center justify-center font-bold text-gray-600 hover:text-[#01AFD1] hover:bg-gray-50 rounded-full transition-colors"
+                        >−</button>
+                        <span className="font-bold text-gray-900 text-sm w-4 text-center">{tripDetails.travellers || 1}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const current = tripDetails.travellers || 1;
+                            if (current < 15) {
+                              const val = current + 1;
+                              setTripDetails(prev => ({...prev, travellers: val}));
+                              const opt = sharingOptions.find(o => o.type === selectedSharing);
+                              if (opt) setComputedPrice(opt.pricePerPerson * val);
+                            }
+                          }}
+                          className={`w-6 h-6 flex items-center justify-center font-bold rounded-full transition-colors ${
+                            tripDetails.travellers >= 15 
+                              ? 'text-gray-300 cursor-not-allowed' 
+                              : 'text-gray-600 hover:text-[#01AFD1] hover:bg-gray-50'
+                          }`}
+                        >+</button>
                       </div>
-                      <h3 className={`font-bold text-lg ${isActive ? 'text-[#01AFD1]' : 'text-gray-800'}`}>{option.label}</h3>
-                      <div className="mt-auto">
-                        <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{formatMoney(pricePerPerson)}</span>
-                        <span className="text-xs text-gray-500 font-medium ml-1">/ person</span>
+                    ) : (
+                      <input
+                        type="number"
+                        value={tripDetails.travellers}
+                        readOnly={true}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+                      />
+                    )}
+                    {tripDetails?.travellers >= 15 && (
+                      <p className="text-xs text-amber-600 mt-2 font-medium">For bookings of more than 15 travellers, please contact our travel expert.</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Room Sharing</label>
+                    <select
+                      value={primaryTravellerSharing}
+                      onChange={(e) => setPrimaryTravellerSharing(e.target.value)}
+                      disabled={!!bookingId}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
+                    >
+                      <option value="">Select Sharing Type</option>
+                      {Object.entries(sharingAllocation).filter(([k, v]) => v > 0).map(([k, v]) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              {/* Section 2: Additional Travellers */}
+              {tripDetails?.travellers > 1 && (
+                <section className="p-6 md:p-8 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#01AFD1] text-2xl">group</span>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900">Additional Travellers</h2>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Added {additionalTravellers.filter(t => t.fullName && t.phone && t.email).length} of {Math.max(0, (tripDetails?.travellers || 1) - 1)}<br/>
+                          {Math.max(0, (tripDetails?.travellers || 1) - 1 - additionalTravellers.filter(t => t.fullName && t.phone && t.email).length)} travellers left
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </section>
+                  </div>
 
+                  <div className="space-y-4 mb-4">
+                    {additionalTravellers.map((traveller, index) => {
+                      const isCompleted = traveller.fullName && traveller.phone && traveller.email && !traveller._isEditing;
+                      return (
+                        <div key={index} className={`rounded-sm border ${isCompleted ? 'border-gray-200 bg-white p-4' : 'border-[#01AFD1] bg-[#eff6f9] p-5 shadow-sm'}`}>
+                          {isCompleted ? (
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="font-bold text-gray-900 mb-1">Traveller {index + 2}</p>
+                                <p className="text-sm font-semibold text-gray-700">{traveller.fullName}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{traveller.phone} • {traveller.email}</p>
+                                {traveller.gender && traveller.sharingType && (
+                                  <p className="text-xs text-gray-600 mt-1 font-medium bg-gray-100 px-2 py-0.5 rounded inline-block">
+                                    {traveller.gender} • {traveller.sharingType}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newArr = [...additionalTravellers];
+                                  newArr[index]._isEditing = true;
+                                  setAdditionalTravellers(newArr);
+                                }}
+                                className="text-[#01AFD1] hover:text-[#0092b3] font-semibold text-sm flex items-center gap-1"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">edit</span>
+                                Edit
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-gray-900 text-sm">Traveller {index + 2} Details</h3>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newArr = [...additionalTravellers];
+                                    if (!traveller.fullName && !traveller.phone && !traveller.email) {
+                                      newArr.splice(index, 1);
+                                    } else {
+                                      newArr[index]._isEditing = false;
+                                    }
+                                    setAdditionalTravellers(newArr);
+                                  }}
+                                  className="text-gray-500 hover:text-gray-700 text-xs font-semibold flex items-center gap-1"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Full Name</label>
+                                  <input
+                                    type="text"
+                                    value={traveller.fullName || ''}
+                                    onChange={(e) => {
+                                      const newArr = [...additionalTravellers];
+                                      newArr[index].fullName = e.target.value;
+                                      setAdditionalTravellers(newArr);
+                                    }}
+                                    className="w-full border border-gray-200 rounded-sm px-3 py-2 text-sm focus:ring-1 focus:ring-[#01AFD1] outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Phone No. (WhatsApp)</label>
+                                  <input
+                                    type="tel"
+                                    value={traveller.phone || ''}
+                                    onChange={(e) => {
+                                      // Force exactly 10 digits
+                                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                      const newArr = [...additionalTravellers];
+                                      newArr[index].phone = val;
+                                      setAdditionalTravellers(newArr);
+                                    }}
+                                    className="w-full border border-gray-200 rounded-sm px-3 py-2 text-sm focus:ring-1 focus:ring-[#01AFD1] outline-none"
+                                  />
+                                  {traveller.phone && traveller.phone.length < 10 && (
+                                    <p className="text-[10px] text-red-500 mt-1">Enter a valid 10-digit WhatsApp number.</p>
+                                  )}
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
+                                  <input
+                                    type="email"
+                                    value={traveller.email || ''}
+                                    onChange={(e) => {
+                                      const newArr = [...additionalTravellers];
+                                      newArr[index].email = e.target.value.toLowerCase().trim();
+                                      setAdditionalTravellers(newArr);
+                                    }}
+                                    className="w-full border border-gray-200 rounded-sm px-3 py-2 text-sm focus:ring-1 focus:ring-[#01AFD1] outline-none"
+                                  />
+                                  {traveller.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(traveller.email) && (
+                                    <p className="text-[10px] text-red-500 mt-1">Enter a valid email address.</p>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Gender</label>
+                                  <select
+                                    value={traveller.gender || ''}
+                                    onChange={(e) => {
+                                      const newArr = [...additionalTravellers];
+                                      newArr[index].gender = e.target.value;
+                                      setAdditionalTravellers(newArr);
+                                    }}
+                                    className="w-full border border-gray-200 rounded-sm px-3 py-2 text-sm focus:ring-1 focus:ring-[#01AFD1] outline-none"
+                                  >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Room Sharing</label>
+                                  <select
+                                    value={traveller.sharingType || ''}
+                                    onChange={(e) => {
+                                      const newArr = [...additionalTravellers];
+                                      newArr[index].sharingType = e.target.value;
+                                      setAdditionalTravellers(newArr);
+                                    }}
+                                    className="w-full border border-gray-200 rounded-sm px-3 py-2 text-sm focus:ring-1 focus:ring-[#01AFD1] outline-none"
+                                  >
+                                    <option value="">Select Sharing Type</option>
+                                    {Object.entries(sharingAllocation).filter(([k, v]) => v > 0).map(([k, v]) => (
+                                      <option key={k} value={k}>{k}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="mt-4 flex justify-end">
+                                <button
+                                  type="button"
+                                  disabled={!traveller.fullName || !traveller.phone || traveller.phone.length !== 10 || !traveller.email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(traveller.email) || !traveller.gender || !traveller.sharingType}
+                                  onClick={() => {
+                                    const newArr = [...additionalTravellers];
+                                    newArr[index]._isEditing = false;
+                                    setAdditionalTravellers(newArr);
+                                  }}
+                                  className="bg-[#01AFD1] hover:bg-[#0092b3] disabled:bg-gray-300 text-white px-4 py-2 rounded-sm text-sm font-bold transition-colors"
+                                >
+                                  Save Traveller
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {additionalTravellers.length < Math.max(0, (tripDetails?.travellers || 1) - 1) && !additionalTravellers.some(t => t._isEditing) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdditionalTravellers([...additionalTravellers, { fullName: '', phone: '', email: '', _isEditing: true }]);
+                      }}
+                      className="w-full border border-dashed border-gray-300 rounded-sm py-3 text-[#01AFD1] hover:bg-gray-50 font-bold transition-colors flex items-center justify-center gap-2 text-sm"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">add</span>
+                      {additionalTravellers.length === 0 ? 'Add Traveller' : 'Add Another Traveller'}
+                    </button>
+                  )}
+                </section>
+              )}
+
+              {/* Section 3: Room Sharing */}
+              <section className="p-6 md:p-8 border-b border-gray-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="material-symbols-outlined text-[#01AFD1] text-2xl">bed</span>
+                  <h2 className="text-xl font-bold text-gray-900">Room Sharing</h2>
+                </div>
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 text-sm font-medium text-gray-600">
+                  <p>Allocate sharing for travellers</p>
+                  <div className="flex items-center gap-2">
+                    Total: {tripDetails?.travellers || 1} <span className="mx-2">•</span> Assigned: {Object.values(sharingAllocation).reduce((a,b)=>a+b,0)} <span className="mx-2">•</span> Left: {Math.max(0, (tripDetails?.travellers || 1) - Object.values(sharingAllocation).reduce((a,b)=>a+b,0))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {sharingOptions.map((option) => {
+                    const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
+                    if (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0) return null;
+                    const isOccupancyDisabled = !!bookingId;
+                    
+                    return (
+                      <div key={option.type} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border border-gray-100 rounded-sm bg-gray-50 hover:bg-white transition-colors gap-4">
+                        <div>
+                          <h3 className="font-bold text-gray-900">{option.label}</h3>
+                          <p className="text-sm font-semibold text-[#01AFD1]">₹{formatMoney(pricePerPerson)} <span className="text-gray-500 font-normal">/ person</span></p>
+                        </div>
+                        
+                        {!isOccupancyDisabled && (
+                          <div className="flex items-center gap-4 bg-white rounded-full border border-gray-200 px-3 py-1">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); handleAllocationChange(option.label || option.type, -1); }}
+                              className="w-6 h-6 flex items-center justify-center font-bold text-gray-600 hover:text-[#01AFD1] hover:bg-gray-50 rounded-full transition-colors"
+                            >−</button>
+                            <span className="font-bold text-gray-900 text-sm w-4 text-center">{sharingAllocation[option.label || option.type] || 0}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); handleAllocationChange(option.label || option.type, 1); }}
+                              disabled={Object.values(sharingAllocation).reduce((a,b)=>a+b,0) >= (tripDetails?.travellers || 1)}
+                              className={`w-6 h-6 flex items-center justify-center font-bold rounded-full transition-colors ${
+                                Object.values(sharingAllocation).reduce((a,b)=>a+b,0) >= (tripDetails?.travellers || 1)
+                                  ? 'text-gray-300 cursor-not-allowed'
+                                  : 'text-gray-600 hover:text-[#01AFD1] hover:bg-gray-50'
+                              }`}
+                            >+</button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* Section 4: Special Request */}
+              <section className="p-6 md:p-8">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Special Request (Optional)</label>
+                <textarea
+                  value={formData.specialRequest || ''}
+                  readOnly={!!bookingId}
+                  onChange={(e) => setFormData({...formData, specialRequest: e.target.value})}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  rows="3"
+                  placeholder="Any dietary requirements or special requests..."
+                ></textarea>
+              </section>
+            </div>
           </div>
 
           {/* Right Column (30%) - Sticky Payment Summary */}
           <div className="lg:col-span-4 relative">
-            <div className="sticky top-[100px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100">
-
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Payment Summary</h2>
+            <div className="sticky top-[100px] bg-white rounded-xl p-6 border border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Package Summary</h2>
 
               <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
                 <div className="flex-1">
@@ -1069,7 +1370,7 @@ export default function PackageCheckout() {
 
               <div className="space-y-3 mb-4 border-b border-gray-100 pb-4">
                 <div className="flex justify-between text-gray-600 font-medium text-sm">
-                  <span>Subtotal ({tripDetails.travellers} × ₹{formatMoney(computedPrice / travellerCount)})</span>
+                  <span>Subtotal ({tripDetails.travellers} A- ₹{formatMoney(computedPrice / travellerCount)})</span>
                   <span>₹{formatMoney(subTotal)}</span>
                 </div>
                 {gstEnabled && (
@@ -1080,9 +1381,7 @@ export default function PackageCheckout() {
                 )}
               </div>
 
-
-
-              <div className="flex justify-between items-end mb-8 bg-[#eff6f9] p-4 rounded-xl border border-[#cde5ef]">
+              <div className="flex justify-between items-end mb-8 pt-2">
                 <div>
                   <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
                 </div>
@@ -1090,9 +1389,28 @@ export default function PackageCheckout() {
               </div>
 
               <button
-                onClick={handleProceedToPayment}
-                disabled={loading || !selectedSharing || checkoutBlocked}
-                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-[#01AFD1]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+                onClick={(e) => {
+                  const neededAdditional = Math.max(0, (tripDetails?.travellers || 1) - 1);
+                  const validAdditional = additionalTravellers.filter(t => t.fullName && t.phone && t.email).length;
+                  const totalAssigned = Object.values(sharingAllocation).reduce((a,b) => a+b, 0);
+                  const targetAssigned = tripDetails?.travellers || 1;
+                  
+                  if (neededAdditional > 0 && validAdditional !== neededAdditional) {
+                    setError('Please add the remaining traveller details before payment.');
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                    return;
+                  }
+                  
+                  if (totalAssigned !== targetAssigned) {
+                    setError('Please assign room sharing for all travellers.');
+                    window.scrollTo({ top: 500, behavior: 'smooth' });
+                    return;
+                  }
+                  
+                  handleProceedToPayment(e);
+                }}
+                disabled={loading || checkoutBlocked || (tripDetails?.travellers > 15)}
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
               >
                 {loading ? (
                   <>
@@ -1102,7 +1420,7 @@ export default function PackageCheckout() {
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-[22px]">lock</span>
-                    Proceed to Payment
+                    Payment
                   </>
                 )}
               </button>
