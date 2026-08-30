@@ -1108,7 +1108,10 @@ export default function PackageCheckout() {
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Room Sharing</label>
                     <select
                       value={primaryTravellerSharing}
-                      onChange={(e) => setPrimaryTravellerSharing(e.target.value)}
+                      onChange={(e) => {
+                        setPrimaryTravellerSharing(e.target.value);
+                        setSelectedSharing(e.target.value);
+                      }}
                       disabled={!!bookingId}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors"
                     >

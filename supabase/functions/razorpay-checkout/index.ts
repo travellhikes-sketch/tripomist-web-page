@@ -685,7 +685,7 @@ serve(async (req) => {
           });
           if (syncErr) {
             console.error('Failed to sync additional travellers', syncErr);
-            return new Response(JSON.stringify({ error: 'Failed to save additional traveller details' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+            return new Response(JSON.stringify({ error: 'Failed to save additional traveller details: ' + (syncErr.message || 'Unknown RPC error') }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
           }
         }
 
