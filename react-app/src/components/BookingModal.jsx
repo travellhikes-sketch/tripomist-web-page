@@ -6,7 +6,13 @@ async function requestBookingGuestOtp(email, name) {
   const { data, error } = await supabase.functions.invoke('guest-otp', {
     body: { action: 'request', email: email.trim().toLowerCase(), purpose: 'booking', name: (name || '').trim() }
   })
-  if (error) throw new Error(error.message || 'Failed to send verification code.')
+  if (error) {
+    let msg = null;
+    if (error.context && typeof error.context.clone === 'function') {
+      try { msg = (await error.context.clone().json()).error; } catch (e) {}
+    }
+    throw new Error(msg || error.message || 'Failed to send verification code.');
+  }
   if (!data?.verificationId) throw new Error('Failed to initiate verification.')
   return data.verificationId
 }
@@ -48,7 +54,7 @@ async function invokeLeadAction(body, extraHeaders = {}, freshSession = null) {
     leadTokenAttached: !!extraHeaders['x-checkout-lead-token']
   });
 
-  return supabase.functions.invoke('booking-checkout', {
+  return supabase.functions.invoke('razorpay-checkout', {
     body,
     headers,
   });
@@ -141,13 +147,15 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
                 ? (responseBody.error || responseBody.message)
                 : (responseBody || rpcError.message);
 
-              if (functionErrorMessage === 'invalid_checkout_lead_auth') {
-                const normalizedInputEmail = formData.email.trim().toLowerCase();
-                if (session && session.user && session.user.email?.toLowerCase() === normalizedInputEmail) {
-                  // Only remove stale browser reference if authenticated
-                  sessionStorage.removeItem('tripomist_checkout_lead');
-                  throw new Error('RECOVER_STALE_LEAD');
-                }
+              const errorStr = (functionErrorMessage || '').toLowerCase();
+              const isAuthError = rpcError?.context?.status === 401 || rpcError?.context?.status === 403 ||
+                                  errorStr.includes('unauthorized') || errorStr.includes('invalid_checkout_lead_auth') ||
+                                  errorStr.includes('expired') || errorStr.includes('inactive');
+
+              if (isAuthError) {
+                // Remove stale browser reference and fallback to create_guest_lead
+                sessionStorage.removeItem('tripomist_checkout_lead');
+                throw new Error('RECOVER_STALE_LEAD');
               }
 
               console.error("BOOK_NOW_RUNTIME_ERROR", {
@@ -224,7 +232,12 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
       if (isRateLimit) {
         throw new Error("Too many booking attempts. Please wait 10 minutes and try again.");
       }
-      throw new Error("Failed to save your enquiry. Please try again.");
+
+      const functionErrorMessage = typeof responseBody === 'object' && responseBody !== null
+        ? (responseBody.error || responseBody.message)
+        : (responseBody || rpcError.message);
+
+      throw new Error(functionErrorMessage || "Failed to save your enquiry. Please try again.");
     }
 
     // Store the response using: id, token, leadNumber, packageId
