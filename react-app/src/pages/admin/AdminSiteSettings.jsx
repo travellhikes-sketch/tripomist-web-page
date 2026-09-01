@@ -75,8 +75,7 @@ const AdminSiteSettings = () => {
     { id: 'why_choose_us_banners', label: 'Why Choose Us Banners', icon: Shield },
     { id: 'stats_strip', label: 'Stats Strip', icon: BarChart2 },
     { id: 'customer_support', label: 'Customer Support', icon: MessageSquare },
-    { id: 'homepage_section_order', label: 'Homepage Layout', icon: Layers },
-    { id: 'typography', label: 'Typography', icon: LayoutTemplate }
+    { id: 'homepage_section_order', label: 'Homepage Layout', icon: Layers }
   ];
 
   const fetchSettings = useCallback(async () => {
@@ -460,11 +459,10 @@ const AdminSiteSettings = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    isActive
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${isActive
                       ? 'bg-[#01AFD1]/10 text-[#0092b3]'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Icon size={18} className={isActive ? 'text-[#01AFD1]' : 'text-gray-400'} />
                   {tab.label}
@@ -510,7 +508,7 @@ const AdminSiteSettings = () => {
                   <label className={labelClass}>Subheading</label>
                   <input type="text" value={settings.hero.subtitle || 'Your Safe Travel Our Responsibility.'} onChange={e => handleChange('hero', 'subtitle', e.target.value)} className={inputClass} />
                 </div>
-                
+
                 {/* Primary CTA */}
                 <div className="border-t pt-4 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center md:col-span-2 mb-2">
@@ -598,35 +596,6 @@ const AdminSiteSettings = () => {
               <div className="pt-4 flex justify-end">
                 <button onClick={() => handleSave('customer_account_hero')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
                   <Save size={16} /> Save Customer Hero
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TYPOGRAPHY TAB */}
-          {activeTab === 'typography' && (
-            <div className="space-y-6 animate-in">
-              <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Typography Settings</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={labelClass}>Heading Font Family</label>
-                  <select
-                    value={settings.typography.heading_font || 'Ranchers'}
-                    onChange={e => handleChange('typography', 'heading_font', e.target.value)}
-                    className={inputClass}
-                  >
-                    <option value="Ranchers">Ranchers (Playful/Bouncy)</option>
-                    <option value="Fredoka">Fredoka (Rounded/Modern)</option>
-                    <option value="Inter">Inter (Clean/Professional)</option>
-                    <option value="Titan One">Titan One (Bold/Playful)</option>
-                    <option value="Lilita One">Lilita One (Round/Bold)</option>
-                    <option value="Spicy Rice">Spicy Rice (Chunky/Casual)</option>
-                  </select>
-                </div>
-              </div>
-              <div className="pt-4 flex justify-end">
-                <button onClick={() => handleSave('typography')} disabled={saving} className="inline-flex items-center gap-2 bg-[#01AFD1] text-white px-5 py-2.5 rounded-lg hover:bg-[#0092b3] transition-colors text-sm font-medium disabled:opacity-50">
-                  <Save size={16} /> Save Typography
                 </button>
               </div>
             </div>
@@ -851,12 +820,12 @@ const AdminSiteSettings = () => {
                 </div>
                 <div>
                   <label className={labelClass}>GST Label</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     disabled={settings.package_detail_settings.gst_enabled === false}
-                    value={settings.package_detail_settings.gst_label || ''} 
-                    onChange={e => handleChange('package_detail_settings', 'gst_label', e.target.value)} 
-                    className={`${inputClass} ${settings.package_detail_settings.gst_enabled === false ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`} 
+                    value={settings.package_detail_settings.gst_label || ''}
+                    onChange={e => handleChange('package_detail_settings', 'gst_label', e.target.value)}
+                    className={`${inputClass} ${settings.package_detail_settings.gst_enabled === false ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
                     placeholder="e.g. 5% GST"
                   />
                 </div>
@@ -873,7 +842,7 @@ const AdminSiteSettings = () => {
                   <textarea value={settings.package_detail_settings.whatsapp_template || ''} onChange={e => handleChange('package_detail_settings', 'whatsapp_template', e.target.value)} className={inputClass} rows={4} />
                 </div>
               </div>
-              
+
               <div className="border-t pt-6 mt-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Search Results Explore More Style</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1109,8 +1078,8 @@ const AdminSiteSettings = () => {
                             handleChange('why_choose_us_banners', 'banners', list);
                           }}
                           className={inputClass}>
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
+                          <option value="true">Active</option>
+                          <option value="false">Inactive</option>
                         </select>
                       </div>
                       <div className="md:col-span-2">
@@ -1143,8 +1112,8 @@ const AdminSiteSettings = () => {
                             handleChange('why_choose_us_banners', 'banners', list);
                           }}
                           className={inputClass}>
-                            <option value="false">NO (Display Only - No Navigation)</option>
-                            <option value="true">YES (Navigates to Route/URL on click)</option>
+                          <option value="false">NO (Display Only - No Navigation)</option>
+                          <option value="true">YES (Navigates to Route/URL on click)</option>
                         </select>
                       </div>
                       {banner.clickable && (
@@ -1294,7 +1263,7 @@ const AdminSiteSettings = () => {
                 {/* WhatsApp */}
                 <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
                   <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> WhatsApp</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16} /> WhatsApp</h3>
                     <select value={settings.customer_support?.whatsapp?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'whatsapp', { ...settings.customer_support.whatsapp, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
                       <option value="true">Enabled</option>
                       <option value="false">Disabled</option>
@@ -1317,7 +1286,7 @@ const AdminSiteSettings = () => {
                 {/* Call */}
                 <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
                   <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> Call</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16} /> Call</h3>
                     <select value={settings.customer_support?.call?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'call', { ...settings.customer_support.call, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
                       <option value="true">Enabled</option>
                       <option value="false">Disabled</option>
@@ -1340,7 +1309,7 @@ const AdminSiteSettings = () => {
                 {/* Email */}
                 <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
                   <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> Email</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16} /> Email</h3>
                     <select value={settings.customer_support?.email?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'email', { ...settings.customer_support.email, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
                       <option value="true">Enabled</option>
                       <option value="false">Disabled</option>
@@ -1363,7 +1332,7 @@ const AdminSiteSettings = () => {
                 {/* Live Chat */}
                 <div className="bg-gray-50 p-4 rounded-xl border space-y-4">
                   <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16}/> Live Chat</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><MessageSquare size={16} /> Live Chat</h3>
                     <select value={settings.customer_support?.live_chat?.enabled !== false ? 'true' : 'false'} onChange={e => handleChange('customer_support', 'live_chat', { ...settings.customer_support.live_chat, enabled: e.target.value === 'true' })} className={inputClass + " w-32 py-1"}>
                       <option value="true">Enabled</option>
                       <option value="false">Disabled</option>
@@ -1391,7 +1360,7 @@ const AdminSiteSettings = () => {
           {/* HOMEPAGE SECTION ORDER TAB */}
           {activeTab === 'homepage_section_order' && (() => {
             const list = homepageSectionOrder || [];
-            
+
             // Map keys to human-readable names
             const SECTION_NAMES = {
               destinations: 'Destinations Circular Strip',

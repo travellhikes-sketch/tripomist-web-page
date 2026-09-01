@@ -95,26 +95,7 @@ function App() {
     return () => window.removeEventListener('open-chatbot', handleOpenChat);
   }, []);
 
-  useEffect(() => {
-    const fetchTypography = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('setting_value')
-          .eq('setting_key', 'typography')
-          .single();
-        if (!error && data?.setting_value?.heading_font) {
-          const font = data.setting_value.heading_font;
-          document.documentElement.style.setProperty('--heading-font', `"${font}", sans-serif`);
-        } else {
-          document.documentElement.style.setProperty('--heading-font', '"Ranchers", sans-serif');
-        }
-      } catch (err) {
-        console.error('Error fetching typography:', err);
-      }
-    };
-    fetchTypography();
-  }, []);
+
 
   return (
     <>

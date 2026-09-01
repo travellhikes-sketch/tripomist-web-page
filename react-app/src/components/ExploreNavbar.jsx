@@ -1,31 +1,67 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
-function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, setOpenDropdownId }) {
+function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, setOpenDropdownId, anchorEl }) {
   const dropdownRef = useRef(null);
+  const [style, setStyle] = useState({});
   const [shift, setShift] = useState(0);
 
   useEffect(() => {
-    if (dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      const padding = 16;
-      let newShift = 0;
-      if (rect.left < padding) {
-        newShift = padding - rect.left;
-      } else if (rect.right > window.innerWidth - padding) {
-        newShift = window.innerWidth - padding - rect.right;
+    const updatePosition = () => {
+      if (dropdownRef.current && anchorEl) {
+        const anchorRect = anchorEl.getBoundingClientRect();
+        const dropdownRect = dropdownRef.current.getBoundingClientRect();
+        const padding = 16;
+        
+        let left = anchorRect.left + (anchorRect.width / 2);
+        let newShift = 0;
+        const halfWidth = dropdownRect.width / 2;
+        
+        if (left - halfWidth < padding) {
+          newShift = padding - (left - halfWidth);
+        } else if (left + halfWidth > window.innerWidth - padding) {
+          newShift = window.innerWidth - padding - (left + halfWidth);
+        }
+        
+        setStyle({
+          position: 'fixed',
+          top: `${anchorRect.bottom + 2}px`, // Slight gap
+          left: `${left}px`,
+          transform: `translateX(calc(-50% + ${newShift}px))`
+        });
+        setShift(newShift);
       }
-      setShift(newShift);
-    }
-  }, []);
+    };
 
-  return (
+    updatePosition();
+
+    const scrollParent = anchorEl?.closest('.overflow-x-auto');
+    if (scrollParent) {
+      scrollParent.addEventListener('scroll', updatePosition);
+    }
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      if (scrollParent) {
+        scrollParent.removeEventListener('scroll', updatePosition);
+      }
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [anchorEl, packagesMap, loadingDeptId]);
+
+  if (!anchorEl) return null;
+
+  return createPortal(
     <div
       ref={dropdownRef}
-      className="absolute top-full mt-2 w-max max-w-[95vw] md:max-w-[800px] z-[110]"
-      style={{ left: '50%', transform: `translateX(calc(-50% + ${shift}px))` }}
+      data-explore-dropdown="true"
+      className="fixed w-max max-w-[95vw] md:max-w-[800px] z-[110]"
+      style={style}
     >
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -84,7 +120,8 @@ function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, set
         )}
       </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -96,6 +133,8 @@ function ExploreNavbar() {
   const [packagesPerColumn, setPackagesPerColumn] = useState(5);
   const location = useLocation();
   const navRef = useRef(null);
+  const anchorRefs = useRef({});
+
   useEffect(() => {
     const fetchDepartmentsAndSettings = async () => {
       // Fetch departments
@@ -131,7 +170,11 @@ function ExploreNavbar() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target)) {
-        setOpenDropdownId(null);
+        // Also check if clicking inside the portal dropdown (desktop or mobile)
+        const isDropdownClick = event.target.closest('[data-explore-dropdown="true"]');
+        if (!isDropdownClick) {
+          setOpenDropdownId(null);
+        }
       }
     };
     
@@ -141,10 +184,13 @@ function ExploreNavbar() {
       }
     };
 
+    // Listen to both mousedown (desktop) and touchstart (mobile) for outside click
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
     document.addEventListener('keydown', handleEscape);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
   }, []);
@@ -210,7 +256,7 @@ function ExploreNavbar() {
     <div
       id="explore-navbar"
       ref={navRef}
-      className="bg-[#01AFD1] border-y border-black/10 overflow-x-auto md:overflow-visible scrollbar-hide transition-all duration-200 z-[100] sticky top-0"
+      className="bg-[#01AFD1] border-y border-black/10 overflow-x-auto scrollbar-hide transition-all duration-200 z-[100] sticky top-0"
     >
       <div className="flex items-center md:justify-center gap-6 md:gap-8 lg:gap-12 px-4 md:px-12 lg:px-20 min-w-max w-full">
         {topLevel.map(dept => {
@@ -218,7 +264,7 @@ function ExploreNavbar() {
           const route = dept.route || `/explore/${dept.slug}`;
           
           return (
-            <div key={dept.id} className="relative group/dept py-2">
+            <div key={dept.id} className="relative group/dept py-2" ref={el => anchorRefs.current[dept.id] = el}>
               <Link 
                 to={route} 
                 onClick={(e) => handleDepartmentClick(e, dept)}
@@ -236,7 +282,7 @@ function ExploreNavbar() {
               {dept.slug !== 'testimonials' && (
                 <AnimatePresence>
                   {isDropdownOpen && (
-                    <DropdownMenu dept={dept} loadingDeptId={loadingDeptId} packagesMap={packagesMap} packagesPerColumn={packagesPerColumn} setOpenDropdownId={setOpenDropdownId} />
+                    <DropdownMenu dept={dept} loadingDeptId={loadingDeptId} packagesMap={packagesMap} packagesPerColumn={packagesPerColumn} setOpenDropdownId={setOpenDropdownId} anchorEl={anchorRefs.current[dept.id]} />
                   )}
                 </AnimatePresence>
               )}

@@ -1,0 +1,224 @@
+          <div className="lg:col-span-8 flex flex-col gap-8">
+
+            {/* Section 1: Traveller Details */}
+            <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">person</span>
+                <h2 className="text-2xl font-bold text-gray-900">Traveller Details</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.name}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.name ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Travel Date</label>
+                  <input
+                    type="date"
+                    value={formData.date ? formData.date.split('T')[0] : ''}
+                    disabled={!!bookingId}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setFormData({...formData, date: e.target.value});
+                      }
+                    }}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.phone ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    disabled={!!bookingId}
+                    readOnly={profileLocked.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className={`w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors ${profileLocked.email ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''} disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Number of Travellers</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={tripDetails.travellers}
+                    disabled={!!bookingId}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      setTripDetails({...tripDetails, travellers: val});
+                      // Update computed price based on new travellers
+                      const opt = sharingOptions.find(o => o.type === selectedSharing);
+                      if (opt) setComputedPrice(opt.pricePerPerson * val);
+                    }}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Source</label>
+                  <select
+                    value={formData.source}
+                    disabled={!!bookingId}
+                    onChange={(e) => setFormData({...formData, source: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select source</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Google">Google</option>
+                    <option value="Friend and Family">Friend and Family</option>
+                    <option value="I'm already travel with you">I'm already travel with you</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Special Request (Optional)</label>
+                  <textarea
+                    value={formData.specialRequest || ''}
+                    disabled={!!bookingId}
+                    onChange={(e) => setFormData({...formData, specialRequest: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#01AFD1] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-colors disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    rows="3"
+                    placeholder="Any dietary requirements or special requests..."
+                  ></textarea>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 2: Occupancy */}
+            <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="material-symbols-outlined text-[#01AFD1] text-2xl">bed</span>
+                <h2 className="text-2xl font-bold text-gray-900">Occupancy</h2>
+              </div>
+              <p className="text-gray-500 mb-6 border-b border-gray-100 pb-4">Select room sharing type</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sharingOptions.map((option) => {
+                  const pricePerPerson = Number(option.pricePerPerson ?? option.price ?? 0);
+                  if (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0) return null;
+                  const isActive = selectedSharing === option.type;
+                  const isOccupancyDisabled = !!bookingId;
+                  return (
+                    <div
+                      key={option.type}
+                      onClick={() => !isOccupancyDisabled && handleSharingSelect(option)}
+                      className={`rounded-2xl p-5 border-2 transition-all flex flex-col gap-2 ${
+                        isOccupancyDisabled
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer'
+                      } ${
+                        isActive
+                          ? 'border-[#01AFD1] bg-[#eff6f9] shadow-md scale-[1.02]'
+                          : 'border-gray-200 bg-white hover:border-[#01AFD1]/50 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#01AFD1]' : 'border-gray-300'}`}>
+                          {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#01AFD1]"></div>}
+                        </div>
+                        {isActive && <span className="bg-[#01AFD1] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Selected</span>}
+                      </div>
+                      <h3 className={`font-bold text-lg ${isActive ? 'text-[#01AFD1]' : 'text-gray-800'}`}>{option.label}</h3>
+                      <div className="mt-auto">
+                        <span className={`font-extrabold text-xl ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>₹{formatMoney(pricePerPerson)}</span>
+                        <span className="text-xs text-gray-500 font-medium ml-1">/ person</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+          </div>
+
+          {/* Right Column (30%) - Sticky Payment Summary */}
+          <div className="lg:col-span-4 relative">
+            <div className="sticky top-[100px] bg-white rounded-3xl p-6 shadow-xl border border-gray-100">
+
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Payment Summary</h2>
+
+              <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 mb-1 leading-tight">{tripDetails.tripTitle}</h3>
+                  <div className="flex flex-col gap-1 text-sm text-gray-500 mt-3">
+                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">calendar_month</span> {new Date(formData.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">group</span> {tripDetails.travellers} Traveller(s)</div>
+                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">bed</span> {selectedSharing}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-4 border-b border-gray-100 pb-4">
+                <div className="flex justify-between text-gray-600 font-medium text-sm">
+                  <span>Subtotal ({tripDetails.travellers} × ₹{formatMoney(computedPrice / travellerCount)})</span>
+                  <span>₹{formatMoney(subTotal)}</span>
+                </div>
+                {gstEnabled && (
+                  <div className="flex justify-between text-gray-600 font-medium text-sm">
+                    <span>Taxes (GST 5%)</span>
+                    <span>₹{formatMoney(gst)}</span>
+                  </div>
+                )}
+              </div>
+
+
+
+              <div className="flex justify-between items-end mb-8 bg-[#eff6f9] p-4 rounded-xl border border-[#cde5ef]">
+                <div>
+                  <span className="font-bold text-gray-900 text-base block mb-0.5">Total Payable</span>
+                </div>
+                <span className="font-extrabold text-[#01AFD1] text-2xl">₹{formatMoney(safeFinalPayable)}</span>
+              </div>
+
+              <button
+                onClick={handleProceedToPayment}
+                disabled={loading || !selectedSharing || checkoutBlocked}
+                className="w-full bg-[#01AFD1] hover:bg-[#0092b3] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-lg shadow-[#01AFD1]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[22px]">lock</span>
+                    Proceed to Payment
+                  </>
+                )}
+              </button>
+              <div className="text-center mt-4">
+                <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">verified_user</span>
+                  100% Secured by Razorpay
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}

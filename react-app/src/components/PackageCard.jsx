@@ -15,6 +15,8 @@ const PackageCard = ({
   bestSeller,
   badge,
   className,
+  primaryBadgeText,
+  showPrimaryBadge = true,
   secondaryBadgeText,
   showSecondaryBadge,
   isClickable = true,
@@ -119,8 +121,13 @@ const PackageCard = ({
 
       {/* Top badges area */}
       <div className="relative z-10 flex justify-between items-start p-3">
-        {/* Left: Best Seller badge — capsule/pill style */}
-        <div className="flex flex-col gap-1.5">
+        {/* Left: Best Seller badge & Primary badge — capsule/pill style */}
+        <div className="flex flex-col gap-1.5 items-start">
+          {showPrimaryBadge !== false && primaryBadgeText && (
+            <div className="bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">
+              {primaryBadgeText}
+            </div>
+          )}
           {bestSeller && (
             <div className="bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">
               Best Seller

@@ -434,7 +434,7 @@ function Home() {
 
         {/* Dynamic Sections */}
         {pageLoading ? (
-          <div className="flex justify-center items-center py-20 text-gray-400">
+          <div className="flex justify-center items-center py-20 text-gray-400 min-h-[60vh]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1] mb-3"></div>
             <span className="text-sm font-medium ml-3">Loading sections...</span>
           </div>

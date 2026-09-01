@@ -143,16 +143,9 @@ const BookingModal = ({ isOpen, onClose, tripTitle, price, travellers, destinati
                 }
               }
 
-              const functionErrorMessage = typeof responseBody === 'object' && responseBody !== null
-                ? (responseBody.error || responseBody.message)
-                : (responseBody || rpcError.message);
+              const isStale = isStaleCheckoutLeadError(rpcError?.context?.status, responseBody || rpcError.message);
 
-              const errorStr = (functionErrorMessage || '').toLowerCase();
-              const isAuthError = rpcError?.context?.status === 401 || rpcError?.context?.status === 403 ||
-                                  errorStr.includes('unauthorized') || errorStr.includes('invalid_checkout_lead_auth') ||
-                                  errorStr.includes('expired') || errorStr.includes('inactive');
-
-              if (isAuthError) {
+              if (isStale) {
                 // Remove stale browser reference and fallback to create_guest_lead
                 sessionStorage.removeItem('tripomist_checkout_lead');
                 throw new Error('RECOVER_STALE_LEAD');

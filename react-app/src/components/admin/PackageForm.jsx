@@ -5,12 +5,13 @@ import RichTextEditor from './RichTextEditor';
 
 const DEFAULT_SECTION_SETTINGS = [
   { id: 'overview', label: 'Overview', visible: true, order: 1 },
-  { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 2 },
-  { id: 'itinerary', label: 'Itinerary', visible: true, order: 3 },
-  { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 4 },
-  { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 5 },
-  { id: 'note', label: 'Note', visible: true, order: 6 },
-  { id: 'faqs', label: "FAQ's", visible: true, order: 7 }
+  { id: 'trip-info', label: 'Trip Info', visible: true, order: 2 },
+  { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 3 },
+  { id: 'itinerary', label: 'Itinerary', visible: true, order: 4 },
+  { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 5 },
+  { id: 'things-to-carry', label: 'Things to Carry', visible: true, order: 6 },
+  { id: 'note', label: 'Note', visible: true, order: 7 },
+  { id: 'faqs', label: "FAQ's", visible: true, order: 8 }
 ];
 
 const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
