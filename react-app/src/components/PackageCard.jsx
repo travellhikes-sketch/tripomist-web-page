@@ -3,47 +3,53 @@ import { Link } from 'react-router-dom'
 import WishlistButton from './WishlistButton'
 import { formatSlugToTitle } from '../utils/formatters'
 
-const PackageCard = ({ 
-  tripTitle, 
-  price, 
+const PackageCard = ({
+  tripTitle,
+  price,
   originalPrice,
   discountText,
-  duration, 
-  bg, 
-  link, 
-  label, 
+  duration,
+  bg,
+  link,
+  label,
   bestSeller,
   badge,
   className,
-  primaryBadgeText,
-  showPrimaryBadge = true,
-  secondaryBadgeText,
-  showSecondaryBadge,
+  primaryBadgeText: pbt,
+  showPrimaryBadge: spb = true,
+  secondaryBadgeText: sbt,
+  showSecondaryBadge: ssb,
   isClickable = true,
   cardCtaText = 'Click',
   cardCtaAction = 'open_package',
   cardCtaUrl = '',
   departureDates = [],
-  listingCategories = []
+  listingCategories = [],
+  pkg = null
 }) => {
+  const primaryBadgeText = pkg ? pkg.primary_badge_text : pbt;
+  const showPrimaryBadge = pkg ? (pkg.show_primary_badge !== false) : (spb !== false);
+  const secondaryBadgeText = pkg ? pkg.secondary_badge_text : sbt;
+  const showSecondaryBadge = pkg ? pkg.show_secondary_badge : ssb;
+
   const isUpcoming = false; // Standardized layout
   const displayPrice = price ? (typeof price === 'string' && !price.includes('/-') ? `${price}/-` : price) : null;
   const displayOriginalPrice = originalPrice ? (typeof originalPrice === 'string' && !originalPrice.includes('/-') ? `${originalPrice}/-` : originalPrice) : null;
-  
+
   let finalLink = link;
   let finalIsClickable = isClickable;
   let displayCtaText = cardCtaText || 'Click';
 
   if (cardCtaAction === 'coming_soon') {
-      finalIsClickable = false;
-      displayCtaText = cardCtaText && cardCtaText !== 'Click' ? cardCtaText : 'Coming Soon';
+    finalIsClickable = false;
+    displayCtaText = cardCtaText && cardCtaText !== 'Click' ? cardCtaText : 'Coming Soon';
   } else if (cardCtaAction === 'custom_url' && cardCtaUrl) {
-      finalLink = cardCtaUrl;
+    finalLink = cardCtaUrl;
   }
 
   const hasValidLink = finalLink && finalLink !== '#';
   const shouldBeClickable = finalIsClickable && hasValidLink;
-  
+
   let finalSecondaryBadge = (showSecondaryBadge && secondaryBadgeText) ? secondaryBadgeText.replace(/saller/i, 'Seller') : null;
 
   const CardWrapper = shouldBeClickable ? Link : 'div';
@@ -108,7 +114,7 @@ const PackageCard = ({
 
   // ── DEFAULT VARIANT (full detail card) ──
   return (
-    <CardWrapper 
+    <CardWrapper
       {...wrapperProps}
       draggable={false}
       className={`rounded-xl overflow-hidden group relative flex flex-col transition-all duration-300 select-none block border border-gray-200/60 ${shouldBeClickable ? 'hover:border-gray-300' : 'opacity-95'} ${className || 'w-full h-[340px]'}`}
@@ -139,8 +145,8 @@ const PackageCard = ({
         <div className="flex flex-col items-end gap-1.5">
           {finalSecondaryBadge && (
             <div className={
-              finalSecondaryBadge.toLowerCase() === 'coming soon' 
-                ? "bg-white/85 backdrop-blur-sm text-gray-800 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider" 
+              finalSecondaryBadge.toLowerCase() === 'coming soon'
+                ? "bg-white/85 backdrop-blur-sm text-gray-800 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider"
                 : "bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider"
             }>
               {finalSecondaryBadge}
@@ -161,7 +167,7 @@ const PackageCard = ({
       <div className="relative z-10 flex flex-col p-3.5 pt-2 gap-1.5">
         {/* Title */}
         <h3 className="text-white text-base font-bold leading-[1.25] line-clamp-2 drop-shadow-sm">{tripTitle}</h3>
-        
+
         {/* Duration + Dates Row */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* Duration — LEFT */}
@@ -204,7 +210,7 @@ const PackageCard = ({
               </span>
             </div>
           </div>
-          
+
           {/* CTA Button */}
           <div className={`relative overflow-hidden group/btn bg-white/15 backdrop-blur-sm rounded-[5px] px-3 py-1.5 border border-white/25 flex items-center transition-all ${shouldBeClickable ? 'cursor-pointer hover:bg-white/25' : 'cursor-default'}`}>
             <div className={`relative z-10 flex items-center font-bold text-[11px] whitespace-nowrap transition-colors duration-300 ${shouldBeClickable ? 'text-white' : 'text-white/50'}`}>

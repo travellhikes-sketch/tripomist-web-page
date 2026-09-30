@@ -58,8 +58,7 @@ const AdminSiteSettings = () => {
     homepage_static_banner: {},
     search_page_hero: {},
     customer_account_hero: {},
-    homepage_section_order: [],
-    typography: {}
+    homepage_section_order: []
   });
 
   const [homepageSectionOrder, setHomepageSectionOrder] = useState([]);
@@ -193,11 +192,6 @@ const AdminSiteSettings = () => {
         if (!newSettings.explore_more_settings || Object.keys(newSettings.explore_more_settings).length === 0) {
           newSettings.explore_more_settings = {
             'ffffffff-ffff-ffff-ffff-ffffffffffff': 'normal'
-          };
-        }
-        if (!newSettings.typography) {
-          newSettings.typography = {
-            heading_font: 'Ranchers'
           };
         }
         let mergedOrder = [];

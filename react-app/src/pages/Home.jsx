@@ -186,7 +186,7 @@ function Home() {
                 <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                   <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt={dest.name} src={dest.image_url} />
                 </div>
-                <span className="font-button text-button text-on-surface group-hover:text-primary text-center transition-colors">
+                <span className="font-button text-button text-on-surface font-medium group-hover:text-primary text-center transition-colors">
                   {dest.name}
                 </span>
               </Link>
@@ -211,7 +211,7 @@ function Home() {
                 <div className="w-32 h-14 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:-translate-y-1">
                   <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt={interest.name} src={interest.image_url} />
                 </div>
-                <span className="font-button text-button text-on-surface group-hover:text-primary text-center whitespace-nowrap transition-colors">
+                <span className="font-button text-button text-on-surface font-medium group-hover:text-primary text-center whitespace-nowrap transition-colors">
                   {interest.name}
                 </span>
               </Link>
@@ -434,9 +434,23 @@ function Home() {
 
         {/* Dynamic Sections */}
         {pageLoading ? (
-          <div className="flex justify-center items-center py-20 text-gray-400 min-h-[60vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#01AFD1] mb-3"></div>
-            <span className="text-sm font-medium ml-3">Loading sections...</span>
+          <div className="w-full py-12 px-4 md:px-8 lg:px-12 space-y-12 animate-pulse min-h-[600px]">
+            <div className="space-y-4">
+              <div className="h-7 bg-gray-200 rounded w-48"></div>
+              <div className="flex gap-6 overflow-hidden">
+                {[1, 2, 3, 4].map((n) => (
+                  <div key={n} className="w-32 h-14 bg-gray-200 rounded-full shrink-0"></div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-7 bg-gray-200 rounded w-64"></div>
+              <div className="flex gap-6 overflow-hidden">
+                {[1, 2, 3, 4].map((n) => (
+                  <div key={n} className="w-[280px] h-[340px] bg-gray-200 rounded-xl shrink-0"></div>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (() => {
           const sectionRenderers = {

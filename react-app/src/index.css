@@ -11,9 +11,7 @@
   background: linear-gradient(to top, rgba(19, 27, 46, 0.9) 0%, rgba(19, 27, 46, 0.4) 60%, rgba(19, 27, 46, 0.1) 100%);
 }
 
-:root {
-  --heading-font: 'Ranchers', sans-serif;
-}
+
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
@@ -138,7 +136,6 @@ button, input, textarea, select, option {
   font-family: inherit;
 }
 
-/* Global Heading + CTA Font Style (Customer-facing) */
 h1, h2, h3, h4, h5, h6,
 .font-heading,
 .font-headline-md,
@@ -155,7 +152,7 @@ a[class*="btn"],
 a[class*="button"],
 input[type="submit"],
 input[type="button"] {
-  font-family: var(--heading-font, 'Ranchers', sans-serif) !important;
+  font-family: 'Inter', sans-serif;
 }
 
 

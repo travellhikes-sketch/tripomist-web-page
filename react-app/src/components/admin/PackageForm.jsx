@@ -865,7 +865,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
                     </button>
 
                     <span className={`text-sm font-bold ${sec.visible !== false ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
-                      {sec.label}
+                      {sec.id === 'trip-info' ? 'Show Trip Info ON/OFF' : sec.label}
                     </span>
                   </div>
 
@@ -1323,8 +1323,24 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
 
             {/* Structured Repeatable Control: Trip Info Grid */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-gray-800">Trip Info</label>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-bold text-gray-800">Trip Info</label>
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                    <input
+                      type="checkbox"
+                      checked={sectionSettings.find(s => s.id === 'trip-info')?.visible !== false}
+                      onChange={(e) => {
+                        const isVisible = e.target.checked;
+                        setSectionSettings(prev => prev.map(s => s.id === 'trip-info' ? { ...s, visible: isVisible } : s));
+                      }}
+                      className="w-4 h-4 text-[#01AFD1] rounded border-gray-300 focus:ring-[#01AFD1]"
+                    />
+                    <span className="text-xs font-bold text-gray-700">
+                      Show Trip Info: {sectionSettings.find(s => s.id === 'trip-info')?.visible !== false ? 'ON' : 'OFF'}
+                    </span>
+                  </label>
+                </div>
                 <button
                   type="button"
                   onClick={handleAddTripInfo}

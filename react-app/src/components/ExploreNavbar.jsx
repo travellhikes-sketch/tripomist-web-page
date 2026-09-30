@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, setOpenDropdownId, anchorEl }) {
   const dropdownRef = useRef(null);
   const [style, setStyle] = useState({});
-  const [shift, setShift] = useState(0);
 
   useEffect(() => {
     const updatePosition = () => {
@@ -15,24 +14,31 @@ function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, set
         const anchorRect = anchorEl.getBoundingClientRect();
         const dropdownRect = dropdownRef.current.getBoundingClientRect();
         const padding = 16;
-        
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+
+        // Center horizontally on anchor, clamped inside the viewport
         let left = anchorRect.left + (anchorRect.width / 2);
-        let newShift = 0;
-        const halfWidth = dropdownRect.width / 2;
-        
-        if (left - halfWidth < padding) {
-          newShift = padding - (left - halfWidth);
-        } else if (left + halfWidth > window.innerWidth - padding) {
-          newShift = window.innerWidth - padding - (left + halfWidth);
+        const halfW = dropdownRect.width / 2;
+        if (left - halfW < padding) {
+          left = padding + halfW;
+        } else if (left + halfW > viewportW - padding) {
+          left = viewportW - padding - halfW;
         }
-        
+
+        // Vertical: prefer below anchor; flip above if not enough vertical space
+        let top = anchorRect.bottom + 2;
+        if (top + dropdownRect.height > viewportH - padding) {
+          top = anchorRect.top - dropdownRect.height - 2;
+        }
+        if (top < padding) top = padding;
+
         setStyle({
           position: 'fixed',
-          top: `${anchorRect.bottom + 2}px`, // Slight gap
+          top: `${top}px`,
           left: `${left}px`,
-          transform: `translateX(calc(-50% + ${newShift}px))`
+          transform: 'translateX(-50%)'
         });
-        setShift(newShift);
       }
     };
 
@@ -60,7 +66,7 @@ function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, set
     <div
       ref={dropdownRef}
       data-explore-dropdown="true"
-      className="fixed w-max max-w-[95vw] md:max-w-[800px] z-[110]"
+      className="fixed w-[95vw] md:w-max md:max-w-[800px] z-[110]"
       style={style}
     >
       <motion.div
@@ -71,54 +77,54 @@ function DropdownMenu({ dept, loadingDeptId, packagesMap, packagesPerColumn, set
         className="relative"
       >
         {/* Top Caret Pointer */}
-        <div 
+        <div
           className="absolute -top-2 w-4 h-4 bg-white border-t border-l border-gray-100 rotate-45 z-[-1] rounded-sm shadow-[-2px_-2px_4px_rgba(0,0,0,0.02)]"
-          style={{ left: `calc(50% - ${shift}px)`, transform: 'translateX(-50%)' }}
+          style={{ left: '50%', transform: 'translateX(-50%)' }}
         ></div>
-        
+
         <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 max-h-[85vh] overflow-y-auto custom-scrollbar relative">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
-          {dept.title}
-        </h3>
-        
-        {loadingDeptId === dept.id ? (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#01AFD1]"></div>
-          </div>
-        ) : packagesMap[dept.id] && packagesMap[dept.id].length > 0 ? (
-          <div 
-            className="grid gap-x-6 gap-y-2 auto-cols-max overflow-x-auto custom-scrollbar" 
-            style={{ 
-              gridTemplateRows: `repeat(${packagesPerColumn}, minmax(0, 1fr))`,
-              gridAutoFlow: 'column'
-            }}
-          >
-            {packagesMap[dept.id].map(pkg => (
-              <Link
-                key={pkg.id}
-                to={`/itinerary/${pkg.slug}`}
-                onClick={() => setOpenDropdownId(null)}
-                className="flex items-center gap-2.5 group/link py-1 w-56"
-              >
-                {pkg.image_url || pkg.banner_image ? (
-                  <img src={pkg.image_url || pkg.banner_image} alt={pkg.title} className="w-8 h-8 rounded-full object-cover border border-gray-100 flex-shrink-0" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
-                    <span className="material-symbols-outlined text-[14px]">location_on</span>
-                  </div>
-                )}
-                <span className="text-[13px] font-medium text-gray-700 group-hover/link:text-[#01AFD1] transition-colors line-clamp-1 leading-snug">
-                  {pkg.title}
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-gray-500 py-4 text-center">
-            No packages assigned yet.
-          </div>
-        )}
-      </div>
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
+            {dept.title}
+          </h3>
+
+          {loadingDeptId === dept.id ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#01AFD1]"></div>
+            </div>
+          ) : packagesMap[dept.id] && packagesMap[dept.id].length > 0 ? (
+            <div
+              className="flex flex-col md:grid gap-x-6 gap-y-2 md:auto-cols-max overflow-x-auto custom-scrollbar"
+              style={{
+                gridTemplateRows: window.innerWidth >= 768 ? `repeat(${packagesPerColumn}, minmax(0, 1fr))` : undefined,
+                gridAutoFlow: window.innerWidth >= 768 ? 'column' : undefined
+              }}
+            >
+              {packagesMap[dept.id].map(pkg => (
+                <Link
+                  key={pkg.id}
+                  to={`/itinerary/${pkg.slug}`}
+                  onClick={() => setOpenDropdownId(null)}
+                  className="flex items-center gap-2.5 group/link py-1 w-full md:w-56"
+                >
+                  {pkg.image_url || pkg.banner_image ? (
+                    <img src={pkg.image_url || pkg.banner_image} alt={pkg.title} className="w-8 h-8 rounded-full object-cover border border-gray-100 flex-shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                      <span className="material-symbols-outlined text-[14px]">location_on</span>
+                    </div>
+                  )}
+                  <span className="text-[13px] font-medium text-gray-700 group-hover/link:text-[#01AFD1] transition-colors line-clamp-1 leading-snug">
+                    {pkg.title}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500 py-4 text-center">
+              No packages assigned yet.
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>,
     document.body
@@ -143,7 +149,7 @@ function ExploreNavbar() {
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
-      
+
       if (deptData) {
         setDepartments(deptData);
       }
@@ -177,7 +183,7 @@ function ExploreNavbar() {
         }
       }
     };
-    
+
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
         setOpenDropdownId(null);
@@ -197,7 +203,7 @@ function ExploreNavbar() {
 
   const fetchPackagesForDepartment = async (deptId) => {
     if (packagesMap[deptId]) return; // already fetched
-    
+
     setLoadingDeptId(deptId);
     try {
       // 1. Get package IDs plotted to this department
@@ -221,7 +227,7 @@ function ExploreNavbar() {
         .select('id, slug, title, image_url, banner_image')
         .in('id', packageIds)
         .eq('status', 'active');
-        
+
       if (finalErr) throw finalErr;
       setPackagesMap(prev => ({ ...prev, [deptId]: packages || [] }));
     } catch (error) {
@@ -235,11 +241,11 @@ function ExploreNavbar() {
   const handleDepartmentClick = (e, dept) => {
     // Testimonials should just navigate, don't open dropdown
     if (dept.slug === 'testimonials') {
-      return; 
+      return;
     }
-    
+
     e.preventDefault();
-    
+
     if (openDropdownId === dept.id) {
       setOpenDropdownId(null);
     } else {
@@ -262,11 +268,11 @@ function ExploreNavbar() {
         {topLevel.map(dept => {
           const isDropdownOpen = openDropdownId === dept.id;
           const route = dept.route || `/explore/${dept.slug}`;
-          
+
           return (
             <div key={dept.id} className="relative group/dept py-2" ref={el => anchorRefs.current[dept.id] = el}>
-              <Link 
-                to={route} 
+              <Link
+                to={route}
                 onClick={(e) => handleDepartmentClick(e, dept)}
                 className="flex items-center gap-1.5 text-[15px] font-semibold transition-colors py-1 text-white hover:text-white/90"
               >
@@ -278,7 +284,7 @@ function ExploreNavbar() {
                   </span>
                 )}
               </Link>
-              
+
               {dept.slug !== 'testimonials' && (
                 <AnimatePresence>
                   {isDropdownOpen && (
