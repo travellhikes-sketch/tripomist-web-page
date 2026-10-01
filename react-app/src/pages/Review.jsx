@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Star, CheckCircle, Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, CheckCircle, Play, X, ChevronLeft, ChevronRight, Share2, Copy } from 'lucide-react';
 import PremiumPageTemplate from '../components/PremiumPageTemplate';
 import ReviewGalleryCarousel from '../components/ReviewGalleryCarousel';
 
@@ -71,9 +71,27 @@ export default function Review() {
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState(null);
   const [modalReview, setModalReview] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(1);
+  const [shareCopied, setShareCopied] = useState(false);
   const reviewsPerPage = 6;
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'TripoMist Customer Reviews',
+          text: 'Check out customer reviews for TripoMist!',
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log('Share error:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -211,7 +229,31 @@ export default function Review() {
       )}
 
       {/* REVIEWS GRID LIST */}
-      <section className="text-left">
+      <section className="text-left max-w-7xl mx-auto px-2 md:px-6">
+        {/* Sleek Minimal Subheader */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">Customer Reviews</h2>
+            <div className="flex items-center gap-1 bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full text-xs font-semibold border border-amber-200/60">
+              <Star size={12} className="fill-amber-400 text-amber-400" />
+              <span>{avgRating}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Write a Review Button */}
+            <a
+              href="https://maps.app.goo.gl/KEYKo42nC4tRghzt5"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-800 rounded-full text-xs font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+            >
+              <GoogleLogo />
+              <span>Write a Review</span>
+            </a>
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

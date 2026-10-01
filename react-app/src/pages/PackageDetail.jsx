@@ -76,7 +76,6 @@ const cleanHeroTitle = (title) => {
 
 const DEFAULT_SECTIONS = [
   { id: 'overview', label: 'Overview', visible: true, order: 1 },
-  { id: 'trip-info', label: 'Trip Info', visible: true, order: 2 },
   { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 3 },
   { id: 'itinerary', label: 'Itinerary', visible: true, order: 4 },
   { id: 'download-itinerary', label: 'Download Itinerary', visible: true, order: 5 },
@@ -88,7 +87,6 @@ const DEFAULT_SECTIONS = [
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Overview' },
-  { id: 'trip-info', label: 'Trip Info' },
   { id: 'trip-cost', label: 'Trip Cost' },
   { id: 'itinerary', label: 'Itinerary' },
   { id: 'download-itinerary', label: 'Download Itinerary' },
@@ -435,7 +433,6 @@ export default function PackageDetail() {
 
   const sectionsToRender = [
     { id: 'overview', label: 'Overview' },
-    { id: 'trip-info', label: 'Trip Info' },
     { id: 'trip-cost', label: 'Trip Cost' },
     { id: 'itinerary', label: 'Itinerary' },
     { id: 'download-itinerary', label: 'Download Itinerary' },
@@ -946,27 +943,6 @@ export default function PackageDetail() {
                         className="prose max-w-none text-gray-700 text-sm md:text-base leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: trip.overview || trip.description }}
                       />
-                    </section>
-                  );
-                }
-
-                if (sec.id === 'trip-info') {
-                  return (
-                    <section key="trip-info" id="trip-info" className="scroll-mt-32 border-b border-gray-100 pb-10">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 tracking-tight">Trip Info</h2>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                        {(trip.tripInfo || DEFAULT_TRIP_INFO).map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-sm bg-[#eff6f9] text-[#01AFD1] flex items-center justify-center shrink-0">
-                              {renderIcon(item.icon)}
-                            </div>
-                            <div>
-                              <span className="text-xs font-medium text-slate-500 block">{item.label}</span>
-                              <span className="text-sm font-bold text-slate-900 block leading-snug">{item.value}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
                     </section>
                   );
                 }

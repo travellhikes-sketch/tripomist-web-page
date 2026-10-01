@@ -5,7 +5,6 @@ import RichTextEditor from './RichTextEditor';
 
 const DEFAULT_SECTION_SETTINGS = [
   { id: 'overview', label: 'Overview', visible: true, order: 1 },
-  { id: 'trip-info', label: 'Trip Info', visible: true, order: 2 },
   { id: 'trip-cost', label: 'Trip Cost', visible: true, order: 3 },
   { id: 'itinerary', label: 'Itinerary', visible: true, order: 4 },
   { id: 'inclusions-exclusions', label: 'Inclusion & Exclusion', visible: true, order: 5 },
@@ -36,7 +35,6 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
   const [downloadButtonLabel, setDownloadButtonLabel] = useState('Download PDF');
   const [thingsToCarryList, setThingsToCarryList] = useState([]);
   const [notes, setNotes] = useState('');
-  const [tripInfoList, setTripInfoList] = useState([]);
   const [trustBenefitsList, setTrustBenefitsList] = useState([]);
   const [faqsList, setFaqsList] = useState([]);
   const [shortDescription, setShortDescription] = useState('');
@@ -140,16 +138,6 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       }
       setThingsToCarryList(parsedThings);
 
-      // Parse trip_info
-      let parsedInfo = [];
-      if (initialData.trip_info) {
-        if (Array.isArray(initialData.trip_info)) {
-          parsedInfo = initialData.trip_info;
-        } else if (typeof initialData.trip_info === 'string') {
-          try { parsedInfo = JSON.parse(initialData.trip_info); } catch (e) { parsedInfo = []; }
-        }
-      }
-      setTripInfoList(parsedInfo);
 
       // Parse trust_benefits
       let parsedBenefits = [];
@@ -351,31 +339,7 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     });
   };
 
-  // Structured List Handlers: Trip Info
-  const handleAddTripInfo = () => {
-    setTripInfoList(prev => [...prev, { icon: 'Bus', label: '', value: '' }]);
-  };
-  const handleUpdateTripInfo = (idx, field, val) => {
-    setTripInfoList(prev => {
-      const copy = [...prev];
-      copy[idx] = { ...copy[idx], [field]: val };
-      return copy;
-    });
-  };
-  const handleRemoveTripInfo = (idx) => {
-    setTripInfoList(prev => prev.filter((_, i) => i !== idx));
-  };
-  const handleMoveTripInfo = (idx, direction) => {
-    setTripInfoList(prev => {
-      const targetIdx = idx + direction;
-      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
-      const copy = [...prev];
-      const temp = copy[idx];
-      copy[idx] = copy[targetIdx];
-      copy[targetIdx] = temp;
-      return copy;
-    });
-  };
+  // Structured List Handlers: Removed Trip Info
 
   // Structured List Handlers: Trust Benefits
   const handleAddTrustBenefit = () => {
@@ -454,7 +418,6 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
     }
 
     const cleanThingsToCarry = thingsToCarryList.map(t => t.trim()).filter(Boolean);
-    const cleanTripInfo = tripInfoList.filter(item => item.label && item.label.trim());
     const cleanTrustBenefits = trustBenefitsList.map(b => b.trim()).filter(Boolean);
     const cleanFaqs = faqsList.filter(item => item.question && item.question.trim());
 
@@ -483,7 +446,6 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
       section_settings: sectionSettings,
       things_to_carry: cleanThingsToCarry,
       notes: notes.trim() || null,
-      trip_info: cleanTripInfo,
       trust_benefits: cleanTrustBenefits,
       faqs: cleanFaqs,
       short_description: shortDescription.trim() || null,
@@ -1321,99 +1283,6 @@ const PackageForm = ({ onCancel, onSubmit, initialData, saving }) => {
               <RichTextEditor value={notes} onChange={setNotes} placeholder="Important note, age guidelines, or cancellation policy highlights..." />
             </div>
 
-            {/* Structured Repeatable Control: Trip Info Grid */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-3">
-                  <label className="text-sm font-bold text-gray-800">Trip Info</label>
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                    <input
-                      type="checkbox"
-                      checked={sectionSettings.find(s => s.id === 'trip-info')?.visible !== false}
-                      onChange={(e) => {
-                        const isVisible = e.target.checked;
-                        setSectionSettings(prev => prev.map(s => s.id === 'trip-info' ? { ...s, visible: isVisible } : s));
-                      }}
-                      className="w-4 h-4 text-[#01AFD1] rounded border-gray-300 focus:ring-[#01AFD1]"
-                    />
-                    <span className="text-xs font-bold text-gray-700">
-                      Show Trip Info: {sectionSettings.find(s => s.id === 'trip-info')?.visible !== false ? 'ON' : 'OFF'}
-                    </span>
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddTripInfo}
-                  className="text-xs font-bold text-[#01AFD1] hover:text-blue-800 flex items-center gap-1 bg-white border border-[#01AFD1]/30 px-3 py-1 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Plus size={14} /> Add Info Item
-                </button>
-              </div>
-              {tripInfoList.length === 0 ? (
-                <p className="text-xs text-gray-400 italic">No trip info items. Click "+ Add Info Item" above.</p>
-              ) : (
-                <div className="space-y-2">
-                  {tripInfoList.map((item, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white p-2.5 border border-gray-200 rounded-lg shadow-2xs">
-                      <select
-                        value={item.icon || 'Bus'}
-                        onChange={e => handleUpdateTripInfo(idx, 'icon', e.target.value)}
-                        className="border border-gray-200 rounded-md px-2 py-1.5 text-xs text-gray-800 font-semibold focus:ring-1 focus:ring-[#01AFD1] outline-none"
-                      >
-                        <option value="Bus">Bus / Transport</option>
-                        <option value="Users">Users / Group</option>
-                        <option value="Mountain">Mountain / Altitude</option>
-                        <option value="Bed">Bed / Hotel</option>
-                        <option value="Sun">Sun / Season</option>
-                        <option value="UserCheck">UserCheck / Guide</option>
-                        <option value="Compass">Compass / Tour</option>
-                        <option value="Utensils">Utensils / Meals</option>
-                        <option value="FileCheck">FileCheck / Permits</option>
-                      </select>
-                      <input
-                        type="text"
-                        value={item.label || ''}
-                        onChange={e => handleUpdateTripInfo(idx, 'label', e.target.value)}
-                        className="w-full sm:w-1/3 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-[#01AFD1] outline-none"
-                        placeholder="Label (e.g. Group Size)"
-                      />
-                      <input
-                        type="text"
-                        value={item.value || ''}
-                        onChange={e => handleUpdateTripInfo(idx, 'value', e.target.value)}
-                        className="w-full sm:w-1/2 border border-gray-200 rounded-md px-2.5 py-1.5 text-xs text-gray-800 focus:ring-1 focus:ring-[#01AFD1] outline-none"
-                        placeholder="Value (e.g. 12 - 15)"
-                      />
-                      <div className="flex items-center justify-end gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleMoveTripInfo(idx, -1)}
-                          disabled={idx === 0}
-                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
-                        >
-                          <ArrowUp size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleMoveTripInfo(idx, 1)}
-                          disabled={idx === tripInfoList.length - 1}
-                          className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
-                        >
-                          <ArrowDown size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTripInfo(idx)}
-                          className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* Structured Repeatable Control: Sidebar Trust Benefits */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">

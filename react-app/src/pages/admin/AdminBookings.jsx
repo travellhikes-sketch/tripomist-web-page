@@ -5,7 +5,7 @@ import {
   X, Check, XCircle, Copy, Download, Search,
   Calendar, CreditCard, ChevronLeft, ChevronRight, User, Package, Clock,
   MoreVertical, Phone, MessageCircle, Edit, Tag, Building,
-  Globe, Mail, Users
+  Globe, Mail, Users, Eye, EyeOff
 } from 'lucide-react';
 
 import AdminBookingModal from '../../components/admin/AdminBookingModal';
@@ -19,6 +19,8 @@ const AdminBookings = () => {
   const [error, setError] = useState(null);
   const [showManualBooking, setShowManualBooking] = useState(false);
   const [editBookingId, setEditBookingId] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showBulkPassword, setShowBulkPassword] = useState(false);
   
   const [showSecurityModal, setShowSecurityModal] = useState(false);
 
@@ -95,7 +97,7 @@ const AdminBookings = () => {
     setLoading(true);
     setError(null);
     try {
-      let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('bookings').select('*').neq('booking_source', 'manual').order('created_at', { ascending: false });
 
       const { data, error } = await query;
       if (error) throw error;
@@ -646,12 +648,6 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowManualBooking(true)}
-              className="flex items-center gap-1.5 bg-[#01AFD1] border border-[#01AFD1] text-white px-3 py-1.5 rounded-md hover:bg-[#0092b3] transition-colors shadow-sm text-sm font-semibold"
-            >
-              New Booking
-            </button>
-            <button
               onClick={exportToCSV}
               className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold"
             >
@@ -714,7 +710,6 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
             className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#01AFD1] cursor-pointer"
           >
             <option value="all">All Status</option>
-            <option value="new">New</option>
             <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
@@ -1160,9 +1155,9 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
               <div className="grid grid-cols-2 gap-2 mt-4">
                 <button
                   onClick={() => generatePDFVoucher(viewDetailsBooking, 'download')}
-                  className="w-full bg-slate-800  text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm col-span-2"
+                  className="w-full bg-[#01AFD1] hover:bg-[#0092b3] text-white py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors text-sm col-span-2 shadow-sm"
                 >
-                  <Download size={16} /> Voucher
+                  <Download size={16} /> Download Invoice
                 </button>
               </div>
 
@@ -1278,16 +1273,21 @@ const classifyBooking = async (booking, newChannel, companyArg, notesArg) => {
                 </div>
               ) : (
                 <>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Booking Delete Password *</label>
+                  <div className="relative">
                     <input 
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={deleteModal.password}
                       onChange={e => setDeleteModal(prev => ({ ...prev, password: e.target.value, error: '' }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:border-red-700 outline-none"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 pr-10 text-sm focus:border-red-700 outline-none"
                       placeholder="Enter delete password"
                     />
-                    {deleteModal.error && <p className="text-red-600 text-xs mt-1 font-semibold">{deleteModal.error}</p>}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </>
               )}

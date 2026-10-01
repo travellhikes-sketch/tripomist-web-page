@@ -134,11 +134,6 @@ const PackageCard = ({
               {primaryBadgeText}
             </div>
           )}
-          {bestSeller && (
-            <div className="bg-white/85 backdrop-blur-sm text-cyan-700 font-bold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">
-              Best Seller
-            </div>
-          )}
         </div>
 
         {/* Right: Secondary badge / Discount — capsule/pill style */}

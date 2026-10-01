@@ -513,15 +513,20 @@ const AdminBookingModal = ({ isOpen, onClose, onSuccess, bookingId = null }) => 
                       <input type="text" name="package_title" required value={formData.package_title || ''} onChange={handleInputChange} className="w-full p-2 border rounded-lg outline-none focus:border-[#01AFD1] text-sm" />
                       {/* Autocomplete suggestions */}
                       {formData.package_title && packages.filter(p => {
-                        const lower = formData.package_title.toLowerCase();
-                        return p.title?.toLowerCase().includes(lower) || p.destination?.toLowerCase().includes(lower) || p.state?.toLowerCase().includes(lower);
+                        const lower = formData.package_title.toLowerCase().trim();
+                        const pLower = p.title?.toLowerCase().trim();
+                        // Filter out exact match so dropdown disappears once selected/typed
+                        if (pLower === lower) return false;
+                        return pLower.includes(lower) || p.destination?.toLowerCase().includes(lower) || p.state?.toLowerCase().includes(lower);
                       }).length > 0 && (
                         <div className="absolute z-20 bg-white border border-gray-200 rounded mt-1 max-h-48 overflow-y-auto shadow-lg w-full">
                           {packages.filter(p => {
-                            const lower = formData.package_title.toLowerCase();
-                            return p.title?.toLowerCase().includes(lower) || p.destination?.toLowerCase().includes(lower) || p.state?.toLowerCase().includes(lower);
+                            const lower = formData.package_title.toLowerCase().trim();
+                            const pLower = p.title?.toLowerCase().trim();
+                            if (pLower === lower) return false;
+                            return pLower.includes(lower) || p.destination?.toLowerCase().includes(lower) || p.state?.toLowerCase().includes(lower);
                           }).map(p => (
-                            <div key={p.id} className="px-3 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {
+                            <div key={p.id} className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm" onClick={() => {
                               setPerPersonPrice(p.price || 0);
                               setFormData(prev => ({
                                 ...prev,

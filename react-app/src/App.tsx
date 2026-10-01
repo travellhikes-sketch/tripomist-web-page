@@ -40,9 +40,11 @@ const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminPackages = React.lazy(() => import('./pages/admin/AdminPackages'));
 const AdminBookings = React.lazy(() => import('./pages/admin/AdminBookings'))
+const AdminAllBookings = React.lazy(() => import('./pages/admin/AdminAllBookings'))
 const AdminBusinessContribution = React.lazy(() => import('./pages/admin/AdminBusinessContribution'))
 const AdminCancelledBookings = React.lazy(() => import('./pages/admin/AdminCancelledBookings'))
 const AdminServiceRecovery = React.lazy(() => import('./pages/admin/AdminServiceRecovery'))
+const AdminServiceVouchers = React.lazy(() => import('./pages/admin/AdminServiceVouchers'))
 
 const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCheckoutLeads = React.lazy(() => import('./pages/admin/AdminCheckoutLeads'));
@@ -124,9 +126,13 @@ function App() {
               <Route path="bookings" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminBookings /></React.Suspense>} />
               <Route path="bookings/cancelled" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminCancelledBookings /></React.Suspense>} />
               <Route path="service-recovery" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceRecovery /></React.Suspense>} />
+              <Route path="service-vouchers" element={<React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminServiceVouchers /></React.Suspense>} />
 
               <Route path="manual-bookings" element={
                 <React.Suspense fallback={<div>Loading...</div>}><AdminManualBookings /></React.Suspense>
+              } />
+              <Route path="all-bookings" element={
+                <React.Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-[#01AFD1] border-t-transparent rounded-full animate-spin"></div></div>}><AdminAllBookings /></React.Suspense>
               } />
               <Route path="checkout-leads" element={<AdminCheckoutLeads />} />
               <Route path="itinerary-leads" element={<React.Suspense fallback={<div>Loading...</div>}><AdminItineraryLeads /></React.Suspense>} />

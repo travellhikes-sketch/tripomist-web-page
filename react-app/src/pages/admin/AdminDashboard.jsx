@@ -293,7 +293,7 @@ const AdminDashboard = () => {
           <button onClick={() => setShowManualBooking(true)} className="px-3 py-2 text-sm font-semibold bg-[#01AFD1] text-white rounded-lg hover:bg-[#0092b3] flex items-center gap-1.5 transition-colors">
             <Plus size={16}/> New Booking
           </button>
-          <Link to="/admin/bookings" className="px-3 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-1.5 transition-colors text-gray-700">
+          <Link to="/admin/all-bookings" className="px-3 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-1.5 transition-colors text-gray-700">
             <ListTodo size={16}/> All Bookings
           </Link>
         </div>

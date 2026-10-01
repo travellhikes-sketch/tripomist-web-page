@@ -19,7 +19,8 @@ import {
   User as UserIcon,
   Settings,
   Briefcase,
-  HandCoins
+  HandCoins,
+  Bell
 } from 'lucide-react';
 import AdminProfileModal from './AdminProfileModal';
 import AdminBrandingModal from './AdminBrandingModal';
@@ -29,6 +30,7 @@ import { Lock } from 'lucide-react';
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [newCount, setNewCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -96,9 +98,26 @@ const AdminLayout = () => {
     }
   };
 
+  const loadNotificationCount = async () => {
+    try {
+      const [leadsRes, itineraryRes] = await Promise.all([
+        supabase.from('checkout_leads').select('id', { count: 'exact', head: true }).eq('lead_status', 'new'),
+        supabase.from('itinerary_downloads').select('id', { count: 'exact', head: true }).eq('status', 'new')
+      ]);
+      const leadsCount = leadsRes.count || 0;
+      const itineraryCount = itineraryRes.count || 0;
+      setNewCount(leadsCount + itineraryCount);
+    } catch (e) {
+      console.error("Failed to load notifications:", e);
+    }
+  };
+
   useEffect(() => {
     loadProfile();
     loadBranding();
+    loadNotificationCount();
+    const interval = setInterval(loadNotificationCount, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -224,11 +243,14 @@ const AdminLayout = () => {
             </button>
             {isBookingsOpen && !isCollapsed && (
               <div className="pl-9 pr-2 space-y-0.5 mt-1">
-                <Link to="/admin/manual-bookings" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname.startsWith('/admin/manual-bookings') ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
-                  Manual Booking
+                <Link to="/admin/all-bookings" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname === '/admin/all-bookings' ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
+                  All Bookings
                 </Link>
                 <Link to="/admin/bookings" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname === '/admin/bookings' ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
                   Online Bookings
+                </Link>
+                <Link to="/admin/manual-bookings" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname.startsWith('/admin/manual-bookings') ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
+                  Manual Booking
                 </Link>
                 <Link to="/admin/checkout-leads" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname.startsWith('/admin/checkout-leads') ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
                   Checkout Leads
@@ -241,6 +263,9 @@ const AdminLayout = () => {
                 </Link>
                 <Link to="/admin/bookings/cancelled" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname === '/admin/bookings/cancelled' ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
                   Cancelled Bookings
+                </Link>
+                <Link to="/admin/service-vouchers" className={`block px-3 py-1.5 rounded-lg transition-colors font-medium ${location.pathname.startsWith('/admin/service-vouchers') ? 'bg-[#01AFD1] text-white shadow-sm' : 'text-gray-600 hover:bg-[#01AFD1]/10 hover:text-gray-900'}`} onClick={() => setSidebarOpen(false)}>
+                  Service Vouchers
                 </Link>
               </div>
             )}
@@ -410,6 +435,22 @@ const AdminLayout = () => {
           </div>
           <div className="flex items-center gap-4">
             
+            {/* Notification Bell Badge */}
+            <div className="relative">
+              <Link 
+                to="/admin/checkout-leads" 
+                className="p-2 text-gray-500 hover:text-[#01AFD1] hover:bg-gray-100 rounded-full transition-colors relative block"
+                title={`${newCount} new website activity / leads`}
+              >
+                <Bell size={20} />
+                {newCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow animate-pulse">
+                    {newCount > 99 ? '99+' : newCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+
             {/* Avatar Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button 
